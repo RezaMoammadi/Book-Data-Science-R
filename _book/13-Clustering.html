@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Reza Mohammadi">
+<title>13&nbsp; Clustering for Insight: Segmenting Data Without Labels – Data Science Foundations and Machine Learning with R: From Data to Decisions</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./14-References.html" rel="next">
+<link href="./12-Neural-networks.html" rel="prev">
+<link href="./images/logo.png" rel="icon" type="image/png">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-37b910d383d25f91074a86a846b870e0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+</head>
+<body class="nav-sidebar docked">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./13-Clustering.html"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Clustering for Insight: Segmenting Data Without Labels</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Data Science Foundations and Machine Learning with R: From Data to Decisions</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/RezaMoammadi/Book-Data-Science" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Download" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Download"><i class="bi bi-download"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+<li>
+            <a class="dropdown-item sidebar-tools-main-item" href="./Data-Science-Foundations-and-Machine-Learning-with-R--From-Data-to-Decisions.pdf">
+              <i class="bi bi-file-pdf pe-1"></i>
+            Download PDF
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="./Data-Science-Foundations-and-Machine-Learning-with-R--From-Data-to-Decisions.epub">
+              <i class="bi bi-journal pe-1"></i>
+            Download ePub
+            </a>
+          </li>
+      </ul>
+</div>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-1" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-1">
+<li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=%7Curl%7C">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=%7Curl%7C">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.facebook.com/sharer/sharer.php?u=%7Curl%7C">
+              <i class="bi bi-facebook pe-1"></i>
+            Facebook
+            </a>
+          </li>
+      </ul>
+</div>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./0-preface.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./1-Intro-R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Getting Started with R</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2-Intro-data-science.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Foundations of Data Science and Machine Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3-Data-preparation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data Preparation in Practice: Turning Raw Data into Insight</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4-Exploratory-data-analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Exploratory Data Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./5-Statistics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Statistical Inference and Hypothesis Testing</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6-Setup-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Setting Up Data for Modeling</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./7-Classification-kNN.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Classification Using k-Nearest Neighbors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./8-Model-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Evaluating Machine Learning Models</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./9-Naive-Bayes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Naive Bayes Classifier</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Regression Analysis: Foundations and Applications</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-Tree-based-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Decision Trees and Random Forests</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-Neural-networks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Neural Networks: The Building Blocks of Artificial Intelligence</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-Clustering.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Clustering for Insight: Segmenting Data Without Labels</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-References.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li><a href="#what-this-chapter-covers" id="toc-what-this-chapter-covers" class="nav-link active" data-scroll-target="#what-this-chapter-covers">What This Chapter Covers</a></li>
+  <li>
+<a href="#sec-ch13-cluster-what" id="toc-sec-ch13-cluster-what" class="nav-link" data-scroll-target="#sec-ch13-cluster-what"><span class="header-section-number">13.1</span> What is Cluster Analysis?</a>
+  <ul class="collapse">
+<li><a href="#how-do-clustering-algorithms-measure-similarity" id="toc-how-do-clustering-algorithms-measure-similarity" class="nav-link" data-scroll-target="#how-do-clustering-algorithms-measure-similarity">How Do Clustering Algorithms Measure Similarity?</a></li>
+  </ul>
+</li>
+  <li><a href="#sec-ch13-kmeans" id="toc-sec-ch13-kmeans" class="nav-link" data-scroll-target="#sec-ch13-kmeans"><span class="header-section-number">13.2</span> K-means Clustering</a></li>
+  <li><a href="#sec-ch13-kmeans-choose" id="toc-sec-ch13-kmeans-choose" class="nav-link" data-scroll-target="#sec-ch13-kmeans-choose"><span class="header-section-number">13.3</span> Selecting the Optimal Number of Clusters</a></li>
+  <li>
+<a href="#sec-ch13-case-study" id="toc-sec-ch13-case-study" class="nav-link" data-scroll-target="#sec-ch13-case-study"><span class="header-section-number">13.4</span> Case Study: Segmenting Cereal Brands by Nutrition</a>
+  <ul class="collapse">
+<li><a href="#overview-of-the-dataset" id="toc-overview-of-the-dataset" class="nav-link" data-scroll-target="#overview-of-the-dataset"><span class="header-section-number">13.4.1</span> Overview of the Dataset</a></li>
+  <li><a href="#data-preprocessing" id="toc-data-preprocessing" class="nav-link" data-scroll-target="#data-preprocessing"><span class="header-section-number">13.4.2</span> Data Preprocessing</a></li>
+  <li><a href="#selecting-the-number-of-clusters" id="toc-selecting-the-number-of-clusters" class="nav-link" data-scroll-target="#selecting-the-number-of-clusters"><span class="header-section-number">13.4.3</span> Selecting the Number of Clusters</a></li>
+  <li><a href="#performing-k-means-clustering" id="toc-performing-k-means-clustering" class="nav-link" data-scroll-target="#performing-k-means-clustering"><span class="header-section-number">13.4.4</span> Performing K-means Clustering</a></li>
+  <li><a href="#reflections-and-takeaways" id="toc-reflections-and-takeaways" class="nav-link" data-scroll-target="#reflections-and-takeaways"><span class="header-section-number">13.4.5</span> Reflections and Takeaways</a></li>
+  </ul>
+</li>
+  <li><a href="#chapter-summary-and-takeaways" id="toc-chapter-summary-and-takeaways" class="nav-link" data-scroll-target="#chapter-summary-and-takeaways"><span class="header-section-number">13.5</span> Chapter Summary and Takeaways</a></li>
+  <li>
+<a href="#sec-ch13-exercises" id="toc-sec-ch13-exercises" class="nav-link" data-scroll-target="#sec-ch13-exercises"><span class="header-section-number">13.6</span> Exercises</a>
+  <ul class="collapse">
+<li><a href="#conceptual-questions" id="toc-conceptual-questions" class="nav-link" data-scroll-target="#conceptual-questions">Conceptual questions</a></li>
+  <li><a href="#practical-exercises" id="toc-practical-exercises" class="nav-link" data-scroll-target="#practical-exercises">Practical Exercises</a></li>
+  </ul>
+</li>
+  </ul><div class="toc-actions"><ul><li><a href="https://github.com/RezaMoammadi/Book-Data-Science/edit/main/13-Clustering.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/RezaMoammadi/Book-Data-Science/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title"><span id="sec-ch13-clustering" class="quarto-section-identifier"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Clustering for Insight: Segmenting Data Without Labels</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header><p>Imagine walking into a grocery store and seeing shelves lined with cereal boxes. Without reading a single label, you might instinctively group them by shape, size, or color. Clustering algorithms aim to replicate this kind of human intuition—grouping similar items based on shared characteristics, even when no categories are given.</p>
+<p>How do apps know your habits when you never told them? From fitness trackers that sort users into behavioral types to streaming platforms that recommend shows tailored to your taste, machines often uncover structure in data without relying on labels. This process—known as <em>clustering</em>—enables systems to learn from raw, unlabeled information.</p>
+<p>Clustering is a form of <em>unsupervised learning</em> that groups similar data points based on measurable traits, rather than predefined categories. It powers real-world applications such as customer segmentation, gene family discovery, and content recommendation. By organizing complex information into meaningful groups, clustering helps machines detect patterns and uncover structure hidden in the data.</p>
+<p>Unlike classification, which predicts known labels (e.g., spam vs.&nbsp;not spam), clustering is <em>exploratory</em>. It reveals <em>hidden structures</em>—patterns that may not be immediately visible but are statistically meaningful. As such, clustering is a key part of the data scientist’s toolkit when the objective is <em>discovery</em> rather than prediction.</p>
+<p>Clustering is widely used across domains, including customer segmentation for identifying distinct user groups for personalized marketing, market research for understanding consumer behavior to improve product recommendations, document organization for automatically grouping large text collections by topic or theme, and bioinformatics for uncovering functional relationships between genes through expression pattern similarity.</p>
+<section id="what-this-chapter-covers" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="what-this-chapter-covers">What This Chapter Covers</h3>
+<p>In this chapter, we introduce our first unsupervised learning technique—clustering—and continue progressing through the Data Science Workflow introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a>. So far, our focus has been on supervised learning, applying models for classification and regression tasks, including neural networks (Chapter <a href="12-Neural-networks.html" class="quarto-xref"><span>12</span></a>), tree-based methods (Chapter <a href="11-Tree-based-models.html" class="quarto-xref"><span>11</span></a>), and regression analysis (Chapter <a href="10-Regression.html" class="quarto-xref"><span>10</span></a>).</p>
+<p>Clustering now opens the door to data exploration when no labels are available—shifting our mindset from prediction to pattern discovery.</p>
+<p>This chapter introduces the foundations of clustering, including:</p>
+<ul>
+<li><p>The core idea of clustering and how it differs from classification,</p></li>
+<li><p>How similarity is defined and measured in clustering algorithms,</p></li>
+<li><p><em>K-means clustering</em>, one of the most intuitive and widely used methods,</p></li>
+<li><p>A hands-on case study: segmenting cereals based on their nutritional profiles.</p></li>
+</ul>
+<p>By the end of the chapter, you will be able to apply clustering techniques to real-world datasets, evaluate cluster quality, and uncover meaningful patterns from unlabeled data.</p>
+</section><section id="sec-ch13-cluster-what" class="level2" data-number="13.1"><h2 data-number="13.1" class="anchored" data-anchor-id="sec-ch13-cluster-what">
+<span class="header-section-number">13.1</span> What is Cluster Analysis?</h2>
+<p>Clustering is an unsupervised learning technique that organizes data into <em>clusters</em> of similar observations. Unlike supervised learning, which relies on labeled data, clustering is <em>exploratory</em> in nature, aiming to uncover <em>hidden patterns</em> or <em>latent structure</em> in raw data. A good clustering groups data points so that members of the same cluster are highly similar to one another, while those in different clusters are clearly distinct.</p>
+<p>To better understand what makes clustering unique, it helps to compare it with <em>classification</em>, as introduced in Chapters <a href="7-Classification-kNN.html" class="quarto-xref"><span>7</span></a> and <a href="9-Naive-Bayes.html" class="quarto-xref"><span>9</span></a>. <em>Classification</em> assigns new observations to known categories based on past examples—like identifying an email as spam or not spam. <em>Clustering</em>, by contrast, discovers groupings from unlabeled data. It generates labels rather than predicting existing ones, which is why it is sometimes loosely referred to as <em>unsupervised classification</em>, even though no labels are provided during training. These cluster labels can also be used downstream—for example, as input features for neural networks or tree-based models.</p>
+<p>The core objective of clustering is to ensure <em>high intra-cluster similarity</em> (points in the same cluster are alike) and <em>low inter-cluster similarity</em> (clusters are distinct). This idea is illustrated in <a href="#fig-ch13-cluster-1" class="quarto-xref">Figure&nbsp;<span>13.1</span></a>, where tight, well-separated groups represent an effective clustering.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-cluster-1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-cluster-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch13_cluster_illustration.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-cluster-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.1: Clustering algorithms aim to minimize intra-cluster variation while maximizing inter-cluster separation.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>Beyond helping us explore structure in data, clustering also plays a practical role in broader machine learning workflows. It is often used as a powerful <em>preprocessing tool</em>, summarizing a dataset into a smaller number of representative groups. This can:</p>
+<ul>
+<li><p>Reduce computation time for downstream models,</p></li>
+<li><p>Improve interpretability by simplifying complex data structures, and</p></li>
+<li><p>Enhance predictive performance by transforming raw inputs into structured features.</p></li>
+</ul>
+<p>Before clustering can be applied effectively, the data often need to be preprocessed. Features measured on different scales can distort similarity measures, and categorical variables must be encoded numerically. These steps—such as scaling and one-hot encoding—not only improve algorithm performance but also ensure that the resulting clusters reflect meaningful structure.</p>
+<p>What makes two observations feel similar—and how do machines measure that? Let us break it down in the next section.</p>
+<section id="how-do-clustering-algorithms-measure-similarity" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="how-do-clustering-algorithms-measure-similarity">How Do Clustering Algorithms Measure Similarity?</h3>
+<p>At the heart of clustering lies a fundamental question: <em>How similar are these data points?</em> Clustering algorithms answer this using <em>similarity measures</em>—quantitative tools for assessing how close or far apart two observations are. Choosing the right measure is essential for discovering meaningful clusters.</p>
+<p>For numerical data, one of the most commonly used similarity measures is <em>Euclidean distance</em>—the straight-line distance between two points in space. You may recall this from the <em>k</em>-Nearest Neighbors algorithm (Section <a href="7-Classification-kNN.html#sec-ch7-knn-distance-metrics" class="quarto-xref"><span>7.4</span></a>), where it helped identify the “nearest” neighbors. In clustering, it plays a similar role in grouping nearby observations together.</p>
+<p>The Euclidean distance between two data points <span class="math inline">\(x = (x_1, x_2, \ldots, x_n)\)</span> and <span class="math inline">\(y = (y_1, y_2, \ldots, y_n)\)</span> with <span class="math inline">\(n\)</span> features is calculated as:</p>
+<p><span class="math display">\[
+\text{dist}(x, y) = \sqrt{ \sum_{i=1}^n (x_i - y_i)^2}
+\]</span></p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-euclidean-distance" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-euclidean-distance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="13-Clustering_files/figure-html/fig-ch13-euclidean-distance-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-euclidean-distance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.2: Visual representation of Euclidean distance between two points in 2D space.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>In <a href="#fig-ch13-euclidean-distance" class="quarto-xref">Figure&nbsp;<span>13.2</span></a>, the line connecting Point A (2, 3) and Point B (6, 7) represents their Euclidean distance: <span class="math display">\[
+\text{dist}(A, B) = \sqrt{(6 - 2)^2 + (7 - 3)^2} = \sqrt{32} \approx 5.66.
+\]</span></p>
+<p>While this is easy to visualize in two dimensions, clustering usually takes place in much higher dimensions—across dozens or even hundreds of features.</p>
+<p>Before we can meaningfully apply distance-based clustering, we must prepare the data:</p>
+<ul>
+<li><p><em>Feature scaling</em> (e.g., min-max scaling) ensures that no variable dominates the calculation simply because of its unit or range.</p></li>
+<li><p><em>Categorical variables</em> must be numerically encoded (e.g., with one-hot encoding) to be included in distance computations.</p></li>
+</ul>
+<p>Without these steps, even a good algorithm may find <em>spurious patterns</em> or miss <em>real ones</em>. Getting similarity right is the foundation of meaningful clustering.</p>
+<p>Other similarity measures, such as <em>Manhattan distance</em> or <em>cosine similarity</em>, are also used in specific contexts—but Euclidean distance remains the default for many clustering tasks.</p>
+</section></section><section id="sec-ch13-kmeans" class="level2" data-number="13.2"><h2 data-number="13.2" class="anchored" data-anchor-id="sec-ch13-kmeans">
+<span class="header-section-number">13.2</span> K-means Clustering</h2>
+<p>How does an algorithm decide which points belong together? K-means clustering answers this by iteratively grouping observations into <span class="math inline">\(k\)</span> clusters, where each group contains data points that are similar to one another. The algorithm updates the cluster assignments and centers until the structure stabilizes, resulting in a set of well-separated clusters.</p>
+<p>The K-means algorithm requires the user to specify the number of clusters, <span class="math inline">\(k\)</span>, in advance. It proceeds through the following steps:</p>
+<ol type="1">
+<li><p><em>Initialize:</em> Randomly select <span class="math inline">\(k\)</span> data points as initial cluster centers.</p></li>
+<li><p><em>Assign:</em> Assign each data point to the nearest center based on distance.</p></li>
+<li><p><em>Update:</em> Recalculate each cluster’s centroid (mean of its assigned points).</p></li>
+<li><p><em>Repeat:</em> Iterate steps 2 and 3 until no data points change clusters.</p></li>
+</ol>
+<p>Although K-means is simple and efficient, it has limitations. The final clusters depend heavily on the initial choice of cluster centers, meaning different runs of the algorithm may produce different results. In addition, K-means assumes that clusters are spherical and of similar size, which may not always hold in real-world datasets. It is also sensitive to outliers, which can distort centroids and assignments.</p>
+<p>To illustrate how K-means works, consider a dataset with 50 records and two features, <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span>, as shown in <a href="#fig-ch13-example-1" class="quarto-xref">Figure&nbsp;<span>13.3</span></a>. The task is to partition the data into three clusters.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-example-1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-example-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch13_example_fig_1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:60.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-example-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.3: Scatter plot of 50 data points with two features, <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span>, used as the starting point for K-means clustering.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>In the first step, three data points are randomly selected as initial cluster centers (red stars), shown in the left panel of <a href="#fig-ch13-example-2" class="quarto-xref">Figure&nbsp;<span>13.4</span></a>. Each data point is then assigned to the nearest cluster, forming three groups labeled in blue (Cluster A), green (Cluster B), and orange (Cluster C). The right panel of the figure shows these initial assignments. The dashed lines depict the Voronoi diagram, which partitions the space into regions closest to each center.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-example-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-example-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch13_example_fig_2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-example-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.4: First iteration of K-means clustering. Left panel shows randomly initialized cluster centers (red stars); right panel shows the resulting initial assignments and Voronoi regions.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>Because K-means is sensitive to initialization, poor placement of the initial cluster centers can lead to suboptimal results. To address this, the <em>K-means++</em> algorithm <span class="citation" data-cites="arthur2006k">(<a href="14-References.html#ref-arthur2006k" role="doc-biblioref">Arthur and Vassilvitskii 2006</a>)</span> was introduced in 2007. It selects starting points in a more informed way, improving convergence and reducing variability across different initializations.</p>
+<p>After the initial assignment, the algorithm enters the update phase. It recalculates the centroid of each cluster—that is, the mean position of all points in the group. The original cluster centers are updated by moving them to these new centroids, as shown in the left panel of <a href="#fig-ch13-example-3" class="quarto-xref">Figure&nbsp;<span>13.5</span></a>. The right panel shows how the Voronoi boundaries shift, causing some points to be reassigned.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-example-3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-example-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch13_example_fig_3.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-example-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.5: Second iteration of K-means clustering. Left panel shows updated cluster centroids; right panel displays new assignments and the corresponding Voronoi regions.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>This process of reassigning points and updating centroids continues iteratively. After another update, some points switch clusters again, leading to a refined partition of the space, as seen in <a href="#fig-ch13-example-4" class="quarto-xref">Figure&nbsp;<span>13.6</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-example-4" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-example-4-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch13_example_fig_4.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-example-4-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.6: Third iteration of K-means clustering. Cluster centroids and point assignments are updated again as the algorithm continues refining the groupings.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The algorithm continues until no more data points switch clusters. At this point, it has converged, and the final clusters are established, as shown in <a href="#fig-ch13-example-5" class="quarto-xref">Figure&nbsp;<span>13.7</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-example-5" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-example-5-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch13_example_fig_5.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:45.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-example-5-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.7: Final iteration of K-means clustering. Each data point is assigned to a stable cluster after convergence.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>Once clustering is complete, the results can be summarized in two ways:</p>
+<ul>
+<li><p><em>Cluster assignments:</em> Each data point is labeled as belonging to Cluster A, B, or C.</p></li>
+<li><p><em>Centroid coordinates:</em> The final positions of the cluster centers can be used as representative points.</p></li>
+</ul>
+<p>These centroids are particularly useful in applications such as customer segmentation, image compression, and document clustering, where the goal is to reduce complexity while preserving meaningful structure.</p>
+<p>This simple example illustrates the core mechanics of K-means. But choosing how many clusters to use—our next topic—is just as critical to achieving meaningful results.</p>
+</section><section id="sec-ch13-kmeans-choose" class="level2" data-number="13.3"><h2 data-number="13.3" class="anchored" data-anchor-id="sec-ch13-kmeans-choose">
+<span class="header-section-number">13.3</span> Selecting the Optimal Number of Clusters</h2>
+<p>A central challenge in applying K-means clustering is determining the appropriate number of clusters, <span class="math inline">\(k\)</span>. This choice directly affects the outcome: too few clusters may obscure important structure, while too many may overfit the data and lead to fragmentation. Unlike supervised learning—where performance metrics such as accuracy or AUC guide model selection—clustering lacks an external ground truth, making the selection of <span class="math inline">\(k\)</span> inherently more subjective.</p>
+<p>In practice, domain knowledge can offer initial guidance. For instance, when clustering films, the number of well-established genres might suggest a reasonable starting point. In marketing, teams may set <span class="math inline">\(k = 3\)</span> if they aim to develop three targeted strategies. Similarly, logistical constraints—such as seating capacity at a conference—may dictate the desired number of groups. However, in many cases, no natural grouping is evident, and data-driven approaches are needed to inform the decision.</p>
+<p>A widely used heuristic is the <em>elbow method</em>, which examines how within-cluster variation evolves as <span class="math inline">\(k\)</span> increases. As additional clusters are introduced, the average similarity within clusters improves—up to a point. Beyond that, the marginal gain becomes negligible. The objective is to identify this point of diminishing returns, known as the <em>elbow</em>.</p>
+<p>This concept is illustrated in <a href="#fig-ch13-elbow" class="quarto-xref">Figure&nbsp;<span>13.8</span></a>, where the total within-cluster sum of squares (WCSS) is plotted against the number of clusters. The “elbow point”—a bend in the curve—suggests a reasonable choice for <span class="math inline">\(k\)</span> that balances simplicity with explanatory power.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-elbow" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch13_elbow.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number of clusters and within-cluster variation, helping to identify an appropriate value for <span class="math inline">\(k\)</span>.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>While the elbow method is accessible and visually intuitive, it is not without limitations. Some datasets yield no clear inflection point, and evaluating many values of <span class="math inline">\(k\)</span> can become computationally demanding in large-scale applications.</p>
+<p>Alternative approaches can supplement or refine this decision:</p>
+<ul>
+<li><p><em>Silhouette Score:</em> Quantifies how well each data point fits within its assigned cluster compared to others. Higher values indicate more coherent clusters.</p></li>
+<li><p><em>Gap Statistic:</em> Compares the clustering result to that expected under a null reference distribution, helping assess whether structure exists at all.</p></li>
+<li><p><em>Performance in downstream tasks:</em> When clustering is used as a preprocessing step—such as for customer segmentation—different values of <span class="math inline">\(k\)</span> can be evaluated based on their impact on a subsequent predictive model.</p></li>
+</ul>
+<p>Ultimately, the goal is not necessarily to find a mathematically optimal <span class="math inline">\(k\)</span>, but to identify a clustering solution that is both interpretable and practically useful. Clustering is frequently employed in exploratory analysis, and observing how results change across values of <span class="math inline">\(k\)</span> can itself be informative. Stable groupings that persist suggest meaningful structure; volatile groupings may reflect ambiguity in the data.</p>
+<p>In the next section, we apply these ideas in practice using a real-world dataset. We explore how domain knowledge, visualization, and iterative experimentation can jointly inform the choice of <span class="math inline">\(k\)</span> in applied settings.</p>
+</section><section id="sec-ch13-case-study" class="level2" data-number="13.4"><h2 data-number="13.4" class="anchored" data-anchor-id="sec-ch13-case-study">
+<span class="header-section-number">13.4</span> Case Study: Segmenting Cereal Brands by Nutrition</h2>
+<p>Why do some cereals end up on the “healthy” shelf while others are marketed to kids? Behind such decisions lies data-driven product segmentation. In this case study, we use <em>K-means clustering</em> to uncover meaningful groupings based on nutritional content. Using the <em>cereal</em> dataset from the <strong>liver</strong> package, we cluster 77 cereal brands using variables such as calories, fat, protein, and sugar. While simplified, this example demonstrates how unsupervised learning techniques can support product design, marketing strategy, and consumer targeting.</p>
+<p>This case study provides a focused, real-world example of how clustering works in practice—giving you hands-on experience applying K-means in <strong>R</strong>.</p>
+<section id="overview-of-the-dataset" class="level3" data-number="13.4.1"><h3 data-number="13.4.1" class="anchored" data-anchor-id="overview-of-the-dataset">
+<span class="header-section-number">13.4.1</span> Overview of the Dataset</h3>
+<p>What do breakfast cereals reveal about nutritional marketing and consumer preferences? The <em>cereal</em> dataset offers a compact but information-rich glimpse into the world of packaged food products. It includes 77 breakfast cereals from major brands, described by 16 variables capturing nutritional content, product characteristics, and shelf placement. The dataset is included in the <strong>liver</strong> package and can be loaded with:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://www.uva.nl/profile/a.mohammadi">liver</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">cereal</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To view the structure of the dataset:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(cereal)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>   <span class="st">'data.frame'</span><span class="sc">:</span>    <span class="dv">77</span> obs. of  <span class="dv">16</span> variables<span class="sc">:</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="er">$</span> name    <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">77</span> levels <span class="st">"100% Bran"</span>,<span class="st">"100% Natural Bran"</span>,..<span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span> <span class="dv">5</span> <span class="dv">6</span> <span class="dv">7</span> <span class="dv">8</span> <span class="dv">9</span> <span class="dv">10</span> ...</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> manuf   <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">7</span> levels <span class="st">"A"</span>,<span class="st">"G"</span>,<span class="st">"K"</span>,<span class="st">"N"</span>,..<span class="sc">:</span> <span class="dv">4</span> <span class="dv">6</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">7</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">7</span> <span class="dv">5</span> ...</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> type    <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"cold"</span>,<span class="st">"hot"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> ...</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> calories<span class="sc">:</span> int  <span class="dv">70</span> <span class="dv">120</span> <span class="dv">70</span> <span class="dv">50</span> <span class="dv">110</span> <span class="dv">110</span> <span class="dv">110</span> <span class="dv">130</span> <span class="dv">90</span> <span class="dv">90</span> ...</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> protein <span class="sc">:</span> int  <span class="dv">4</span> <span class="dv">3</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">3</span> ...</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> fat     <span class="sc">:</span> int  <span class="dv">1</span> <span class="dv">5</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">0</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">0</span> ...</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> sodium  <span class="sc">:</span> int  <span class="dv">130</span> <span class="dv">15</span> <span class="dv">260</span> <span class="dv">140</span> <span class="dv">200</span> <span class="dv">180</span> <span class="dv">125</span> <span class="dv">210</span> <span class="dv">200</span> <span class="dv">210</span> ...</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> fiber   <span class="sc">:</span> num  <span class="dv">10</span> <span class="dv">2</span> <span class="dv">9</span> <span class="dv">14</span> <span class="dv">1</span> <span class="fl">1.5</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">5</span> ...</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> carbo   <span class="sc">:</span> num  <span class="dv">5</span> <span class="dv">8</span> <span class="dv">7</span> <span class="dv">8</span> <span class="dv">14</span> <span class="fl">10.5</span> <span class="dv">11</span> <span class="dv">18</span> <span class="dv">15</span> <span class="dv">13</span> ...</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> sugars  <span class="sc">:</span> int  <span class="dv">6</span> <span class="dv">8</span> <span class="dv">5</span> <span class="dv">0</span> <span class="dv">8</span> <span class="dv">10</span> <span class="dv">14</span> <span class="dv">8</span> <span class="dv">6</span> <span class="dv">5</span> ...</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> potass  <span class="sc">:</span> int  <span class="dv">280</span> <span class="dv">135</span> <span class="dv">320</span> <span class="dv">330</span> <span class="sc">-</span><span class="dv">1</span> <span class="dv">70</span> <span class="dv">30</span> <span class="dv">100</span> <span class="dv">125</span> <span class="dv">190</span> ...</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> vitamins<span class="sc">:</span> int  <span class="dv">25</span> <span class="dv">0</span> <span class="dv">25</span> <span class="dv">25</span> <span class="dv">25</span> <span class="dv">25</span> <span class="dv">25</span> <span class="dv">25</span> <span class="dv">25</span> <span class="dv">25</span> ...</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> shelf   <span class="sc">:</span> int  <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">1</span> <span class="dv">3</span> ...</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> weight  <span class="sc">:</span> num  <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="fl">1.33</span> <span class="dv">1</span> <span class="dv">1</span> ...</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> cups    <span class="sc">:</span> num  <span class="fl">0.33</span> <span class="dv">1</span> <span class="fl">0.33</span> <span class="fl">0.5</span> <span class="fl">0.75</span> <span class="fl">0.75</span> <span class="dv">1</span> <span class="fl">0.75</span> <span class="fl">0.67</span> <span class="fl">0.67</span> ...</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> rating  <span class="sc">:</span> num  <span class="fl">68.4</span> <span class="dv">34</span> <span class="fl">59.4</span> <span class="fl">93.7</span> <span class="fl">34.4</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Here is an overview of the key variables:</p>
+<ul>
+<li>
+<code>name</code>: Name of the cereal (categorical-nominal).</li>
+<li>
+<code>manuf</code>: Manufacturer (categorical-nominal).</li>
+<li>
+<code>type</code>: Cereal type—hot or cold (categorical-binary).</li>
+<li>
+<code>calories</code>: Calories per serving (numerical).</li>
+<li>
+<code>protein</code>: Grams of protein per serving (numerical).</li>
+<li>
+<code>fat</code>: Grams of fat per serving (numerical).</li>
+<li>
+<code>sodium</code>: Milligrams of sodium per serving (numerical).</li>
+<li>
+<code>fiber</code>: Grams of dietary fiber per serving (numerical).</li>
+<li>
+<code>carbo</code>: Grams of carbohydrates per serving (numerical).</li>
+<li>
+<code>sugars</code>: Grams of sugar per serving (numerical).</li>
+<li>
+<code>potass</code>: Milligrams of potassium per serving (numerical).</li>
+<li>
+<code>vitamins</code>: Percentage of recommended daily vitamins (categorical-ordinal: 0, 25, or 100).</li>
+<li>
+<code>shelf</code>: Display shelf position in stores (categorical-ordinal: 1, 2, or 3).</li>
+<li>
+<code>weight</code>: Weight of one serving in ounces (numerical).</li>
+<li>
+<code>cups</code>: Number of cups per serving (numerical).</li>
+<li>
+<code>rating</code>: Cereal rating score (numerical).</li>
+</ul>
+<p>The dataset combines several feature types that reflect how real-world data is structured. It includes one binary variable (<code>type</code>), two nominal variables (<code>name</code> and <code>manuf</code>), and two ordinal variables (<code>vitamins</code> and <code>shelf</code>). The remaining variables are continuous numerical measures. Understanding these distinctions is essential for properly preparing the data for clustering.</p>
+<p>Before clustering, we need to prepare the data by addressing missing values, selecting relevant features, and applying scaling—steps that ensure the algorithm focuses on meaningful nutritional differences rather than artifacts of data format.</p>
+</section><section id="data-preprocessing" class="level3" data-number="13.4.2"><h3 data-number="13.4.2" class="anchored" data-anchor-id="data-preprocessing">
+<span class="header-section-number">13.4.2</span> Data Preprocessing</h3>
+<p>What makes some cereals more alike than others? Before we can explore that question with clustering, we must ensure that the data reflects meaningful similarities. This step corresponds to the second stage of the <em>Data Science Workflow</em> (<a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>): Data Preparation (Section <a href="3-Data-preparation.html" class="quarto-xref"><span>3</span></a>). Effective clustering depends on distance calculations, which in turn rely on clean and consistently scaled inputs. Data preprocessing is therefore essential—especially when working with real-world datasets that often contain inconsistencies or hidden assumptions.</p>
+<p>A summary of the cereal dataset reveals anomalous values in the <code>sugars</code>, <code>carbo</code>, and <code>potass</code> variables, where some entries are set to <code>-1</code>:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cereal)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>                           name    manuf    type       calories        protein           fat            sodium     </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="dv">100</span>% Bran                <span class="sc">:</span> <span class="dv">1</span>   A<span class="sc">:</span> <span class="dv">1</span>   cold<span class="sc">:</span><span class="dv">74</span>   Min.   <span class="sc">:</span> <span class="fl">50.0</span>   Min.   <span class="sc">:</span><span class="fl">1.000</span>   Min.   <span class="sc">:</span><span class="fl">0.000</span>   Min.   <span class="sc">:</span>  <span class="fl">0.0</span>  </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="dv">100</span>% Natural Bran        <span class="sc">:</span> <span class="dv">1</span>   G<span class="sc">:</span><span class="dv">22</span>   hot <span class="sc">:</span> <span class="dv">3</span>   <span class="dv">1</span>st Qu.<span class="sc">:</span><span class="fl">100.0</span>   <span class="dv">1</span>st Qu.<span class="sc">:</span><span class="fl">2.000</span>   <span class="dv">1</span>st Qu.<span class="sc">:</span><span class="fl">0.000</span>   <span class="dv">1</span>st Qu.<span class="sc">:</span><span class="fl">130.0</span>  </span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    All<span class="sc">-</span>Bran                 <span class="sc">:</span> <span class="dv">1</span>   K<span class="sc">:</span><span class="dv">23</span>             Median <span class="sc">:</span><span class="fl">110.0</span>   Median <span class="sc">:</span><span class="fl">3.000</span>   Median <span class="sc">:</span><span class="fl">1.000</span>   Median <span class="sc">:</span><span class="fl">180.0</span>  </span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    All<span class="sc">-</span>Bran with Extra Fiber<span class="sc">:</span> <span class="dv">1</span>   N<span class="sc">:</span> <span class="dv">6</span>             Mean   <span class="sc">:</span><span class="fl">106.9</span>   Mean   <span class="sc">:</span><span class="fl">2.545</span>   Mean   <span class="sc">:</span><span class="fl">1.013</span>   Mean   <span class="sc">:</span><span class="fl">159.7</span>  </span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    Almond Delight           <span class="sc">:</span> <span class="dv">1</span>   P<span class="sc">:</span> <span class="dv">9</span>             <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="fl">110.0</span>   <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="fl">3.000</span>   <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="fl">2.000</span>   <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="fl">210.0</span>  </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    Apple Cinnamon Cheerios  <span class="sc">:</span> <span class="dv">1</span>   Q<span class="sc">:</span> <span class="dv">8</span>             Max.   <span class="sc">:</span><span class="fl">160.0</span>   Max.   <span class="sc">:</span><span class="fl">6.000</span>   Max.   <span class="sc">:</span><span class="fl">5.000</span>   Max.   <span class="sc">:</span><span class="fl">320.0</span>  </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    (Other)                  <span class="sc">:</span><span class="dv">71</span>   R<span class="sc">:</span> <span class="dv">8</span>                                                                            </span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        fiber            carbo          sugars           potass          vitamins          shelf           weight    </span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    Min.   <span class="sc">:</span> <span class="fl">0.000</span>   Min.   <span class="sc">:-</span><span class="fl">1.0</span>   Min.   <span class="sc">:-</span><span class="fl">1.000</span>   Min.   <span class="sc">:</span> <span class="sc">-</span><span class="fl">1.00</span>   Min.   <span class="sc">:</span>  <span class="fl">0.00</span>   Min.   <span class="sc">:</span><span class="fl">1.000</span>   Min.   <span class="sc">:</span><span class="fl">0.50</span>  </span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span>st Qu.<span class="sc">:</span> <span class="fl">1.000</span>   <span class="dv">1</span>st Qu.<span class="sc">:</span><span class="fl">12.0</span>   <span class="dv">1</span>st Qu.<span class="sc">:</span> <span class="fl">3.000</span>   <span class="dv">1</span>st Qu.<span class="sc">:</span> <span class="fl">40.00</span>   <span class="dv">1</span>st Qu.<span class="sc">:</span> <span class="fl">25.00</span>   <span class="dv">1</span>st Qu.<span class="sc">:</span><span class="fl">1.000</span>   <span class="dv">1</span>st Qu.<span class="sc">:</span><span class="fl">1.00</span>  </span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    Median <span class="sc">:</span> <span class="fl">2.000</span>   Median <span class="sc">:</span><span class="fl">14.0</span>   Median <span class="sc">:</span> <span class="fl">7.000</span>   Median <span class="sc">:</span> <span class="fl">90.00</span>   Median <span class="sc">:</span> <span class="fl">25.00</span>   Median <span class="sc">:</span><span class="fl">2.000</span>   Median <span class="sc">:</span><span class="fl">1.00</span>  </span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    Mean   <span class="sc">:</span> <span class="fl">2.152</span>   Mean   <span class="sc">:</span><span class="fl">14.6</span>   Mean   <span class="sc">:</span> <span class="fl">6.922</span>   Mean   <span class="sc">:</span> <span class="fl">96.08</span>   Mean   <span class="sc">:</span> <span class="fl">28.25</span>   Mean   <span class="sc">:</span><span class="fl">2.208</span>   Mean   <span class="sc">:</span><span class="fl">1.03</span>  </span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="dv">3</span>rd Qu.<span class="sc">:</span> <span class="fl">3.000</span>   <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="fl">17.0</span>   <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="fl">11.000</span>   <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="fl">120.00</span>   <span class="dv">3</span>rd Qu.<span class="sc">:</span> <span class="fl">25.00</span>   <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="fl">3.000</span>   <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="fl">1.00</span>  </span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    Max.   <span class="sc">:</span><span class="fl">14.000</span>   Max.   <span class="sc">:</span><span class="fl">23.0</span>   Max.   <span class="sc">:</span><span class="fl">15.000</span>   Max.   <span class="sc">:</span><span class="fl">330.00</span>   Max.   <span class="sc">:</span><span class="fl">100.00</span>   Max.   <span class="sc">:</span><span class="fl">3.000</span>   Max.   <span class="sc">:</span><span class="fl">1.50</span>  </span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>                                                                                                                     </span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>         cups           rating     </span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    Min.   <span class="sc">:</span><span class="fl">0.250</span>   Min.   <span class="sc">:</span><span class="fl">18.04</span>  </span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span>st Qu.<span class="sc">:</span><span class="fl">0.670</span>   <span class="dv">1</span>st Qu.<span class="sc">:</span><span class="fl">33.17</span>  </span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    Median <span class="sc">:</span><span class="fl">0.750</span>   Median <span class="sc">:</span><span class="fl">40.40</span>  </span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    Mean   <span class="sc">:</span><span class="fl">0.821</span>   Mean   <span class="sc">:</span><span class="fl">42.67</span>  </span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="fl">1.000</span>   <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="fl">50.83</span>  </span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    Max.   <span class="sc">:</span><span class="fl">1.500</span>   Max.   <span class="sc">:</span><span class="fl">93.70</span>  </span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>   </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>As discussed in Section <a href="3-Data-preparation.html#sec-ch3-missing-values" class="quarto-xref"><span>3.8</span></a>, it is common for datasets to use codes like <code>-1</code> or <code>999</code> to represent missing or unknown values—especially for attributes that should be non-negative. Since negative values are not valid for nutritional measurements, we treat these entries as missing:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>cereal[cereal <span class="sc">==</span> <span class="sc">-</span><span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">find.na</span>(cereal)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        row col</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">1</span>,]  <span class="dv">58</span>   <span class="dv">9</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">2</span>,]  <span class="dv">58</span>  <span class="dv">10</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">3</span>,]   <span class="dv">5</span>  <span class="dv">11</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">4</span>,]  <span class="dv">21</span>  <span class="dv">11</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The <code><a href="https://rdrr.io/pkg/liver/man/find.na.html">find.na()</a></code> function from the <strong>liver</strong> package reports the locations of missing values. This dataset contains 4 such entries, with the first one appearing in row 58 and column 9.</p>
+<p>To handle missing values in the <em>cereal</em> dataset, we apply <em>predictive imputation</em> using random forests, a method introduced in Section <a href="3-Data-preparation.html#sec-ch3-missing-values" class="quarto-xref"><span>3.8</span></a>. This approach leverages the relationships among observed variables to estimate missing entries. We use the <code>mice()</code> function from the <strong>mice</strong> package that creates a predictive model for each variable with missing values, using the other variables as predictors. In this example, we use the <code>"rf"</code> method to perform random forest imputation and we generate a single imputed dataset using one iteration and a small number of trees for demonstration purposes:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mice)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>imp <span class="ot">&lt;-</span> <span class="fu">mice</span>(cereal, <span class="at">method =</span> <span class="st">"rf"</span>, <span class="at">ntree =</span> <span class="dv">3</span>, <span class="at">m =</span> <span class="dv">1</span>, <span class="at">maxit =</span> <span class="dv">1</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    iter imp variable</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>     <span class="dv">1</span>   <span class="dv">1</span>  carbo  sugars  potass</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>cereal <span class="ot">&lt;-</span> <span class="fu">complete</span>(imp)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">find.na</span>(cereal)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">1</span>] <span class="st">" No missing values (NA) in the dataset."</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The <code>complete()</code> function extracts the imputed dataset from the <code>mice</code> object. By default, it returns the first completed version when only one is created. The <code>mice()</code> function also supports a range of other imputation methods, including mean imputation (<code>"mean"</code>), predictive mean matching (<code>"pmm"</code>), and classification and regression trees (<code>"cart"</code>), allowing users to tailor the imputation strategy to their data and modeling needs.</p>
+<p>The resulting <code>cereal</code> dataset contains no missing values, as confirmed by the <code><a href="https://rdrr.io/pkg/liver/man/find.na.html">find.na()</a></code> function. This imputation step ensures that subsequent clustering analyses are not biased by incomplete records.</p>
+<p>After imputation, no missing values remain, and the dataset is complete and ready for clustering. We now select the variables that will be used to group cereals. Three variables are excluded based on their role and structure:</p>
+<ul>
+<li><p><code>name</code> is an identifier, functioning like an ID. It carries no analytical value for clustering.</p></li>
+<li><p><code>manuf</code> is a nominal variable with seven categories. Encoding it would require six dummy variables, which may inflate dimensionality and distort distance metrics.</p></li>
+<li><p><code>rating</code> reflects a subjective outcome (e.g., taste), rather than a feature of the cereal’s composition. It is more appropriate as a target variable in supervised learning than as an input for clustering.</p></li>
+</ul>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">selected_variables</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">cereal</span><span class="op">)</span><span class="op">[</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">16</span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">cereal_subset</span> <span class="op">&lt;-</span> <span class="va">cereal</span><span class="op">[</span>, <span class="va">selected_variables</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Because the numerical features span different scales (e.g., milligrams of sodium vs.&nbsp;grams of fiber), we apply min-max normalization using the <code><a href="https://rdrr.io/pkg/liver/man/minmax.html">minmax()</a></code> function from the <strong>liver</strong> package:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>cereal_mm <span class="ot">&lt;-</span> <span class="fu">minmax</span>(cereal_subset, <span class="at">col =</span> <span class="st">"all"</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(cereal_mm)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>   <span class="st">'data.frame'</span><span class="sc">:</span>    <span class="dv">77</span> obs. of  <span class="dv">13</span> variables<span class="sc">:</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="er">$</span> type    <span class="sc">:</span> num  <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> ...</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> calories<span class="sc">:</span> num  <span class="fl">0.182</span> <span class="fl">0.636</span> <span class="fl">0.182</span> <span class="dv">0</span> <span class="fl">0.545</span> ...</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> protein <span class="sc">:</span> num  <span class="fl">0.6</span> <span class="fl">0.4</span> <span class="fl">0.6</span> <span class="fl">0.6</span> <span class="fl">0.2</span> <span class="fl">0.2</span> <span class="fl">0.2</span> <span class="fl">0.4</span> <span class="fl">0.2</span> <span class="fl">0.4</span> ...</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> fat     <span class="sc">:</span> num  <span class="fl">0.2</span> <span class="dv">1</span> <span class="fl">0.2</span> <span class="dv">0</span> <span class="fl">0.4</span> <span class="fl">0.4</span> <span class="dv">0</span> <span class="fl">0.4</span> <span class="fl">0.2</span> <span class="dv">0</span> ...</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> sodium  <span class="sc">:</span> num  <span class="fl">0.4062</span> <span class="fl">0.0469</span> <span class="fl">0.8125</span> <span class="fl">0.4375</span> <span class="fl">0.625</span> ...</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> fiber   <span class="sc">:</span> num  <span class="fl">0.7143</span> <span class="fl">0.1429</span> <span class="fl">0.6429</span> <span class="dv">1</span> <span class="fl">0.0714</span> ...</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> carbo   <span class="sc">:</span> num  <span class="dv">0</span> <span class="fl">0.167</span> <span class="fl">0.111</span> <span class="fl">0.167</span> <span class="fl">0.5</span> ...</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> sugars  <span class="sc">:</span> num  <span class="fl">0.4</span> <span class="fl">0.533</span> <span class="fl">0.333</span> <span class="dv">0</span> <span class="fl">0.533</span> ...</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> potass  <span class="sc">:</span> num  <span class="fl">0.841</span> <span class="fl">0.381</span> <span class="fl">0.968</span> <span class="dv">1</span> <span class="fl">0.238</span> ...</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> vitamins<span class="sc">:</span> num  <span class="fl">0.25</span> <span class="dv">0</span> <span class="fl">0.25</span> <span class="fl">0.25</span> <span class="fl">0.25</span> <span class="fl">0.25</span> <span class="fl">0.25</span> <span class="fl">0.25</span> <span class="fl">0.25</span> <span class="fl">0.25</span> ...</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> shelf   <span class="sc">:</span> num  <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">0</span> <span class="fl">0.5</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">1</span> ...</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> weight  <span class="sc">:</span> num  <span class="fl">0.5</span> <span class="fl">0.5</span> <span class="fl">0.5</span> <span class="fl">0.5</span> <span class="fl">0.5</span> <span class="fl">0.5</span> <span class="fl">0.5</span> <span class="fl">0.83</span> <span class="fl">0.5</span> <span class="fl">0.5</span> ...</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> cups    <span class="sc">:</span> num  <span class="fl">0.064</span> <span class="fl">0.6</span> <span class="fl">0.064</span> <span class="fl">0.2</span> <span class="fl">0.4</span> <span class="fl">0.4</span> <span class="fl">0.6</span> <span class="fl">0.4</span> <span class="fl">0.336</span> <span class="fl">0.336</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To visualize the effect of normalization, we compare the distribution of the <code>sodium</code> variable before and after scaling:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">ggplot</span><span class="op">(</span>data <span class="op">=</span> <span class="va">cereal</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">geom_histogram</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">sodium</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"blue"</span>, fill <span class="op">=</span> <span class="st">"lightblue"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">theme_minimal</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"Before min-max normalization"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggplot</span><span class="op">(</span>data <span class="op">=</span> <span class="va">cereal_mm</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">geom_histogram</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">sodium</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"blue"</span>, fill <span class="op">=</span> <span class="st">"lightblue"</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>    <span class="fu">theme_minimal</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"After min-max normalization"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell quarto-layout-panel" data-layout-ncol="2" data-layout-align="center">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="13-Clustering_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" data-fig-pos="H"></p>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="13-Clustering_files/figure-html/unnamed-chunk-16-2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" data-fig-pos="H"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<p>As shown in the histograms, normalization rescales all features to the <span class="math inline">\([0, 1]\)</span> range. This prevents variables like sodium or potassium—originally measured in large units—from overpowering the clustering process.</p>
+<p>With the dataset cleaned, imputed, and normalized, we are now ready to explore how cereals naturally group together. But first, how many clusters should we use?</p>
+</section><section id="selecting-the-number-of-clusters" class="level3" data-number="13.4.3"><h3 data-number="13.4.3" class="anchored" data-anchor-id="selecting-the-number-of-clusters">
+<span class="header-section-number">13.4.3</span> Selecting the Number of Clusters</h3>
+<p>A key decision in clustering is selecting how many clusters (<span class="math inline">\(k\)</span>) to use. Choosing too few clusters can obscure meaningful groupings, while too many may lead to overfitting or fragmented results. Because clustering is unsupervised, this decision must be guided by internal evaluation methods.</p>
+<p>One widely used approach is the <em>elbow method</em>, which evaluates how the total within-cluster sum of squares (WCSS) decreases as <span class="math inline">\(k\)</span> increases. Initially, adding more clusters significantly reduces WCSS, but beyond a certain point the improvement slows. The “elbow” in the plot—where the rate of decrease flattens—suggests a suitable value for <span class="math inline">\(k\)</span>.</p>
+<p>To create the elbow plot, we use the <code><a href="https://rdrr.io/pkg/factoextra/man/fviz_nbclust.html">fviz_nbclust()</a></code> function from the <strong>factoextra</strong> package. This package provides user-friendly tools for visualizing clustering results and evaluation metrics. The <code><a href="https://rdrr.io/pkg/factoextra/man/fviz_nbclust.html">fviz_nbclust()</a></code> function generates evaluation plots for different values of <span class="math inline">\(k\)</span> based on methods such as WCSS or silhouette width.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://www.sthda.com/english/rpkgs/factoextra">factoextra</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/factoextra/man/fviz_nbclust.html">fviz_nbclust</a></span><span class="op">(</span><span class="va">cereal_mm</span>, <span class="va">kmeans</span>, method <span class="op">=</span> <span class="st">"wss"</span>, k.max <span class="op">=</span> <span class="fl">15</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_vline</a></span><span class="op">(</span>xintercept <span class="op">=</span> <span class="fl">4</span>, linetype <span class="op">=</span> <span class="fl">2</span>, color <span class="op">=</span> <span class="st">"gray"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="13-Clustering_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>As shown in <a href="#fig-ch13-elbow" class="quarto-xref">Figure&nbsp;<span>13.8</span></a>, the WCSS drops sharply for small values of <span class="math inline">\(k\)</span>, but levels off after <span class="math inline">\(k = 4\)</span>. This suggests that four clusters may offer a reasonable balance between model complexity and within-cluster cohesion.</p>
+</section><section id="performing-k-means-clustering" class="level3" data-number="13.4.4"><h3 data-number="13.4.4" class="anchored" data-anchor-id="performing-k-means-clustering">
+<span class="header-section-number">13.4.4</span> Performing K-means Clustering</h3>
+<p>With the number of clusters selected, we now apply the K-means algorithm to segment the cereals into four groups. We use the <code><a href="https://rdrr.io/r/stats/kmeans.html">kmeans()</a></code> function from base <strong>R</strong>, which does not require any additional packages. Its key arguments include the input data (<code>x</code>), the number of clusters (<code>centers</code>), and optional parameters such as the number of random starts (<code>nstart</code>), which helps avoid poor local optima.</p>
+<p>We use <code><a href="https://rdrr.io/r/base/Random.html">set.seed()</a></code> to ensure that the results are reproducible. Since the K-means algorithm involves random initialization of cluster centers, setting the seed guarantees that the same clusters are obtained each time the code is run.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span>  <span class="co"># Ensure reproducibility</span></span>
+<span><span class="va">cereal_kmeans</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html">kmeans</a></span><span class="op">(</span><span class="va">cereal_mm</span>, centers <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The <code><a href="https://rdrr.io/r/stats/kmeans.html">kmeans()</a></code> function returns several useful components, including:</p>
+<ul>
+<li>
+<code>cluster</code>: the cluster assignment for each observation,</li>
+<li>
+<code>centers</code>: the coordinates of the cluster centroids,</li>
+<li>
+<code>size</code>: the number of observations in each cluster,</li>
+<li>
+<code>tot.withinss</code>: the total within-cluster sum of squares (used earlier in the elbow method).</li>
+</ul>
+<p>To check how the observations are distributed across the clusters:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cereal_kmeans<span class="sc">$</span>size</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">1</span>] <span class="dv">36</span> <span class="dv">10</span> <span class="dv">13</span> <span class="dv">18</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The output shows the number of cereals assigned to each cluster, which can help us understand the distribution of products across the four groups.</p>
+<section id="visualizing-the-clusters" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="visualizing-the-clusters">Visualizing the Clusters</h4>
+<p>To gain insight into the clustering results, we use the <code><a href="https://rdrr.io/pkg/factoextra/man/fviz_cluster.html">fviz_cluster()</a></code> function from the <strong>factoextra</strong> package to visualize the four groups:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/factoextra/man/fviz_cluster.html">fviz_cluster</a></span><span class="op">(</span><span class="va">cereal_kmeans</span>, <span class="va">cereal_mm</span>, </span>
+<span>             geom <span class="op">=</span> <span class="st">"point"</span>, </span>
+<span>             ellipse.type <span class="op">=</span> <span class="st">"norm"</span>, </span>
+<span>             palette <span class="op">=</span> <span class="st">"custom_palette"</span>, </span>
+<span>             ggtheme <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_minimal</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="13-Clustering_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The resulting scatter plot displays the cluster structure, with each point representing a cereal. Colors indicate cluster membership, and ellipses represent the standard deviation around each cluster center. The plot is constructed using principal component analysis (PCA), which reduces the high-dimensional feature space to two principal components for visualization. Although some detail is inevitably lost, this projection helps reveal the overall shape and separation of the clusters.</p>
+</section><section id="interpreting-the-results" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="interpreting-the-results">Interpreting the Results</h4>
+<p>The clustering results reveal natural groupings among cereals based on their nutritional composition. For example:</p>
+<ul>
+<li><p>One cluster includes low-sugar, high-fiber cereals that are likely positioned for health-conscious consumers.</p></li>
+<li><p>Another contains high-calorie, high-sugar cereals typically marketed to children.</p></li>
+<li><p>A third represents balanced options with moderate levels of key nutrients.</p></li>
+<li><p>The fourth cluster combines cereals with higher protein or other distinctive profiles.</p></li>
+</ul>
+<p>To examine which cereals belong to a particular cluster (e.g., Cluster 1), we can use:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cereal</span><span class="op">$</span><span class="va">name</span><span class="op">[</span><span class="va">cereal_kmeans</span><span class="op">$</span><span class="va">cluster</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This command returns the names of cereals assigned to Cluster 1, allowing for further inspection and interpretation of that group’s defining features.</p>
+</section></section><section id="reflections-and-takeaways" class="level3" data-number="13.4.5"><h3 data-number="13.4.5" class="anchored" data-anchor-id="reflections-and-takeaways">
+<span class="header-section-number">13.4.5</span> Reflections and Takeaways</h3>
+<p>The cereal clustering analysis illustrates how K-means can be used to segment products based on measurable features—in this case, nutritional content. By combining careful preprocessing, feature scaling, and model evaluation, we identified coherent groupings that reflect distinct product profiles.</p>
+<p>More generally, this example highlights the value of unsupervised learning in discovering hidden patterns when no outcome variable is available. Clustering is widely used in domains such as marketing, health analytics, and customer segmentation, where understanding natural structure in the data leads to better decisions and targeted strategies.</p>
+<p>The process illustrated here—choosing relevant features, selecting the number of clusters, and interpreting results—forms the foundation for applying clustering techniques to other domains. Whether used for segmenting users, detecting anomalies, or grouping documents, clustering provides a flexible tool for uncovering structure and generating insights.</p>
+</section></section><section id="chapter-summary-and-takeaways" class="level2" data-number="13.5"><h2 data-number="13.5" class="anchored" data-anchor-id="chapter-summary-and-takeaways">
+<span class="header-section-number">13.5</span> Chapter Summary and Takeaways</h2>
+<p>In this chapter, we introduced clustering as a fundamental technique for unsupervised learning—where the goal is to group observations based on similarity without using labeled outcomes.</p>
+<p>We focused on the K-means algorithm, one of the most widely used clustering methods. You learned how K-means iteratively partitions data into <span class="math inline">\(k\)</span> clusters by minimizing the within-cluster sum of squares. Selecting an appropriate number of clusters is crucial, and we explored common evaluation methods such as the elbow method.</p>
+<p>We emphasized the importance of proper data preparation, including selecting relevant features, handling missing values, and applying scaling techniques to ensure fair distance calculations.</p>
+<p>Through a case study using the cereal dataset, we demonstrated how to apply K-means in <strong>R</strong>, visualize the resulting clusters, and interpret their meaning in a real-world context. Unlike earlier chapters, we did not partition the dataset into training and testing sets. Since clustering is an unsupervised technique, there is no outcome variable to predict, and evaluation relies on internal measures such as within-cluster variance or silhouette scores.</p>
+<p>This practical application highlighted the value of clustering in uncovering patterns and informing decisions. Clustering is a versatile tool with wide applications—from customer segmentation to product classification and beyond. A solid understanding of its strengths and limitations is essential for every data scientist.</p>
+</section><section id="sec-ch13-exercises" class="level2" data-number="13.6"><h2 data-number="13.6" class="anchored" data-anchor-id="sec-ch13-exercises">
+<span class="header-section-number">13.6</span> Exercises</h2>
+<p>The exercises are grouped into two categories: conceptual questions and practical exercises using the <em>redWines</em> dataset, applying clustering techniques to real-world data.</p>
+<section id="conceptual-questions" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="conceptual-questions">Conceptual questions</h3>
+<ol type="1">
+<li><p>What is clustering, and how does it differ from classification?</p></li>
+<li><p>Explain the concept of similarity measures in clustering. What is the most commonly used distance metric for numerical data?</p></li>
+<li><p>Why is clustering considered an unsupervised learning method?</p></li>
+<li><p>What are some real-world applications of clustering? Name at least three.</p></li>
+<li><p>Define the terms <em>intra-cluster similarity</em> and <em>inter-cluster separation</em>. Why are these important in clustering?</p></li>
+<li><p>How does K-means clustering determine which data points belong to a cluster?</p></li>
+<li><p>Explain the role of centroids in K-means clustering.</p></li>
+<li><p>What happens if the number of clusters <span class="math inline">\(k\)</span> in K-means is chosen too small? What if it is too large?</p></li>
+<li><p>What is the elbow method, and how does it help determine the optimal number of clusters?</p></li>
+<li><p>Why is K-means sensitive to the initial selection of cluster centers? How does K-means++ address this issue?</p></li>
+<li><p>Describe a scenario where Euclidean distance might not be an appropriate similarity measure for clustering.</p></li>
+<li><p>Why do we need to normalize or scale variables before applying K-means clustering?</p></li>
+<li><p>How does clustering help in dimensionality reduction and preprocessing for supervised learning?</p></li>
+<li><p>What are the key assumptions of K-means clustering?</p></li>
+<li><p>How does the silhouette score help evaluate the quality of clustering?</p></li>
+<li><p>Compare K-means with hierarchical clustering. What are the advantages and disadvantages of each?</p></li>
+<li><p>Why is K-means not suitable for non-spherical clusters?</p></li>
+<li><p>What is the difference between hard clustering (e.g., K-means) and soft clustering (e.g., Gaussian Mixture Models)?</p></li>
+<li><p>What are outliers, and how do they affect K-means clustering?</p></li>
+<li><p>What are alternative clustering methods that are more robust to outliers than K-means?</p></li>
+</ol></section><section id="practical-exercises" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="practical-exercises">Practical Exercises</h3>
+<p>These exercises use the <em>redWines</em> dataset from the <strong>liver</strong> package, which contains chemical properties of red wines and their quality scores. Your goal is to apply clustering techniques to uncover natural groupings in the wines—without using the quality label during clustering.</p>
+<section id="data-preparation-and-exploratory-analysis" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="data-preparation-and-exploratory-analysis">Data preparation and exploratory analysis</h4>
+<ol start="21" type="1">
+<li>Load the <em>redWines</em> dataset from the <strong>liver</strong> package and inspect its structure.</li>
+</ol>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://www.uva.nl/profile/a.mohammadi">liver</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">redWines</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">redWines</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ol start="22" type="1">
+<li><p>Summarize the dataset using <code><a href="https://rdrr.io/r/base/summary.html">summary()</a></code>. Identify any missing values.</p></li>
+<li><p>Check the distribution of wine quality scores in the dataset. What is the most common wine quality score?</p></li>
+<li><p>Since clustering requires numerical features, remove any non-numeric columns from the dataset.</p></li>
+<li><p>Apply min-max scaling to normalize all numerical variables before clustering. Why is this step necessary?</p></li>
+</ol></section><section id="applying-k-means-clustering" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="applying-k-means-clustering">Applying K-means clustering</h4>
+<ol start="26" type="1">
+<li>Use the elbow method to determine the optimal number of clusters for the dataset.</li>
+</ol>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://www.sthda.com/english/rpkgs/factoextra">factoextra</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/factoextra/man/fviz_nbclust.html">fviz_nbclust</a></span><span class="op">(</span><span class="va">redWines</span>, <span class="va">kmeans</span>, method <span class="op">=</span> <span class="st">"wss"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ol start="27" type="1">
+<li><p>Based on the elbow plot, choose an appropriate value of <span class="math inline">\(k\)</span> and perform K-means clustering.</p></li>
+<li><p>Visualize the clusters using a scatter plot of two numerical features.</p></li>
+<li><p>Compute the silhouette score to evaluate cluster cohesion and separation.</p></li>
+<li><p>Identify the centroids of the final clusters and interpret their meaning.</p></li>
+</ol></section><section id="interpreting-the-clusters" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="interpreting-the-clusters">Interpreting the clusters</h4>
+<ol start="31" type="1">
+<li><p>Assign the cluster labels to the original dataset and examine the average chemical composition of each cluster.</p></li>
+<li><p>Compare the wine quality scores across clusters. Do some clusters contain higher-quality wines than others?</p></li>
+<li><p>Identify which features contribute most to defining the clusters.</p></li>
+<li><p>Are certain wine types (e.g., high acidity, high alcohol content) concentrated in specific clusters?</p></li>
+<li><p>Experiment with different values of <span class="math inline">\(k\)</span> and compare the clustering results. Does increasing or decreasing <span class="math inline">\(k\)</span> improve the clustering?</p></li>
+<li><p>Visualize how wine acidity and alcohol content influence cluster formation.</p></li>
+<li><p>(Optional) The <strong>liver</strong> package also includes a <em>whiteWines</em> dataset with the same structure as <em>redWines</em>. Repeat the clustering process on this dataset—from preprocessing and elbow method to K-means application and interpretation. How do the cluster profiles differ between red and white wines?</p></li>
+</ol></section><section id="self-reflection" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="self-reflection">Self-reflection</h4>
+<ol start="38" type="1">
+<li>Reflect on your experience applying K-means clustering to the <em>redWines</em> dataset. What challenges did you encounter in interpreting the clusters, and how might you validate or refine your results if this were a real-world project? What role do domain insights (e.g., wine chemistry, customer preferences) play in making clustering results actionable?</li>
+</ol>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-arthur2006k" class="csl-entry" role="listitem">
+Arthur, David, and Sergei Vassilvitskii. 2006. <span>“K-Means++: The Advantages of Careful Seeding.”</span>
+</div>
+</div>
+</section></section></section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/uncovering-data-science\.netlify\.app");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./12-Neural-networks.html" class="pagination-link" aria-label="Neural Networks: The Building Blocks of Artificial Intelligence">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Neural Networks: The Building Blocks of Artificial Intelligence</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./14-References.html" class="pagination-link" aria-label="References">
+        <span class="nav-page-text">References</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Data Science Foundations and Machine Learning with R was written by <a href="https://www.uva.nl/profile/a.mohammadi"><span style="color:gray">Reza Mohammadi</span></a>.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/RezaMoammadi/Book-Data-Science/edit/main/13-Clustering.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/RezaMoammadi/Book-Data-Science/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>This book was built with <a href="https://quarto.org/">Quarto</a>.</p>
+</div>
+  </div>
+</footer>
+
+
+</body></html>
