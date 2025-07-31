@@ -1,21 +1,21 @@
 ## Data Science Foundations and Machine Learning Using R <a href="https://CRAN.R-project.org/package=liver"><img src="images/logo_black.png" align="right" width="145"/></a>
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/8efdea24-88be-4551-883b-edef5b9dd329/deploy-status)](https://app.netlify.com/sites/uncovering-data-science/deploys) [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://www.tidyverse.org/lifecycle/#stable)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/7907d43f-4de9-4df4-8629-a15666a8b6c9/deploy-status)](https://app.netlify.com/projects/book-data-science-r/deploys) [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://www.tidyverse.org/lifecycle/#stable)
 
-Welcome to the *Data Science Foundations and Machine Learning Using R* repository! This repository contains the source code for the book [Data Science with R](https://uncovering-data-science.netlify.app), a collection of notes, tutorials, and practical examples for learning *data science using R*.
+Welcome to the *Data Science Foundations and Machine Learning Using R* repository! This repository contains the source code for the book [Data Science with R](https://book-data-science-r.netlify.app), a collection of notes, tutorials, and practical examples for learning *data science using R*.
 
 The book is written in R Markdown and built using the [bookdown](https://bookdown.org) package. It is hosted on GitHub Pages and can be accessed here: [GitHub Repository](https://github.com/RezaMoammadi/Book-Data-Science-R).
 
 [Book web page](https://book-data-science-r.netlify.app)
 
-[Book PDF version](https://github.com/RezaMoammadi/Book-Data-Science/blob/main/_book/Book-Data-Science.pdf)
+[Book PDF version](https://github.com/RezaMoammadi/Book-Data-Science-R/blob/main/_book/Data-Science-Foundations-and-Machine-Learning-with-R--From-Data-to-Decisions.pdf)
 
 ### Work in Progress
 
 This book is continuously evolving! If you find any errors, typos, or areas for improvement, please consider:
 
--   Opening an issue on GitHub\
--   Submitting a pull request with suggested changes\
+-   Opening an issue on GitHub
+-   Submitting a pull request with suggested changes
 -   Contacting me directly at [a.mohammadi\@uva.nl](mailto:a.mohammadi@uva.nl)
 
 Your feedback and contributions are greatly appreciated!
