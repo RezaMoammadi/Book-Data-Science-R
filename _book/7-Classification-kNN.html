@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Reza Mohammadi">
+
+<title>7&nbsp; Classification Using k-Nearest Neighbors – Data Science Foundations and Machine Learning with R: From Data to Decisions</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./8-Model-evaluation.html" rel="next">
+<link href="./6-Setup-data.html" rel="prev">
+<link href="./images/logo.png" rel="icon" type="image/png">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-37b910d383d25f91074a86a846b870e0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./7-Classification-kNN.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Classification Using k-Nearest Neighbors</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Data Science Foundations and Machine Learning with R: From Data to Decisions</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/RezaMoammadi/Book-Data-Science" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Download" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Download"><i class="bi bi-download"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="./Data-Science-Foundations-and-Machine-Learning-with-R--From-Data-to-Decisions.pdf">
+              <i class="bi bi-file-pdf pe-1"></i>
+            Download PDF
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="./Data-Science-Foundations-and-Machine-Learning-with-R--From-Data-to-Decisions.epub">
+              <i class="bi bi-journal pe-1"></i>
+            Download ePub
+            </a>
+          </li>
+      </ul>
+    </div>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-1" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-1">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.facebook.com/sharer/sharer.php?u=|url|">
+              <i class="bi bi-facebook pe-1"></i>
+            Facebook
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./0-preface.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./1-Intro-R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Getting Started with R</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2-Intro-data-science.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Foundations of Data Science and Machine Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3-Data-preparation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data Preparation in Practice: Turning Raw Data into Insight</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4-Exploratory-data-analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Exploratory Data Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./5-Statistics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Statistical Inference and Hypothesis Testing</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6-Setup-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Setting Up Data for Modeling</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./7-Classification-kNN.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Classification Using k-Nearest Neighbors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./8-Model-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Evaluating Machine Learning Models</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./9-Naive-Bayes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Naive Bayes Classifier</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Regression Analysis: Foundations and Applications</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-Tree-based-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Decision Trees and Random Forests</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-Neural-networks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Neural Networks: The Building Blocks of Artificial Intelligence</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-Clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Clustering for Insight: Segmenting Data Without Labels</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-References.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#what-this-chapter-covers" id="toc-what-this-chapter-covers" class="nav-link active" data-scroll-target="#what-this-chapter-covers">What This Chapter Covers</a></li>
+  <li><a href="#classification" id="toc-classification" class="nav-link" data-scroll-target="#classification"><span class="header-section-number">7.1</span> Classification</a>
+  <ul class="collapse">
+  <li><a href="#how-classification-works" id="toc-how-classification-works" class="nav-link" data-scroll-target="#how-classification-works">How Classification Works</a></li>
+  <li><a href="#classification-algorithms-and-the-role-of-knn" id="toc-classification-algorithms-and-the-role-of-knn" class="nav-link" data-scroll-target="#classification-algorithms-and-the-role-of-knn">Classification Algorithms and the Role of kNN</a></li>
+  </ul></li>
+  <li><a href="#how-k-nearest-neighbors-works" id="toc-how-k-nearest-neighbors-works" class="nav-link" data-scroll-target="#how-k-nearest-neighbors-works"><span class="header-section-number">7.2</span> How k-Nearest Neighbors Works</a>
+  <ul class="collapse">
+  <li><a href="#how-does-knn-classify-a-new-observation" id="toc-how-does-knn-classify-a-new-observation" class="nav-link" data-scroll-target="#how-does-knn-classify-a-new-observation">How Does kNN Classify a New Observation?</a></li>
+  <li><a href="#strengths-and-limitations-of-knn" id="toc-strengths-and-limitations-of-knn" class="nav-link" data-scroll-target="#strengths-and-limitations-of-knn">Strengths and Limitations of kNN</a></li>
+  </ul></li>
+  <li><a href="#knn-in-action-a-toy-example-for-drug-classification" id="toc-knn-in-action-a-toy-example-for-drug-classification" class="nav-link" data-scroll-target="#knn-in-action-a-toy-example-for-drug-classification"><span class="header-section-number">7.3</span> kNN in Action: A Toy Example for Drug Classification</a></li>
+  <li><a href="#sec-ch7-knn-distance-metrics" id="toc-sec-ch7-knn-distance-metrics" class="nav-link" data-scroll-target="#sec-ch7-knn-distance-metrics"><span class="header-section-number">7.4</span> How Does kNN Measure Similarity?</a>
+  <ul class="collapse">
+  <li><a href="#euclidean-distance" id="toc-euclidean-distance" class="nav-link" data-scroll-target="#euclidean-distance"><span class="header-section-number">7.4.1</span> Euclidean Distance</a></li>
+  </ul></li>
+  <li><a href="#sec-ch7-knn-prep" id="toc-sec-ch7-knn-prep" class="nav-link" data-scroll-target="#sec-ch7-knn-prep"><span class="header-section-number">7.5</span> Data Preparation for the kNN Algorithm</a>
+  <ul class="collapse">
+  <li><a href="#encoding-categorical-variables-for-knn" id="toc-encoding-categorical-variables-for-knn" class="nav-link" data-scroll-target="#encoding-categorical-variables-for-knn"><span class="header-section-number">7.5.1</span> Encoding Categorical Variables for kNN</a></li>
+  <li><a href="#scaling-features-for-fair-distance-computation" id="toc-scaling-features-for-fair-distance-computation" class="nav-link" data-scroll-target="#scaling-features-for-fair-distance-computation"><span class="header-section-number">7.5.2</span> Scaling Features for Fair Distance Computation</a></li>
+  <li><a href="#sec-ch7-knn-proper-scaling" id="toc-sec-ch7-knn-proper-scaling" class="nav-link" data-scroll-target="#sec-ch7-knn-proper-scaling"><span class="header-section-number">7.5.3</span> Preventing Data Leakage during Scaling</a></li>
+  </ul></li>
+  <li><a href="#choosing-the-right-value-of-k-in-knn" id="toc-choosing-the-right-value-of-k-in-knn" class="nav-link" data-scroll-target="#choosing-the-right-value-of-k-in-knn"><span class="header-section-number">7.6</span> Choosing the Right Value of <em>k</em> in kNN</a></li>
+  <li><a href="#sec-ch7-knn-churn" id="toc-sec-ch7-knn-churn" class="nav-link" data-scroll-target="#sec-ch7-knn-churn"><span class="header-section-number">7.7</span> Case Study: Predicting Customer Churn with kNN</a>
+  <ul class="collapse">
+  <li><a href="#partitioning-and-preprocessing-the-data-for-knn" id="toc-partitioning-and-preprocessing-the-data-for-knn" class="nav-link" data-scroll-target="#partitioning-and-preprocessing-the-data-for-knn"><span class="header-section-number">7.7.1</span> Partitioning and Preprocessing the Data for kNN</a></li>
+  <li><a href="#finding-the-best-value-for-k" id="toc-finding-the-best-value-for-k" class="nav-link" data-scroll-target="#finding-the-best-value-for-k"><span class="header-section-number">7.7.2</span> Finding the Best Value for (k)</a></li>
+  <li><a href="#applying-the-knn-classifier" id="toc-applying-the-knn-classifier" class="nav-link" data-scroll-target="#applying-the-knn-classifier"><span class="header-section-number">7.7.3</span> Applying the kNN Classifier</a></li>
+  <li><a href="#evaluating-model-performance-of-the-knn-model" id="toc-evaluating-model-performance-of-the-knn-model" class="nav-link" data-scroll-target="#evaluating-model-performance-of-the-knn-model"><span class="header-section-number">7.7.4</span> Evaluating Model Performance of the kNN Model</a></li>
+  <li><a href="#summary-of-the-knn-case-study" id="toc-summary-of-the-knn-case-study" class="nav-link" data-scroll-target="#summary-of-the-knn-case-study">Summary of the kNN Case Study</a></li>
+  </ul></li>
+  <li><a href="#chapter-summary-and-takeaways" id="toc-chapter-summary-and-takeaways" class="nav-link" data-scroll-target="#chapter-summary-and-takeaways"><span class="header-section-number">7.8</span> Chapter Summary and Takeaways</a></li>
+  <li><a href="#sec-ch7-exercises" id="toc-sec-ch7-exercises" class="nav-link" data-scroll-target="#sec-ch7-exercises"><span class="header-section-number">7.9</span> Exercises</a>
+  <ul class="collapse">
+  <li><a href="#conceptual-questions" id="toc-conceptual-questions" class="nav-link" data-scroll-target="#conceptual-questions">Conceptual Questions</a></li>
+  <li><a href="#hands-on-practice-applying-knn-to-the-bank-dataset" id="toc-hands-on-practice-applying-knn-to-the-bank-dataset" class="nav-link" data-scroll-target="#hands-on-practice-applying-knn-to-the-bank-dataset">Hands-On Practice: Applying kNN to the Bank Dataset</a></li>
+  <li><a href="#critical-thinking-and-real-world-applications" id="toc-critical-thinking-and-real-world-applications" class="nav-link" data-scroll-target="#critical-thinking-and-real-world-applications">Critical Thinking and Real-World Applications</a></li>
+  <li><a href="#self-reflection" id="toc-self-reflection" class="nav-link" data-scroll-target="#self-reflection">Self-Reflection</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/RezaMoammadi/Book-Data-Science/edit/main/7-Classification-kNN.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/RezaMoammadi/Book-Data-Science/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span id="sec-ch7-classification-knn" class="quarto-section-identifier"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Classification Using k-Nearest Neighbors</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><em>Classification</em> is a foundational task in machine learning that enables algorithms to assign observations to specific categories based on patterns learned from labeled data. Whether filtering spam emails, detecting fraudulent transactions, or predicting customer churn, classification plays a vital role in many real-world decision systems. This chapter introduces classification as a form of supervised learning, emphasizing accessible and practical methods for those beginning their journey into predictive modeling.</p>
+<p>This chapter also marks the start of <em>Step 5: Modeling</em> in the Data Science Workflow (Figure <a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>). Building on earlier chapters—where we cleaned and explored data, developed statistical reasoning, and prepared datasets for modeling—we now turn to the exciting stage of applying machine learning techniques.</p>
+<section id="what-this-chapter-covers" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="what-this-chapter-covers">What This Chapter Covers</h3>
+<p>We begin by defining classification and contrasting it with regression, then introduce common applications and categories of classification algorithms. The focus then shifts to one of the most intuitive and interpretable methods: <em>k-Nearest Neighbors (kNN)</em>, a distance-based algorithm that predicts the class of a new observation by examining its closest neighbors in the training set.</p>
+<p>To demonstrate the method in action, we apply kNN to the <em>churn</em> dataset, where the goal is to predict whether a customer will discontinue a service. The chapter walks through the full modeling workflow—data preparation, selecting an appropriate value of <em>k</em>, implementing the model in <strong>R</strong>, and evaluating its predictive performance—offering a step-by-step blueprint for real-world classification problems.</p>
+<p>By the end of this chapter, readers will have a clear understanding of how classification models operate, how kNN translates similarity into prediction, and how to apply this method effectively to real-world data.</p>
+</section>
+<section id="classification" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="classification"><span class="header-section-number">7.1</span> Classification</h2>
+<p>How do email applications filter spam, streaming services recommend the next show, or banks detect fraudulent transactions in real time? These intelligent systems rely on <em>classification</em>, a core task in supervised machine learning that assigns input data to one of several predefined categories.</p>
+<p>In classification, models learn from labeled data to predict categorical outcomes. For example, given customer attributes, a model might predict whether a customer is likely to churn. This contrasts with regression, which predicts continuous quantities such as income or house price.</p>
+<p>The target variable—often called the <em>class</em> or <em>label</em>—can take different forms. In <em>binary classification</em>, the outcome has two possible categories, such as spam versus not spam. In <em>multiclass classification</em>, the outcome includes more than two categories, such as distinguishing between a pedestrian, a car, or a bicycle in an object recognition task.</p>
+<p>Classification underpins a wide array of applications. Email clients detect spam based on message features and sender behavior. Financial systems flag anomalous transactions to prevent fraud. Businesses use churn models to identify customers at risk of leaving. In healthcare, models assist in diagnosing diseases from clinical data. Autonomous vehicles rely on object recognition to navigate safely. Recommendation systems apply classification logic to tailor content to users.</p>
+<p>These examples illustrate how classification enables intelligent systems to translate structured inputs into meaningful, actionable predictions. As digital data becomes more pervasive, classification remains a foundational technique for building effective and reliable predictive models.</p>
+<section id="how-classification-works" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="how-classification-works">How Classification Works</h3>
+<p>Classification typically involves two main phases:</p>
+<ol type="1">
+<li><em>Training phase</em>: The model learns patterns from a labeled dataset, where each observation contains input features along with a known class label. For example, a fraud detection system might learn that high-value transactions originating from unfamiliar locations are often fraudulent.</li>
+<li><em>Prediction phase</em>: Once trained, the model is used to classify new, unseen observations. Given the features of a new transaction, the model predicts whether it is fraudulent.</li>
+</ol>
+<p>A well-performing classification model captures meaningful patterns in the data rather than simply memorizing the training set. Its value lies in the ability to generalize—that is, to make accurate predictions on new data not encountered during training. This ability to generalize is a defining characteristic of all supervised learning methods.</p>
+</section>
+<section id="classification-algorithms-and-the-role-of-knn" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="classification-algorithms-and-the-role-of-knn">Classification Algorithms and the Role of kNN</h3>
+<p>A wide range of algorithms can be used for classification, each with its own strengths depending on the nature of the data and the modeling goals. Some commonly used methods include:</p>
+<ul>
+<li><p><em>k-Nearest Neighbors (kNN)</em>: A simple, distance-based algorithm that assigns labels based on the nearest neighbors. It is the focus of this chapter.</p></li>
+<li><p><em>Naive Bayes</em>: A probabilistic method well-suited to text classification tasks such as spam detection (see <a href="9-Naive-Bayes.html" class="quarto-xref"><span>Chapter 9</span></a>).</p></li>
+<li><p><em>Logistic Regression</em>: A widely used model for binary outcomes, known for its interpretability (see <a href="10-Regression.html" class="quarto-xref"><span>Chapter 10</span></a>).</p></li>
+<li><p><em>Decision Trees and Random Forests</em>: Flexible models that can capture complex, nonlinear relationships (see <a href="11-Tree-based-models.html" class="quarto-xref"><span>Chapter 11</span></a>).</p></li>
+<li><p><em>Neural Networks</em>: High-capacity algorithms effective for high-dimensional or unstructured data, including images and text (see <a href="12-Neural-networks.html" class="quarto-xref"><span>Chapter 12</span></a>).</p></li>
+</ul>
+<p>Choosing an appropriate algorithm depends on several factors, including dataset size, the types of features, the need for interpretability, and computational constraints. For small to medium-sized datasets or when transparency is a priority, simpler models such as kNN or Decision Trees may be suitable. For more complex tasks involving large datasets or unstructured inputs, Neural Networks may offer better predictive performance.</p>
+<p>To illustrate, consider the <em>bank</em> dataset, where the task is to predict whether a customer will subscribe to a term deposit (<code>deposit = yes</code>). Predictor variables such as <code>age</code>, <code>education</code>, and <code>marital status</code> can be used to build a classification model. Such a model can support targeted marketing by identifying customers more likely to respond positively.</p>
+<p>Among these algorithms, <em>k</em>-Nearest Neighbors (kNN) stands out for its ease of use and intuitive decision-making process. Because it makes minimal assumptions about the underlying data, kNN is often used as a baseline model—helping to gauge how challenging a classification problem is before considering more complex approaches. In the sections that follow, we explore how the kNN algorithm works, how to implement it in <strong>R</strong>, and how to apply it to a real-world classification task using the <em>churn</em> dataset.</p>
+</section>
+</section>
+<section id="how-k-nearest-neighbors-works" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="how-k-nearest-neighbors-works"><span class="header-section-number">7.2</span> How k-Nearest Neighbors Works</h2>
+<p>Imagine making a decision by consulting a few trusted peers who have faced similar situations. The <em>k-Nearest Neighbors (kNN)</em> algorithm works in much the same way: it predicts outcomes based on the most similar observations from previously seen data. This intuitive, experience-based approach makes kNN one of the most accessible methods in classification.</p>
+<p>Unlike many algorithms that involve an explicit training phase, kNN follows a <em>lazy learning</em> strategy. It stores the entire training dataset and postpones computation until a prediction is needed. When a new observation arrives, the algorithm calculates its distance from all training points, identifies the <em>k</em> closest neighbors, and assigns the most common class among them. The choice of <em>k</em>—the number of neighbors used—is crucial: small values make the model sensitive to local patterns, while larger values promote broader generalization. Because kNN defers all computation until prediction, it avoids upfront model fitting but shifts the computational burden to the prediction phase.</p>
+<section id="how-does-knn-classify-a-new-observation" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="how-does-knn-classify-a-new-observation">How Does kNN Classify a New Observation?</h3>
+<p>When classifying a new observation, the kNN algorithm first computes its <em>distance</em> to all data points in the training set, typically using the <em>Euclidean distance</em>. It then identifies the <em>k</em> nearest neighbors and assigns the most frequent class label among them as the predicted outcome.</p>
+<p><a href="#fig-ch7-knn-image" class="quarto-xref">Figure&nbsp;<span>7.1</span></a> illustrates this idea using a toy dataset with two classes: <span style="color: red;">Class A (red circles)</span> and <span style="color: blue;">Class B (blue squares)</span>. A new data point, shown as a <em>dark star</em>, must be assigned to one of the two classes. The classification result depends on the chosen value of <em>k</em>:</p>
+<ul>
+<li><p>When <span class="math inline">\(k = 3\)</span>, the three closest neighbors include two blue squares and one red circle. Since the majority class is <em>Class B</em>, the new point is labeled accordingly.</p></li>
+<li><p>When <span class="math inline">\(k = 6\)</span>, the nearest neighbors include four red circles and two blue squares, resulting in a prediction of <em>Class A</em>.</p></li>
+</ul>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch7-knn-image" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ch7-knn-image-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch7_knn.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:55.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch7-knn-image-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7.1: A two-dimensional toy dataset with two classes (Class A and Class B) and a new data point (dark star), illustrating the k-Nearest Neighbors algorithm with k = 3 and k = 6.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>These examples demonstrate how the choice of <em>k</em> directly affects the classification result. A smaller <em>k</em> makes the model more sensitive to local variation and potentially noisy observations—leading to overfitting. In contrast, a larger <em>k</em> smooths the decision boundaries by incorporating more neighbors but may overlook meaningful local structure. Choosing the right value of <em>k</em> is therefore essential for balancing variance and bias, a topic we revisit later in this chapter.</p>
+</section>
+<section id="strengths-and-limitations-of-knn" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="strengths-and-limitations-of-knn">Strengths and Limitations of kNN</h3>
+<p>The <em>k</em>-Nearest Neighbors (kNN) algorithm is valued for its simplicity and transparent decision-making process, making it a common starting point in classification tasks. It requires no explicit model training; instead, it stores the training data and performs computations only at prediction time. This approach makes kNN easy to implement and interpret—particularly effective for small datasets with well-separated class boundaries.</p>
+<p>However, this simplicity comes with important trade-offs. The algorithm is sensitive to irrelevant or noisy features, which can distort distance calculations and degrade predictive performance. Moreover, since kNN calculates distances to all training examples at prediction time, it can become computationally expensive as the dataset grows.</p>
+<p>Another crucial consideration is the choice of <em>k</em>, which directly affects model behavior. A small <em>k</em> may lead to overfitting and heightened sensitivity to noise, whereas a large <em>k</em> may oversmooth the decision boundary, obscuring meaningful patterns. As we discuss later in the chapter, selecting an appropriate value of <em>k</em> is key to balancing variance and bias.</p>
+<p>Finally, the effectiveness of kNN often hinges on proper data preprocessing. Feature selection, scaling, and outlier handling all play a significant role in ensuring that distance computations reflect meaningful structure in the data—topics we address in the next sections.</p>
+</section>
+</section>
+<section id="knn-in-action-a-toy-example-for-drug-classification" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="knn-in-action-a-toy-example-for-drug-classification"><span class="header-section-number">7.3</span> kNN in Action: A Toy Example for Drug Classification</h2>
+<p>To further illustrate how kNN works in practice, consider a simplified classification scenario involving drug prescriptions. A synthetically generated dataset of 200 patients includes their <em>age</em>, <em>sodium-to-potassium (Na/K) ratio</em>, and the prescribed drug type. Although simulated, the dataset reflects patterns that one might encounter in real-world clinical data. For details on how the dataset was generated, see Section <a href="1-Intro-R.html#sec-intro-R-exercises" class="quarto-xref"><span>1.20</span></a>.</p>
+<p><a href="#fig-ch7-ex-drug-1" class="quarto-xref">Figure&nbsp;<span>7.2</span></a> visualizes the distribution of patient records. Each point represents a patient, with different shapes and colors used to indicate drug type. <span style="color: red;">Red circles</span> correspond to Drug A, <span style="color: green;">green triangles</span> to Drug B, and <span style="color: blue;">blue squares</span> to Drug C.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch7-ex-drug-1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ch7-ex-drug-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="7-Classification-kNN_files/figure-html/fig-ch7-ex-drug-1-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:95.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch7-ex-drug-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7.2: Scatter plot of Age vs.&nbsp;Sodium/Potassium Ratio for 200 patients, with drug type indicated by color and shape.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Suppose three new patients arrive at the clinic, and we need to determine which drug is most suitable for them based on their <em>age</em> and <em>sodium-to-potassium ratio</em>. Patient 1 is a 40-year-old with a Na/K ratio of 30.5. Patient 2 is 28 years old with a Na/K ratio of 9.6. Patient 3 is 61 years old with a Na/K ratio of 10.5.</p>
+<p>These patients are represented by large orange circles with cross markers in <a href="#fig-ch7-ex-drug-2" class="quarto-xref">Figure&nbsp;<span>7.3</span></a>. The following analysis explores how kNN assigns drug classifications to these individuals based on proximity to labeled cases in the training data.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch7-ex-drug-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ch7-ex-drug-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="7-Classification-kNN_files/figure-html/fig-ch7-ex-drug-2-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:95.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch7-ex-drug-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7.3: Scatter plot of Age vs.&nbsp;Sodium/Potassium Ratio for 200 patients, with drug type indicated by color and shape. The three new patients are represented by large orange circles.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>For Patient 1, who is located deep within a cluster of red-circle points (Drug A), the classification is straightforward. All the nearest neighbors belong to Drug A, making it a confident and unambiguous decision.</p>
+<p>For Patient 2, the classification outcome depends on the value of <em>k</em>. When <span class="math inline">\(k = 1\)</span>, the nearest neighbor is a blue square, and the predicted class is Drug C. When <span class="math inline">\(k = 2\)</span>, there is a tie between Drug B and Drug C, and no majority class can be determined. When <span class="math inline">\(k = 3\)</span>, two of the three nearest neighbors are blue squares, so the prediction remains Drug C.</p>
+<p>For Patient 3, the classification becomes more uncertain. When <span class="math inline">\(k = 1\)</span>, the closest neighbor is a blue square, and the classification is Drug C. However, when <span class="math inline">\(k = 2\)</span> or <span class="math inline">\(k = 3\)</span>, the nearest neighbors belong to different classes, leading to ambiguity in the predicted label.</p>
+<div class="cell" data-layout-nrow="2" data-layout-align="center">
+<div id="fig-ch7-ex-drug-3" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ch7-ex-drug-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="cell-output-display quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ch7-ex-drug-3" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-ch7-ex-drug-3-1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-ch7-ex-drug-3-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="7-Classification-kNN_files/figure-html/fig-ch7-ex-drug-3-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H" data-ref-parent="fig-ch7-ex-drug-3">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ch7-ex-drug-3-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) Patient 1
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output-display quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ch7-ex-drug-3" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-ch7-ex-drug-3-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-ch7-ex-drug-3-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="7-Classification-kNN_files/figure-html/fig-ch7-ex-drug-3-2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H" data-ref-parent="fig-ch7-ex-drug-3">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ch7-ex-drug-3-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) Patient 2
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="cell-output-display quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ch7-ex-drug-3" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-ch7-ex-drug-3-3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-ch7-ex-drug-3-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="7-Classification-kNN_files/figure-html/fig-ch7-ex-drug-3-3.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H" data-ref-parent="fig-ch7-ex-drug-3">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ch7-ex-drug-3-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(c) Patient 3
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch7-ex-drug-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7.4: Zoom-in plots for the three new patients and their nearest neighbors. The left plot is for Patient 1, the middle plot is for Patient 2, and the right plot is for Patient 3.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>This example highlights key considerations for using kNN effectively. The choice of <em>k</em> strongly influences the decision boundary, with smaller values emphasizing local variation and larger values yielding smoother classifications. The distance metric shapes how similarity is assessed, and appropriate feature scaling ensures that all features contribute meaningfully. Together, these design decisions play a critical role in the success of kNN in practice.</p>
+</section>
+<section id="sec-ch7-knn-distance-metrics" class="level2" data-number="7.4">
+<h2 data-number="7.4" class="anchored" data-anchor-id="sec-ch7-knn-distance-metrics"><span class="header-section-number">7.4</span> How Does kNN Measure Similarity?</h2>
+<p>Suppose you are a physician comparing two patients based on age and sodium-to-potassium (Na/K) ratio. One patient is 40 years old with a Na/K ratio of 30.5, and the other is 28 years old with a ratio of 9.6. Which of these patients is more similar to a new case you are evaluating?</p>
+<p>In the k-Nearest Neighbors (kNN) algorithm, classifying a new observation depends on identifying the most <em>similar</em> records in the training set. While similarity may seem intuitive, machine learning requires a precise definition. Specifically, similarity is quantified using a <em>distance metric</em>, which determines how close two observations are in a multidimensional feature space. These distances govern which records are chosen as neighbors and, ultimately, how a new observation is classified.</p>
+<p>In this medical scenario, similarity is measured by comparing numerical features such as age and lab values. The smaller the computed distance between two patients, the more similar they are assumed to be, and the more influence they have on classification. Since kNN relies on the assumption that nearby points tend to share the same class label, choosing an appropriate distance metric is essential for accurate predictions.</p>
+<section id="euclidean-distance" class="level3" data-number="7.4.1">
+<h3 data-number="7.4.1" class="anchored" data-anchor-id="euclidean-distance"><span class="header-section-number">7.4.1</span> Euclidean Distance</h3>
+<p>A widely used measure of similarity in kNN is <em>Euclidean distance</em>, which corresponds to the straight-line, or “as-the-crow-flies,” distance between two points. It is intuitive, easy to compute, and well-suited to numerical data with comparable scales.</p>
+<p>Mathematically, the Euclidean distance between two points <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> in <span class="math inline">\(n\)</span>-dimensional space is given by:</p>
+<p><span class="math display">\[
+\text{dist}(x, y) = \sqrt{(x_1 - y_1)^2 + (x_2 - y_2)^2 + \ldots + (x_n - y_n)^2},
+\]</span></p>
+<p>where <span class="math inline">\(x = (x_1, x_2, \ldots, x_n)\)</span> and <span class="math inline">\(y = (y_1, y_2, \ldots, y_n)\)</span> are the feature vectors.</p>
+<p>For example, suppose we want to compute the Euclidean distance between two new patients from the previous section, using their <em>age</em> and <em>sodium-to-potassium (Na/K) ratio</em>. Patient 1 is 40 years old with a Na/K ratio of 30.5, and Patient 2 is 28 years old with a Na/K ratio of 9.6. The Euclidean distance between these two patients is visualized in <a href="#fig-ch7-euclidean-distance" class="quarto-xref">Figure&nbsp;<span>7.5</span></a> in a two-dimensional feature space, where each axis represents one of the features (age and Na/K ratio). The line connecting Patient 1 <span class="math inline">\((40, 30.5)\)</span> and Patient 2 <span class="math inline">\((28, 9.6)\)</span> represents their Euclidean distance:</p>
+<p><span class="math display">\[
+\text{dist}(x, y) = \sqrt{(40 - 28)^2 + (30.5 - 9.6)^2} = \sqrt{144 + 436.81} = 24.11
+\]</span></p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch7-euclidean-distance" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ch7-euclidean-distance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="7-Classification-kNN_files/figure-html/fig-ch7-euclidean-distance-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch7-euclidean-distance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7.5: Visual representation of Euclidean distance between two patients in 2D space.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>This value quantifies how dissimilar the patients are in the two-dimensional feature space, and it plays a key role in determining how the new patient would be classified by kNN.</p>
+<p>Although other distance metrics exist, such as Manhattan distance, Hamming distance, or cosine similarity, Euclidean distance is the most commonly used in practice, especially when working with numerical features. Its geometric interpretation is intuitive and it works well when variables are measured on similar scales. In more specialized contexts, other distance metrics may be more appropriate depending on the structure of the data or the application domain. Readers interested in alternative metrics can explore resources such as the <strong>proxy</strong> package in <strong>R</strong> or consult advanced machine learning texts.</p>
+<p>In the next section, we will examine how preprocessing steps like feature scaling ensure that Euclidean distance yields meaningful and balanced comparisons across features.</p>
+</section>
+</section>
+<section id="sec-ch7-knn-prep" class="level2" data-number="7.5">
+<h2 data-number="7.5" class="anchored" data-anchor-id="sec-ch7-knn-prep"><span class="header-section-number">7.5</span> Data Preparation for the kNN Algorithm</h2>
+<p>The performance of the <em>k</em>-Nearest Neighbors (kNN) algorithm is highly sensitive to how the data is preprocessed. Because kNN relies on distance calculations to assess similarity between observations, careful preparation of the feature space is essential. Two key steps—<em>encoding categorical variables</em> and <em>feature scaling</em>—ensure that both categorical and numerical features are properly represented in these computations.</p>
+<p>These tasks fall under the <em>Data Preparation</em> phase of the Data Science Workflow introduced in Chapter <a href="3-Data-preparation.html" class="quarto-xref"><span>3</span></a> (see <a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>), and they also connect to the broader <em>Data Setup for Modeling</em> stage discussed in Chapter <a href="6-Setup-data.html" class="quarto-xref"><span>6</span></a>. Regardless of where they appear in the workflow, these steps are crucial for ensuring that kNN’s similarity measures are both consistent and reliable.</p>
+<p>To make this concrete, imagine you are working with patient data that includes age, sodium-to-potassium (Na/K) ratio, marital status, and education level. While age and Na/K ratio are numeric, marital status and education are categorical. To prepare these features for use in a distance-based model, we must convert them into numerical form in a way that preserves their original meaning.</p>
+<p>In most tabular datasets (such as the <em>bank</em> and <em>churn</em> datasets introduced earlier), features include a mix of categorical and numerical variables. A common and recommended approach is to begin by <em>encoding</em> the categorical features into numeric format and then <em>scaling</em> all numeric features. This sequence ensures that distance calculations are performed on a unified numerical scale, without introducing artificial distortions. In the next subsection, we begin with the challenge of encoding categorical variables.</p>
+<section id="encoding-categorical-variables-for-knn" class="level3" data-number="7.5.1">
+<h3 data-number="7.5.1" class="anchored" data-anchor-id="encoding-categorical-variables-for-knn"><span class="header-section-number">7.5.1</span> Encoding Categorical Variables for kNN</h3>
+<p>Categorical features—such as marital status or education level—are common in real-world datasets. But before they can be used in kNN, they must be transformed into numerical form in a way that aligns with how distances are computed. Since kNN cannot interpret text labels or non-numeric values directly, all categorical variables must be encoded. The appropriate encoding strategy depends on whether the variable is binary, nominal, or ordinal.</p>
+<p>These techniques were introduced in Chapter <a href="3-Data-preparation.html" class="quarto-xref"><span>3</span></a>, with general guidance in Section <a href="3-Data-preparation.html#sec-ch3-encoding" class="quarto-xref"><span>3.13</span></a>, ordinal handling in Section <a href="3-Data-preparation.html#sec-ch3-ordinal-encoding" class="quarto-xref"><span>3.14</span></a>, and one-hot encoding in Section <a href="3-Data-preparation.html#sec-ch3-one-hot-encoding" class="quarto-xref"><span>3.15</span></a>.</p>
+<section id="binary-and-nominal-variables-one-hot-encoding" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="binary-and-nominal-variables-one-hot-encoding">Binary and Nominal Variables: One-Hot Encoding</h4>
+<p>For <em>binary</em> variables (such as <code>yes</code>/<code>no</code>) and <em>nominal</em> variables (such as <code>marital status</code> with categories <code>single</code>, <code>married</code>, <code>divorced</code>), the recommended approach is <em>one-hot encoding</em>. This technique creates one binary column per category, omitting one to avoid redundancy—a practice that avoids the so-called dummy variable trap, where perfectly collinear columns interfere with computation.</p>
+<p>For example, the <code>marital</code> variable in the <em>bank</em> dataset can be one-hot encoded using the <code>one.hot()</code> function from the <strong>liver</strong> package:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(bank)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># One-hot encode the "marital" variable from the bank dataset</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>bank_encoded <span class="ot">&lt;-</span> <span class="fu">one.hot</span>(bank, <span class="at">cols =</span> <span class="fu">c</span>(<span class="st">"marital"</span>), <span class="at">dropCols =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(bank_encoded)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>   <span class="st">'data.frame'</span><span class="sc">:</span>    <span class="dv">4521</span> obs. of  <span class="dv">20</span> variables<span class="sc">:</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="er">$</span> age             <span class="sc">:</span> int  <span class="dv">30</span> <span class="dv">33</span> <span class="dv">35</span> <span class="dv">30</span> <span class="dv">59</span> <span class="dv">35</span> <span class="dv">36</span> <span class="dv">39</span> <span class="dv">41</span> <span class="dv">43</span> ...</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> job             <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">12</span> levels <span class="st">"admin."</span>,<span class="st">"blue-collar"</span>,..<span class="sc">:</span> <span class="dv">11</span> <span class="dv">8</span> <span class="dv">5</span> <span class="dv">5</span> <span class="dv">2</span> <span class="dv">5</span> <span class="dv">7</span> <span class="dv">10</span> <span class="dv">3</span> <span class="dv">8</span> ...</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> marital         <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">3</span> levels <span class="st">"divorced"</span>,<span class="st">"married"</span>,..<span class="sc">:</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> ...</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> marital_divorced<span class="sc">:</span> int  <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> ...</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> marital_married <span class="sc">:</span> int  <span class="dv">1</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> ...</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> marital_single  <span class="sc">:</span> int  <span class="dv">0</span> <span class="dv">0</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> ...</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> education       <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">4</span> levels <span class="st">"primary"</span>,<span class="st">"secondary"</span>,..<span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">1</span> ...</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> default         <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"no"</span>,<span class="st">"yes"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> ...</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> balance         <span class="sc">:</span> int  <span class="dv">1787</span> <span class="dv">4789</span> <span class="dv">1350</span> <span class="dv">1476</span> <span class="dv">0</span> <span class="dv">747</span> <span class="dv">307</span> <span class="dv">147</span> <span class="dv">221</span> <span class="sc">-</span><span class="dv">88</span> ...</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> housing         <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"no"</span>,<span class="st">"yes"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> ...</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> loan            <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"no"</span>,<span class="st">"yes"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> ...</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> contact         <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">3</span> levels <span class="st">"cellular"</span>,<span class="st">"telephone"</span>,..<span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">1</span> ...</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> day             <span class="sc">:</span> int  <span class="dv">19</span> <span class="dv">11</span> <span class="dv">16</span> <span class="dv">3</span> <span class="dv">5</span> <span class="dv">23</span> <span class="dv">14</span> <span class="dv">6</span> <span class="dv">14</span> <span class="dv">17</span> ...</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> month           <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">12</span> levels <span class="st">"apr"</span>,<span class="st">"aug"</span>,<span class="st">"dec"</span>,..<span class="sc">:</span> <span class="dv">11</span> <span class="dv">9</span> <span class="dv">1</span> <span class="dv">7</span> <span class="dv">9</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">9</span> <span class="dv">9</span> <span class="dv">1</span> ...</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> duration        <span class="sc">:</span> int  <span class="dv">79</span> <span class="dv">220</span> <span class="dv">185</span> <span class="dv">199</span> <span class="dv">226</span> <span class="dv">141</span> <span class="dv">341</span> <span class="dv">151</span> <span class="dv">57</span> <span class="dv">313</span> ...</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> campaign        <span class="sc">:</span> int  <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> ...</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> pdays           <span class="sc">:</span> int  <span class="sc">-</span><span class="dv">1</span> <span class="dv">339</span> <span class="dv">330</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">-</span><span class="dv">1</span> <span class="dv">176</span> <span class="dv">330</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">-</span><span class="dv">1</span> <span class="dv">147</span> ...</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> previous        <span class="sc">:</span> int  <span class="dv">0</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">2</span> ...</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> poutcome        <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">4</span> levels <span class="st">"failure"</span>,<span class="st">"other"</span>,..<span class="sc">:</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">1</span> ...</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> deposit         <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"no"</span>,<span class="st">"yes"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This transformation results in three new binary columns: <code>marital_single</code>, <code>marital_married</code>, and <code>marital_divorced</code>. Each column indicates whether the corresponding category is present (1) or absent (0) for each observation. This approach ensures that categories are treated as equidistant in the feature space, which is appropriate for variables with no inherent order.</p>
+</section>
+<section id="ordinal-variables-numeric-encoding" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="ordinal-variables-numeric-encoding">Ordinal Variables: Numeric Encoding</h4>
+<p>For <em>ordinal</em> variables with a meaningful ranking (such as <code>low</code>, <code>medium</code>, <code>high</code>), it is preferable to assign numeric values that reflect their order (e.g., <code>low = 1</code>, <code>medium = 2</code>, <code>high = 3</code>). This preserves the ordinal relationship in the distance calculations, which would otherwise be ignored by one-hot encoding.</p>
+<p>For instance, consider the <code>education</code> variable in the <em>bank</em> dataset, which has levels <code>primary</code>, <code>secondary</code>, and <code>tertiary</code>. We can convert this variable to numeric scores as follows:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert an ordinal variable to numeric scores</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>bank<span class="sc">$</span>education_level <span class="ot">&lt;-</span> <span class="fu">factor</span>(bank<span class="sc">$</span>education, </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>                               <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"primary"</span>, <span class="st">"secondary"</span>, <span class="st">"tertiary"</span>),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                               <span class="at">labels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This numeric encoding preserves the order of education levels and allows the kNN model to treat higher education levels as more distant from lower ones, reflecting real-world meaning.</p>
+<p>In summary, binary and nominal variables should be transformed using one-hot encoding to ensure that each category contributes fairly and independently to the distance computation. For ordinal variables, assigning numeric values that reflect their inherent order allows kNN to capture meaningful relationships. By contrast, treating unordered categories as numeric—such as assigning <code>red = 1</code>, <code>blue = 2</code>, <code>green = 3</code>—can mislead the model by introducing artificial structure. Careful attention to encoding choices helps preserve the integrity of similarity calculations and improves classification accuracy.</p>
+</section>
+</section>
+<section id="scaling-features-for-fair-distance-computation" class="level3" data-number="7.5.2">
+<h3 data-number="7.5.2" class="anchored" data-anchor-id="scaling-features-for-fair-distance-computation"><span class="header-section-number">7.5.2</span> Scaling Features for Fair Distance Computation</h3>
+<p>Once categorical variables have been encoded, all numeric features—both original and derived—should be scaled to ensure they contribute fairly to similarity calculations. Even after proper encoding, features may vary substantially in scale. For example, <em>age</em> might range from 20 to 70, while <em>income</em> could vary from 20,000 to 150,000. Without appropriate scaling, variables with larger ranges may disproportionately influence the distance calculation, resulting in biased neighbor selection.</p>
+<p>Two widely used methods address this issue: <em>min-max scaling</em> and <em>z-score standardization</em>. These approaches were introduced in Section <a href="3-Data-preparation.html#sec-ch3-feature-scaling" class="quarto-xref"><span>3.10</span></a>.</p>
+<p><em>Min-max scaling</em> transforms each feature to a fixed range, typically <span class="math inline">\([0, 1]\)</span>, using the formula:</p>
+<p><span class="math display">\[
+x_{\text{scaled}} = \frac{x - \min(x)}{\max(x) - \min(x)},
+\]</span></p>
+<p>where <span class="math inline">\(\min(x)\)</span> and <span class="math inline">\(\max(x)\)</span> are calculated from the training data. This method ensures that all features contribute on the same numerical scale.</p>
+<p><em>Z-score standardization</em> rescales features so that they have a mean of 0 and a standard deviation of 1:</p>
+<p><span class="math display">\[
+x_{\text{scaled}} = \frac{x - \text{mean}(x)}{\text{sd}(x)}.
+\]</span></p>
+<p>This method is more appropriate when features contain outliers or have differing units or distributions.</p>
+<p>Min-max scaling is generally appropriate when feature values are bounded and preserving relative distances is important. Z-score standardization is preferable when features are measured on different units or contain outliers, as it reduces the influence of extreme values.</p>
+</section>
+<section id="sec-ch7-knn-proper-scaling" class="level3" data-number="7.5.3">
+<h3 data-number="7.5.3" class="anchored" data-anchor-id="sec-ch7-knn-proper-scaling"><span class="header-section-number">7.5.3</span> Preventing Data Leakage during Scaling</h3>
+<p>Scaling should be performed <em>after</em> splitting the dataset into training and test sets. This prevents <em>data leakage</em>, a common pitfall in predictive modeling where information from the test set inadvertently influences the model during training. Specifically, parameters such as the mean, standard deviation, minimum, and maximum must be computed <em>only</em> from the training data, and then applied to scale both the training and test sets.</p>
+<p>The comparison in <a href="#fig-ch7-ex-proper-scaling" class="quarto-xref">Figure&nbsp;<span>7.6</span></a> visualizes the importance of applying scaling correctly. The middle panel shows proper scaling using training-derived parameters; the right panel shows the distortion caused by scaling the test data independently.</p>
+<p>To illustrate, consider the drug classification task from earlier. Suppose <code>age</code> and <code>Na/K ratio</code> are the two predictors. The following code demonstrates both correct and incorrect approaches to scaling, using the <code>minmax()</code> function from the <strong>liver</strong> package:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(liver)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Correct scaling: Apply train-derived parameters to test data</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>train_scaled <span class="ot">=</span> <span class="fu">minmax</span>(train_data, <span class="at">col =</span> <span class="fu">c</span>(<span class="st">"Age"</span>, <span class="st">"Ratio"</span>))</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>test_scaled <span class="ot">=</span> <span class="fu">minmax</span>(</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  test_data, </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">col =</span> <span class="fu">c</span>(<span class="st">"Age"</span>, <span class="st">"Ratio"</span>), </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">min =</span> <span class="fu">c</span>(<span class="fu">min</span>(train_data<span class="sc">$</span>Age), <span class="fu">min</span>(train_data<span class="sc">$</span>Ratio)), </span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">max =</span> <span class="fu">c</span>(<span class="fu">max</span>(train_data<span class="sc">$</span>Age), <span class="fu">max</span>(train_data<span class="sc">$</span>Ratio))</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Incorrect scaling: Apply separate scaling to test set</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>train_scaled_wrongly <span class="ot">=</span> <span class="fu">minmax</span>(train_data, <span class="at">col =</span> <span class="fu">c</span>(<span class="st">"Age"</span>, <span class="st">"Ratio"</span>))</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>test_scaled_wrongly  <span class="ot">=</span> <span class="fu">minmax</span>(test_data , <span class="at">col =</span> <span class="fu">c</span>(<span class="st">"Age"</span>, <span class="st">"Ratio"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-nrow="2" data-layout-align="center">
+<div id="fig-ch7-ex-proper-scaling" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ch7-ex-proper-scaling-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="cell-output-display quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ch7-ex-proper-scaling" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-ch7-ex-proper-scaling-1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-ch7-ex-proper-scaling-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="7-Classification-kNN_files/figure-html/fig-ch7-ex-proper-scaling-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H" data-ref-parent="fig-ch7-ex-proper-scaling">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ch7-ex-proper-scaling-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) Without Scaling
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="cell-output-display quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ch7-ex-proper-scaling" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-ch7-ex-proper-scaling-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-ch7-ex-proper-scaling-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="7-Classification-kNN_files/figure-html/fig-ch7-ex-proper-scaling-2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H" data-ref-parent="fig-ch7-ex-proper-scaling">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ch7-ex-proper-scaling-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) Proper Scaling
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="cell-output-display quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ch7-ex-proper-scaling" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-ch7-ex-proper-scaling-3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-subfloat-fig figure">
+<div aria-describedby="fig-ch7-ex-proper-scaling-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="7-Classification-kNN_files/figure-html/fig-ch7-ex-proper-scaling-3.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H" data-ref-parent="fig-ch7-ex-proper-scaling">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ch7-ex-proper-scaling-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(c) Improper Scaling
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch7-ex-proper-scaling-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7.6: Visualization illustrating the difference between proper scaling and improper scaling. The left panel shows the original data without scaling. The middle panel shows the results of proper scaling. The right panel shows the results of improper scaling.
+</figcaption>
+</figure>
+</div>
+</div>
+<blockquote class="blockquote">
+<p><em>Note.</em> Scaling parameters should always be derived from the training data and then applied consistently to both the training and test sets. Failing to do so can result in incompatible feature spaces, leading the kNN algorithm to identify misleading neighbors and produce unreliable predictions.</p>
+</blockquote>
+<p>With similarity measurement and data preparation steps now complete, the next task is to determine an appropriate value of <span class="math inline">\(k\)</span>. The following section examines how this crucial hyperparameter influences the behavior and performance of the kNN algorithm.</p>
+</section>
+</section>
+<section id="choosing-the-right-value-of-k-in-knn" class="level2" data-number="7.6">
+<h2 data-number="7.6" class="anchored" data-anchor-id="choosing-the-right-value-of-k-in-knn"><span class="header-section-number">7.6</span> Choosing the Right Value of <em>k</em> in kNN</h2>
+<p>Imagine you are new to a city and looking for a good coffee shop. If you ask just one person, you might get a recommendation based on their personal taste, which may differ from yours. If you ask too many people, you could be overwhelmed by conflicting opinions or suggestions that average out to a generic option. The sweet spot is asking a few individuals whose preferences align with your own. Similarly, in the <em>k</em>-Nearest Neighbors (kNN) algorithm, selecting an appropriate number of neighbors (<span class="math inline">\(k\)</span>) requires balancing specificity and generalization.</p>
+<p>The parameter <em>k</em>, which determines how many nearest neighbors are considered during classification, plays a central role in shaping model performance. There is no universally optimal value for <em>k</em>; the best choice depends on the structure of the dataset and the nature of the classification task. Selecting <em>k</em> involves navigating the trade-off between overfitting and underfitting.</p>
+<p>When <em>k</em> is too small, such as <span class="math inline">\(k = 1\)</span>, the model becomes overly sensitive to individual training points. Each new observation is classified based solely on its nearest neighbor, making the model highly reactive to noise and outliers. This often leads to <em>overfitting</em>, where the model performs well on the training data but generalizes poorly to new cases. A small cluster of mislabeled examples, for instance, could disproportionately influence the results.</p>
+<p>As <em>k</em> increases, the algorithm includes more neighbors in its classification decisions, smoothing the decision boundary and reducing the influence of noisy observations. However, when <em>k</em> becomes too large, the model may begin to overlook meaningful patterns, leading to <em>underfitting</em>. If <em>k</em> approaches the size of the training set, predictions may default to the majority class label.</p>
+<p>To determine a suitable value of <em>k</em>, it is common to evaluate a range of options using a validation set or cross-validation. Performance metrics such as accuracy, precision, recall, and F1-score help guide the selection process.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch7-kNN-plot" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-ch7-kNN-plot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="7-Classification-kNN_files/figure-html/fig-ch7-kNN-plot-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:85.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch7-kNN-plot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7.7: Accuracy of the k-Nearest Neighbors algorithm for different values of k in the range from 1 to 30.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>As an example, we revisit the <em>churn</em> dataset and assess the accuracy of the kNN classifier for <em>k</em> values ranging from 1 to 30. Figure <a href="#fig-ch7-kNN-plot" class="quarto-xref"><span>7.7</span></a> presents the results, generated using the <code>kNN.plot()</code> function from the <strong>liver</strong> package in <strong>R</strong>. Accuracy fluctuates as <em>k</em> increases, and the best performance is achieved when <span class="math inline">\(k = 9\)</span>. At this value, the model reaches an accuracy of 0.898 and an error rate of 0.102, balancing local sensitivity with broader generalization.</p>
+<p>Choosing <em>k</em> is ultimately an empirical process informed by validation and domain knowledge. There is no universal rule, but careful experimentation helps identify a value that generalizes well for the problem at hand. A detailed case study in the following section revisits this example and walks through the complete modeling process, including the generation of Figure <a href="#fig-ch7-kNN-plot" class="quarto-xref"><span>7.7</span></a>.</p>
+</section>
+<section id="sec-ch7-knn-churn" class="level2" data-number="7.7">
+<h2 data-number="7.7" class="anchored" data-anchor-id="sec-ch7-knn-churn"><span class="header-section-number">7.7</span> Case Study: Predicting Customer Churn with kNN</h2>
+<p>In this case study, we demonstrate how to apply the <em>k</em>-Nearest Neighbors (kNN) algorithm to a real-world classification problem. Using the <em>churn</em> dataset from the <strong>liver</strong> package in <strong>R</strong>, we follow the complete modeling workflow—from data preparation to model training and evaluation. This provides a practical context to reinforce the concepts introduced earlier in the chapter.</p>
+<p>The <em>churn</em> dataset captures customer behavior and service usage across multiple dimensions, including account length, service plans, call metrics, and customer service interactions. The modeling task is to predict whether a customer has churned (<code>yes</code>) or not (<code>no</code>) based on these features.</p>
+<p>Readers unfamiliar with the dataset are encouraged to review the exploratory analysis presented in Section <a href="4-Exploratory-data-analysis.html#sec-ch4-EDA-churn" class="quarto-xref"><span>4.3</span></a>, which provides important context and preliminary findings. We begin here by inspecting the dataset structure:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(churn)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>   <span class="st">'data.frame'</span><span class="sc">:</span>    <span class="dv">5000</span> obs. of  <span class="dv">20</span> variables<span class="sc">:</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="er">$</span> state         <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">51</span> levels <span class="st">"AK"</span>,<span class="st">"AL"</span>,<span class="st">"AR"</span>,..<span class="sc">:</span> <span class="dv">17</span> <span class="dv">36</span> <span class="dv">32</span> <span class="dv">36</span> <span class="dv">37</span> <span class="dv">2</span> <span class="dv">20</span> <span class="dv">25</span> <span class="dv">19</span> <span class="dv">50</span> ...</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> area.code     <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">3</span> levels <span class="st">"area_code_408"</span>,..<span class="sc">:</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> ...</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> account.length<span class="sc">:</span> int  <span class="dv">128</span> <span class="dv">107</span> <span class="dv">137</span> <span class="dv">84</span> <span class="dv">75</span> <span class="dv">118</span> <span class="dv">121</span> <span class="dv">147</span> <span class="dv">117</span> <span class="dv">141</span> ...</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> voice.plan    <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"yes"</span>,<span class="st">"no"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> ...</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> voice.messages<span class="sc">:</span> int  <span class="dv">25</span> <span class="dv">26</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">24</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">37</span> ...</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> intl.plan     <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"yes"</span>,<span class="st">"no"</span><span class="sc">:</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> ...</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> intl.mins     <span class="sc">:</span> num  <span class="dv">10</span> <span class="fl">13.7</span> <span class="fl">12.2</span> <span class="fl">6.6</span> <span class="fl">10.1</span> <span class="fl">6.3</span> <span class="fl">7.5</span> <span class="fl">7.1</span> <span class="fl">8.7</span> <span class="fl">11.2</span> ...</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> intl.calls    <span class="sc">:</span> int  <span class="dv">3</span> <span class="dv">3</span> <span class="dv">5</span> <span class="dv">7</span> <span class="dv">3</span> <span class="dv">6</span> <span class="dv">7</span> <span class="dv">6</span> <span class="dv">4</span> <span class="dv">5</span> ...</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> intl.charge   <span class="sc">:</span> num  <span class="fl">2.7</span> <span class="fl">3.7</span> <span class="fl">3.29</span> <span class="fl">1.78</span> <span class="fl">2.73</span> <span class="fl">1.7</span> <span class="fl">2.03</span> <span class="fl">1.92</span> <span class="fl">2.35</span> <span class="fl">3.02</span> ...</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> day.mins      <span class="sc">:</span> num  <span class="dv">265</span> <span class="dv">162</span> <span class="dv">243</span> <span class="dv">299</span> <span class="dv">167</span> ...</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> day.calls     <span class="sc">:</span> int  <span class="dv">110</span> <span class="dv">123</span> <span class="dv">114</span> <span class="dv">71</span> <span class="dv">113</span> <span class="dv">98</span> <span class="dv">88</span> <span class="dv">79</span> <span class="dv">97</span> <span class="dv">84</span> ...</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> day.charge    <span class="sc">:</span> num  <span class="fl">45.1</span> <span class="fl">27.5</span> <span class="fl">41.4</span> <span class="fl">50.9</span> <span class="fl">28.3</span> ...</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> eve.mins      <span class="sc">:</span> num  <span class="fl">197.4</span> <span class="fl">195.5</span> <span class="fl">121.2</span> <span class="fl">61.9</span> <span class="fl">148.3</span> ...</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> eve.calls     <span class="sc">:</span> int  <span class="dv">99</span> <span class="dv">103</span> <span class="dv">110</span> <span class="dv">88</span> <span class="dv">122</span> <span class="dv">101</span> <span class="dv">108</span> <span class="dv">94</span> <span class="dv">80</span> <span class="dv">111</span> ...</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> eve.charge    <span class="sc">:</span> num  <span class="fl">16.78</span> <span class="fl">16.62</span> <span class="fl">10.3</span> <span class="fl">5.26</span> <span class="fl">12.61</span> ...</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> night.mins    <span class="sc">:</span> num  <span class="dv">245</span> <span class="dv">254</span> <span class="dv">163</span> <span class="dv">197</span> <span class="dv">187</span> ...</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> night.calls   <span class="sc">:</span> int  <span class="dv">91</span> <span class="dv">103</span> <span class="dv">104</span> <span class="dv">89</span> <span class="dv">121</span> <span class="dv">118</span> <span class="dv">118</span> <span class="dv">96</span> <span class="dv">90</span> <span class="dv">97</span> ...</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> night.charge  <span class="sc">:</span> num  <span class="fl">11.01</span> <span class="fl">11.45</span> <span class="fl">7.32</span> <span class="fl">8.86</span> <span class="fl">8.41</span> ...</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> customer.calls<span class="sc">:</span> int  <span class="dv">1</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">0</span> <span class="dv">3</span> <span class="dv">0</span> <span class="dv">1</span> <span class="dv">0</span> ...</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> churn         <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"yes"</span>,<span class="st">"no"</span><span class="sc">:</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The dataset is an <strong>R</strong> data frame containing 5000 observations and 19 predictor variables, along with a binary outcome variable, <code>churn</code>.</p>
+<p>Based on the earlier exploratory analysis and domain relevance, we focus on the following features for building the kNN model:</p>
+<p><code>account.length</code>, <code>voice.plan</code>, <code>voice.messages</code>, <code>intl.plan</code>, <code>intl.mins</code>, <code>intl.calls</code>, <code>day.mins</code>, <code>day.calls</code>, <code>eve.mins</code>, <code>eve.calls</code>, <code>night.mins</code>, <code>night.calls</code>, and <code>customer.calls</code>.</p>
+<p>In the remainder of this section, we proceed step by step: partitioning and preprocessing the data, selecting an appropriate value of <em>k</em>, fitting the kNN model, making predictions, and evaluating classification performance.</p>
+<section id="partitioning-and-preprocessing-the-data-for-knn" class="level3" data-number="7.7.1">
+<h3 data-number="7.7.1" class="anchored" data-anchor-id="partitioning-and-preprocessing-the-data-for-knn"><span class="header-section-number">7.7.1</span> Partitioning and Preprocessing the Data for kNN</h3>
+<p>To assess how well the kNN model generalizes to new observations, we begin by splitting the dataset into training and test sets. This separation provides an unbiased estimate of predictive accuracy by evaluating model performance on previously unseen data.</p>
+<p>Because the <em>churn</em> dataset is already cleaned and free of missing values (see Chapter <a href="3-Data-preparation.html" class="quarto-xref"><span>3</span></a>), we proceed directly to data partitioning using the <code>partition()</code> function from the <strong>liver</strong> package. This function divides the data into an 80% training set and a 20% test set:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>data_sets <span class="ot">=</span> <span class="fu">partition</span>(<span class="at">data =</span> churn, <span class="at">ratio =</span> <span class="fu">c</span>(<span class="fl">0.8</span>, <span class="fl">0.2</span>))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>train_set <span class="ot">=</span> data_sets<span class="sc">$</span>part1</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>test_set  <span class="ot">=</span> data_sets<span class="sc">$</span>part2</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>test_labels <span class="ot">=</span> test_set<span class="sc">$</span>churn</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The <code>partition()</code> function preserves the class distribution of the target variable (<code>churn</code>) across both sets, ensuring that the test set remains representative of the population. This stratified sampling approach is especially important for classification tasks with imbalanced outcomes. For additional background on data partitioning and validation strategies, refer to Section <a href="6-Setup-data.html#sec-ch6-validate-partition" class="quarto-xref"><span>6.5</span></a>.</p>
+<section id="encoding-categorical-features-for-knn" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="encoding-categorical-features-for-knn">Encoding Categorical Features for kNN</h4>
+<p>Because the kNN algorithm requires numerical inputs and relies on distance calculations, categorical features must be converted into numeric format. In the <em>churn</em> dataset, <code>voice.plan</code> and <code>intl.plan</code> are binary categorical variables that require transformation.</p>
+<p>The <code>one.hot()</code> function from the <strong>liver</strong> package automates this process by generating binary indicator features:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>categorical_vars <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"voice.plan"</span>, <span class="st">"intl.plan"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>train_onehot <span class="ot">=</span> <span class="fu">one.hot</span>(train_set, <span class="at">cols =</span> categorical_vars)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>test_onehot  <span class="ot">=</span> <span class="fu">one.hot</span>(test_set,  <span class="at">cols =</span> categorical_vars)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(test_onehot)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>   <span class="st">'data.frame'</span><span class="sc">:</span>    <span class="dv">1000</span> obs. of  <span class="dv">22</span> variables<span class="sc">:</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="er">$</span> state         <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">51</span> levels <span class="st">"AK"</span>,<span class="st">"AL"</span>,<span class="st">"AR"</span>,..<span class="sc">:</span> <span class="dv">37</span> <span class="dv">16</span> <span class="dv">10</span> <span class="dv">6</span> <span class="dv">41</span> <span class="dv">27</span> <span class="dv">1</span> <span class="dv">32</span> <span class="dv">21</span> <span class="dv">16</span> ...</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> area.code     <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">3</span> levels <span class="st">"area_code_408"</span>,..<span class="sc">:</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> ...</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> account.length<span class="sc">:</span> int  <span class="dv">75</span> <span class="dv">65</span> <span class="dv">147</span> <span class="dv">77</span> <span class="dv">111</span> <span class="dv">54</span> <span class="dv">36</span> <span class="dv">149</span> <span class="dv">135</span> <span class="dv">60</span> ...</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> voice.plan_yes<span class="sc">:</span> int  <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">1</span> <span class="dv">0</span> ...</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> voice.plan_no <span class="sc">:</span> int  <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">1</span> ...</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> voice.messages<span class="sc">:</span> int  <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">30</span> <span class="dv">0</span> <span class="dv">41</span> <span class="dv">0</span> ...</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> intl.plan_yes <span class="sc">:</span> int  <span class="dv">1</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">1</span> <span class="dv">0</span> ...</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> intl.plan_no  <span class="sc">:</span> int  <span class="dv">0</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">1</span> ...</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> intl.mins     <span class="sc">:</span> num  <span class="fl">10.1</span> <span class="fl">12.7</span> <span class="fl">10.6</span> <span class="fl">5.7</span> <span class="fl">7.7</span> <span class="fl">14.7</span> <span class="fl">14.5</span> <span class="fl">11.1</span> <span class="fl">14.6</span> <span class="fl">6.8</span> ...</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> intl.calls    <span class="sc">:</span> int  <span class="dv">3</span> <span class="dv">6</span> <span class="dv">4</span> <span class="dv">6</span> <span class="dv">6</span> <span class="dv">4</span> <span class="dv">6</span> <span class="dv">9</span> <span class="dv">15</span> <span class="dv">3</span> ...</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> intl.charge   <span class="sc">:</span> num  <span class="fl">2.73</span> <span class="fl">3.43</span> <span class="fl">2.86</span> <span class="fl">1.54</span> <span class="fl">2.08</span> <span class="fl">3.97</span> <span class="fl">3.92</span> <span class="dv">3</span> <span class="fl">3.94</span> <span class="fl">1.84</span> ...</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> day.mins      <span class="sc">:</span> num  <span class="fl">166.7</span> <span class="fl">129.1</span> <span class="fl">155.1</span> <span class="fl">62.4</span> <span class="fl">110.4</span> ...</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> day.calls     <span class="sc">:</span> int  <span class="dv">113</span> <span class="dv">137</span> <span class="dv">117</span> <span class="dv">89</span> <span class="dv">103</span> <span class="dv">73</span> <span class="dv">128</span> <span class="dv">94</span> <span class="dv">85</span> <span class="dv">57</span> ...</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> day.charge    <span class="sc">:</span> num  <span class="fl">28.3</span> <span class="fl">21.9</span> <span class="fl">26.4</span> <span class="fl">10.6</span> <span class="fl">18.8</span> ...</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> eve.mins      <span class="sc">:</span> num  <span class="dv">148</span> <span class="dv">228</span> <span class="dv">240</span> <span class="dv">170</span> <span class="dv">137</span> ...</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> eve.calls     <span class="sc">:</span> int  <span class="dv">122</span> <span class="dv">83</span> <span class="dv">93</span> <span class="dv">121</span> <span class="dv">102</span> <span class="dv">100</span> <span class="dv">80</span> <span class="dv">92</span> <span class="dv">107</span> <span class="dv">115</span> ...</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> eve.charge    <span class="sc">:</span> num  <span class="fl">12.6</span> <span class="fl">19.4</span> <span class="fl">20.4</span> <span class="fl">14.4</span> <span class="fl">11.7</span> ...</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> night.mins    <span class="sc">:</span> num  <span class="dv">187</span> <span class="dv">209</span> <span class="dv">209</span> <span class="dv">210</span> <span class="dv">190</span> ...</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> night.calls   <span class="sc">:</span> int  <span class="dv">121</span> <span class="dv">111</span> <span class="dv">133</span> <span class="dv">64</span> <span class="dv">105</span> <span class="dv">68</span> <span class="dv">109</span> <span class="dv">108</span> <span class="dv">78</span> <span class="dv">129</span> ...</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> night.charge  <span class="sc">:</span> num  <span class="fl">8.41</span> <span class="fl">9.4</span> <span class="fl">9.4</span> <span class="fl">9.43</span> <span class="fl">8.53</span> ...</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> customer.calls<span class="sc">:</span> int  <span class="dv">3</span> <span class="dv">4</span> <span class="dv">0</span> <span class="dv">5</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">0</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">1</span> ...</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> churn         <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"yes"</span>,<span class="st">"no"</span><span class="sc">:</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>For each binary variable, the function creates two columns (e.g., <code>voice.plan_yes</code> and <code>voice.plan_no</code>). Since the presence of one category implies the absence of the other, only one indicator variable (e.g., <code>voice.plan_yes</code>) is retained. This avoids redundancy and maintains interpretability while ensuring compatibility with distance-based modeling.</p>
+</section>
+<section id="feature-scaling-for-knn" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="feature-scaling-for-knn">Feature Scaling for kNN</h4>
+<p>To ensure that all numerical features contribute equally to distance calculations, we apply <em>min-max scaling</em>. This technique rescales each feature to the <span class="math inline">\([0,1]\)</span> range using the minimum and maximum values calculated from the <em>training set</em>. The same scaling parameters are then applied to the test set to prevent data leakage:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>numeric_vars <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"account.length"</span>, <span class="st">"voice.messages"</span>, <span class="st">"intl.mins"</span>, </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"intl.calls"</span>, <span class="st">"day.mins"</span>, <span class="st">"day.calls"</span>, <span class="st">"eve.mins"</span>, </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"eve.calls"</span>, <span class="st">"night.mins"</span>, <span class="st">"night.calls"</span>, </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"customer.calls"</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>min_train <span class="ot">=</span> <span class="fu">sapply</span>(train_set[, numeric_vars], min)   <span class="co"># Compute column-wise minimums</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>max_train <span class="ot">=</span> <span class="fu">sapply</span>(train_set[, numeric_vars], max)   <span class="co"># Compute column-wise maximums</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>train_scaled <span class="ot">=</span> <span class="fu">minmax</span>(train_onehot, <span class="at">col =</span> numeric_vars, <span class="at">min =</span> min_train, <span class="at">max =</span> max_train)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>test_scaled  <span class="ot">=</span> <span class="fu">minmax</span>(test_onehot,  <span class="at">col =</span> numeric_vars, <span class="at">min =</span> min_train, <span class="at">max =</span> max_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Here, the <code>sapply()</code> function is used to compute the column-wise minimum and maximum values across the selected numeric variables in the training set. These values define the scaling range. The <code>minmax()</code> function from the <strong>liver</strong> package then applies min-max normalization to both the training and test sets, using the training-set values as reference.</p>
+<p>This step ensures that all features are on a comparable scale, preventing those with larger ranges from disproportionately influencing the kNN distance calculations. For a more detailed discussion of scaling methods and best practices, see Section <a href="3-Data-preparation.html#sec-ch3-feature-scaling" class="quarto-xref"><span>3.10</span></a> and the preparation overview in Section <a href="#sec-ch7-knn-prep" class="quarto-xref"><span>7.5</span></a>. Now that the data are properly encoded and scaled, we are ready to choose the optimal number of neighbors (k) for the kNN algorithm.</p>
+</section>
+</section>
+<section id="finding-the-best-value-for-k" class="level3" data-number="7.7.2">
+<h3 data-number="7.7.2" class="anchored" data-anchor-id="finding-the-best-value-for-k"><span class="header-section-number">7.7.2</span> Finding the Best Value for (k)</h3>
+<p>The number of neighbors, <em>k</em>, is a key hyperparameter in the kNN algorithm. Choosing too small a <em>k</em> can make the model overly sensitive to noise in the data, while a very large <em>k</em> can oversmooth the decision boundary, potentially missing important local patterns.</p>
+<p>In <strong>R</strong>, there are several ways to choose the optimal value of <em>k</em>. A common approach is to evaluate the classification accuracy of the kNN algorithm across a range of values (e.g., from 1 to 30), and then select the <em>k</em> that yields the highest accuracy. This can be implemented manually using a <code>for</code> loop and tracking performance for each <em>k</em>.</p>
+<p>To simplify this process, the <strong>liver</strong> package provides the <code>kNN.plot()</code> function, which automates this task. It computes accuracy across a specified range of <em>k</em> values and produces a visual summary of the results, making it easier to identify the best-performing <em>k</em>.</p>
+<p>Before running the function, we define a <code>formula</code> object that specifies the relationship between the target variable (<code>churn</code>) and the predictor variables. The predictors include all scaled numerical features as well as the binary indicators generated through one-hot encoding—namely <code>intl.plan_yes</code> and <code>voice.plan_yes</code>:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>formula <span class="ot">=</span> churn <span class="sc">~</span> voice.plan_yes <span class="sc">+</span> intl.plan_yes <span class="sc">+</span> account.length <span class="sc">+</span> </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                  voice.messages <span class="sc">+</span> intl.mins <span class="sc">+</span> intl.calls <span class="sc">+</span> </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>                  day.mins <span class="sc">+</span> day.calls <span class="sc">+</span> eve.mins <span class="sc">+</span> eve.calls <span class="sc">+</span> </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                  night.mins <span class="sc">+</span> night.calls <span class="sc">+</span> customer.calls</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We now apply the <code>kNN.plot()</code> function:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">kNN.plot</span>(<span class="at">formula =</span> formula, <span class="at">train =</span> train_scaled, <span class="at">test =</span> test_scaled, </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>         <span class="at">k.max =</span> <span class="dv">30</span>, <span class="at">reference =</span> <span class="st">"yes"</span>, <span class="at">set.seed =</span> <span class="dv">42</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="7-Classification-kNN_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The arguments to <code>kNN.plot()</code> play distinct roles in shaping the evaluation. The <code>train</code> and <code>test</code> inputs specify the scaled datasets used for training and testing, respectively, ensuring that distance calculations are made on comparable feature scales. The <code>k.max = 30</code> argument defines the maximum number of neighbors to evaluate, allowing us to observe model behavior across a range of values. Setting <code>reference = "yes"</code> indicates that the <code>"yes"</code> class represents the positive outcome of interest—i.e., customer churn. Finally, <code>set.seed = 42</code> ensures reproducibility by fixing the random seed for any internal random processes.</p>
+<p>The resulting plot shows how model accuracy varies with <em>k</em>. In this case, the highest accuracy is achieved when <span class="math inline">\(k = 9\)</span>, suggesting that this value offers a good balance between capturing local structure and maintaining generalization. With the optimal value of <span class="math inline">\(k\)</span> identified, we are now ready to apply the kNN algorithm to classify new customer records in the test set.</p>
+</section>
+<section id="applying-the-knn-classifier" class="level3" data-number="7.7.3">
+<h3 data-number="7.7.3" class="anchored" data-anchor-id="applying-the-knn-classifier"><span class="header-section-number">7.7.3</span> Applying the kNN Classifier</h3>
+<p>With the optimal value <span class="math inline">\(k = 9\)</span> identified, we now apply the <em>k</em>-Nearest Neighbors (kNN) algorithm to classify customer churn in the test set. This step brings together the work from the previous sections—data preparation, feature encoding, scaling, and hyperparameter tuning.</p>
+<p>Unlike many machine learning algorithms, kNN does not build an explicit predictive model during training. Instead, it retains the training data and performs classification <em>on demand</em> by computing distances to determine the closest training examples.</p>
+<p>In <strong>R</strong>, we use the <code>kNN()</code> function from the <strong>liver</strong> package to apply the <em>k</em>-Nearest Neighbors algorithm. This function provides a formula-based interface, consistent with other modeling functions in <strong>R</strong>, making the syntax more readable and the modeling process more transparent. An alternative is the <code>knn()</code> function from the <strong>class</strong> package, which requires manually specifying input matrices and class labels. While effective, this approach is less intuitive for beginners and is not used in this book:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>kNN_predict <span class="ot">=</span> <span class="fu">kNN</span>(<span class="at">formula =</span> formula, <span class="at">train =</span> train_scaled, <span class="at">test =</span> test_scaled, <span class="at">k =</span> <span class="dv">9</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In this command, <code>formula</code> defines the relationship between the response variable (<code>churn</code>) and the predictors. The <code>train</code> and <code>test</code> arguments specify the scaled datasets prepared in earlier steps. The parameter <code>k = 9</code> sets the number of nearest neighbors to use, as determined in the tuning step.</p>
+<p>The <code>kNN()</code> function classifies each test observation by computing its distance to all records in the training set and assigning the majority class among the nine nearest neighbors.</p>
+</section>
+<section id="evaluating-model-performance-of-the-knn-model" class="level3" data-number="7.7.4">
+<h3 data-number="7.7.4" class="anchored" data-anchor-id="evaluating-model-performance-of-the-knn-model"><span class="header-section-number">7.7.4</span> Evaluating Model Performance of the kNN Model</h3>
+<p>With predictions in hand, the final step is to assess how well the kNN model performs. A fundamental and intuitive evaluation tool is the <em>confusion matrix</em>, which summarizes the correspondence between predicted and actual class labels in the test set.</p>
+<p>We use the <code>conf.mat.plot()</code> function from the <strong>liver</strong> package to compute and visualize this matrix. The argument <code>reference = "yes"</code> specifies that the positive class refers to customers who have churned:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">conf.mat.plot</span>(kNN_predict, test_labels, <span class="at">reference =</span> <span class="st">"yes"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="7-Classification-kNN_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:30.0%" data-fig-pos="H"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The resulting matrix displays the number of true positives, true negatives, false positives, and false negatives. In this example, the model correctly classified 898 observations and misclassified 102.</p>
+<p>While the confusion matrix provides a useful snapshot of model performance, it does not capture all aspects of classification quality. In Chapter <a href="8-Model-evaluation.html" class="quarto-xref"><span>8</span></a>, we introduce additional evaluation metrics—including accuracy, precision, recall, and F1-score—that offer a more nuanced assessment.</p>
+</section>
+<section id="summary-of-the-knn-case-study" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="summary-of-the-knn-case-study">Summary of the kNN Case Study</h3>
+<p>This case study has demonstrated the complete modeling pipeline for applying <em>k</em>-Nearest Neighbors (kNN): starting with data partitioning, followed by preprocessing (including encoding and scaling), tuning the hyperparameter <em>k</em>, applying the classifier, and evaluating the results. Each stage plays a critical role in ensuring that the final predictions are both accurate and interpretable.</p>
+<p>While the confusion matrix provides an initial evaluation of model performance, a more comprehensive assessment requires additional metrics such as accuracy, precision, recall, and F1-score. These will be explored in the next chapter (Chapter <a href="8-Model-evaluation.html" class="quarto-xref"><span>8</span></a>), which introduces tools and techniques for evaluating and comparing machine learning models more rigorously.</p>
+</section>
+</section>
+<section id="chapter-summary-and-takeaways" class="level2" data-number="7.8">
+<h2 data-number="7.8" class="anchored" data-anchor-id="chapter-summary-and-takeaways"><span class="header-section-number">7.8</span> Chapter Summary and Takeaways</h2>
+<p>This chapter introduced the <em>k</em>-Nearest Neighbors (kNN) algorithm, a simple yet effective method for classification. We began by revisiting the concept of classification and its practical applications, distinguishing between binary and multi-class problems. We then examined how kNN classifies observations by identifying their nearest neighbors using distance metrics.</p>
+<p>To ensure meaningful distance comparisons, we discussed essential preprocessing steps such as one-hot encoding of categorical variables and feature scaling. We also explored how to select the optimal number of neighbors (<span class="math inline">\(k\)</span>), emphasizing the trade-off between overfitting and underfitting. These concepts were demonstrated through a complete case study using the <strong>liver</strong> package in <strong>R</strong> and the <em>churn</em> dataset, highlighting the importance of thoughtful data preparation and parameter tuning.</p>
+<p>The simplicity and interpretability of kNN make it a valuable introductory model. However, its limitations—including sensitivity to noise, reliance on proper scaling, and inefficiency with large datasets—can reduce its practicality for large-scale applications. Despite these drawbacks, kNN remains a strong baseline for classification tasks and a useful reference point for model comparison.</p>
+<p>While our focus has been on <em>classification</em>, the kNN algorithm also supports <em>regression</em>. In <em>kNN regression</em>, the target variable is numeric, and predictions are based on averaging the outcomes of the <em>k</em> nearest neighbors. This variant follows the same core principles and offers a non-parametric alternative to traditional regression models.</p>
+<p>Another important use case is <em>imputation of missing values</em>, where kNN fills in missing entries by identifying similar observations and using their values (via majority vote or averaging). This method preserves local structure in the data and often outperforms basic imputation techniques such as mean substitution, especially when the extent of missingness is moderate.</p>
+<p>In the chapters that follow, we turn to more advanced classification methods. We begin with Naive Bayes (Chapter <a href="9-Naive-Bayes.html" class="quarto-xref"><span>9</span></a>), followed by Logistic Regression (Chapter <a href="10-Regression.html" class="quarto-xref"><span>10</span></a>), and Decision Trees (Chapter <a href="11-Tree-based-models.html" class="quarto-xref"><span>11</span></a>). These models address many of kNN’s limitations and provide more scalable and robust tools for real-world predictive tasks.</p>
+</section>
+<section id="sec-ch7-exercises" class="level2" data-number="7.9">
+<h2 data-number="7.9" class="anchored" data-anchor-id="sec-ch7-exercises"><span class="header-section-number">7.9</span> Exercises</h2>
+<p>The following exercises reinforce key ideas introduced in this chapter. Begin with conceptual questions to test your understanding, continue with hands-on modeling tasks using the <em>bank</em> dataset, and conclude with reflective prompts and real-world considerations for applying kNN.</p>
+<section id="conceptual-questions" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="conceptual-questions">Conceptual Questions</h3>
+<ol type="1">
+<li><p>Explain the fundamental difference between classification and regression. Provide an example of each.</p></li>
+<li><p>What are the key steps in applying the kNN algorithm?</p></li>
+<li><p>Why is the choice of <span class="math inline">\(k\)</span> important in kNN, and what happens when <span class="math inline">\(k\)</span> is too small or too large?</p></li>
+<li><p>Describe the role of distance metrics in kNN classification. Why is Euclidean distance commonly used?</p></li>
+<li><p>What are the limitations of kNN compared to other classification algorithms?</p></li>
+<li><p>How does feature scaling impact the performance of kNN? Why is it necessary?</p></li>
+<li><p>How is one-hot encoding used in kNN, and why is it necessary for categorical variables?</p></li>
+<li><p>How does kNN handle missing values? What strategies can be used to deal with missing data?</p></li>
+<li><p>Explain the difference between <em>lazy learning</em> (such as kNN) and <em>eager learning</em> (such as decision trees or logistic regression). Give one advantage of each.</p></li>
+<li><p>Why is kNN considered a non-parametric algorithm? What advantages and disadvantages does this bring?</p></li>
+</ol>
+</section>
+<section id="hands-on-practice-applying-knn-to-the-bank-dataset" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="hands-on-practice-applying-knn-to-the-bank-dataset">Hands-On Practice: Applying kNN to the Bank Dataset</h3>
+<p>The following tasks apply the kNN algorithm to the <em>bank</em> dataset from the <strong>liver</strong> package. This dataset includes customer demographics and banking history, with the goal of predicting whether a customer subscribed to a term deposit. These exercises follow the same modeling steps as the churn case study and offer opportunities to deepen your practical understanding.</p>
+<p>To begin, load the necessary package and dataset:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(liver)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the dataset</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(bank)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co"># View the structure of the dataset</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(bank)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>   <span class="st">'data.frame'</span><span class="sc">:</span>    <span class="dv">4521</span> obs. of  <span class="dv">17</span> variables<span class="sc">:</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="er">$</span> age      <span class="sc">:</span> int  <span class="dv">30</span> <span class="dv">33</span> <span class="dv">35</span> <span class="dv">30</span> <span class="dv">59</span> <span class="dv">35</span> <span class="dv">36</span> <span class="dv">39</span> <span class="dv">41</span> <span class="dv">43</span> ...</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> job      <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">12</span> levels <span class="st">"admin."</span>,<span class="st">"blue-collar"</span>,..<span class="sc">:</span> <span class="dv">11</span> <span class="dv">8</span> <span class="dv">5</span> <span class="dv">5</span> <span class="dv">2</span> <span class="dv">5</span> <span class="dv">7</span> <span class="dv">10</span> <span class="dv">3</span> <span class="dv">8</span> ...</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> marital  <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">3</span> levels <span class="st">"divorced"</span>,<span class="st">"married"</span>,..<span class="sc">:</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> ...</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> education<span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">4</span> levels <span class="st">"primary"</span>,<span class="st">"secondary"</span>,..<span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">1</span> ...</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> default  <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"no"</span>,<span class="st">"yes"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> ...</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> balance  <span class="sc">:</span> int  <span class="dv">1787</span> <span class="dv">4789</span> <span class="dv">1350</span> <span class="dv">1476</span> <span class="dv">0</span> <span class="dv">747</span> <span class="dv">307</span> <span class="dv">147</span> <span class="dv">221</span> <span class="sc">-</span><span class="dv">88</span> ...</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> housing  <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"no"</span>,<span class="st">"yes"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> ...</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> loan     <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"no"</span>,<span class="st">"yes"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> ...</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> contact  <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">3</span> levels <span class="st">"cellular"</span>,<span class="st">"telephone"</span>,..<span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">1</span> ...</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> day      <span class="sc">:</span> int  <span class="dv">19</span> <span class="dv">11</span> <span class="dv">16</span> <span class="dv">3</span> <span class="dv">5</span> <span class="dv">23</span> <span class="dv">14</span> <span class="dv">6</span> <span class="dv">14</span> <span class="dv">17</span> ...</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> month    <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">12</span> levels <span class="st">"apr"</span>,<span class="st">"aug"</span>,<span class="st">"dec"</span>,..<span class="sc">:</span> <span class="dv">11</span> <span class="dv">9</span> <span class="dv">1</span> <span class="dv">7</span> <span class="dv">9</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">9</span> <span class="dv">9</span> <span class="dv">1</span> ...</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> duration <span class="sc">:</span> int  <span class="dv">79</span> <span class="dv">220</span> <span class="dv">185</span> <span class="dv">199</span> <span class="dv">226</span> <span class="dv">141</span> <span class="dv">341</span> <span class="dv">151</span> <span class="dv">57</span> <span class="dv">313</span> ...</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> campaign <span class="sc">:</span> int  <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> ...</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> pdays    <span class="sc">:</span> int  <span class="sc">-</span><span class="dv">1</span> <span class="dv">339</span> <span class="dv">330</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">-</span><span class="dv">1</span> <span class="dv">176</span> <span class="dv">330</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">-</span><span class="dv">1</span> <span class="dv">147</span> ...</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> previous <span class="sc">:</span> int  <span class="dv">0</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">2</span> ...</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> poutcome <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">4</span> levels <span class="st">"failure"</span>,<span class="st">"other"</span>,..<span class="sc">:</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">1</span> ...</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> deposit  <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"no"</span>,<span class="st">"yes"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="data-exploration-and-preparation" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="data-exploration-and-preparation">Data Exploration and Preparation</h4>
+<ol start="11" type="1">
+<li><p>Load the <em>bank</em> dataset and display its structure. Identify the target variable and the predictor variables.</p></li>
+<li><p>Perform an initial EDA:</p>
+<ul>
+<li>What are the distributions of key numeric variables like <code>age</code>, <code>balance</code>, and <code>duration</code>?</li>
+<li>Are there any unusually high or low values that might influence distance calculations in kNN?</li>
+</ul></li>
+<li><p>Explore potential associations:</p>
+<ul>
+<li>Are there noticeable differences in numeric features (e.g., <code>balance</code>, <code>duration</code>) between customers who subscribed to a deposit versus those who did not?</li>
+<li>Are there categorical features (e.g., <code>job</code>, <code>marital</code>) that seem associated with the outcome?</li>
+</ul></li>
+<li><p>Count the number of instances where a customer subscribed to a term deposit (<em>deposit = “yes”</em>) versus those who did not (<em>deposit = “no”</em>). What does this tell you about class imbalance?</p></li>
+<li><p>Identify nominal variables in the dataset. Apply one-hot encoding using the <code>one.hot()</code> function. Retain only one dummy variable per categorical feature to avoid redundancy and multicollinearity.</p></li>
+<li><p>Partition the dataset into 80% training and 20% testing sets using the <code>partition()</code> function. Ensure the target variable remains proportionally distributed in both sets.</p></li>
+<li><p>Validate the partitioning by comparing the class distribution of the target variable in the training and test sets.</p></li>
+<li><p>Apply min-max scaling to numerical variables in both training and test sets. Ensure that the scaling parameters are derived from the training set only.</p></li>
+</ol>
+</section>
+<section id="diagnosing-the-impact-of-preprocessing" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="diagnosing-the-impact-of-preprocessing">Diagnosing the Impact of Preprocessing</h4>
+<ol start="19" type="1">
+<li><p>What happens if you skip feature scaling before applying kNN? Train a model without scaling and compare its accuracy to the scaled version.</p></li>
+<li><p>What happens if you leave categorical variables as strings without applying one-hot encoding? Does the model return an error, or does performance decline? Explain why.</p></li>
+</ol>
+</section>
+<section id="choosing-the-optimal-k" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="choosing-the-optimal-k">Choosing the Optimal k</h4>
+<ol start="21" type="1">
+<li><p>Use the <code>kNN.plot()</code> function to determine the optimal <span class="math inline">\(k\)</span> value for classifying <code>deposit</code> in the <em>bank</em> dataset.</p></li>
+<li><p>What is the best <span class="math inline">\(k\)</span> value based on accuracy? How does accuracy change as <span class="math inline">\(k\)</span> increases?</p></li>
+<li><p>Interpret the meaning of the accuracy curve generated by <code>kNN.plot()</code>. What patterns do you observe?</p></li>
+</ol>
+</section>
+<section id="building-and-evaluating-the-knn-model" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="building-and-evaluating-the-knn-model">Building and Evaluating the kNN Model</h4>
+<ol start="24" type="1">
+<li><p>Train a kNN model using the optimal <span class="math inline">\(k\)</span> and make predictions on the test set.</p></li>
+<li><p>Generate a confusion matrix for the kNN model predictions using the <code>conf.mat()</code> function. Interpret the results.</p></li>
+<li><p>Calculate the accuracy of the kNN model. How well does it perform in predicting <em>deposit</em>?</p></li>
+<li><p>Compare the performance of kNN with different values of <span class="math inline">\(k\)</span> (e.g., <span class="math inline">\(k = 1, 5, 15, 25\)</span>). How does changing <span class="math inline">\(k\)</span> affect the classification results?</p></li>
+<li><p>Train a kNN model using only a subset of features: <code>age</code>, <code>balance</code>, <code>duration</code>, and <code>campaign</code>. Compare its accuracy with the full-feature model. What does this tell you about feature selection?</p></li>
+<li><p>Compare the accuracy of kNN when using min-max scaling versus z-score standardization. How does the choice of scaling method impact model performance?</p></li>
+</ol>
+</section>
+</section>
+<section id="critical-thinking-and-real-world-applications" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="critical-thinking-and-real-world-applications">Critical Thinking and Real-World Applications</h3>
+<ol start="30" type="1">
+<li><p>Suppose you are building a fraud detection system for a bank. Would kNN be a suitable algorithm? What are its advantages and limitations in this context?</p></li>
+<li><p>How would you handle imbalanced classes in the <em>bank</em> dataset? What strategies could improve classification performance?</p></li>
+<li><p>In a high-dimensional dataset with hundreds of features, would kNN still be an effective approach? Why or why not?</p></li>
+<li><p>Imagine you are working with a dataset where new observations are collected continuously. What challenges would kNN face, and how could they be addressed?</p></li>
+<li><p>If a financial institution wants to classify customers into different risk categories for loan approval, what preprocessing steps would be essential before applying kNN?</p></li>
+<li><p>In a dataset where some features are irrelevant or redundant, how could you improve kNN’s performance? What feature selection methods would you use?</p></li>
+<li><p>If computation time is a concern, what strategies could you apply to make kNN more efficient for large datasets?</p></li>
+<li><p>Suppose kNN is performing poorly on the <em>bank</em> dataset. What possible reasons could explain this, and how would you troubleshoot the issue?</p></li>
+</ol>
+</section>
+<section id="self-reflection" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="self-reflection">Self-Reflection</h3>
+<ol start="38" type="1">
+<li><p>What did you find most intuitive about the kNN algorithm? What aspects required more effort to understand?</p></li>
+<li><p>How did the visualizations (e.g., scatter plots, accuracy curves, and confusion matrices) help you understand the behavior of the model?</p></li>
+<li><p>If you were to explain how kNN works to a colleague or friend, how would you describe it in your own words?</p></li>
+<li><p>How would you decide whether kNN is a good choice for a new dataset or project you are working on?</p></li>
+<li><p>Which data preprocessing steps—such as encoding or scaling—felt most important in improving kNN’s performance?</p></li>
+</ol>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/uncovering-data-science\.netlify\.app");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./6-Setup-data.html" class="pagination-link" aria-label="Setting Up Data for Modeling">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Setting Up Data for Modeling</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./8-Model-evaluation.html" class="pagination-link" aria-label="Evaluating Machine Learning Models">
+        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Evaluating Machine Learning Models</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Data Science Foundations and Machine Learning with R was written by <a href="https://www.uva.nl/profile/a.mohammadi"><span style="color:gray">Reza Mohammadi</span></a>.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/RezaMoammadi/Book-Data-Science/edit/main/7-Classification-kNN.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/RezaMoammadi/Book-Data-Science/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>This book was built with <a href="https://quarto.org/">Quarto</a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
