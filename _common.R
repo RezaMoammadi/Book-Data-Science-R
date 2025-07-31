@@ -6,36 +6,39 @@ set.seed(42)
 # R options set globally
 # options(width = 60)
 
+options(repos = c(CRAN = "https://cran.rstudio.com"))
+
 # Any package that is required by the script below is given here:
 inst_pkgs = load_pkgs = c(
-    "bookdown",
-    "mltools",
-    "knitr",
-    "kableExtra", 
-    "tidyr",   # for pivot_longer function in ch12
-    "mice",    # for imputation in ch13
-    "liver", 
-    "ggplot2", 
-    "plyr",    # for mutate function
-    "dplyr",   # for filter and between functions
-    "forcats", # for fct_collapse function in ch4
-    "Hmisc",   # for handling missing values
-    "naniar",  # for visualizing missing values
-    "ROSE",
-    "gganimate", # for animation in ch4
-    "ggcorrplot", # for correlation plot in ch4
-    "dslabs",    # for gapminder dataset in ch4
-    
-    "pROC", 
-    "neuralnet",
-    "psych", 
-    "rpart", 
-    "rpart.plot", 
-    "C50", 
-    "randomForest",
-    "naivebayes",
-    "factoextra",
-    "here")
+  #"bookdown",
+  "mltools",
+  "knitr",
+  "kableExtra", 
+  "tidyr",   # for pivot_longer function in ch12
+  "mice",    # for imputation in ch13
+  "ranger",  # for mice package we need in ch13
+  "liver", 
+  "ggplot2", 
+  "plyr",    # for mutate function
+  "dplyr",   # for filter and between functions
+  "forcats", # for fct_collapse function in ch4
+  "Hmisc",   # for handling missing values
+  "naniar",  # for visualizing missing values
+  "ROSE",
+  "gganimate", # for animation in ch4
+  "ggcorrplot", # for correlation plot in ch4
+  "dslabs",    # for gapminder dataset in ch4
+  
+  "pROC", 
+  "neuralnet",
+  "psych", 
+  "rpart", 
+  "rpart.plot", 
+  "C50", 
+  "randomForest",
+  "naivebayes",
+  "factoextra",
+  "here")
 
 inst_pkgs = inst_pkgs[!(inst_pkgs %in% installed.packages()[,"Package"])]
 if (length(inst_pkgs)) install.packages(inst_pkgs)
