@@ -4,9 +4,9 @@ source("_common.R")
 
 # Evaluating Machine Learning Models {#sec-ch8-evaluation}
 
-How do we know whether a machine learning model is actually good? Is 95% accuracy always impressive—or can it be misleading? How do we balance catching true cases while minimizing false alarms? These are the kinds of questions we begin to answer in this chapter.
+How do we know whether a machine learning model is actually good? Is 95% accuracy always impressive, or can it be misleading? How do we balance catching true cases while minimizing false alarms? These are the kinds of questions we begin to answer in this chapter.
 
-Consider this: if you give the same dataset and research question to ten different data science teams, you are likely to receive ten different results—often with dramatically different conclusions. Why does this happen? These differences often arise not from the data or models themselves, but from how each team *evaluates* their results. One team’s “successful” model might be another team’s failure, depending on the metrics they prioritize, how they set thresholds, and what trade-offs they are willing to make. As [George Box](https://en.wikipedia.org/wiki/George_E._P._Box) famously said, *"All models are wrong, but some are useful."* Evaluation helps us determine which models are useful enough to inform decisions and guide action. This chapter gives you the tools to understand those differences—and to evaluate models with clarity and confidence.
+Consider this: if you give the same dataset and research question to ten different data science teams, you are likely to receive ten different results, often with dramatically different conclusions. Why does this happen? These differences often arise not from the data or models themselves, but from how each team *evaluates* their results. One team’s “successful” model might be another team’s failure, depending on the metrics they prioritize, how they set thresholds, and what trade-offs they are willing to make. As [George Box](https://en.wikipedia.org/wiki/George_E._P._Box) famously said, *"All models are wrong, but some are useful."* Evaluation helps us determine which models are useful enough to inform decisions and guide action. This chapter gives you the tools to understand those differences, and to evaluate models with clarity and confidence.
 
 In the previous chapter, we introduced our first machine learning algorithm: kNN. We learned how to build a classifier using the *churn* dataset, carefully scaling features and tuning the number of neighbors to improve predictions. This raises a critical question: *How can we determine whether the model truly performs well?*
 
@@ -30,11 +30,11 @@ A model may perform well during development but fail in deployment, where data d
 
 Developing a model is only the beginning. Its real value lies in its ability to generalize to *new, unseen data*. A model may perform well during development but fail in real-world deployment, where data distributions often shift and the cost of errors can be much higher.
 
-Consider a model built to detect fraudulent credit card transactions. Suppose it achieves 95% accuracy. While this might sound impressive, it could be misleading if only 1% of the transactions are actually fraudulent. In such an imbalanced dataset, a model might simply label all transactions as legitimate to attain high accuracy—yet fail entirely to detect fraud. This example illustrates a crucial point: *accuracy alone does not always tell the full story*, especially in class-imbalanced settings.
+Consider a model built to detect fraudulent credit card transactions. Suppose it achieves 95% accuracy. While this might sound impressive, it could be misleading if only 1% of the transactions are actually fraudulent. In such an imbalanced dataset, a model might simply label all transactions as legitimate to attain high accuracy, yet fail entirely to detect fraud. This example illustrates a crucial point: *accuracy alone does not always tell the full story*, especially in class-imbalanced settings.
 
-Effective model evaluation offers a more nuanced view of performance by revealing both strengths and limitations. It helps clarify what the model does well—such as correctly identifying fraud—and where it falls short, such as missing fraudulent cases or producing too many false alarms. It also surfaces trade-offs between competing priorities, such as sensitivity versus specificity, or precision versus recall.
+Effective model evaluation offers a more nuanced view of performance by revealing both strengths and limitations. It helps clarify what the model does well, such as correctly identifying fraud, and where it falls short, such as missing fraudulent cases or producing too many false alarms. It also surfaces trade-offs between competing priorities, such as sensitivity versus specificity, or precision versus recall.
 
-In this sense, evaluation is not just about metrics—it is about trust. A well-evaluated model informs responsible decision-making by aligning performance with the needs and risks of the application. Key questions include:
+In this sense, evaluation is not just about metrics, it is about trust. A well-evaluated model informs responsible decision-making by aligning performance with the needs and risks of the application. Key questions include:
 
 -   How well does the model handle class imbalance?
 
@@ -42,13 +42,13 @@ In this sense, evaluation is not just about metrics—it is about trust. A well-
 
 -   Does it minimize false positives, such as incorrectly classifying a legitimate email as spam?
 
-These considerations show why model evaluation is a critical step in the data science workflow. Choosing appropriate metrics—and interpreting them in context—enables us to move beyond surface-level performance and toward robust, reliable solutions.
+These considerations show why model evaluation is a critical step in the data science workflow. Choosing appropriate metrics, and interpreting them in context, enables us to move beyond surface-level performance and toward robust, reliable solutions.
 
 ### What This Chapter Covers {.unnumbered}
 
 This chapter introduces essential tools for evaluating machine learning models. We begin with binary classification, focusing on how to interpret confusion matrices and compute key performance metrics such as accuracy, precision, recall, and the F1-score. We also examine how adjusting classification thresholds can influence predictions and introduce ROC curves and the Area Under the Curve (AUC) as effective tools for visualizing and comparing classifier performance.
 
-We then introduce evaluation metrics for regression models, including Mean Absolute Error (MAE), Root Mean Squared Error (RMSE), and the coefficient of determination ($R^2$), with guidance on interpreting these values in applied contexts.
+We then introduce evaluation metrics for regression models, including Mean Absolute Error (MAE) and the coefficient of determination ($R^2$), with guidance on interpreting these values in applied contexts.
 
 These evaluation metrics are among the most widely used in machine learning. They will appear frequently in the chapters that follow as we explore a variety of classification and regression algorithms. Mastering them now will equip you with the tools to assess and compare models throughout the rest of the book.
 
@@ -58,13 +58,13 @@ We begin with one of the most foundational tools in model evaluation: the *confu
 
 ## Confusion Matrix {#sec-ch8-confusion-matrix}
 
-How can we tell exactly where a model performs well—and where it fails? The *confusion matrix* provides a structured answer. It is one of the most fundamental tools for evaluating classification models, breaking down predictions into four outcomes based on the comparison of predicted and actual class labels.
+How can we tell exactly where a model performs well, and where it fails? The *confusion matrix* provides a structured answer. It is one of the most fundamental tools for evaluating classification models, breaking down predictions into four outcomes based on the comparison of predicted and actual class labels.
 
-In binary classification, one class is typically designated as the *positive class*—the class of primary interest—while the other is considered the *negative class*. For instance, in fraud detection, fraudulent transactions are usually labeled as positive, and legitimate ones as negative.
+In binary classification, one class is typically designated as the *positive class*, the class of primary interest, while the other is considered the *negative class*. For instance, in fraud detection, fraudulent transactions are usually labeled as positive, and legitimate ones as negative.
 
 ::: {#tbl-confusion-matrix .table}
 | *Predicted*       | Positive                                        | Negative                                    |
-|-----------------|-----------------------------|---------------------------|
+|------------------|----------------------------|--------------------------|
 | *Actual Positive* | [**True Positive (TP)**]{style="color: green;"} | [False Negative (FN)]{style="color: red;"}  |
 | *Actual Negative* | [False Positive (FP)]{style="color: red;"}      | [True Negative (TN)]{style="color: green;"} |
 
@@ -73,7 +73,7 @@ Confusion matrix for binary classification, summarizing correct and incorrect pr
 
 Each cell in the matrix represents one of four possible outcomes. *True Positives (TP)* occur when the model correctly predicts the positive class (e.g., fraud detected as fraud). *False Positives (FP)* arise when the model incorrectly flags the positive class (e.g., legitimate transactions incorrectly flagged as fraud). *True Negatives (TN)* are correct predictions of the negative class, while *False Negatives (FN)* represent missed detections of the positive class (e.g., fraudulent transactions classified as legitimate).
 
-This structure may feel familiar—it mirrors the concept of *Type I and Type II errors* introduced in Chapter [-@sec-ch5-statistics] on hypothesis testing. The diagonal elements (TP and TN) represent correct predictions, while the off-diagonal elements (FP and FN) represent errors.
+This structure may feel familiar, it mirrors the concept of *Type I and Type II errors* introduced in Chapter [-@sec-ch5-statistics] on hypothesis testing. The diagonal elements (TP and TN) represent correct predictions, while the off-diagonal elements (FP and FN) represent errors.
 
 With the confusion matrix in hand, we can compute basic performance metrics. Two of the most general are *accuracy* and *error rate*.
 
@@ -89,9 +89,9 @@ $$
 \text{Error Rate} = 1 - \text{Accuracy} = \frac{\text{FP} + \text{FN}}{\text{Total Predictions}}
 $$
 
-These metrics offer a broad summary of model performance. However, they can be misleading. Imagine a dataset in which only 5% of transactions are fraudulent. A model that labels all transactions as legitimate would still achieve 95% accuracy—yet completely fail to detect fraud. This illustrates a classic case where accuracy hides deeper weaknesses, especially in imbalanced datasets.
+These metrics offer a broad summary of model performance. However, they can be misleading. Imagine a dataset in which only 5% of transactions are fraudulent. A model that labels all transactions as legitimate would still achieve 95% accuracy, yet completely fail to detect fraud. This illustrates a classic case where accuracy hides deeper weaknesses, especially in imbalanced datasets.
 
-To better understand a model’s strengths and weaknesses—such as how well it identifies positive cases or avoids false alarms—we need more detailed metrics. The next section introduces sensitivity, specificity, precision, and recall.
+To better understand a model’s strengths and weaknesses, such as how well it identifies positive cases or avoids false alarms, we need more detailed metrics. The next section introduces sensitivity, specificity, precision, and recall.
 
 Let us revisit the kNN model from Chapter [-@sec-ch7-classification-knn], which was used to predict customer churn using the `churn` dataset. We now evaluate its performance using a confusion matrix. We begin by applying the kNN model to the test set:
 
@@ -117,7 +117,7 @@ kNN_predict = kNN(formula = formula, train = train_set,
 
 For details on how this model was built, see Section [-@sec-ch7-knn-churn]. Here we use `scaler = "minmax"` to scale numeric features to the $[0, 1]$ range and one-hot encode binary variables.
 
-In **R**, one way to compute a confusion matrix is by using the `conf.mat()` function from the **liver** package, which provides a consistent interface for classification evaluation. The same package also includes `conf.mat.plot()` for visualizing confusion matrices, making interpretation more intuitive.
+In R, one way to compute a confusion matrix is by using the `conf.mat()` function from the **liver** package, which provides a consistent interface for classification evaluation. The same package also includes `conf.mat.plot()` for visualizing confusion matrices, making interpretation more intuitive.
 
 We compute the confusion matrix as follows:
 
@@ -125,7 +125,7 @@ We compute the confusion matrix as follows:
 conf.mat(pred = kNN_predict, actual = test_labels, reference = "yes")
 ```
 
-The `conf.mat()` function accepts several key arguments. The `pred` argument specifies the predicted class labels or probabilities, while `actual` contains the true labels from the test set. The `reference` argument designates which class is treated as the *positive class*. The optional `cutoff` argument is used when probabilities are predicted (defaulting to 0.5), but it is not needed here because `kNN_predict` returns class labels. In this example, `"yes"` denotes the positive class—indicating customers who churned.
+The `conf.mat()` function accepts several key arguments. The `pred` argument specifies the predicted class labels or probabilities, while `actual` contains the true labels from the test set. The `reference` argument designates which class is treated as the *positive class*. The optional `cutoff` argument is used when probabilities are predicted (defaulting to 0.5), but it is not needed here because `kNN_predict` returns class labels. In this example, `"yes"` denotes the positive class, indicating customers who churned.
 
 ```{r echo=FALSE}
 conf_max_knn_churn = conf.mat(pred = kNN_predict, actual = test_labels, reference = "yes")
@@ -153,19 +153,19 @@ $$
 
 Thus, the model correctly classified `r round((conf_max_knn_churn[1, 1] + conf_max_knn_churn[2, 2]) / sum(conf_max_knn_churn), 3) * 100`% of cases, while `r round((conf_max_knn_churn[2, 1] + conf_max_knn_churn[1, 2]) / sum(conf_max_knn_churn), 3) * 100`% were misclassified.
 
-Having reviewed accuracy and error rate, we next turn to additional evaluation metrics that provide more insight into a model’s strengths and limitations—particularly in imbalanced or high-stakes classification settings. The next section introduces *sensitivity*, *specificity*, *precision*, and *recall*.
+Having reviewed accuracy and error rate, we next turn to additional evaluation metrics that provide more insight into a model’s strengths and limitations, particularly in imbalanced or high-stakes classification settings. The next section introduces *sensitivity*, *specificity*, *precision*, and *recall*.
 
 ## Sensitivity and Specificity
 
-Suppose your model achieves 98% accuracy in detecting credit card fraud. Sounds impressive—but what if only 2% of transactions are actually fraudulent? Could a model that simply labels every transaction as not fraud still reach that 98% accuracy? This is where accuracy falls short—and where *sensitivity* and *specificity* become essential.
+Suppose your model achieves 98% accuracy in detecting credit card fraud. Sounds impressive, but what if only 2% of transactions are actually fraudulent? Could a model that simply labels every transaction as not fraud still reach that 98% accuracy? This is where accuracy falls short, and where *sensitivity* and *specificity* become essential.
 
-In classification, it is not enough to know how many predictions are correct overall. We also need to understand *how well the model identifies each class*. Sensitivity and specificity are two complementary metrics that help answer this question, especially in situations with *imbalanced data*—when one class appears much more frequently than the other.
+In classification, it is not enough to know how many predictions are correct overall. We also need to understand *how well the model identifies each class*. Sensitivity and specificity are two complementary metrics that help answer this question, especially in situations with *imbalanced data*, when one class appears much more frequently than the other.
 
 These metrics allow us to examine the model's strengths and weaknesses more critically by asking whether it can detect rare but important cases, such as fraud or disease, and whether it avoids misclassifying too many negative cases. By separating performance across the positive and negative classes, sensitivity and specificity help us go beyond accuracy and build more trustworthy models.
 
 ### Sensitivity
 
-How good is your model at *catching the cases that matter most*? That is the question sensitivity helps answer. *Sensitivity*—also known as *recall* in fields like information retrieval—measures a model’s ability to correctly identify *positive cases*. In other words, it answers: *Out of all the actual positives, how many did the model correctly predict?*
+How good is your model at *catching the cases that matter most*? That is the question sensitivity helps answer. *Sensitivity*, also known as *recall* in fields like information retrieval, measures a model’s ability to correctly identify *positive cases*. In other words, it answers: *Out of all the actual positives, how many did the model correctly predict?*
 
 This matters most in situations where missing a positive case has serious consequences, such as failing to detect fraud or disease. The formula for sensitivity is:
 
@@ -173,7 +173,7 @@ $$
 \text{Sensitivity} = \frac{\text{True Positives (TP)}}{\text{True Positives (TP)} + \text{False Negatives (FN)}}
 $$
 
-Let us apply this to the kNN model from Chapter [-@sec-ch7-classification-knn], where we predicted customer churn (`churn = yes`). Sensitivity tells us the percentage of customers who actually left—and were correctly flagged by the model. Using the confusion matrix from the previous section, we have:
+Let us apply this to the kNN model from Chapter [-@sec-ch7-classification-knn], where we predicted customer churn (`churn = yes`). Sensitivity tells us the percentage of customers who actually left, and were correctly flagged by the model. Using the confusion matrix from the previous section, we have:
 
 $$
 \text{Sensitivity} = \frac{\text{TP}}{\text{TP} + \text{FN}} = \frac{`r conf_max_knn_churn[1, 1]`}{`r conf_max_knn_churn[1, 1]` + `r conf_max_knn_churn[1, 2]`} = `r round(conf_max_knn_churn[1, 1] / (conf_max_knn_churn[1, 1] + conf_max_knn_churn[1, 2]), 3)`
@@ -181,7 +181,7 @@ $$
 
 This means the model correctly identified `r round(conf_max_knn_churn[1, 1] / (conf_max_knn_churn[1, 1] + conf_max_knn_churn[1, 2]), 3) * 100`% of actual churners.
 
-Note that a model with *100% sensitivity* flags *every single* positive case. But here’s the catch: even a model that labels *everyone* as positive would score perfectly on sensitivity. That is why this metric must always be interpreted in context—with help from other measures like *specificity* and *precision*.
+Note that a model with *100% sensitivity* flags *every single* positive case. But here’s the catch: even a model that labels *everyone* as positive would score perfectly on sensitivity. That is why this metric must always be interpreted in context, with help from other measures like *specificity* and *precision*.
 
 ### Specificity
 
@@ -211,13 +211,13 @@ The trade-off between sensitivity and specificity is a central consideration in 
 
 The appropriate balance depends on the context and the relative costs of different types of errors. For instance, in medical diagnostics, failing to identify a disease case (a false negative) may have severe consequences. In such situations, models with high sensitivity are preferred, even at the expense of a higher false positive rate. Conversely, in applications such as email spam detection, misclassifying a legitimate message as spam (a false positive) can be more problematic than missing a few spam messages. In these cases, higher specificity is more desirable.
 
-Understanding the interplay between these two metrics allows practitioners to tailor model evaluation to the priorities and risks associated with a specific application. In the next section, we introduce two additional metrics—precision and recall—that provide further insight into the model’s effectiveness in detecting and correctly classifying the positive class.
+Understanding the interplay between these two metrics allows practitioners to tailor model evaluation to the priorities and risks associated with a specific application. In the next section, we introduce two additional metrics, precision and recall, that provide further insight into the model’s effectiveness in detecting and correctly classifying the positive class.
 
 ## Precision, Recall, and F1-Score
 
 Imagine you are designing a system to detect fraudulent credit card transactions. If your model predicts fraud and it is wrong, an annoyed customer gets a call and may lose trust in your service. But if it fails to detect actual fraud, money is lost. Which mistake is worse?
 
-This kind of dilemma reveals why metrics beyond accuracy are essential. Accuracy tells us how often the model is right—but not *how* it goes wrong. Sensitivity tells us how many positives we catch—but not how many false alarms we raise. Precision and recall close this gap.
+This kind of dilemma reveals why metrics beyond accuracy are essential. Accuracy tells us how often the model is right, but not *how* it goes wrong. Sensitivity tells us how many positives we catch, but not how many false alarms we raise. Precision and recall close this gap.
 
 When your model flags a customer as likely to churn, how confident can you be that it is right? And how often does it miss actual churners? These are the kinds of questions precision and recall help us answer.
 
@@ -281,7 +281,7 @@ This score summarizes the model’s ability to correctly identify churners while
 
 The F1-score is a valuable metric when precision and recall are both important. However, in practice, their relative importance depends on the context. In healthcare, recall might be prioritized to avoid missing true cases. In contrast, in filtering systems like spam detection, precision may be more important to avoid misclassifying valid items.
 
-In the next section, we shift our focus to metrics that evaluate classification models across a range of thresholds, rather than at a fixed cutoff. This leads us to the Receiver Operating Characteristic (ROC) curve and Area Under the Curve (AUC), which offer a broader view of classification performance.
+In the next section, we shift our focus to metrics that evaluate classification models across a range of thresholds, rather than at a fixed cutoff. This leads us to the ROC curve and AUC, which offer a broader view of classification performance.
 
 ## Taking Uncertainty into Account {#sec-ch8-taking-uncertainty}
 
@@ -330,13 +330,13 @@ Of course, this involves trade-offs. Lowering the threshold generally boosts rec
 
 In short, threshold tuning transforms classification from a one-size-fits-all decision rule into a flexible tool that aligns model output with domain-specific priorities.
 
-Manual tuning is helpful, but a more comprehensive view is needed to fully assess a model’s discriminatory power. To build on this idea, the next section introduces two powerful tools—the *Receiver Operating Characteristic (ROC) curve* and the *Area Under the Curve (AUC)*—which allow us to evaluate model performance across all possible thresholds.
+Manual tuning is helpful, but a more comprehensive view is needed to fully assess a model’s discriminatory power. To build on this idea, the next section introduces two powerful tools, the ROC curve and the AUC, which allow us to evaluate model performance across all possible thresholds.
 
-## ROC Curve
+## Receiver Operating Characteristic (ROC) curve
 
-How can we fairly compare models when performance depends on the threshold we choose? Imagine building a medical diagnostic tool: adjusting the classification threshold might improve sensitivity but worsen specificity. To understand how models behave across all thresholds—and to compare them systematically—we turn to the *Receiver Operating Characteristic (ROC) curve* and its associated metric, the *Area Under the Curve (AUC)*.
+How can we fairly compare models when performance depends on the threshold we choose? Imagine building a medical diagnostic tool: adjusting the classification threshold might improve sensitivity but worsen specificity. To understand how models behave across all thresholds, and to compare them systematically, we turn to the *ROC curve* and its associated metric, the *Area Under the Curve (AUC)*.
 
-The ROC curve visually represents the trade-off between sensitivity (true positive rate) and the false positive rate (1 – specificity) across various classification thresholds. It plots sensitivity (true positive rate) on the vertical axis against the false positive rate on the horizontal axis. Originally developed for radar signal detection during World War II, the ROC curve is now widely used in machine learning to evaluate classifier performance. In practice, ROC curves are especially useful for comparing different classification models—such as logistic regression, decision trees, and random forests. We will return to this idea in upcoming case studies, where ROC curves and AUC scores help us select the best-performing model.
+The ROC curve visually represents the trade-off between sensitivity (true positive rate) and the false positive rate (1 – specificity) across various classification thresholds. It plots sensitivity (true positive rate) on the vertical axis against the false positive rate on the horizontal axis. Originally developed for radar signal detection during World War II, the ROC curve is now widely used in machine learning to evaluate classifier performance. In practice, ROC curves are especially useful for comparing different classification models, such as logistic regression, decision trees, and random forests. We will return to this idea in upcoming case studies, where ROC curves and AUC scores help us select the best-performing model.
 
 @fig-roc-curve illustrates three common performance scenarios:
 
@@ -357,7 +357,7 @@ This visualization helps illustrate key trade-offs. For example, in *medical dia
 To construct an ROC curve, predicted probabilities for the positive class and the actual class labels are needed. Correctly predicted positives move the curve upward (increased sensitivity), while false positives move it to the right (increased false positive rate). Let us now see how this works in practice by applying it to the kNN model.
 
 ::: {#ex-roc-curve-kNN .example}
-We return to the *kNN* model in [Section -@sec-ch8-taking-uncertainty], where we obtained probability scores for the positive class (`churn = yes`). We now use these probabilities to generate the ROC curve. The **pROC** package in **R** provides tools to compute and visualize ROC curves. If it is not already installed, you can do so using `install.packages("pROC")`.
+We return to the *kNN* model in [Section -@sec-ch8-taking-uncertainty], where we obtained probability scores for the positive class (`churn = yes`). We now use these probabilities to generate the ROC curve. The **pROC** package in R provides tools to compute and visualize ROC curves. If it is not already installed, you can do so using `install.packages("pROC")`.
 
 To construct the ROC curve, we use the `roc()` function from the **pROC** package. It requires two main arguments: `response`, which contains the actual class labels from the test set, and `predictor`, a numeric vector of predicted probabilities for the *positive* class. In our case, `test_labels` contains the true labels, and `kNN_prob[, 1]` extracts the predicted probabilities for `churn = yes` from the first column of the `kNN_prob` matrix. The first column contains probabilities for the positive class, which is essential for computing the ROC curve.
 
@@ -377,11 +377,11 @@ ggroc(roc_knn, colour = "blue") +
 This ROC curve shows how the model’s true positive rate and false positive rate vary as we adjust the classification threshold. A curve closer to the top-left corner indicates better classification performance. In this case, the ROC curve suggests that the kNN model is effective at distinguishing churners from non-churners.
 :::
 
-While the ROC curve provides a visual summary of a model’s classification performance across all thresholds, we often need a single numeric value to compare models more directly. This is where the *Area Under the Curve (AUC)* becomes valuable.
+While the ROC curve provides a visual summary of a model’s classification performance across all thresholds, we often need a single numeric value to compare models more directly. This is where the AUC becomes valuable.
 
 ## Area Under the Curve (AUC)
 
-While the ROC curve provides a visual summary of a model’s performance across all thresholds, it is often useful to quantify this performance with a single number. The *Area Under the Curve (AUC)* serves this purpose. It measures how well the model ranks positive cases higher than negative ones, independent of any particular threshold.
+While the ROC curve provides a visual summary of a model’s performance across all thresholds, it is often useful to quantify this performance with a single number. The *AUC* serves this purpose. It measures how well the model ranks positive cases higher than negative ones, independent of any particular threshold.
 
 Mathematically, AUC is defined as:
 
@@ -397,7 +397,7 @@ knitr::include_graphics("images/ch8_auc.png")
 
 As shown in @fig-ch8-auc, the AUC ranges from 0 to 1. A value of 1 indicates a perfect model, 0.5 corresponds to random guessing, and values between 0.5 and 1 reflect varying degrees of predictive power.
 
-To compute the AUC in **R**, we use the `auc()` function from the **pROC** package. This function takes an ROC object, such as the one created earlier using `roc()`, and returns a numeric value:
+To compute the AUC in R, we use the `auc()` function from the **pROC** package. This function takes an ROC object, such as the one created earlier using `roc()`, and returns a numeric value:
 
 ```{r}
 auc(roc_knn)
@@ -423,7 +423,7 @@ To compute metrics such as precision, recall, or F1-score in multi-class setting
 
 Since multi-class problems involve multiple binary evaluations, we need ways to summarize these into a single score to compare models effectively. To do this, we use different averaging strategies:
 
--   *Macro-average*: Computes the unweighted mean of the per-class metrics, treating all classes equally. This is useful when misclassifying any class is equally costly—such as in disease subtype classification.
+-   *Macro-average*: Computes the unweighted mean of the per-class metrics, treating all classes equally. This is useful when misclassifying any class is equally costly, such as in disease subtype classification.
 
 -   *Micro-average*: Aggregates the individual true positives, false positives, and false negatives across all classes, then calculates metrics from these totals. This method favors majority classes and reflects the model’s overall predictive effectiveness across all examples, as might be desirable in quality control applications.
 
@@ -433,7 +433,7 @@ These averaging techniques ensure that performance evaluation remains meaningful
 
 While ROC curves and AUC are inherently binary, they can be extended to multi-class problems using a one-vs-all approach. This generates separate ROC curves and AUC scores for each class. However, interpreting multiple ROC plots can be cumbersome. In many applications, macro- or weighted-averaged F1-scores provide a more concise and interpretable summary.
 
-Many **R** packages such as **caret**, **yardstick**, and **MLmetrics** support multi-class metrics and facilitate the computation and visualization of evaluation results.
+Many R packages such as **caret**, **yardstick**, and **MLmetrics** support multi-class metrics and facilitate the computation and visualization of evaluation results.
 
 By leveraging one-vs-all metrics and appropriate averaging strategies, we can gain a nuanced view of model performance in multi-class tasks. These tools help identify weaknesses, compare models, and align evaluation with the goals of the application.
 
@@ -479,11 +479,11 @@ The choice of metric depends on the goals of the analysis and the characteristic
 
 ## Chapter Summary and Takeaways
 
-No model is complete until it has been evaluated. A machine learning model is only as useful as its ability to perform reliably on unseen data. In this chapter, we examined the essential task of model evaluation—the process of determining whether a model meets practical requirements and can be trusted in real-world settings. Beginning with foundational concepts, we introduced a range of evaluation metrics for binary classification, multi-class classification, and regression problems.
+No model is complete until it has been evaluated. A machine learning model is only as useful as its ability to perform reliably on unseen data. In this chapter, we examined the essential task of model evaluation, the process of determining whether a model meets practical requirements and can be trusted in real-world settings. Beginning with foundational concepts, we introduced a range of evaluation metrics for binary classification, multi-class classification, and regression problems.
 
-Unlike other chapters in this book, this one does not include a standalone case study. This is intentional: model evaluation is not a one-time activity but a recurring component of every modeling task. All subsequent case studies—spanning Naive Bayes, logistic regression, decision trees, and beyond—will include model evaluation as a core element. The tools introduced here will be applied repeatedly, reinforcing their role in sound data science practice.
+Unlike other chapters in this book, this one does not include a standalone case study. This is intentional: model evaluation is not a one-time activity but a recurring component of every modeling task. All subsequent case studies, spanning Naive Bayes, logistic regression, decision trees, and beyond, will include model evaluation as a core element. The tools introduced here will be applied repeatedly, reinforcing their role in sound data science practice.
 
-This chapter also marks the completion of **Step 6: Model Evaluation** in the Data Science Workflow introduced in Chapter [-@sec-ch2-intro-data-science] and illustrated in @fig-ch2_DSW. By evaluating model performance with appropriate metrics, we close the loop between modeling and decision-making—ensuring that models are not only built but validated and aligned with practical goals. In future chapters, as we explore more advanced methods, we will continue to revisit this step in new modeling contexts.
+This chapter also marks the completion of *Step 6: Model Evaluation* in the Data Science Workflow introduced in Chapter [-@sec-ch2-intro-data-science] and illustrated in @fig-ch2_DSW. By evaluating model performance with appropriate metrics, we close the loop between modeling and decision-making, ensuring that models are not only built but validated and aligned with practical goals. In future chapters, as we explore more advanced methods, we will continue to revisit this step in new modeling contexts.
 
 **Key Takeaways from this chapter include:**
 
@@ -575,7 +575,7 @@ The following exercises reinforce the core concepts of model evaluation introduc
 
 10. What is an ROC curve, and how does it help compare different models?
 
-11. What does the Area Under the Curve (AUC) represent? How do you interpret different AUC values?
+11. What does the AUC represent? How do you interpret different AUC values?
 
 12. How can adjusting classification thresholds optimize model performance for a specific business need?
 
@@ -585,9 +585,9 @@ The following exercises reinforce the core concepts of model evaluation introduc
 
 15. Explain how multi-class classification evaluation differs from binary classification.
 
-16. What is Mean Squared Error (MSE), and why is it used in regression models?
+16. What is MSE, and why is it used in regression models?
 
-17. How does Mean Absolute Error (MAE) compare to MSE? When would you prefer one over the other?
+17. How does MAE compare to MSE? When would you prefer one over the other?
 
 18. What is the $R^2$ score in regression, and what does it indicate?
 

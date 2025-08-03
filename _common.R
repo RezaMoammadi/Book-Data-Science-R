@@ -10,7 +10,7 @@ options(repos = c(CRAN = "https://cran.rstudio.com"))
 
 # Any package that is required by the script below is given here:
 inst_pkgs = load_pkgs = c(
-  #"bookdown",
+  "bookdown",
   "mltools",
   "knitr",
   "kableExtra", 
