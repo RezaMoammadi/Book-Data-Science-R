@@ -159,13 +159,27 @@ ggplot_1 = filter(gapminder, year %in% c(1962, 2011) & !is.na(Group) & Group != 
   labs(x = 'GDP per Capita (USD)', 
        y = 'Life Expectancy') 
 
-ggplot_1 + 
-  facet_grid(. ~ year) + 
-  theme(legend.position = "top", 
-        axis.text.x = element_text(size=9, angle=45),
-        axis.text.y = element_text(size = 9), 
-        axis.title = element_text(size = 9, face = "bold"),
-        title = element_text(size = 10, face = "bold"))
+if(knitr::is_latex_output()){
+  ggplot_1 + 
+    facet_grid(. ~ year) + 
+    theme(legend.position = "top", 
+          axis.text.x = element_text(size=9, angle=45),
+          axis.text.y = element_text(size = 9), 
+          axis.title = element_text(size = 9, face = "bold"),
+          title = element_text(size = 10, face = "bold"))
+}else{
+  ggplot_html = ggplot_1 +
+    ggtitle('{frame_time}') +
+    gganimate::transition_time(year) +   
+    ease_aes('linear') + 
+    theme(title = element_text(size = 14, face = "bold"),
+          legend.title = element_blank(), 
+          plot.margin = unit(c(-.19, 0, .03, .1), "null"),
+          plot.title = element_text(hjust = 0.8, vjust = -18, color = "#eddee4", size = 60, 
+                                  face = "bold.italic"))
+  
+  animate(ggplot_html, fps = 7, end_pause = 25) #, rewind = TRUE)
+}
 ```
 
 As you conduct EDA, it is worth asking not only *what* the data shows, but also *why* those patterns matter. What story is emerging? How can that story inform a decision, challenge an assumption, or inspire further analysis? Framing EDA as storytelling ensures that exploratory work is not merely descriptive but purposeful, anchored in the real-world questions that motivated the analysis in the first place.
