@@ -123,49 +123,6 @@ Although more computationally intensive, k-fold cross-validation helps reduce th
 
 Partitioning data is a foundational step in predictive modeling. Yet even with a carefully designed split, it is important to verify whether the resulting subsets are representative of the original data. The next section addresses how to validate the quality of the partition before training begins.
 
-## How to Split Data for Modeling {#sec-partitioning}
-
-Now that we understand *why* partitioning matters, let us see *how* to do it in practice. Splitting the dataset is a key step in preparing for machine learning, and the most common approach is the *train-test split*, also called the holdout method. In this method, you divide the data into two parts: a *training set* to build the model and a *testing set* to evaluate how well it performs on new, unseen cases. This separation ensures a fair and realistic assessment of the model’s ability to generalize.
-
-Common split ratios include 70-30, 80-20, or 90-10, depending on the dataset size and modeling goals. Both sets contain the same structure, predictor features and the target outcome. But during training, the model only sees the target values from the training set. After training, the model predicts outcomes for the test set, and you compare these predictions to the actual values to measure accuracy and robustness.
-
-### Example: Train-Test Split in R {.unnumbered}
-
-To demonstrate a typical train-test split, we use R and the **liver** package. We will revisit the *churn* dataset from @sec-ch4-EDA-churn, where the goal is to predict customer churn using a machine learning algorithm (introduced in the next chapter). Since the dataset is bundled with the **liver** package, we begin by loading it:
-
-```{r}
-library(liver)
-
-data(churn)
-```
-
-There are several ways to partition a dataset in R. An easy and efficient approach is to use the `partition()` function from the [**liver**](https://CRAN.R-project.org/package=liver) package, which randomly splits a dataset according to a specified ratio. The example below divides the *churn* dataset into an 80% training set and a 20% test set:
-
-```{r}
-set.seed(42)
-
-data_sets = partition(data = churn, ratio = c(0.8, 0.2))
-
-train_set = data_sets$part1
-test_set  = data_sets$part2
-
-test_labels = test_set$churn
-```
-
-The `set.seed(42)` command ensures *reproducibility*, producing the same random split across sessions, a vital practice for consistent model evaluation and collaboration. The `partition()` function randomly assigns 80% of the data to `train_set`, which is used for model training, and 20% to `test_set`, reserved for performance evaluation. The `ratio` argument controls the split and can be adjusted as needed. We also extract `test_labels`, the actual class labels in the test set, for use in model evaluation. These labels must remain hidden during training to avoid data leakage.
-
-Reproducibility is a cornerstone of reliable modeling. Setting a random seed ensures consistent results across runs and supports transparency in code sharing, debugging, and publication.
-
-### A Note on Cross-Validation {.unnumbered}
-
-While the train-test split is simple and widely used, it can yield results that are sensitive to how the data is divided, particularly in small datasets. To obtain a more stable and reliable estimate of model performance, *cross-validation* offers a valuable alternative.
-
-In *k*-fold cross-validation, the dataset is divided into *k* equally sized parts, or folds. The model is trained on *k*–1 folds and evaluated on the remaining fold. This process is repeated *k* times, with each fold serving once as the test set. Performance metrics are then averaged across the *k* runs, reducing variability and offering a more robust assessment of generalization.
-
-Cross-validation is especially useful when comparing models or tuning hyperparameters, where a single train-test split may not provide enough confidence. Although not used in this chapter’s case study, it plays a central role in many advanced modeling workflows. For further explanation and implementation examples, see Chapter 5 of *An Introduction to Statistical Learning* [@james2013introduction].
-
-Partitioning is the starting point for building trustworthy machine learning models. However, a single split does not ensure that the training and test sets are representative of the full dataset. In the next section, we will evaluate whether our partition is statistically sound, critical check before training predictive models.
-
 ## How to Validate a Train-Test Split {#sec-ch6-validate-partition}
 
 How can we be sure that our train-test split truly represents the original dataset? After splitting the data, we must validate that the partition is statistically sound. A reliable split ensures that the training set reflects the broader population and that the test set mimics real-world deployment. Without this step, we risk building models that learn from biased data or fail to generalize.
@@ -208,7 +165,7 @@ test_churn
 
 Here, $x_1$ and $x_2$ denote the number of churners in the training and testing sets, respectively; $n_1$ and $n_2$ are the corresponding sample sizes. The function `prop.test()` performs the two-sample Z-test and returns a *p*-value indicating whether the difference in proportions is statistically significant.
 
-Suppose the *p*-value is `r round(test_churn$p.value, 2)`. Since this value exceeds the typical significance threshold ($\alpha = 0.05$), we fail to reject $H_0$. This suggests that the observed difference in churn rates is not statistically significant, and the split appears valid with respect to the target variable.
+The *p*-value is `r round(test_churn$p.value, 3)`. Since this value is greater than the conventional significance level ($\alpha = 0.05$), we do not reject $H_0$. This indicates that the observed difference in churn rates is not statistically significant, suggesting that the data split is valid with respect to the target variable.
 
 Beyond the target variable, checking the distribution of key predictors helps detect imbalances that could bias the model. Unequal distributions in important features can lead the model to learn misleading or unrepresentative patterns. For instance, apply a *two-sample t-test* to compare means for numerical predictors such as `customer.calls` or `day.mins`, and use a *Chi-square test* for categorical variables like `area.code`. If `day.mins` is notably higher in the test set, a model trained on lower values may underpredict in deployment. Although it is rarely feasible to check every variable in high-dimensional datasets, focusing on known or selected predictors helps ensure a balanced and representative partition.
 
@@ -246,8 +203,7 @@ table(train_set$churn)
 
 prop.table(table(train_set$churn))
 ```
-
-Suppose the output shows that churners (`churn = "yes"`) make up only a small proportion, say around `r round(prop.table(table(train_set$churn))[1], 2)`, compared to non-churners. This imbalance may lead to a model that overlooks the very class we aim to predict.
+The output shows that churners (`churn = "yes"`) represent only a small proportion of the data, about `r round(prop.table(table(train_set$churn))[1], 2)`, compared to non-churners. This class imbalance can result in a model that underemphasizes the very group we are most interested in predicting.
 
 To address this in R, we can use the `ovun.sample()` function from the **ROSE** package to oversample the minority class so that it makes up 30% of the training set. This target ratio is illustrative; the optimal value depends on the use case and modeling goals.
 

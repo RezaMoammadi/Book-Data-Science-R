@@ -141,8 +141,7 @@ ci_upper <- mean_calls + z_score * se_calls
 
 cat("95% Confidence Interval: [", ci_lower, ",", ci_upper, "]")
 ```
-
-If the computed interval is $[`r round(ci_lower, 2)`, `r round(ci_upper, 2)`]$, we can state that we are 95% confident the true average number of customer service calls for churned customers falls within this range. Technically, this means that if we were to repeat the process many times using different random samples, about 95% of those intervals would contain the true population mean.
+The computed interval is (`r round(ci_lower, 2)`, `r round(ci_upper, 2)`), which means we are 95% confident that the true average number of customer service calls for churned customers lies within this range. More precisely, if we were to draw many random samples and construct a confidence interval from each, approximately 95% of those intervals would capture the true population mean.
 
 Another way to compute this confidence interval in R is to use the `z.conf()` function from **liver** package, which automatically applies the appropriate distribution based on the sample size and variability:
 
@@ -162,7 +161,7 @@ In the broader data science workflow, hypothesis testing helps move from explora
 
 At its core, hypothesis testing evaluates claims about population characteristics using sample data. While confidence intervals provide a range of plausible values for an estimate, hypothesis testing focuses on whether the observed evidence is strong enough to support a specific claim about a parameter. The overall process, from stating hypotheses to drawing conclusions, is summarized visually in @fig-hypothesis-testing.
 
-```{r fig-hypothesis-testing, echo = FALSE, out.width = "75%", fig.cap = "Visual summary of hypothesis testing, showing how sample evidence informs the decision to reject or fail to reject the null hypothesis ($H_0$)."}
+```{r fig-hypothesis-testing, echo = FALSE, out.width = "75%", fig.cap = "Visual summary of hypothesis testing, showing how sample evidence informs the decision to reject or do not reject the null hypothesis ($H_0$)."}
 knitr::include_graphics("images/ch5_hypothesis_testing.png")
 ```
 
@@ -194,18 +193,18 @@ The structure of a hypothesis test depends on the nature of the question and the
 
 -   *Two-tailed test*: The alternative hypothesis states that the parameter is *not equal to* a specified value ($H_a: \theta \neq \theta_0$), capturing deviations in either direction. An example would be testing whether the mean monthly charges differ from \$50.
 
-To better understand the logic behind these decisions, consider the analogy of a criminal trial. The *null hypothesis* represents the presumption of innocence. The *alternative hypothesis* corresponds to a claim of guilt. The jury weighs the evidence and must either convict (reject $H_0$) or acquit (fail to reject $H_0$ due to insufficient evidence). Just as legal verdicts can result in mistakes, hypothesis testing is subject to two types of error, summarized in @tbl-hypothesis-errors.
+To better understand the logic behind these decisions, consider the analogy of a criminal trial. The *null hypothesis* represents the presumption of innocence. The *alternative hypothesis* corresponds to a claim of guilt. The jury weighs the evidence and must either convict (reject $H_0$) or acquit (do not reject $H_0$ due to insufficient evidence). Just as legal verdicts can result in mistakes, hypothesis testing is subject to two types of error, summarized in @tbl-hypothesis-errors.
 
 ::: {#tbl-hypothesis-errors .table}
 | *Decision*           | *Reality:* $H_0$ is True                               | *Reality:* $H_0$ is False                          |
 |------------------|----------------------------|--------------------------|
-| Fail to Reject $H_0$ | *Correct Decision*: Acquit an innocent person.         | *Type II Error (*$\beta$): Acquit a guilty person. |
+| Do not Reject $H_0$ | *Correct Decision*: Acquit an innocent person.         | *Type II Error (*$\beta$): Acquit a guilty person. |
 | Reject $H_0$         | *Type I Error (*$\alpha$): Convict an innocent person. | *Correct Decision*: Convict a guilty person.       |
 
 Possible outcomes of hypothesis testing, with two correct decisions and two types of error.
 :::
 
-A *Type I error* ($\alpha$) occurs when we reject $H_0$ even though it is actually true, this is analogous to convicting an innocent person. A *Type II error* ($\beta$) occurs when we fail to reject $H_0$ even though it is false, similar to acquitting someone who is guilty.
+A *Type I error* ($\alpha$) occurs when we reject $H_0$ even though it is actually true, this is analogous to convicting an innocent person. A *Type II error* ($\beta$) occurs when we do not reject $H_0$ even though it is false, similar to acquitting someone who is guilty.
 
 The probability of a Type I error is set by the significance level $\alpha$, which we choose before conducting the test. In contrast, the probability of a Type II error depends on multiple factors, including the sample size, variability in the data, and the magnitude of the effect. A key concept here is *power*, which refers to the test's ability to detect a true effect when it exists. Higher power reduces the likelihood of making a Type II error and is often achieved by increasing the sample size.
 
@@ -293,9 +292,9 @@ t_test <- t.test(churned_customers$customer.calls, mu = 2)
 t_test
 ```
 
-The function returns several key results: a test statistic, *p*-value, confidence interval, and degrees of freedom. The *p*-value is `r round(t_test$p.value, 3)`, which is less than $\alpha = 0.05$. We therefore reject the null hypothesis and conclude that the average number of calls differs from 2.
+The function returns several key results: a test statistic, *p*-value, confidence interval, and degrees of freedom. The *p*-value is close to zero, that is less than $\alpha = 0.05$. We therefore reject the null hypothesis and conclude that the average number of calls differs from 2.
 
-The *95% confidence interval* is \[`r round(t_test$conf.int[1], 2)`, `r round(t_test$conf.int[2], 2)`\]. Since this interval does not include 2, the result reinforces our conclusion. The sample mean is `r round(t_test$estimate, 2)`, which serves as our best estimate of the true average in the population.
+The *95% confidence interval* is (`r round(t_test$conf.int, 2)`). Since this interval does not include 2, the result reinforces our conclusion. The sample mean is `r round(t_test$estimate, 2)`, which serves as our best estimate of the true average in the population.
 
 Because the population standard deviation is unknown, the test statistic follows a t-distribution with $n - 1$ degrees of freedom.
 :::
@@ -331,9 +330,9 @@ prop_test
 
 In this code, `x` gives the number of churners, `n` specifies the total sample size, and `p = 0.15` defines the hypothesized proportion. The test evaluates whether the observed proportion significantly differs from this value, using a chi-square approximation.
 
-The output includes three key results: the *p*-value, the confidence interval, and the observed sample proportion. The *p*-value is `r round(prop_test$p.value, 4)`. Because it exceeds the standard significance level of $\alpha = 0.05$, we do not reject the null hypothesis. We conclude that there is no statistically significant evidence to suggest that the population proportion of churners differs from 15%.
+The output includes three key results: the *p*-value, the confidence interval, and the observed sample proportion. The *p*-value is `r round(prop_test$p.value, 3)`. Because it exceeds the standard significance level of $\alpha = 0.05$, we do not reject the null hypothesis. We conclude that there is no statistically significant evidence to suggest that the population proportion of churners differs from 15%.
 
-The *95% confidence interval* for the true proportion is `r round(prop_test$conf.int, 2)`. Since this interval contains 0.15, the result is consistent with the decision not to reject $H_0$. The *observed sample proportion* is `r round(prop_test$estimate, 2)`, which serves as our best estimate of the true churn rate in the population.
+The *95% confidence interval* for the true proportion is (`r round(prop_test$conf.int, 3)`). Since this interval contains 0.15, the result is consistent with the decision not to reject $H_0$. The *observed sample proportion* is `r round(prop_test$estimate, 3)`, which serves as our best estimate of the true churn rate in the population.
 :::
 
 This example illustrates how a proportion test can be used to validate assumptions about categorical outcomes. The *p*-value determines statistical significance, while the confidence interval and sample proportion provide important context. When used alongside domain knowledge, this method supports evidence-based decisions in evaluating changes in customer behavior.
@@ -379,7 +378,7 @@ t_test_calls
 
 This function outputs the test statistic, *p*-value, degrees of freedom, confidence interval, and estimated group means. The *p*-value is `r round(t_test_calls$p.value, 4)`, which is less than the standard significance level of $\alpha = 0.05$. We therefore reject the null hypothesis and conclude that the mean number of international calls differs between churners and non-churners.
 
-The *95% confidence interval* for the difference in means is \[`r round(t_test_calls$conf.int[1], 2)`, `r round(t_test_calls$conf.int[2], 2)`\]. Because zero is not in this range, the result supports our conclusion that the group means are different. The estimated group means are `r round(t_test_calls$estimate[1], 2)` for churners and `r round(t_test_calls$estimate[2], 2)` for non-churners. These values suggest that churners tend to make fewer international calls on average, an insight that may have business implications.
+The *95% confidence interval* for the difference in means is (`r round(t_test_calls$conf.int, 3)`). Because zero is not in this range, the result supports our conclusion that the group means are different. The estimated group means are `r round(t_test_calls$estimate[1], 2)` for churners and `r round(t_test_calls$estimate[2], 2)` for non-churners. These values suggest that churners tend to make fewer international calls on average, an insight that may have business implications.
 
 The two-sample t-test assumes that the two groups are independent and that the numerical variable is approximately normally distributed within each group. When sample sizes are large, the Central Limit Theorem provides robustness to non-normality. If the data are heavily skewed or contain outliers, a nonparametric alternative such as the Mann–Whitney U test may be more appropriate.
 
@@ -440,9 +439,9 @@ z_test
 
 The `prop.test()` function performs a test for equality of two proportions. It returns a *p*-value, confidence interval for the difference in proportions, and the estimated group proportions.
 
-The *p*-value is `r round(z_test$p.value, 4)`, which is less than the significance level of 0.05. This leads us to reject the null hypothesis and conclude that the proportion of Voice Mail Plan users differs significantly between churners and non-churners.
+The *p*-value is close to zero, well below the significance level of 0.05. We therefore reject the null hypothesis and conclude that the proportion of Voice Mail Plan users differs significantly between churners and non-churners.
 
-The *95% confidence interval* for the difference in proportions is \[`r round(z_test$conf.int[1], 4)`, `r round(z_test$conf.int[2], 4)`\]. Since this interval does not include zero, it reinforces our conclusion. The observed sample proportions are `r round(z_test$estimate[1], 4)` for churners and `r round(z_test$estimate[2], 4)` for non-churners, suggesting that customers without a Voice Mail Plan are more likely to churn.
+The *95% confidence interval* for the difference in proportions is (`r round(z_test$conf.int, 3)`). Because this interval does not include zero, it supports our conclusion that there is a meaningful difference between the groups. The observed sample proportions of churners are `r round(z_test$estimate[1], 3)` for customers with a Voice Mail Plan and `r round(z_test$estimate[2], 3)` for customers without one, indicating that customers without a Voice Mail Plan are more likely to churn.
 
 This result highlights a potential link between Voice Mail Plan usage and customer retention. Businesses might explore whether the plan provides value to customers or if it serves as a marker of engagement. They may also consider promoting the plan to at-risk customers. While the statistical result is clear, practical significance requires further evaluation, would promoting plan enrollment lead to better retention outcomes? That is a question best answered through follow-up testing and experimentation.
 
@@ -476,7 +475,7 @@ ggplot(data = bank) +
 
 The first plot shows the raw counts of deposit outcomes across marital categories, while the second plot presents relative proportions. The visuals suggest possible differences in behavior among marital groups, but we need statistical evidence to determine whether these differences are significant.
 
-To perform a Chi-square test, we first summarize the data in a **contingency table**. This table tallies the number of observations for each combination of `marital` status and `deposit` outcome:
+To perform a Chi-square test, we first summarize the data in a *contingency table*. This table tallies the number of observations for each combination of `marital` status and `deposit` outcome:
 
 ```{r}
 table_marital <- table(bank$deposit, bank$marital, dnn = c("deposit", "marital"))
@@ -498,8 +497,7 @@ We conduct the test as follows:
 chisq_test <- chisq.test(table_marital)
 chisq_test
 ```
-
-The `chisq.test()` function compares the observed counts in the table with expected counts under independence. It returns a *p*-value, Chi-square statistic, degrees of freedom, and expected frequencies. If the *p*-value is `r chisq_test$p.value` and less than the significance level ($\alpha = 0.05$), we reject the null hypothesis and conclude that marital status and deposit purchase are not independent.
+The `chisq.test()` function compares the observed counts in the table with the expected counts under the assumption of independence. It returns the Chi-square statistic, degrees of freedom, expected frequencies, and a corresponding *p*-value. In this case, because the *p*-value is less than the significance level ($\alpha = 0.05$), we reject the null hypothesis and conclude that marital status and deposit purchase are associated rather than independent.
 
 The expected counts are especially useful. They show how many deposit purchases would be expected in each marital category if no association existed. By comparing these to the observed counts, we can identify which group differences are driving the result. For instance, if married customers subscribe to deposits more frequently than expected, they may be a key contributor to the observed association.
 
@@ -523,7 +521,7 @@ ggplot(data = diamonds) +
   scale_fill_manual(values = c("palevioletred1", "darkseagreen1", "skyblue1", "gold1", "lightcoral"))
 ```
 
-The box plot shows the spread and median prices for each cut category. While the visual suggests that better cuts tend to command higher prices, we turn to statistical testing to determine whether these differences are meaningful.
+The box plot shows the distribution and median prices for each cut category. The plots suggest some variation in price across the different cut categories, but they do not reveal a clear association between `price` and `cut`. Therefore, we proceed with statistical testing to determine whether the observed differences are statistically meaningful.
 
 To evaluate whether cut quality affects diamond price, we compare the mean price across all five categories. Our hypotheses are:
 
@@ -540,8 +538,7 @@ We apply the `aov()` function in R, which fits a linear model and returns an ANO
 anova_test <- aov(price ~ cut, data = diamonds)
 summary(anova_test)
 ```
-
-The output provides the F-statistic, degrees of freedom, and *p*-value. If the *p*-value is less than the significance level ($\alpha = 0.05$), we reject the null hypothesis and conclude that cut quality has a statistically significant effect on diamond price.
+The output reports the degrees of freedom (`Df`), the F-statistic (`F value`), and the corresponding *p*-value (`Pr(>F)`). Because, here, the *p*-value is below the significance level ($\alpha = 0.05$), we reject the null hypothesis and conclude that cut quality has a statistically significant effect on diamond price.
 
 However, rejecting $H_0$ only tells us that at least one group differs. It does not tell us which cuts differ from each other. To identify the specific differences, we can use post-hoc tests such as Tukey’s Honest Significant Difference (HSD) test, which controls for multiple comparisons while revealing which group pairs have statistically different means.
 
@@ -579,7 +576,7 @@ cor_test <- cor.test(diamonds$carat, diamonds$price)
 cor_test
 ```
 
-The output includes three key results. First, the *p*-value is `r round(cor_test$p.value, 4)`, which is less than the significance level ($\alpha = 0.05$). This leads us to reject the null hypothesis, concluding that the correlation between carat and price is statistically significant. Second, the correlation coefficient is `r round(cor_test$estimate, 2)`, indicating a strong positive linear association. Finally, the 95% confidence interval for the true population correlation is `r round(cor_test$conf.int, 2)`, which does not include zero, further reinforcing the statistical significance of the relationship.
+The output provides three key results. First, the *p*-value is close to zero and therefore well below the significance level ($\alpha = 0.05$). Thus, we reject the null hypothesis and conclude that the correlation between carat and price is statistically significant. Second, the correlation coefficient is `r round(cor_test$estimate, 2)`, reflecting a strong positive linear association. Finally, the 95% confidence interval for the true population correlation is (`r round(cor_test$conf.int, 3)`), which does not include zero and thus reinforces the evidence for a significant relationship.
 
 This result has both statistical and practical implications. From a business perspective, the strong correlation between carat and price suggests that carat is a key determinant in diamond pricing. However, while statistically significant, the correlation alone may not capture all relevant factors. For instance, variation in price at similar carat levels may be explained by other attributes such as clarity, cut, or certification. Further analysis, such as multivariate regression, can help disentangle these effects.
 
