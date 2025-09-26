@@ -42,7 +42,7 @@ A well-performing classification model captures meaningful patterns in the data 
 
 A wide range of algorithms can be used for classification, each with its own strengths depending on the nature of the data and the modeling goals. Some commonly used methods include:
 
--   *k-Nearest Neighbors (kNN)*: A simple, distance-based algorithm that assigns labels based on the nearest neighbors. It is the focus of this chapter.
+-   *k-Nearest Neighbors*: A simple, distance-based algorithm that assigns labels based on the nearest neighbors. It is the focus of this chapter.
 
 -   *Naive Bayes*: A probabilistic method well-suited to text classification tasks such as spam detection (see @sec-ch9-bayes).
 
@@ -74,7 +74,7 @@ When classifying a new observation, the kNN algorithm first computes its *distan
 
 -   When $k = 6$, the nearest neighbors include four red circles and two blue squares, resulting in a prediction of *Class A*.
 
-```{r fig-ch7-knn-image, echo = FALSE, out.width = "55%", fig.cap = "A two-dimensional toy dataset with two classes (Class A and Class B) and a new data point (dark star), illustrating the k-Nearest Neighbors algorithm with k = 3 and k = 6."}
+```{r fig-ch7-knn-image, echo = FALSE, out.width = "55%", fig.cap = "A two-dimensional toy dataset with two classes (Class A and Class B) and a new data point (dark star), illustrating the kNN algorithm with k = 3 and k = 6."}
 knitr::include_graphics("images/ch7_knn.png")
 ```
 
@@ -92,31 +92,18 @@ Finally, the effectiveness of kNN often hinges on proper data preprocessing. Fea
 
 ## kNN in Action: A Toy Example for Drug Classification
 
-To further illustrate how kNN works in practice, consider a simplified classification scenario involving drug prescriptions. A synthetically generated dataset of 200 patients includes their *age*, *sodium-to-potassium (Na/K) ratio*, and the prescribed drug type. Although simulated, the dataset reflects patterns that one might encounter in real-world clinical data. For details on how the dataset was generated, see Section [-@sec-intro-R-exercises].
+To further illustrate how kNN operates in practice, consider a simplified classification example involving drug prescriptions. We use a synthetic dataset of 200 patients that records each patient’s *age*, *sodium-to-potassium (Na/K) ratio* in the blood, and the prescribed drug type. Although artificially generated, the dataset mimics patterns commonly found in real clinical data. Details of the data generation process are provided in Section [-@sec-intro-R-exercises]. The dataset is available in the **liver** package under the name `drug`.
 
 @fig-ch7-ex-drug-1 visualizes the distribution of patient records. Each point represents a patient, with different shapes and colors used to indicate drug type. [Red circles]{style="color: red;"} correspond to Drug A, [green triangles]{style="color: green;"} to Drug B, and [blue squares]{style="color: blue;"} to Drug C.
 
 ```{r fig-ch7-ex-drug-1, echo = FALSE, out.width = "95%", fig.cap = "Scatter plot of Age vs. Sodium/Potassium Ratio for 200 patients, with drug type indicated by color and shape."}
 # Simulated data for illustration
-set.seed(10)
 
-n  = 200         
-n1 = 90          
-n2 = 60          
-n3 = n - n1 - n2 
+data(drug)
+train_set = drug
 
-Age   = sample(x = 15:75, size = n, replace = TRUE)
-Type  = sample(x = c("A", "B", "C"), size = n, replace = TRUE, prob = c(n1, n2, n3))
-Ratio = numeric(n)
-
-Ratio[Type == "A"] = sample(x = 10:40, size = sum(Type == "A"), replace = TRUE)
-Ratio[Type == "B"] = sample(x =  5:15, size = sum(Type == "B"), replace = TRUE)
-Ratio[Type == "C"] = sample(x =  5:15, size = sum(Type == "C"), replace = TRUE)
-
-train_data = data.frame(Age = Age, Ratio = Ratio, Type = Type)
-
-p = ggplot(data = train_data, aes(x = Age, y = Ratio)) +
-    geom_point(aes(color = Type, shape = Type)) + 
+p = ggplot(data = train_set, aes(x = age, y = ratio)) +
+    geom_point(aes(color = type, shape = type)) + 
     labs(x = "Age", y = "Sodium/Potassium Ratio") + 
     guides(color = guide_legend(title = "Drug Type"), 
            shape = guide_legend(title = "Drug Type"))
@@ -132,18 +119,18 @@ These patients are represented by large orange circles with cross markers in @fi
 size = if(knitr::is_latex_output()) 14.3 else 15
 
 # To create a data frame for new patients
-test_data = data.frame(Age = c(40, 28, 61), Ratio = c(30.5, 9.6, 10.5))
+test_set = data.frame(age = c(40, 28, 61), ratio = c(30.5, 9.6, 10.5))
 
 # To plot train data and new patients
-p + geom_point(data = test_data, aes(x = Age, y = Ratio), colour = "orange", size = size, shape = 1) +
-  geom_point(data = test_data, aes(x = Age, y = Ratio), colour = "orange", size = 1, shape = 4)
+p + geom_point(data = test_set, aes(x = age, y = ratio), colour = "orange", size = size, shape = 1) +
+  geom_point(data = test_set, aes(x = age, y = ratio), colour = "orange", size = 1, shape = 4)
 ```
 
-For Patient 1, who is located deep within a cluster of red-circle points (Drug A), the classification is straightforward. All the nearest neighbors belong to Drug A, making it a confident and unambiguous decision.
+For Patient 1, who lies deep within a cluster of red-circle points (Drug A), the classification is straightforward. All nearest neighbors belong to Drug A, making the prediction confident and unambiguous.  
 
-For Patient 2, the classification outcome depends on the value of *k*. When $k = 1$, the nearest neighbor is a blue square, and the predicted class is Drug C. When $k = 2$, there is a tie between Drug B and Drug C, and no majority class can be determined. When $k = 3$, two of the three nearest neighbors are blue squares, so the prediction remains Drug C.
+For Patient 2, the outcome depends on the choice of *k*. When $k = 1$, the nearest neighbor is a blue square, so the predicted class is Drug C. With $k = 2$, there is a tie between Drug B and Drug C, leaving no clear majority. At $k = 3$, two of the three nearest neighbors are blue squares, so the prediction is again Drug C.  
 
-For Patient 3, the classification becomes more uncertain. When $k = 1$, the closest neighbor is a blue square, and the classification is Drug C. However, when $k = 2$ or $k = 3$, the nearest neighbors belong to different classes, leading to ambiguity in the predicted label.
+For Patient 3, the classification is more uncertain. With $k = 1$ or $k = 2$, the patient is equally close to both red and blue points, so voting provides no decisive result. At $k = 3$, the three nearest neighbors each represent a different class, making the prediction entirely ambiguous.  
 
 ```{r}
 #| label: fig-ch7-ex-drug-3
@@ -155,15 +142,15 @@ For Patient 3, the classification becomes more uncertain. When $k = 1$, the clos
 #|   - "Patient 2"
 #|   - "Patient 3"
 
-p = ggplot(data = train_data, aes(x = Age, y = Ratio)) +
-    geom_point(aes(color = Type, shape = Type, size = 3), show.legend = FALSE) + 
+p = ggplot(data = train_set, aes(x = age, y = ratio)) +
+    geom_point(aes(color = type, shape = type, size = 3), show.legend = FALSE) + 
     labs(x = "Age", y = "Sodium/Potassium Ratio")
 
 r_x = 3; r_y = 2
 
 # For patient 1
-x = test_data$Age[1]
-y = test_data$Ratio[1]
+x = test_set$age[1]
+y = test_set$ratio[1]
 
 size = if(knitr::is_latex_output()) 97 else 120
 
@@ -172,16 +159,16 @@ p + coord_cartesian(xlim = c(x - r_x, x + r_x), ylim = c(y - r_y, y + r_y)) +
     geom_point(aes(x = x, y = y), colour = "orange", size = 8, shape = 4) 
 
 # For patient 2
-x = test_data$Age[2]
-y = test_data$Ratio[2]
+x = test_set$age[2]
+y = test_set$ratio[2]
 
 p + coord_cartesian(xlim = c(x - r_x, x + r_x), ylim = c(y - r_y, y + r_y)) +
     geom_point(aes(x = x, y = y), colour = "orange", size = size, shape = 1) +
     geom_point(aes(x = x, y = y), colour = "orange", size = 8, shape = 4) 
 
 # For patient 3
-x = test_data$Age[3]
-y = test_data$Ratio[3]
+x = test_set$age[3]
+y = test_set$ratio[3]
 
 p + coord_cartesian(xlim = c(x - r_x, x + r_x), ylim = c(y - r_y, y + r_y)) +
     geom_point(aes(x = x, y = y), colour = "orange", size = size, shape = 1) +
@@ -269,7 +256,7 @@ In the next section, we will examine how preprocessing steps like feature scalin
 
 The performance of the kNN algorithm is highly sensitive to how the data is preprocessed. Because kNN relies on distance calculations to assess similarity between observations, careful preparation of the feature space is essential. Two key steps, *encoding categorical variables* and *feature scaling*, ensure that both categorical and numerical features are properly represented in these computations.
 
-These tasks fall under the *Data Preparation* phase of the Data Science Workflow introduced in Chapter [-@sec-ch3-data-preparation] (see @fig-ch2_DSW), and they also connect to the broader *Data Setup for Modeling* stage discussed in Chapter [-@sec-ch6-setup-data]. Regardless of where they appear in the workflow, these steps are crucial for ensuring that kNN's similarity measures are both consistent and reliable.
+These tasks fall under the *Data Preparation* phase of the Data Science Workflow introduced in Chapter [-@sec-ch3-data-preparation] (see @fig-ch2_DSW), and they also connect to the broader *Data Setup to Model* stage discussed in Chapter [-@sec-ch6-setup-data]. Regardless of where they appear in the workflow, these steps are crucial for ensuring that kNN's similarity measures are both consistent and reliable.
 
 To make this concrete, imagine you are working with patient data that includes age, sodium-to-potassium (Na/K) ratio, marital status, and education level. While age and Na/K ratio are numeric, marital status and education are categorical. To prepare these features for use in a distance-based model, we must convert them into numerical form in a way that preserves their original meaning.
 
@@ -305,9 +292,7 @@ For instance, consider the `education` variable in the *bank* dataset, which has
 
 ```{r}
 # Convert an ordinal variable to numeric scores
-bank$education_level <- factor(bank$education, 
-                               levels = c("primary", "secondary", "tertiary"),
-                               labels = c(1, 2, 3))
+bank$education_level <- factor(bank$education, levels = c("primary", "secondary", "tertiary"), labels = c(1, 2, 3))
 ```
 
 This numeric encoding preserves the order of education levels and allows the kNN model to treat higher education levels as more distant from lower ones, reflecting real-world meaning.
@@ -350,18 +335,16 @@ To illustrate, consider the drug classification task from earlier. Suppose `age`
 library(liver)
 
 # Correct scaling: Apply train-derived parameters to test data
-train_scaled = minmax(train_data, col = c("Age", "Ratio"))
+train_scaled = minmax(train_set, col = c("age", "ratio"))
 
-test_scaled = minmax(
-  test_data, 
-  col = c("Age", "Ratio"), 
-  min = c(min(train_data$Age), min(train_data$Ratio)), 
-  max = c(max(train_data$Age), max(train_data$Ratio))
+test_scaled = minmax(test_set, col = c("age", "ratio"), 
+  min = c(min(train_set$age), min(train_set$ratio)), 
+  max = c(max(train_set$age), max(train_set$ratio))
 )
 
 # Incorrect scaling: Apply separate scaling to test set
-train_scaled_wrongly = minmax(train_data, col = c("Age", "Ratio"))
-test_scaled_wrongly  = minmax(test_data , col = c("Age", "Ratio"))
+train_scaled_wrongly = minmax(train_set, col = c("age", "ratio"))
+test_scaled_wrongly  = minmax(test_set , col = c("age", "ratio"))
 ```
 
 ```{r}
@@ -378,36 +361,36 @@ test_scaled_wrongly  = minmax(test_data , col = c("Age", "Ratio"))
 #|   - "Improper Scaling"
 
 # To plot the data without scaling
-ggplot(data = train_data, aes(x = Age, y = Ratio)) +
-  geom_point(aes(color = Type, shape = Type)) + 
+ggplot(data = train_set, aes(x = age, y = ratio)) +
+  geom_point(aes(color = type, shape = type)) + 
   labs(title = "Without Scaling", 
        x = "Age", y = "Sodium/Potassium Ratio") + 
   guides(color = guide_legend(title = "Drug Type"), 
          shape = guide_legend(title = "Drug Type")) +
-  geom_point(data = test_data, aes(x = Age, y = Ratio), colour = "orange", size = 15, shape = 1) +
-  geom_point(data = test_data, aes(x = Age, y = Ratio), colour = "orange", size = 1, shape = 4) +
+  geom_point(data = test_set, aes(x = age, y = ratio), colour = "orange", size = 15, shape = 1) +
+  geom_point(data = test_set, aes(x = age, y = ratio), colour = "orange", size = 1, shape = 4) +
   theme(legend.position = "none")
 
 # To plot the data with proper scaling
-ggplot(data = train_scaled, aes(x = Age, y = Ratio)) +
-  geom_point(aes(color = Type, shape = Type)) + 
+ggplot(data = train_scaled, aes(x = age, y = ratio)) +
+  geom_point(aes(color = type, shape = type)) + 
   labs(title = "Proper Scaling", 
        x = "Age", y = "Sodium/Potassium Ratio") + 
   guides(color = guide_legend(title = "Drug Type"), 
          shape = guide_legend(title = "Drug Type")) +
-  geom_point(data = test_scaled, aes(x = Age, y = Ratio), colour = "orange", size = 15, shape = 1) +
-  geom_point(data = test_scaled, aes(x = Age, y = Ratio), colour = "orange", size = 1, shape = 4) +
+  geom_point(data = test_scaled, aes(x = age, y = ratio), colour = "orange", size = 15, shape = 1) +
+  geom_point(data = test_scaled, aes(x = age, y = ratio), colour = "orange", size = 1, shape = 4) +
   theme(legend.position = "none")
 
 # To plot the data with improper scaling
-ggplot(data = train_scaled_wrongly, aes(x = Age, y = Ratio)) +
-  geom_point(aes(color = Type, shape = Type)) + 
+ggplot(data = train_scaled_wrongly, aes(x = age, y = ratio)) +
+  geom_point(aes(color = type, shape = type)) + 
   labs(title = "Improper Scaling", 
        x = "Age", y = "Sodium/Potassium Ratio") + 
   guides(color = guide_legend(title = "Drug Type"), 
          shape = guide_legend(title = "Drug Type")) +
-  geom_point(data = test_scaled_wrongly, aes(x = Age, y = Ratio), colour = "orange", size = 15, shape = 1) +
-  geom_point(data = test_scaled_wrongly, aes(x = Age, y = Ratio), colour = "orange", size = 1, shape = 4) +
+  geom_point(data = test_scaled_wrongly, aes(x = age, y = ratio), colour = "orange", size = 15, shape = 1) +
+  geom_point(data = test_scaled_wrongly, aes(x = age, y = ratio), colour = "orange", size = 1, shape = 4) +
   theme(legend.position = "none")
 ```
 
@@ -425,39 +408,11 @@ When *k* is too small, such as $k = 1$, the model becomes overly sensitive to in
 
 As *k* increases, the algorithm includes more neighbors in its classification decisions, smoothing the decision boundary and reducing the influence of noisy observations. However, when *k* becomes too large, the model may begin to overlook meaningful patterns, leading to *underfitting*. If *k* approaches the size of the training set, predictions may default to the majority class label.
 
-To determine a suitable value of *k*, it is common to evaluate a range of options using a validation set or cross-validation. Performance metrics such as accuracy, precision, recall, and F1-score help guide the selection process.
+To determine a suitable value of *k*, it is common to evaluate a range of options using a validation set or cross-validation. Performance metrics such as accuracy, precision, recall, and the F1-score can guide this choice. These metrics are discussed in detail in Chapter [-@sec-ch8-evaluation]. For simplicity, we focus here on *accuracy* (also called the success rate), which measures the proportion of correct predictions.
 
-```{r fig-ch7-kNN-plot, echo = FALSE, out.width = "85%", fig.cap = "Accuracy of the k-Nearest Neighbors algorithm for different values of k in the range from 1 to 30."}
+As an example, Figure [-@fig-ch7-kNN-plot] presents the accuracy of the kNN classifier for *k* values ranging from 1 to 30, generated with the `kNN.plot()` function from the **liver** package in R. Accuracy fluctuates as *k* increases, with the best performance achieved at $k = 9$, where the algorithm reaches its highest accuracy.
 
-data(churn)
-
-set.seed(42)
-
-data_sets = partition(data = churn, ratio = c(0.8, 0.2))
-
-train_set = data_sets$part1
-test_set  = data_sets$part2
-
-test_labels = test_set$churn
-
-formula = churn ~ voice.plan + intl.plan + account.length + 
-          voice.messages + intl.mins + intl.calls + 
-          day.mins + day.calls + eve.mins + eve.calls + 
-          night.mins + night.calls + customer.calls
-
-kNN.plot(formula, train = train_set, test = test_set, 
-         scale = "minmax", base = "accuracy", reference = "yes",
-         k.max = 30, set.seed = 42)
-
-kNN.plot_output = kNN.plot(formula, train = train_set, test = test_set, 
-                           scale = "minmax", base = "accuracy", reference = "yes",
-                           k.max = 30, set.seed = 7, report = T)
-kNN.plot_output = kNN.plot_output[[1]]
-```
-
-As an example, we revisit the *churn* dataset and assess the accuracy of the kNN classifier for *k* values ranging from 1 to 30. Figure [-@fig-ch7-kNN-plot] presents the results, generated using the `kNN.plot()` function from the **liver** package in R. Accuracy fluctuates as *k* increases, and the best performance is achieved when $k = `r which.max(kNN.plot_output)`$. At this value, the model reaches an accuracy of `r max(kNN.plot_output)` and an error rate of `r 1 - max(kNN.plot_output)`, balancing local sensitivity with broader generalization.
-
-Choosing *k* is ultimately an empirical process informed by validation and domain knowledge. There is no universal rule, but careful experimentation helps identify a value that generalizes well for the problem at hand. A detailed case study in the following section revisits this example and walks through the complete modeling process, including the generation of Figure [-@fig-ch7-kNN-plot].
+Choosing *k* is ultimately an empirical process informed by validation and domain knowledge. There is no universal rule, but careful experimentation helps identify a value that generalizes well for the problem at hand. A detailed case study in the following section revisits this example and walks through the complete modeling process.
 
 ## Case Study: Predicting Customer Churn with kNN {#sec-ch7-knn-churn}
 
@@ -468,6 +423,7 @@ The *churn* dataset captures customer behavior and service usage across multiple
 Readers unfamiliar with the dataset are encouraged to review the exploratory analysis presented in Section [-@sec-ch4-EDA-churn], which provides important context and preliminary findings. We begin here by inspecting the dataset structure:
 
 ```{r}
+data(churn)
 str(churn)
 ```
 
@@ -555,7 +511,7 @@ formula = churn ~ voice.plan_yes + intl.plan_yes + account.length +
 
 We now apply the `kNN.plot()` function:
 
-```{r}
+```{r fig-ch7-kNN-plot, echo = FALSE, out.width = "85%", fig.cap = "Accuracy of the kNN algorithm on the churn dataset for values of k ranging from 1 to 30."}
 kNN.plot(formula = formula, train = train_scaled, test = test_scaled, 
          k.max = 30, reference = "yes", set.seed = 42)
 ```

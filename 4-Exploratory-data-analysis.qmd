@@ -6,7 +6,7 @@ source("_common.R")
 
 Exploratory Data Analysis (EDA) is the essential first step before building models or conducting statistical inference. It involves examining data carefully, thoroughly, and creatively to uncover insights. EDA helps reveal unexpected patterns, spot anomalies, and highlight relationships that shape the direction of further analysis.
 
-EDA plays a pivotal role in the Data Science Workflow (see @fig-ch2_DSW), functioning as the bridge between data preparation (Chapter [-@sec-ch3-data-preparation]) and data setup for modeling (Chapter [-@sec-ch6-setup-data]). This phase deepens our understanding of the data’s structure, quality, and potential, ensuring that downstream decisions rest on a solid foundation.
+EDA plays a pivotal role in the Data Science Workflow (see @fig-ch2_DSW), functioning as the bridge between Data Preparation (Chapter [-@sec-ch3-data-preparation]) and  (Chapter [-@sec-ch6-setup-data]). This phase deepens our understanding of the data’s structure, quality, and potential, ensuring that downstream decisions rest on a solid foundation.
 
 Unlike formal hypothesis testing, EDA is not rigid or sequential. It is an iterative, open-ended process that invites curiosity. Different datasets pose different questions. Some exploratory paths reveal meaningful trends, while others point to data issues or dead ends. Through iterative exploration, analysts develop intuition and refine their focus, ultimately identifying the most informative features for modeling.
 
@@ -228,20 +228,20 @@ This reveals that the dataset is stored as a `data.frame` with `r nrow(churn)` o
 
 A structured overview of the variables is provided below:
 
--   `state`: U.S. state of the customer (51 levels), Categorical.
--   `area.code`: Area code assigned to the customer, Categorical.
--   `account.length`: Number of days the account has been active, Discrete numerical.
--   `voice.plan`: Whether the customer subscribes to a voice mail plan, Binary categorical.
--   `voice.messages`: Number of voice mail messages received, Discrete numerical.
--   `intl.plan`: Whether the customer has an international calling plan, Binary categorical.
--   `intl.mins`: Total international call minutes, Continuous numerical.
--   `intl.calls`: Number of international calls made, Discrete numerical.
--   `intl.charge`: Charges for international calls, Continuous numerical.
--   `day.mins`, `day.calls`, `day.charge`: Metrics for daytime usage, Continuous numerical.
--   `eve.mins`, `eve.calls`, `eve.charge`: Metrics for evening usage, Continuous numerical.
+-   `state`: U.S. state of the customer (51 levels), categorical.
+-   `area.code`: Area code assigned to the customer, categorical.
+-   `account.length`: Number of days the account has been active, discrete numerical.
+-   `voice.plan`: Whether the customer subscribes to a voice mail plan, binary categorical.
+-   `voice.messages`: Number of voice mail messages received, discrete numerical.
+-   `intl.plan`: Whether the customer has an international calling plan, binary categorical.
+-   `intl.mins`: Total international call minutes, continuous numerical.
+-   `intl.calls`: Number of international calls made, discrete numerical.
+-   `intl.charge`: Charges for international calls, continuous numerical.
+-   `day.mins`, `day.calls`, `day.charge`: Metrics for daytime usage, numerical.
+-   `eve.mins`, `eve.calls`, `eve.charge`: Metrics for evening usage, numerical.
 -   `night.mins`, `night.calls`, `night.charge`: Metrics for nighttime usage.
--   `customer.calls`: Number of calls to customer service, Discrete numerical.
--   `churn`: Indicates whether the customer churned (`yes`/`no`), Binary categorical.
+-   `customer.calls`: Number of calls to customer service, discrete numerical.
+-   `churn`: Indicates whether the customer churned (`yes`/`no`), binary categorical.
 
 To get a quick sense of each variable’s distribution and spot potential issues, use the `summary()` function:
 
@@ -583,12 +583,14 @@ The churn rate within this group is approximately `r round(mean(sub_churn$churn 
 Next, we examine another potential interaction: the relationship between `customer.calls` and `day.mins`.
 
 ```{r}
-ggplot(data = churn) +
-  geom_point(aes(x = day.mins, y = customer.calls, color = churn), alpha = 0.8) +
-  scale_color_manual(values = c("violetred1", "lightgreen"))
+ggplot(data = churn, aes(x = day.mins, y = customer.calls, color = churn)) +
+  geom_point(alpha = 0.7) +
+  scale_color_manual(values = c("violetred1", "lightgreen")) + 
+  geom_point(data = data.frame(day.mins = 110, customer.calls = 5.5), colour = "orange", size = 50, shape = 1) + 
+  geom_point(data = data.frame(day.mins = 310, customer.calls = 2.0), colour = "orange", size = 45, shape = 1)
 ```
 
-This scatter plot reveals an interesting segment: customers who contact support frequently but have low usage tend to churn at higher rates. These may be frustrated users who experience issues despite using the service sparingly. In contrast, customers with high usage and support contact show more varied churn outcomes, possibly because they value the service more, despite occasional problems.
+This scatter plot highlights an interesting pattern. Customers who contact support frequently but have low usage (orange circle, top-left) tend to churn at higher rates, perhaps reflecting frustration despite limited use of the service. In contrast, customers with both high usage and frequent support contact (orange circle, bottom-right) show more mixed churn outcomes, possibly because they value the service highly even when problems arise.
 
 Together, these examples illustrate how multivariate analysis can expose interaction effects and behavioral subgroups that are not apparent in simpler analyses. From a modeling perspective, such findings suggest opportunities to engineer features that capture joint effects, such as interaction terms or binary flags for high-risk combinations. From a business standpoint, these insights can guide proactive interventions aimed at specific customer profiles.
 
