@@ -2,7 +2,7 @@
 source("_common.R")
 ```
 
-# Data Preparation in Practice: Turning Raw Data into Insight {#sec-ch3-data-preparation}
+# Data Preparation in Practice: From Raw Data to Insight {#sec-ch3-data-preparation}
 
 You have just been handed a spreadsheet with hundreds of columns and thousands of rows—missing entries, inconsistent labels, strange codes like `-999`, and values that make no sense. How do you begin to turn this chaos into insight?
 
@@ -26,7 +26,7 @@ This chapter introduces the essential techniques for transforming raw data into 
 
 -   Detect and impute missing values to preserve data quality and completeness,
 
--   Scale numerical features using Min-Max and Z-score methods to ensure comparability,
+-   Scale numerical features using min-max and z-score methods to ensure comparability,
 
 -   Encode categorical variables through ordinal, one-hot, and frequency encoding for use in machine learning algorithms.
 
@@ -44,7 +44,7 @@ From a business perspective, answering these questions supports smarter pricing 
 
 Later in the book, we will return to this dataset in Chapter [-@sec-ch10-regression], where we use the features prepared here to build a predictive regression model, completing the journey from raw data to actionable insight.
 
-### Loading and Exploring the *diamonds* Dataset {.unnumbered}
+### Overview of the *diamonds* Dataset {.unnumbered}
 
 With a clear understanding of the problem and the analytical goals, we are ready to begin working directly with the data. The first step in data preparation is to load the dataset and explore its structure to identify what needs to be cleaned, transformed, or encoded.
 
@@ -108,7 +108,7 @@ Features fall into two broad categories: *quantitative (numerical)* and *categor
 
 Although the *diamonds* dataset does not contain discrete, nominal, or binary features, these are frequently encountered in real-world datasets and require distinct handling strategies.
 
-Understanding feature types helps determine which preprocessing techniques are appropriate. Numerical features often benefit from normalization or standardization, typically using methods such as Min-Max Scaling or Z-score Scaling. Ordinal features are usually encoded with ordinal encoding to preserve their ranking, although one-hot encoding may be used when the rank is not relevant to the analysis. Nominal features, lacking any inherent order, are best handled using one-hot encoding to represent each category as a separate binary feature.
+Understanding feature types helps determine which preprocessing techniques are appropriate. Numerical features often benefit from scaling, typically using methods such as min-max scaling or z-score scaling. Ordinal features are usually encoded with ordinal encoding to preserve their ranking, although one-hot encoding may be used when the rank is not relevant to the analysis. Nominal features, lacking any inherent order, are best handled using one-hot encoding to represent each category as a separate binary feature.
 
 In R, how a variable is stored affects its treatment during analysis. Continuous variables are usually stored as `numeric`, while discrete ones are often `integer`. Categorical variables appear as `factor` objects, which may be either ordered or unordered. You can inspect these using `str()` for the full dataset, or use `class()` and `typeof()` to examine specific variables.
 
@@ -124,7 +124,7 @@ First, data quality is essential. We need to ensure that the dataset is accurate
 
 Second, thoughtful feature engineering can add substantial value. For example, rather than using the `x`, `y`, and `z` dimensions separately, we might create a new variable that captures the *volume* of each diamond. This derived feature could serve as a more interpretable and effective predictor of price.
 
-Finally, appropriate data transformation ensures that all features are in a format suitable for modeling. Categorical variables like `cut` or `color` need to be encoded numerically, using methods that respect their structure and meaning. At the same time, numerical features may require scaling or normalization to ensure they contribute fairly in algorithms that rely on distance or gradient-based optimization.
+Finally, appropriate data transformation ensures that all features are in a format suitable for modeling. Categorical variables like `cut` or `color` need to be encoded numerically, using methods that respect their structure and meaning. At the same time, numerical features may require scaling to ensure they contribute fairly in algorithms that rely on distance or gradient-based optimization.
 
 These three pillars—data quality, feature engineering, and transformation—form the foundation of robust data preparation and help ensure that our modeling efforts are grounded in clean, well-structured, and informative data.
 
@@ -136,7 +136,7 @@ Recognizing and handling outliers appropriately is especially important in real-
 
 However, not all outliers are errors to be discarded. Some reflect valuable exceptions that offer new insights. Removing them indiscriminately risks throwing away useful information; keeping them blindly can undermine model reliability. Sound judgment, grounded in both statistical reasoning and domain knowledge, is essential when deciding how to handle them.
 
-Outlier detection can begin with visual tools such as *boxplots*, *histograms*, and *scatter plots*, which offer intuitive ways to spot anomalies. These methods are especially useful during the exploratory phase of analysis. More formal techniques, such as Z-scores and interquartile range (IQR) thresholds, provide quantitative criteria for identifying unusually high or low values.
+Outlier detection can begin with visual tools such as *boxplots*, *histograms*, and *scatter plots*, which offer intuitive ways to spot anomalies. These methods are especially useful during the exploratory phase of analysis. More formal techniques, such as z-scores and interquartile range (IQR) thresholds, provide quantitative criteria for identifying unusually high or low values.
 
 In the next section, we apply visual tools to the *diamonds* dataset to see how outliers manifest in real data and how they might affect our understanding of key variables.
 
@@ -293,7 +293,7 @@ Selecting the right imputation method involves balancing simplicity and precisio
 
 In the coming example, we demonstrate the random sampling approach for its simplicity and illustrative value. However, in real-world applications, more advanced techniques are often preferred. Later in this chapter and in Chapter [-@sec-ch13-clustering] (Section [-@sec-ch13-case-study]), we revisit this topic using Random Forest algorithm for imputation. This transition from basic to sophisticated methods reflects the increasing demands of applied data science.
 
-### Example: Random Sampling Imputation in R {.unnumbered}
+### Random Sampling Imputation in R {.unnumbered}
 
 Let us now put imputation into practice using the `y` variable (diamond width) in the *diamonds* dataset. Earlier, we flagged implausible values, such as 0 or values above 30 mm, as missing (`NA`). Our goal here is to replace those missing values using *random sampling*, a simple technique that draws replacements from the observed, non-missing values of the same variable.
 
@@ -314,12 +314,10 @@ To assess the effect of imputation visually, the scatter plots below show the re
 #| fig-width: 4
 #| fig-height: 4
 
-# Before imputation (with NAs)
 ggplot(data = diamonds, aes(x = y, y = price)) + 
   geom_point(color = "blue", size = 0.3) +
   ggtitle("Original Distribution (with Outliers)")
 
-# After random sampling imputation
 ggplot(data = diamonds_2, aes(x = y, y = price)) + 
   geom_point(color = "blue", size = 0.3) +
   ggtitle("After Random Sampling Imputation")
@@ -329,7 +327,7 @@ These plots illustrate that after removing implausible values and imputing missi
 
 *Try it yourself:* Apply the same technique to the `x` and `z` variables, which represent diamond length and depth. First identify implausible values, recode them as `NA`, and then impute them using random sampling. Reflect on how these changes affect the variables' relationships with price.
 
-### Alternative Approaches {.unnumbered}
+### Other Imputation Approaches {.unnumbered}
 
 The `impute()` function also supports statistical imputation methods such as mean, median, and mode. By default, it performs *median imputation*. For more advanced tasks, `aregImpute()` (also from **Hmisc**) enables predictive imputation using techniques like additive regression and bootstrapping.
 
@@ -351,17 +349,17 @@ This section introduces two widely used scaling techniques:
 
 -   *Min-Max Scaling* rescales values to a fixed range, typically $[0, 1]$.
 
--   *Z-score Scaling* centers values at zero with a standard deviation of one.
+-   *Z-Score Scaling* centers values at zero with a standard deviation of one.
 
-Choosing between these methods depends on the model and the structure of the data. Min-Max Scaling is preferred when a fixed input range is required (as in neural networks), whereas Z-score Scaling is better suited for algorithms that assume standardized input distributions or rely on variance-sensitive optimization.
+Choosing between these methods depends on the model and the structure of the data. min-max scaling is preferred when a fixed input range is required (as in neural networks), whereas z-score scaling is better suited for algorithms that assume standardized input distributions or rely on variance-sensitive optimization.
 
 Note that scaling is not always necessary. Tree-based models, such as decision trees and random forests, are scale-invariant and do not require rescaled inputs. But for many other algorithms, scaling improves model performance, convergence speed, and fairness across features.
 
-One caution: scaling can obscure real-world units or exaggerate the effect of outliers, especially when using Min-Max Scaling. As always, the choice of technique should reflect your modeling objectives and the nature of your dataset. In the following sections, we demonstrate how to apply each technique using the *diamonds* dataset.
+One caution: scaling can obscure real-world units or exaggerate the effect of outliers, especially when using min-max scaling. As always, the choice of technique should reflect your modeling objectives and the nature of your dataset. In the following sections, we demonstrate how to apply each technique using the *diamonds* dataset.
 
 ## Min-Max Scaling
 
-When one feature ranges from 0 to 1 and another spans thousands, models that rely on distances, like *k*-nearest neighbors, may be skewed toward features with larger scales. *Min-Max Scaling* addresses this by rescaling each feature to a common range, typically $[0, 1]$, so that no single variable dominates due to its units.
+When one feature ranges from 0 to 1 and another spans thousands, models that rely on distances, like *k*-nearest neighbors, may be skewed toward features with larger scales. Min-max scaling addresses this by rescaling each feature to a common range, typically $[0, 1]$, so that no single variable dominates due to its units.
 
 The transformation is defined by the formula:
 
@@ -371,10 +369,10 @@ $$
 
 where $x$ is the original value, and $x_{\text{min}}$ and $x_{\text{max}}$ are the minimum and maximum values of the feature. This method ensures that the minimum value becomes 0 and the maximum becomes 1.
 
-Min-Max Scaling is especially useful for algorithms that use distance or gradient information, including neural networks and support vector machines. However, this technique is sensitive to outliers: extreme values can stretch the scale, compressing most of the data into a narrow band and reducing resolution for typical values.
+Min-max scaling is especially useful for algorithms that use distance or gradient information, including neural networks and support vector machines. However, this technique is sensitive to outliers: extreme values can stretch the scale, compressing most of the data into a narrow band and reducing resolution for typical values.
 
 ::: {#ex-min-max .example}
-To see Min-Max Scaling in action, we apply it to the `carat` variable in the *diamonds* dataset. This variable ranges from approximately `r round(min(diamonds$carat), 1)` to `r round(max(diamonds$carat), 1)`. We use the `minmax()` function from the **liver** package to rescale the values to the $[0, 1]$ interval:
+To see min-max scaling in action, we apply it to the `carat` variable in the *diamonds* dataset. This variable ranges from approximately `r round(min(diamonds$carat), 1)` to `r round(max(diamonds$carat), 1)`. We use the `minmax()` function from the **liver** package to rescale the values to the $[0, 1]$ interval:
 
 ```{r}
 #| layout-ncol: 2
@@ -384,24 +382,22 @@ To see Min-Max Scaling in action, we apply it to the `carat` variable in the *di
 ggplot(data = diamonds) +
   geom_histogram(mapping = aes(x = carat), bins = 30,
                  color = 'blue', fill = "lightblue") +
-  ggtitle("Histogram of `carat` (original scale)") + 
-  xlab("Carat")
+  ggtitle("Before min-max scaling") 
 
 ggplot(data = diamonds) +
   geom_histogram(mapping = aes(x = minmax(carat)), bins = 30,
                  color = 'blue', fill = "lightblue") +
-  ggtitle("Histogram of `carat` (Min-Max scaled)") + 
-  xlab("Carat (scaled)")
+  ggtitle("After min-max scaling") 
 ```
 
 The left panel shows the raw distribution of carat values, while the right panel displays the scaled version. After transformation, all values fall within the $[0, 1]$ range, making this feature numerically comparable to others. This is particularly important when modeling techniques depend on distance or gradient magnitude.
 :::
 
-## Z-score Scaling
+## Z-Score Scaling
 
-While Min-Max Scaling compresses values into a fixed range, *Z-score Scaling*, also known as standardization, centers each numerical feature around zero and scales it to have unit variance. This technique is especially useful for algorithms that assume normally distributed input or rely on gradient-based optimization, such as linear regression, logistic regression, and support vector machines.
+While min-max scaling compresses values into a fixed range, z-score scaling, also known as standardization, centers each numerical feature around zero and scales it to have unit variance. This technique is especially useful for algorithms that assume normally distributed input or rely on gradient-based optimization, such as linear regression, logistic regression, and support vector machines.
 
-The formula for Z-score Scaling is:
+The formula for z-score scaling is:
 
 $$
 x_{\text{scaled}} = \frac{x - \text{mean}(x)}{\text{sd}(x)},
@@ -409,10 +405,10 @@ $$
 
 where $x$ is the original feature value, $\text{mean}(x)$ is the mean of the feature, and $\text{sd}(x)$ is its standard deviation. The result, $x_{\text{scaled}}$, tells us how many standard deviations the value is from the mean.
 
-Z-score Scaling helps place features with different units or magnitudes on a common footing. However, it is still sensitive to outliers, since both the mean and standard deviation can be influenced by extreme values.
+Z-score scaling helps place features with different units or magnitudes on a common footing. However, it is still sensitive to outliers, since both the mean and standard deviation can be influenced by extreme values.
 
 ::: {#ex-zscore .example}
-To illustrate, let us apply Z-score Scaling to the `carat` variable in the *diamonds* dataset. The mean and standard deviation of `carat` are approximately `r round(mean(diamonds$carat), 2)` and `r round(sd(diamonds$carat), 2)`, respectively. We use the `zscore()` function from the **liver** package:
+To illustrate, let us apply z-score scaling to the `carat` variable in the *diamonds* dataset. The mean and standard deviation of `carat` are approximately `r round(mean(diamonds$carat), 2)` and `r round(sd(diamonds$carat), 2)`, respectively. We use the `zscore()` function from the **liver** package:
 
 ```{r}
 #| layout-ncol: 2
@@ -422,24 +418,22 @@ To illustrate, let us apply Z-score Scaling to the `carat` variable in the *diam
 ggplot(data = diamonds) +
   geom_histogram(mapping = aes(x = carat), bins = 30,
                  color = 'blue', fill = "lightblue") +
-  ggtitle("Histogram of `carat` (original scale)") + 
-  xlab("Carat")
+  ggtitle("Before z-score scaling") 
 
 ggplot(data = diamonds) +
   geom_histogram(mapping = aes(x = zscore(carat)), bins = 30,
                  color = 'blue', fill = "lightblue") +
-  ggtitle("Histogram of `carat` (Z-score scaled)") + 
-  xlab("Carat (scaled)")
+  ggtitle("After z-score scaling") 
 ```
 
-The left panel shows the original distribution of `carat` values. The right panel displays the Z-score scaled version, where the values are centered around 0 and spread in units of standard deviation. While the location and scale are adjusted, the shape of the distribution, including any skewness, remains unchanged.
+The left panel shows the original distribution of `carat` values. The right panel displays the z-score scaled version, where the values are centered around 0 and spread in units of standard deviation. While the location and scale are adjusted, the shape of the distribution, including any skewness, remains unchanged.
 :::
 
-Note that Z-score Scaling does not make a variable normally distributed. It standardizes the location and spread but preserves the shape. If the original variable is skewed, it will remain skewed after transformation.
+Note that z-score scaling does not make a variable normally distributed. It standardizes the location and spread but preserves the shape. If the original variable is skewed, it will remain skewed after transformation.
 
 With numerical features now on a comparable scale, the next step is to turn our attention to *categorical variables*. Unlike numerical features, these cannot be used directly in most models—they must be encoded numerically. In the next section, we explore encoding strategies for different types of categorical data, including ordinal and nominal variables.
 
-## Encoding Categorical Features for Modeling {#sec-ch3-encoding}
+## Encoding Categorical Features {#sec-ch3-encoding}
 
 Categorical features often need to be transformed into numeric format before they can be used in machine learning models. Algorithms such as *k*-Nearest Neighbors and neural networks require numerical inputs, and failure to encode categorical data properly can lead to misleading results or even errors during model training.
 
@@ -817,9 +811,9 @@ This section includes exercises designed to deepen your understanding of data pr
 
 25. Define a new variable `net.capital` as the difference between `capital.gain` and `capital.loss`. Analyze its distribution using plots.
 
-26. Apply Min-Max scaling to `age`, `capital.gain`, `capital.loss`, and `hours.per.week` using `mutate()` and summarize the results.
+26. Apply min-max scaling to `age`, `capital.gain`, `capital.loss`, and `hours.per.week` using `mutate()` and summarize the results.
 
-27. Apply Z-score normalization to the same variables. How do the results compare to Min-Max scaling?
+27. Apply z-score scaling to the same variables. How do the results compare to min-max scaling?
 
 ### Modeling and Real-World Scenarios {.unnumbered}
 
