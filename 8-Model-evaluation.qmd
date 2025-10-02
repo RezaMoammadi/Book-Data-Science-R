@@ -296,7 +296,7 @@ kNN_prob = kNN(formula = formula, train = train_set,
                test = test_set, k = 9, scaler = "minmax",
                type = "prob")
 
-kNN_prob[1:6, ]
+round(kNN_prob[1:6, ], 2)  # show first 6 rows
 ```
 
 The matrix `kNN_prob` has one column per class, so column 1 represents the model's estimated probability that each observation belongs to the positive class (`churn = yes`) and the second column represents the probability for the negative class (`churn = no`). For example, the first entry of the first column is `r round(kNN_prob[1, 1], 2)`, which means the model is `r round(kNN_prob[1, 1], 2) * 100`% confident the customer will churn (`churn = yes`).
@@ -306,11 +306,11 @@ The matrix `kNN_prob` has one column per class, so column 1 represents the model
 To convert these probabilities to class predictions, we use the `cutoff` argument in the `conf.mat()` function. Here, we compare two different thresholds:
 
 ```{r}
-conf.mat(kNN_prob[, 1], test_labels, reference = "yes", cutoff = 0.5)
-conf.mat(kNN_prob[, 1], test_labels, reference = "yes", cutoff = 0.7)
+conf.mat(kNN_prob[, "yes"], test_labels, reference = "yes", cutoff = 0.5)
+conf.mat(kNN_prob[, "yes"], test_labels, reference = "yes", cutoff = 0.7)
 ```
 
-Note that `kNN_prob[, 1]` extracts the predicted probabilities for `churn = yes` from the first column of the `kNN_prob` matrix. A threshold of 0.5 casts a wider net, predicting churn for anyone with at least 50% probability. This increases sensitivity but may allow more false positives. A threshold of 0.7 is stricter, requiring stronger evidence (70% certainty) before labeling a customer as likely to churn. This generally reduces false positives but risks missing actual churners.
+Note that `kNN_prob[, "yes"]` extracts the predicted probabilities for `churn = yes` from the first column of the `kNN_prob` matrix. A threshold of 0.5 casts a wider net, predicting churn for anyone with at least 50% probability. This increases sensitivity but may allow more false positives. A threshold of 0.7 is stricter, requiring stronger evidence (70% certainty) before labeling a customer as likely to churn. This generally reduces false positives but risks missing actual churners.
 
 Adjusting the decision threshold helps adapt model behavior to real-world needs where the *costs of errors are not equal*. In practice, lower thresholds increase sensitivity but reduce specificity. Higher thresholds increase specificity but reduce sensitivity.
 
@@ -354,12 +354,12 @@ To construct an ROC curve, predicted probabilities for the positive class and th
 ::: {#ex-roc-curve-kNN .example}
 We return to the *kNN* model in [Section -@sec-ch8-taking-uncertainty], where we obtained probability scores for the positive class (`churn = yes`). We now use these probabilities to generate the ROC curve. The **pROC** package in R provides tools to compute and visualize ROC curves. If it is not already installed, you can do so using `install.packages("pROC")`.
 
-To construct the ROC curve, we use the `roc()` function from the **pROC** package. It requires two main arguments: `response`, which contains the actual class labels from the test set, and `predictor`, a numeric vector of predicted probabilities for the *positive* class. In our case, `test_labels` contains the true labels, and `kNN_prob[, 1]` extracts the predicted probabilities for `churn = yes` from the first column of the `kNN_prob` matrix. The first column contains probabilities for the positive class, which is essential for computing the ROC curve.
+To construct the ROC curve, we use the `roc()` function from the **pROC** package. It requires two main arguments: `response`, which contains the actual class labels from the test set, and `predictor`, a numeric vector of predicted probabilities for the *positive* class. In our case, `test_labels` contains the true labels, and `kNN_prob[, "yes"]` extracts the predicted probabilities for `churn = yes` from the first column of the `kNN_prob` matrix. The first column contains probabilities for the positive class, which is essential for computing the ROC curve.
 
 ```{r}
 library(pROC)
 
-roc_knn <- roc(response = test_labels, predictor = kNN_prob[, 1])
+roc_knn <- roc(response = test_labels, predictor = kNN_prob[, "yes"])
 ```
 
 We then use the `ggroc()` function to visualize the ROC curve. It takes an ROC object and generates a `ggplot2` visualization for easier customization and clearer display:
