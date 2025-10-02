@@ -77,7 +77,7 @@ knitr::opts_chunk$set(
   error      = FALSE,
   fig.show   = 'hold',
   fig.align  = 'center',
-  out.width  = '60%', #fig.width  = 6,
+  out.width  = '65%', #fig.width  = 6,
   fig.asp    = 2/3
   )
 
