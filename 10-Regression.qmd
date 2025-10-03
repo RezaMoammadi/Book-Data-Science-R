@@ -66,6 +66,7 @@ library(psych)
 
 pairs.panels(marketing[, -4])
 ```
+
 Here we exclude the `display` variable (column 4) since it is categorical. This visualization includes:
 
 -   *Correlation coefficients* (upper triangle), quantifying the strength of linear associations among all features.
@@ -84,13 +85,16 @@ A logical starting point in regression analysis is to examine the relationship b
 
 Before fitting the model, it is helpful to visualize the relationship between the two variables to assess whether a linear assumption is appropriate. A scatter plot with a fitted least-squares regression line provides insight into the strength and direction of the association:
 
-```{r fig-scoter-plot-simple-reg, echo = FALSE, out.width = "80%", fig.cap = "Scatter plot of daily revenue (euros) versus daily spend (euros) for 40 observations, with the fitted least-squares regression line (red) showing the linear relationship."}
+```{r fig-scoter-plot-simple-reg, echo = FALSE, out.width = "80%", fig.cap = "Scatter plot of daily revenue (euros) versus daily spend (euros) for 40 observations, with the fitted least-squares regression line (orange) showing the linear relationship."}
+
 ggplot(marketing, aes(x = spend, y = revenue)) +
-    geom_point(color="blue") +
-    geom_smooth(method = "lm", se = FALSE, color="red") +
-    labs(title = "Daily Revenue vs Campaign Spend",
-         x = "Daily Spend (euros)",
-         y = "Daily Revenue (euros)") 
+  geom_point(color = "#377EB8", alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "#E66101", size = .8) +
+  labs(
+    title = "Daily Revenue vs. Campaign Spend with Fitted Line",
+    x = "Daily Spend (euros)",
+    y = "Daily Revenue (euros)"
+  ) 
 ```
 
 @fig-scoter-plot-simple-reg shows the empirical relationship between `spend` and `revenue` in the *marketing* dataset. The scatter plot suggests a positive association, indicating that increased advertising expenditure is generally linked to higher revenue, a pattern consistent with a linear relationship.
@@ -216,16 +220,20 @@ $$
 
 where $y_i$ is the actual observed value and $\hat{y}_i$ is the predicted value from the regression model. @fig-residual-simple-reg visually depicts these residuals as dashed lines connecting observed outcomes to the fitted regression line.
 
-```{r fig-residual-simple-reg, echo = FALSE, out.width = "80%", fig.cap = "Scatter plot of daily revenue (euros) versus daily spend (euros) for 40 observations. The red line shows the fitted regression line, and the orange dashed lines represent residuals, the vertical distances between observed values and their predicted values on the line."}
+```{r fig-residual-simple-reg, echo = FALSE, out.width = "80%", fig.cap = "Scatter plot of daily revenue (euros) versus daily spend (euros) for 40 observations. The orange line shows the fitted regression line, and the gray dashed lines indicate residuals, representing the vertical distances between the observed values and the predictions from the line."}
+
 marketing$predicted <- predict(simple_reg)
 
 ggplot(marketing, aes(x = spend, y = revenue)) +
-    geom_point(color="blue") +
-    geom_smooth(method = "lm", se = FALSE, color="red") +
-    geom_segment(aes(xend = spend, yend = predicted), color = "orange", linetype = "dashed", alpha = 1) +
-    labs(title = "Daily Revenue vs Campaign Spend",
-         x = "Daily Spend (euros)",
-         y = "Daily Revenue (euros)")
+  geom_point(color = "#377EB8", alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "#E66101", size = .8) +
+  geom_segment(aes(xend = spend, yend = predicted),
+               color = "gray50", linetype = "dashed", alpha = 0.8) +
+  labs(
+    title = "Daily Revenue vs. Campaign Spend",
+    x = "Daily Spend (euros)",
+    y = "Daily Revenue (euros)"
+  ) 
 ```
 
 For example, suppose the 21st day in the dataset has a marketing spend of 25 euros and an actual revenue of `r marketing$revenue[21]`. The residual for this observation is:
@@ -418,7 +426,7 @@ However, these metrics do not tell the full story. For example, a high $R^2$ can
 
 ::: {#tbl-reg-quality-matrics .table}
 | Metric                    | What It Tells You                       | What to Look For                 |
-|-------------------|-----------------------------|------------------------|
+|---------------------------|-----------------------------------------|----------------------------------|
 | RSE (Residual Std. Error) | Average prediction error                | Lower is better                  |
 | $R^2$                     | Proportion of variance explained        | Higher is better                 |
 | Adjusted $R^2$            | $R^2$ adjusted for number of predictors | Higher (but realistic) is better |
@@ -553,18 +561,30 @@ In the plots below (@fig-ch10-Simpson-Paradox), the left panel displays a regres
 #| echo: false
 #| fig-cap: "Simpson’s Paradox: The left plot shows a regression line fitted to the full dataset, ignoring group structure. The right plot fits separate regression lines for each group, revealing positive trends within groups that are hidden when data are aggregated."
 
-p1 = ggplot(sim_data, aes(x = x, y = y)) +
-  geom_point(alpha = 0.7) +
-  geom_smooth(method = "lm", se = FALSE, color = "red") +
-  labs(title = "Ignoring Groups", x = "X", y = "Y")
+p1 <- ggplot(sim_data, aes(x = x, y = y)) +
+  geom_point(alpha = 0.6, color = "gray50") +
+  geom_smooth(method = "lm", se = FALSE, color = "#377EB8", linewidth = 1) +
+  labs(title = "Ignoring Groups", x = "Predictor (X)", y = "Response (Y)") +
+  theme(plot.title = element_text(hjust = 0.5))
 
-p2 = ggplot(sim_data, aes(x = x, y = y, color = Groups)) +
-  geom_point(alpha = 0.4) +
-  geom_smooth(method = "lm", se = FALSE) +
-#  geom_smooth(aes(group = Groups), method = "lm", se = FALSE, color = "darkblue") +
-  labs(title = "Separate Trends by Group", x = "X", y = "Y")
+p2 <- ggplot(sim_data, aes(x = x, y = y, color = Groups)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1) +
+  scale_color_brewer(palette = "Set2") +
+  labs(title = "Separate Trends by Group", x = "Predictor (X)", y = "Response (Y)", color = "Group") +
+  theme(plot.title = element_text(hjust = 0.5))
 
-gridExtra::grid.arrange(p1, p2, nrow = 1)
+#(p1 + p2) + plot_layout(guides = "collect") & theme(legend.position = "bottom")
+
+(p1 + p2) + plot_layout(guides = "collect") & 
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(hjust = 0.5, size = 9),
+    axis.title  = element_text(size = 9),
+    axis.text   = element_text(size = 9),
+    legend.text = element_text(size = 9),
+    legend.title = element_text(size = 9)
+  )
 ```
 
 This example underscores the importance of including relevant variables. Omitting key groupings can lead to flawed conclusions, even when regression coefficients appear statistically sound. This phenomenon connects directly to our earlier analysis of the *marketing* dataset. In the simple regression model, we considered only `spend` as a predictor of revenue. However, once we added `display` in the multiple regression model, the interpretation of `spend` changed. This shift illustrates how omitted variables, such as group membership or campaign status, can confound observed associations. Simpson’s Paradox reminds us that *a variable’s effect can reverse or diminish once other important predictors are included*. Careful modeling and exploratory analysis are essential for uncovering such subtleties.
@@ -898,19 +918,20 @@ This formulation includes both the original predictor and its squared term, allo
 
 The blue curve in @fig-scoter-plot-non-reg shows the improved fit from a quadratic regression. Unlike the straight-line model, it adapts to the curvature in the data, producing a more accurate and visually aligned fit.
 
-```{r fig-scoter-plot-non-reg, echo = FALSE, out.width = "100%", fig.cap = "Scatter plot of house price ($) versus house age (years) for the house dataset, with the fitted simple linear regression line in orange and the quadratic regression curve in blue."}
+```{r fig-scoter-plot-non-reg, echo = FALSE, out.width = "100%", fig.cap = "Scatter plot of house price ($) versus house age (years) for the house dataset, with the fitted simple linear regression line in dashed-orange and the quadratic regression curve in blue."}
+
 data(house)
 
 ggplot(data = house, aes(x = house.age, y = unit.price)) +
-    geom_point() +
-    geom_smooth(method = "lm", se = FALSE, colour = "orange") +
-    stat_smooth(method = "lm", formula = y ~ x + I(x ^ 2), se = FALSE) +
+    geom_point(color = "gray60", alpha = 0.6) +
+    geom_smooth(method = "lm", se = FALSE, linetype = "dashed", colour = "#E66101", size = .9) +
+    stat_smooth(method = "lm", formula = y ~ x + I(x ^ 2), se = FALSE, colour = "#377EB8", size = .9) +
     labs(
       title = "House Age vs Unit Price",
       x = "House Age (years)",
       y = "Unit Price ($)"
     ) +
-    ggtitle("Scatter Plot with Linear and Non-Linear Regression Fits")
+    ggtitle("Scatter Plot with Linear and Quadratic Fits")
 ```
 
 This example illustrates the importance of adapting model structure when the linearity assumption does not hold. Polynomial regression extends our modeling vocabulary by allowing us to describe more realistic shapes in the data, while keeping the model framework interpretable and statistically tractable.
@@ -1164,13 +1185,14 @@ We visualize all three ROC curves in a single plot:
 
 ```{r out.width = "90%"}
 ggroc(list(roc_logistic, roc_bayes, roc_knn), size = 0.8) + 
-    ggtitle("ROC Curves with AUC for Three Models") +
-  scale_color_manual(values = 1:3, 
-    labels = c(paste("Logistic; AUC=", round(auc(roc_logistic), 3)), 
-                paste("Naive Bayes; AUC=", round(auc(roc_bayes), 3)), 
-                paste("kNN; AUC=", round(auc(roc_knn), 3)))) +
-  theme(legend.title = element_blank()) +
-  theme(legend.position = c(.7, .3), text = element_text(size = 17))
+  scale_color_manual(values = c("#377EB8", "#E66101", "#4DAF4A"),
+                     labels = c(
+                       paste("Logistic (AUC =", round(auc(roc_logistic), 3), ")"),
+                       paste("Naive Bayes (AUC =", round(auc(roc_bayes), 3), ")"),
+                       paste("kNN (AUC =", round(auc(roc_knn), 3), ")")
+                     )) +
+  ggtitle("ROC Curves with AUC for Three Models") + 
+  theme(legend.title = element_blank(), legend.position = c(.7, .3))
 ```
 
 In the ROC plot, each curve represents the performance of one classifier: logistic regression, Naive Bayes, and kNN. Higher curves and larger AUC values indicate stronger predictive performance.

@@ -74,7 +74,7 @@ When classifying a new observation, the kNN algorithm first computes its *distan
 
 -   When $k = 6$, the nearest neighbors include four red circles and two blue squares, resulting in a prediction of *Class A*.
 
-```{r fig-ch7-knn-image, echo = FALSE, out.width = "55%", fig.cap = "A two-dimensional toy dataset with two classes (Class A and Class B) and a new data point (dark star), illustrating the kNN algorithm with k = 3 and k = 6."}
+```{r fig-ch7-knn-image, echo = FALSE, out.width = "52%", fig.cap = "A two-dimensional toy dataset with two classes (Class A and Class B) and a new data point (dark star), illustrating the kNN algorithm with k = 3 and k = 6."}
 knitr::include_graphics("images/ch7_knn.png")
 ```
 
@@ -102,11 +102,16 @@ To further illustrate how kNN operates in practice, consider a simplified classi
 data(drug)
 train_set = drug
 
-p = ggplot(data = train_set, aes(x = age, y = ratio)) +
-    geom_point(aes(color = type, shape = type)) + 
-    labs(x = "Age", y = "Sodium/Potassium Ratio") + 
-    guides(color = guide_legend(title = "Drug Type"), 
-           shape = guide_legend(title = "Drug Type"))
+p = ggplot(train_set, aes(x = age, y = ratio, color = type, shape = type)) +
+  geom_point(alpha = 0.7) +
+  scale_color_brewer(palette = "Set2") +
+  labs(x = "Age", 
+       y = "Sodium/Potassium Ratio", 
+       color = "Type", 
+       shape = "Type") +
+  theme(legend.text = element_text(size = 8),
+        legend.title = element_text(size = 10))
+
 p
 ```
 
@@ -114,25 +119,25 @@ Suppose three new patients arrive at the clinic, and we need to determine which 
 
 These patients are represented by large orange circles with cross markers in @fig-ch7-ex-drug-2. The following analysis explores how kNN assigns drug classifications to these individuals based on proximity to labeled cases in the training data.
 
-```{r fig-ch7-ex-drug-2, echo = FALSE, out.width = "95%", fig.cap = "Scatter plot of Age vs. Sodium/Potassium Ratio for 200 patients, with drug type indicated by color and shape. The three new patients are represented by large orange circles."}
+```{r fig-ch7-ex-drug-2, echo = FALSE, out.width = "95%", fig.cap = "Scatter plot of age versus sodium/potassium ratio for 200 patients, with drug type shown by color and shape. The three new patients are highlighted with large orange circles."}
 
-size = if(knitr::is_latex_output()) 14.3 else 15
+size = if(knitr::is_latex_output()) 13.5 else 14.5
 
 # To create a data frame for new patients
 test_set = data.frame(age = c(40, 28, 61), ratio = c(30.5, 9.6, 10.5))
 
 # To plot train data and new patients
-p + geom_point(data = test_set, aes(x = age, y = ratio), colour = "orange", size = size, shape = 1) +
-  geom_point(data = test_set, aes(x = age, y = ratio), colour = "orange", size = 1, shape = 4)
+p + geom_point(data = test_set, aes(x = age, y = ratio), colour = "#E66101", size = size, shape = 1) +
+    geom_point(data = test_set, aes(x = age, y = ratio), colour = "#E66101", size = 1   , shape = 8)
 ```
 
-For Patient 1, who lies deep within a cluster of red-circle points (Drug A), the classification is straightforward. All nearest neighbors belong to Drug A, making the prediction confident and unambiguous.
+For Patient 1, who lies deep within a cluster of green-circle points (Drug A), the classification is straightforward. All nearest neighbors belong to Drug A, making the prediction confident and unambiguous.
 
 For Patient 2, the outcome depends on the choice of *k*. When $k = 1$, the nearest neighbor is a blue square, so the predicted class is Drug C. With $k = 2$, there is a tie between Drug B and Drug C, leaving no clear majority. At $k = 3$, two of the three nearest neighbors are blue squares, so the prediction is again Drug C.
 
 For Patient 3, the classification is more uncertain. With $k = 1$ or $k = 2$, the patient is equally close to both red and blue points, so voting provides no decisive result. At $k = 3$, the three nearest neighbors each represent a different class, making the prediction entirely ambiguous.
 
-```{r}
+```{r, out.width  = '100%'}
 #| label: fig-ch7-ex-drug-3
 #| echo: false
 #| layout-nrow: 2
@@ -142,9 +147,10 @@ For Patient 3, the classification is more uncertain. With $k = 1$ or $k = 2$, th
 #|   - "Patient 2"
 #|   - "Patient 3"
 
-p = ggplot(data = train_set, aes(x = age, y = ratio)) +
-    geom_point(aes(color = type, shape = type, size = 3), show.legend = FALSE) + 
-    labs(x = "Age", y = "Sodium/Potassium Ratio")
+p = ggplot(train_set, aes(x = age, y = ratio, color = type, shape = type)) +
+  geom_point(alpha = 0.7, size = 4, show.legend = FALSE) +
+  scale_color_brewer(palette = "Set2") +
+  labs(x = "Age", y = "Sodium/Potassium Ratio") 
 
 r_x = 3; r_y = 2
 
@@ -155,24 +161,24 @@ y = test_set$ratio[1]
 size = if(knitr::is_latex_output()) 97 else 120
 
 p + coord_cartesian(xlim = c(x - r_x, x + r_x), ylim = c(y - r_y, y + r_y)) +
-    geom_point(aes(x = x, y = y), colour = "orange", size = size, shape = 1) +
-    geom_point(aes(x = x, y = y), colour = "orange", size = 8, shape = 4) 
+    geom_point(aes(x = x, y = y), colour = "#E66101", size = size, shape = 1) +
+    geom_point(aes(x = x, y = y), colour = "#E66101", size = 4, shape = 8) 
 
 # For patient 2
 x = test_set$age[2]
 y = test_set$ratio[2]
 
 p + coord_cartesian(xlim = c(x - r_x, x + r_x), ylim = c(y - r_y, y + r_y)) +
-    geom_point(aes(x = x, y = y), colour = "orange", size = size, shape = 1) +
-    geom_point(aes(x = x, y = y), colour = "orange", size = 8, shape = 4) 
+    geom_point(aes(x = x, y = y), colour = "#E66101", size = size, shape = 1) +
+    geom_point(aes(x = x, y = y), colour = "#E66101", size = 4, shape = 8) 
 
 # For patient 3
 x = test_set$age[3]
 y = test_set$ratio[3]
 
 p + coord_cartesian(xlim = c(x - r_x, x + r_x), ylim = c(y - r_y, y + r_y)) +
-    geom_point(aes(x = x, y = y), colour = "orange", size = size, shape = 1) +
-    geom_point(aes(x = x, y = y), colour = "orange", size = 8, shape = 4)
+    geom_point(aes(x = x, y = y), colour = "#E66101", size = size, shape = 1) +
+    geom_point(aes(x = x, y = y), colour = "#E66101", size = 4, shape = 8)
 ```
 
 This example highlights key considerations for using kNN effectively. The choice of *k* strongly influences the decision boundary, with smaller values emphasizing local variation and larger values yielding smoother classifications. The distance metric shapes how similarity is assessed, and appropriate feature scaling ensures that all features contribute meaningfully. Together, these design decisions play a critical role in the success of kNN in practice.
@@ -217,7 +223,8 @@ point2 = c(28, 9.6)
 points_df <- data.frame(
   x = c(point1[1], point2[1]),
   y = c(point1[2], point2[2]),
-  label = c("Patient1 (40, 30.5)", "Patient2 (28, 9.6)")
+  label = c("Patient1 (40, 30.5)", "Patient2 (28, 9.6)"),
+  vjust = c(-1.3, 1.9)   # Patient1 above, Patient2 below
 )
 
 # Data frame for the segment between the two Patients
@@ -233,16 +240,15 @@ euclidean_distance <- sqrt(sum((point1 - point2)^2))
 
 # Plot
 ggplot(points_df, aes(x = x, y = y)) +
-  geom_text(aes(label = label), vjust = -1.3, size = 5, color = "blue") +
+  geom_text(aes(label = label, vjust = vjust), size = 5, color = "#377EB8") +
   geom_segment(data = segment_df,
                aes(x = x, y = y, xend = xend, yend = yend),
-               color = "darkorange", size = 1) +
+               color = "#E66101", size = 1) +
   annotate("text", x = 28, y = 22,
            label = paste0("Distance = ", round(euclidean_distance, 2)),
-           color = "darkorange", size = 5.5) +
-  geom_point(size = 4, color = "blue") +
+           color = "#E66101", size = 5.5) +
+  geom_point(shape = 21, size = 4, stroke = 0.8, fill = "white", color = "#377EB8") +
   xlim(20, 50) + ylim(0, 40) +
-  theme_minimal() +
   labs(x = "Age", y = "Sodium/Potassium Ratio", title = "Euclidean Distance Between Two Patients")
 ```
 
@@ -347,7 +353,7 @@ train_scaled_wrongly = minmax(train_set, col = c("age", "ratio"))
 test_scaled_wrongly  = minmax(test_set , col = c("age", "ratio"))
 ```
 
-```{r}
+```{r out.width  = '100%'}
 #| label: fig-ch7-ex-proper-scaling
 #| echo: false
 #| fig.width: 5
@@ -362,35 +368,35 @@ test_scaled_wrongly  = minmax(test_set , col = c("age", "ratio"))
 
 # To plot the data without scaling
 ggplot(data = train_set, aes(x = age, y = ratio)) +
-  geom_point(aes(color = type, shape = type)) + 
-  labs(title = "Without Scaling", 
-       x = "Age", y = "Sodium/Potassium Ratio") + 
+  geom_point(alpha = 0.7, aes(color = type, shape = type)) + 
+  scale_color_brewer(palette = "Set2") +
+  labs(x = "Age", y = "Sodium/Potassium Ratio") + 
   guides(color = guide_legend(title = "Drug Type"), 
          shape = guide_legend(title = "Drug Type")) +
-  geom_point(data = test_set, aes(x = age, y = ratio), colour = "orange", size = 15, shape = 1) +
-  geom_point(data = test_set, aes(x = age, y = ratio), colour = "orange", size = 1, shape = 4) +
+  geom_point(data = test_set, aes(x = age, y = ratio), colour = "#E66101", size = 9, shape = 1) +
+  geom_point(data = test_set, aes(x = age, y = ratio), colour = "#E66101", size = 1, shape = 8) +
   theme(legend.position = "none")
 
 # To plot the data with proper scaling
 ggplot(data = train_scaled, aes(x = age, y = ratio)) +
-  geom_point(aes(color = type, shape = type)) + 
-  labs(title = "Proper Scaling", 
-       x = "Age", y = "Sodium/Potassium Ratio") + 
+  geom_point(alpha = 0.7, aes(color = type, shape = type)) + 
+  scale_color_brewer(palette = "Set2") +
+  labs(x = "Age", y = "Sodium/Potassium Ratio") + 
   guides(color = guide_legend(title = "Drug Type"), 
          shape = guide_legend(title = "Drug Type")) +
-  geom_point(data = test_scaled, aes(x = age, y = ratio), colour = "orange", size = 15, shape = 1) +
-  geom_point(data = test_scaled, aes(x = age, y = ratio), colour = "orange", size = 1, shape = 4) +
+  geom_point(data = test_scaled, aes(x = age, y = ratio), colour = "#E66101", size = 9, shape = 1) +
+  geom_point(data = test_scaled, aes(x = age, y = ratio), colour = "#E66101", size = 1, shape = 8) +
   theme(legend.position = "none")
 
 # To plot the data with improper scaling
 ggplot(data = train_scaled_wrongly, aes(x = age, y = ratio)) +
-  geom_point(aes(color = type, shape = type)) + 
-  labs(title = "Improper Scaling", 
-       x = "Age", y = "Sodium/Potassium Ratio") + 
+  geom_point(alpha = 0.7, aes(color = type, shape = type)) + 
+  scale_color_brewer(palette = "Set2") +
+  labs(x = "Age", y = "Sodium/Potassium Ratio") + 
   guides(color = guide_legend(title = "Drug Type"), 
          shape = guide_legend(title = "Drug Type")) +
-  geom_point(data = test_scaled_wrongly, aes(x = age, y = ratio), colour = "orange", size = 15, shape = 1) +
-  geom_point(data = test_scaled_wrongly, aes(x = age, y = ratio), colour = "orange", size = 1, shape = 4) +
+  geom_point(data = test_scaled_wrongly, aes(x = age, y = ratio), colour = "#E66101", size = 8.5, shape = 1) +
+  geom_point(data = test_scaled_wrongly, aes(x = age, y = ratio), colour = "#E66101", size = 1, shape = 8) +
   theme(legend.position = "none")
 ```
 

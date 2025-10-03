@@ -28,6 +28,7 @@ inst_pkgs = load_pkgs = c(
   "gganimate", # for animation in ch4
   "ggcorrplot", # for correlation plot in ch4
   "dslabs",    # for gapminder dataset in ch4
+  "patchwork",  # for combining ggplots in ch10
   
   "pROC", 
   "neuralnet",

@@ -161,15 +161,18 @@ $$
 This binary, step-like behavior is shown in @fig-ch12-active-fun.
 
 ```{r fig-ch12-active-fun, echo = FALSE, fig.cap = "Visualization of the threshold activation function (unit step)."}
-library(ggplot2)       
 
 x_values <- seq(-10, 10, by = 0.1)
 data <- data.frame(x = x_values, y = ifelse(x_values >= 0, 1, 0))
 
 ggplot(data, aes(x = x, y = y)) +
-  geom_step(color = "blue", size = 1.5) +
+  geom_step(color = "#377EB8", size = 1.2) +
+  geom_point(aes(x = 0, y = 0), color = "#377EB8", size = 3, shape = 1) +
+  geom_point(aes(x = 0, y = 1), color = "#377EB8", size = 3, shape = 16) +
+  scale_y_continuous(breaks = c(0, 1), limits = c(-0.2, 1.2)) +
   labs(title = "Unit Step Activation Function",
-       x = "Sum of Input Signals", y = "Output Signal") 
+       x = "Sum of Input Signals", y = "Output Signal")
+
 ```
 
 Although biologically intuitive, the threshold function is not differentiable, which prevents its use in gradient-based learning algorithms such as backpropagation. Its inability to capture nuanced input-output relationships also limits its effectiveness in modern neural networks.
@@ -189,7 +192,10 @@ x_values <- seq(-10, 10, by = 0.01)
 data <- data.frame(x = x_values, y = 1 / (1 + exp(-x_values)))
 
 ggplot(data, aes(x = x, y = y)) +
-  geom_line(color = "blue", size = 1.5) +
+  geom_line(color = "#377EB8", size = 1.2) +
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "gray50") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  scale_y_continuous(breaks = c(0, 0.5, 1), limits = c(-0.05, 1.05)) +
   labs(title = "Sigmoid Activation Function",
        x = "Sum of Input Signals", y = "Output Signal") 
 ```
@@ -222,7 +228,7 @@ While the sigmoid function was foundational in early neural networks, modern arc
 
 @fig-ch12-active-fun-comparison visually compares the output shapes of sigmoid, tanh, and ReLU activation functions across a range of inputs.
 
-```{r fig-ch12-active-fun-comparison, echo = FALSE, fig.cap = "Comparison of common activation functions: sigmoid, tanh, and ReLU."}
+```{r fig-ch12-active-fun-comparison, echo = FALSE, out.width  = '70%', fig.cap = "Comparison of common activation functions: sigmoid, tanh, and ReLU."}
 x_values <- seq(-5, 5, by = 0.008)
 sigmoid <- 1 / (1 + exp(-x_values))
 tanh_val <- tanh(x_values)
@@ -234,13 +240,20 @@ data <- data.frame(x = x_values, Sigmoid = sigmoid, Tanh = tanh_val, ReLU = relu
 data_long <- pivot_longer(data, cols = -x, names_to = "Function", values_to = "Value")
 
 ggplot(data_long, aes(x = x, y = Value, color = Function, linetype = Function)) +
-  geom_line(size = 1.2) +
+  geom_line(size = 1.1) +
+  geom_hline(yintercept = c(-1, 0, 1), linetype = "dashed", color = "gray70") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray70") +
   scale_color_manual(name = "Activation Functions",
-                     values = c("Sigmoid" = "blue", "Tanh" = "darkorange", "ReLU" = "darkred")) +
+                     values = c("Sigmoid" = "#377EB8", 
+                                "Tanh" = "#E66101", 
+                                "ReLU" = "#B2182B")) +
   scale_linetype_manual(name = "Activation Functions",
-                        values = c("Sigmoid" = "solid", "Tanh" = "dotdash", "ReLU" = "dotted")) +
+                        values = c("Sigmoid" = "solid", 
+                                   "Tanh" = "dotdash", 
+                                   "ReLU" = "dotted")) +
+  scale_y_continuous(breaks = c(-1, 0, 0.5, 1)) +
   labs(title = "Comparison of Activation Functions",
-       x = "Input Signal", y = "Output Signal")
+       x = "Input Signal", y = "Output Signal") 
 ```
 
 These activation functions each offer advantages depending on the architecture, input characteristics, and task complexity. The next subsection discusses how to select an appropriate activation function given the structure of the model and the goals of learning.
@@ -497,13 +510,13 @@ To visualize the effect of scaling, we compare the distribution of `age` before 
 #| fig-width: 4.5
 #| fig-height: 4
 
-ggplot(data = train_set) +
-  geom_histogram(mapping = aes(x = age), color = "white", fill = "#2C7BB6") +
-  ggtitle("Before min-max scaling")
+ggplot(train_set, aes(x = age)) +
+  geom_histogram(color = "white", fill = "#2C7BB6") +
+  labs(x = "Age (years)", y = "Count", title = "Before Min–Max Scaling") 
 
-ggplot(data = train_scaled) +
-  geom_histogram(mapping = aes(x = age), color = "white", fill = "#2C7BB6") +
-  ggtitle("After min-max scaling")
+ggplot(train_scaled, aes(x = age)) +
+  geom_histogram(color = "white", fill = "#2C7BB6") +
+  labs(x = "Scaled Age [0–1]", y = "Count", title = "After Min–Max Scaling") 
 ```
 
 The first histogram (left) shows the distribution of `age` in the training set before scaling, while the second histogram (right) shows the distribution after applying min-max scaling. The values are mapped to the interval \[0, 1\] while preserving the original shape of the distribution.
@@ -548,7 +561,7 @@ After training, we can visualize the network architecture:
 
 ```{r out.width = "80%"}
 plot(neuralnet_model, rep = "best", fontsize = 10,
-     col.entry = "blue", col.hidden = "red", col.out = "green")
+     col.entry = "#377EB8", col.hidden = "#E66101", col.out = "#4DAF4A")
 ```
 
 This visualization shows that the network consists of:
@@ -632,15 +645,12 @@ To further assess model performance across different thresholds, we plot the Rec
 ```{r}
 library(pROC)
 
-neuralnet_roc = roc(test_labels, neuralnet_probs_yes)
+neuralnet_roc <- roc(test_labels, neuralnet_probs_yes)
 
-ggroc(neuralnet_roc, size = 0.8, colour = "blue") + 
-  ggtitle("ROC for Neural Network Algorithm") +
-  annotate("text", x = .2, y = .2, size = 7, col = "blue", 
-           label = paste("AUC = ", round(auc(neuralnet_roc), 3))) +
-  theme(legend.title = element_blank(),
-        legend.position = c(.7, .3),
-        text = element_text(size = 17))
+ggroc(neuralnet_roc, size = 0.9, colour = "#377EB8") +
+  annotate("text", x = .2, y = .2, size = 6, color = "#377EB8",
+           label = paste("AUC =", round(auc(neuralnet_roc), 3))) +
+  labs(title = "ROC Curve for Neural Network") 
 ```
 
 The ROC curve visualizes the trade-off between sensitivity (true positive rate) and specificity (false positive rate) across thresholds. The AUC score (`r round(auc(neuralnet_roc), 3)`) summarizes this performance into a single value. An AUC of 1 indicates perfect classification; a value close to 0.5 suggests random guessing.

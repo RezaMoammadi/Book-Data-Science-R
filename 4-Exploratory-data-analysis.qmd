@@ -135,6 +135,7 @@ Visualizations play a central role in this process. While summary statistics pro
 Data storytelling is now common across domains, from business and journalism to public policy and scientific research. A well-known example appears in Hans Rosling’s TED Talk ["New insights on poverty"](https://www.ted.com/talks/hans_rosling_new_insights_on_poverty). Figure @fig-EDA-fig-1, adapted from his presentation, illustrates how GDP per capita and life expectancy have changed across global regions from 1962 to 2011. It presents decades of demographic and health data into an engaging and comprehensible format. Although this example is drawn from global development, the same principles apply when exploring customer behavior, financial trends, or healthcare outcomes.
 
 ```{r fig-EDA-fig-1, echo = FALSE, out.width = "100%", fig.cap = "Changes in GDP per capita and life expectancy by region from 1962 to 2011. Dot size is proportional to population."}
+
 The_West = c("Western Europe", "Northern Europe", "Southern Europe", "Northern America", "Australia and New Zealand")
 Asia = c("Eastern Asia", "South-Eastern Asia", "Central Asia", "Southern Asia", "Western Asia")
 Latin_America = c("Caribbean", "Central America", "South America")
@@ -166,7 +167,8 @@ if(knitr::is_latex_output()){
           axis.text.x = element_text(size=9, angle=45),
           axis.text.y = element_text(size = 9), 
           axis.title = element_text(size = 9, face = "bold"),
-          title = element_text(size = 10, face = "bold"))
+          title = element_text(size = 10, face = "bold")) + 
+          scale_color_brewer(palette = "Set2")
 }else{
   ggplot_html = ggplot_1 +
     ggtitle('{frame_time}') +
@@ -176,7 +178,8 @@ if(knitr::is_latex_output()){
           legend.title = element_blank(), 
           plot.margin = unit(c(-.19, 0, .03, .1), "null"),
           plot.title = element_text(hjust = 0.8, vjust = -18, color = "#eddee4", size = 60, 
-                                  face = "bold.italic"))
+                                  face = "bold.italic")) + 
+          scale_color_brewer(palette = "Set2")
   
   animate(ggplot_html, fps = 7, end_pause = 25) #, rewind = TRUE)
 }
@@ -263,7 +266,7 @@ To begin, we examine the distribution of the target variable `churn`, which reco
 
 ```{r out.width = "50%"}
 ggplot(data = churn, aes(x = churn, label = scales::percent(prop.table(stat(count))))) +
-  geom_bar(fill = c("palevioletred1", "darkseagreen1")) + 
+  geom_bar(fill = c("#F4A582", "#A8D5BA")) + 
   geom_text(stat = 'count', vjust = 0.4, size = 8)
 ```
 
@@ -294,10 +297,12 @@ As a binary categorical variable, `intl.plan` allows for a straightforward compa
 #| fig-height: 4
 
 ggplot(data = churn) + 
-  geom_bar(aes(x = intl.plan, fill = churn))  
+  geom_bar(aes(x = intl.plan, fill = churn)) +
+  scale_fill_manual(values = c("#F4A582", "#A8D5BA"))  
 
 ggplot(data = churn) + 
-  geom_bar(aes(x = intl.plan, fill = churn), position = "fill") 
+  geom_bar(aes(x = intl.plan, fill = churn), position = "fill") +
+  scale_fill_manual(values = c("#F4A582", "#A8D5BA"))
 ```
 
 The first plot shows the absolute number of churners and non-churners in each group. The second, normalized by group size, reveals a sharper insight: customers subscribed to an international plan are disproportionately more likely to churn.
@@ -325,10 +330,12 @@ We now turn to another service-related feature: the voice mail plan. The variabl
 #| fig-height: 4
 
 ggplot(data = churn) + 
-  geom_bar(aes(x = voice.plan, fill = churn)) 
+  geom_bar(aes(x = voice.plan, fill = churn)) +
+  scale_fill_manual(values = c("#F4A582", "#A8D5BA"))
 
 ggplot(data = churn) + 
-  geom_bar(aes(x = voice.plan, fill = churn), position = "fill") 
+  geom_bar(aes(x = voice.plan, fill = churn), position = "fill") +
+  scale_fill_manual(values = c("#F4A582", "#A8D5BA"))
 ```
 
 The left panel displays the absolute number of customers who churned or remained, segmented by voice mail plan subscription. The right panel presents the same information in proportional form, highlighting differences in churn rates between groups. While the difference is not dramatic, customers with a voice mail plan appear to churn at slightly lower rates.
@@ -367,7 +374,7 @@ We begin by visualizing the distribution of this variable:
 
 ```{r out.width = "60%"}
 ggplot(data = churn) +
-  geom_bar(aes(x = factor(customer.calls)), fill = "lightblue") +
+  geom_bar(aes(x = factor(customer.calls)), fill = "#80CDC1", color = "black") +
   labs(x = "Number of Service Calls", y = "Count")
 ```
 
@@ -382,11 +389,13 @@ The bar plot reveals a right-skewed distribution: most customers contact support
 
 ggplot(data = churn) +
   geom_bar(aes(x = factor(customer.calls), fill = churn), position = "stack") +
-  labs(x = "Number of Service Calls", y = "Count", fill = "Churn")
+  labs(x = "Number of Service Calls", y = "Count", fill = "Churn") +
+  scale_fill_manual(values = c("#F4A582", "#A8D5BA"))
 
 ggplot(data = churn) +
   geom_bar(aes(x = factor(customer.calls), fill = churn), position = "fill") +
-  labs(x = "Number of Service Calls", y = "Proportion", fill = "Churn")
+  labs(x = "Number of Service Calls", y = "Proportion", fill = "Churn") +
+  scale_fill_manual(values = c("#F4A582", "#A8D5BA"))
 ```
 
 The left plot shows raw counts of churners and non-churners at each call level. The right plot, normalized by call frequency, reveals a clear trend: customers who make *four or more service calls* are significantly more likely to churn.
@@ -408,7 +417,7 @@ Because `day.mins` is a continuous numerical variable, we use a box plot to comp
 
 ggplot(data = churn) +
   geom_boxplot(aes(x = churn, y = day.mins), 
-               fill = c("palevioletred1", "darkseagreen1")) +
+               fill = c("#F4A582", "#A8D5BA")) +
   labs(x = "Churn", y = "Daytime Minutes")
 
 ggplot(data = churn) +
@@ -433,7 +442,7 @@ Since both variables are continuous, we begin by visualizing `eve.mins` using a 
 
 ggplot(data = churn, aes(x = churn, y = eve.mins)) +
   geom_violin(trim = FALSE) + 
-  geom_boxplot(width = 0.3, fill = c("palevioletred1", "darkseagreen1")) +
+  geom_boxplot(width = 0.3, fill = c("#F4A582", "#A8D5BA")) +
   labs(x = "Churn", y = "Evening Minutes")
 
 ggplot(data = churn) +
@@ -451,7 +460,7 @@ We now apply the same approach to `night.mins`:
 #| fig-height: 4
 
 ggplot(data = churn) +
-  geom_boxplot(aes(x = churn, y = night.mins), fill = c("palevioletred1", "darkseagreen1")) +
+  geom_boxplot(aes(x = churn, y = night.mins), fill = c("#F4A582", "#A8D5BA")) +
   labs(x = "Churn", y = "Nighttime Minutes")
 
 ggplot(data = churn) +
@@ -476,7 +485,7 @@ Because `intl.calls` is a discrete numeric variable with moderate range, we exam
 
 ggplot(data = churn) +
   geom_boxplot(aes(x = churn, y = intl.calls), 
-               fill = c("palevioletred1", "darkseagreen1")) +
+               fill = c("#F4A582", "#A8D5BA")) +
   labs(x = "Churn", y = "International Calls")
 
 ggplot(data = churn) +
@@ -549,8 +558,10 @@ Let us begin by jointly analyzing `day.mins` (daytime call duration) and `eve.mi
 
 ```{r}
 ggplot(data = churn) +
-    geom_point(aes(x = eve.mins, y = day.mins, color = churn), size = 0.7, alpha = 0.8) +
-    geom_abline(intercept = 400, slope = -0.6, color = "blue", size = 1)
+    geom_point(aes(x = eve.mins, y = day.mins, color = churn), size = 0.7) +
+    geom_abline(intercept = 400, slope = -0.6, color = "#377EB8", linewidth = 1) + 
+    scale_color_manual(values = c("#F4A582", "#A8D5BA")) + 
+    labs(x = "Evening Minutes", y = "Daytime Minutes", color = "Churn")
 ```
 
 To help identify behavioral segments, we add a diagonal line using `geom_abline()`, which overlays a reference line with a given intercept and slope. This line represents the boundary:
@@ -567,7 +578,7 @@ To quantify this finding, we isolate this high-usage group using the `subset()` 
 sub_churn = subset(churn, (day.mins > 400 - 0.6 * eve.mins))
 
 ggplot(data = sub_churn, aes(x = churn, label = scales::percent(prop.table(stat(count))))) +
-    geom_bar(fill = c("palevioletred1", "darkseagreen1")) + 
+    geom_bar(fill = c("#F4A582", "#A8D5BA")) + 
     geom_text(stat = 'count', vjust = 0.4, size = 8)
 ```
 
@@ -577,9 +588,11 @@ Next, we examine another potential interaction: the relationship between `custom
 
 ```{r}
 ggplot(data = churn, aes(x = day.mins, y = customer.calls, color = churn)) +
-  geom_point(alpha = 0.7) +
-  geom_point(data = data.frame(day.mins = 110, customer.calls = 5.5), colour = "blue", size = 50, shape = 1) + 
-  geom_point(data = data.frame(day.mins = 310, customer.calls = 2.0), colour = "blue", size = 40, shape = 1)
+  geom_point(size = 1) +
+  geom_point(data = data.frame(day.mins = 110, customer.calls = 5.5), colour = "#377EB8", size = 50, shape = 1) + 
+  geom_point(data = data.frame(day.mins = 310, customer.calls = 2.0), colour = "#377EB8", size = 40, shape = 1) +
+  scale_color_manual(values = c("#F4A582", "#A8D5BA")) +
+  labs(x = "Daytime Minutes", y = "Customer Service Calls", color = "Churn")
 ```
 
 This scatter plot highlights an interesting pattern. Customers who contact support frequently but have low usage (blue circle, top-left) tend to churn at higher rates, perhaps reflecting frustration despite limited use of the service. In contrast, customers with both high usage and frequent support contact (blue circle, bottom-right) show more mixed churn outcomes, possibly because they value the service highly even when problems arise.
