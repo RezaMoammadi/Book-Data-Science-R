@@ -306,7 +306,7 @@
 \title{Data Science Foundations and Machine Learning with R: From Data
 to Decisions}
 \author{\href{https://www.uva.nl/profile/a.mohammadi}{{Reza Mohammadi}}}
-\date{3 October 2025}
+\date{4 October 2025}
 
 \begin{document}
 \maketitle
@@ -7932,7 +7932,9 @@ coefficients, and control aesthetics for better interpretation.
 
 \NormalTok{cor\_matrix }\OtherTok{=} \FunctionTok{cor}\NormalTok{(churn[, variable\_list])}
 
-\FunctionTok{ggcorrplot}\NormalTok{(cor\_matrix, }\AttributeTok{type =} \StringTok{"lower"}\NormalTok{, }\AttributeTok{lab =} \ConstantTok{TRUE}\NormalTok{, }\AttributeTok{lab\_size =} \DecValTok{2}\NormalTok{, }\AttributeTok{tl.cex =} \DecValTok{8}\NormalTok{, }\AttributeTok{title =} \StringTok{"Visualization of the Correlation Matrix"}\NormalTok{)}
+\FunctionTok{ggcorrplot}\NormalTok{(cor\_matrix, }\AttributeTok{type =} \StringTok{"upper"}\NormalTok{, }\AttributeTok{lab =} \ConstantTok{TRUE}\NormalTok{, }\AttributeTok{lab\_size =} \DecValTok{2}\NormalTok{, }\AttributeTok{tl.cex =} \DecValTok{8}\NormalTok{, }
+           \AttributeTok{colors =} \FunctionTok{c}\NormalTok{(}\StringTok{"\#6D9EC1"}\NormalTok{, }\StringTok{"white"}\NormalTok{, }\StringTok{"\#E46726"}\NormalTok{),}
+           \AttributeTok{title =} \StringTok{"Visualization of the Correlation Matrix"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -7942,10 +7944,10 @@ coefficients, and control aesthetics for better interpretation.
 
 The resulting heatmap highlights two main patterns. First, the
 \emph{charge variables} (such as \texttt{day.charge},
-\texttt{eve.charge}, and \texttt{intl.charge}) are nearly perfectly
-correlated with their corresponding \emph{minutes variables}. This is
-expected, as charges are calculated directly from call duration.
-Including both in a model would add redundancy without new information.
+\texttt{eve.charge}, and \texttt{intl.charge}) are perfectly correlated
+with their corresponding \emph{minutes variables}. This is expected, as
+charges are calculated directly from call duration. Including both in a
+model would add redundancy without new information.
 
 Second, the \emph{call count variables} (e.g., \texttt{day.calls},
 \texttt{night.calls}) show only weak correlations with their
@@ -15425,21 +15427,31 @@ appropriate.
 Data}\label{exploring-relationships-in-the-data}
 \addcontentsline{toc}{subsection}{Exploring Relationships in the Data}
 
-Before constructing a regression model, we first explore the
-relationships between variables to ensure that our assumptions hold and
-to identify strong predictors. This step also helps assess whether the
-relationship between variables appears linear, a key assumption in
-simple linear regression.
+Before constructing a regression model, it is important to explore the
+relationships between variables. This step helps verify modeling
+assumptions, such as linearity, and identify strong predictors. It also
+provides a first look at how the variables interact, revealing potential
+patterns or anomalies.
 
-A useful tool for this is the \texttt{pairs.panels()} function from the
-\textbf{psych} package, which provides a comprehensive overview of
-pairwise relationships:
+A concise and effective way to examine pairwise relationships is with
+the \texttt{pairs.panels()} function from the \textbf{psych} package,
+which displays correlations, scatterplots, and histograms in a single
+matrix:
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(psych)}
 
-\FunctionTok{pairs.panels}\NormalTok{(marketing[, }\SpecialCharTok{{-}}\DecValTok{4}\NormalTok{])}
+\FunctionTok{pairs.panels}\NormalTok{(}
+\NormalTok{  marketing[, }\SpecialCharTok{{-}}\DecValTok{4}\NormalTok{],}
+  \AttributeTok{bg =} \FunctionTok{c}\NormalTok{(}\StringTok{"\#F4A582"}\NormalTok{, }\StringTok{"\#92C5DE"}\NormalTok{)[marketing}\SpecialCharTok{$}\NormalTok{display }\SpecialCharTok{+} \DecValTok{1}\NormalTok{],  }\CommentTok{\# color by display group}
+  \AttributeTok{pch =} \DecValTok{21}\NormalTok{,                  }\CommentTok{\# solid points without border}
+  \AttributeTok{col =} \ConstantTok{NA}\NormalTok{, }
+  \AttributeTok{smooth =} \ConstantTok{FALSE}\NormalTok{,            }\CommentTok{\# no regression line}
+  \AttributeTok{ellipses =} \ConstantTok{FALSE}\NormalTok{,          }\CommentTok{\# no correlation ellipse}
+  \AttributeTok{hist.col =} \StringTok{"\#CCEBC5"}\NormalTok{,      }\CommentTok{\# muted green histogram fill}
+  \AttributeTok{main =} \StringTok{"Pairwise Relationships in the \textquotesingle{}marketing\textquotesingle{} Data"}
+\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -15447,29 +15459,31 @@ pairwise relationships:
 \includegraphics[width=1\linewidth,height=\textheight,keepaspectratio]{10-Regression_files/figure-pdf/unnamed-chunk-3-1.pdf}
 \end{center}
 
-Here we exclude the \texttt{display} variable (column 4) since it is
-categorical. This visualization includes:
+Here, we exclude the binary variable \texttt{display} (column 4) from
+the matrix and use it only to color the points, distinguishing the two
+groups (orange for 0 and blue for 1). The resulting visualization
+presents:
 
 \begin{itemize}
 \item
-  \emph{Correlation coefficients} (upper triangle), quantifying the
-  strength of linear associations among all features.
+  \emph{Correlation coefficients} (upper triangle), summarizing the
+  strength of linear associations between variables.
 \item
-  \emph{Scatter plots} (lower triangle), presenting pairwise
-  relationships between variables.
+  \emph{Scatter plots} (lower triangle), showing pairwise relationships
+  and group patterns.
 \item
   \emph{Histograms} (diagonal), illustrating the distribution of each
   variable.
 \end{itemize}
 
 From the correlation coefficients, we observe that \texttt{spend} and
-\texttt{revenue} exhibit a \emph{strong positive correlation} of 0.79.
-This indicates that \emph{higher advertising expenditure is generally
-associated with higher revenue}, suggesting that \texttt{spend} is a
-promising predictor for modeling \texttt{revenue}. This correlation
-reflects the type of relationship we studied in Section
-\ref{sec-ch5-correlation-test}, where we examined how to quantify and
-test linear associations between numeric variables.
+\texttt{revenue} exhibit a strong positive correlation of 0.79. This
+indicates that higher advertising expenditure is generally associated
+with higher revenue, suggesting that \texttt{spend} is a promising
+predictor for modeling \texttt{revenue}. This finding is consistent with
+the type of linear association discussed in Section
+\ref{sec-ch5-correlation-test}, where we explored how to quantify and
+test correlations between numeric variables.
 
 In the next section, we formalize this relationship using a \emph{simple
 linear regression model}.
@@ -16143,8 +16157,8 @@ models more critically and prepares us to move beyond models with a
 single predictor.
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2647}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.4020}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2639}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.4028}}
   >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3333}}@{}}
 \caption{Overview of commonly used regression model quality
 metrics.}\label{tbl-reg-quality-matrics}\tabularnewline

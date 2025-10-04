@@ -55,27 +55,36 @@ The dataset contains `r ncol(marketing)` variables and `r nrow(marketing)` obser
 
 In the following section, we explore the relationship between advertising spend and revenue to determine whether a linear model is appropriate.
 
+
 ### Exploring Relationships in the Data {.unnumbered}
 
-Before constructing a regression model, we first explore the relationships between variables to ensure that our assumptions hold and to identify strong predictors. This step also helps assess whether the relationship between variables appears linear, a key assumption in simple linear regression.
+Before constructing a regression model, it is important to explore the relationships between variables. This step helps verify modeling assumptions, such as linearity, and identify strong predictors. It also provides a first look at how the variables interact, revealing potential patterns or anomalies.
 
-A useful tool for this is the `pairs.panels()` function from the **psych** package, which provides a comprehensive overview of pairwise relationships:
+A concise and effective way to examine pairwise relationships is with the `pairs.panels()` function from the **psych** package, which displays correlations, scatterplots, and histograms in a single matrix:
 
 ```{r, out.width = "100%"}
 library(psych)
 
-pairs.panels(marketing[, -4])
+pairs.panels(
+  marketing[, -4],
+  bg = c("#F4A582", "#92C5DE")[marketing$display + 1],  # color by display group
+  pch = 21,                  # solid points without border
+  col = NA, 
+  smooth = FALSE,            # no regression line
+  ellipses = FALSE,          # no correlation ellipse
+  hist.col = "#CCEBC5",      # muted green histogram fill
+  main = "Pairwise Relationships in the 'marketing' Data"
+)
 ```
+Here, we exclude the binary variable `display` (column 4) from the matrix and use it only to color the points, distinguishing the two groups (orange for 0 and blue for 1). The resulting visualization presents:
 
-Here we exclude the `display` variable (column 4) since it is categorical. This visualization includes:
+-   *Correlation coefficients* (upper triangle), summarizing the strength of linear associations between variables.
 
--   *Correlation coefficients* (upper triangle), quantifying the strength of linear associations among all features.
-
--   *Scatter plots* (lower triangle), presenting pairwise relationships between variables.
+-   *Scatter plots* (lower triangle), showing pairwise relationships and group patterns.
 
 -   *Histograms* (diagonal), illustrating the distribution of each variable.
 
-From the correlation coefficients, we observe that `spend` and `revenue` exhibit a *strong positive correlation* of `r round(cor(marketing$spend, marketing$revenue), 2)`. This indicates that *higher advertising expenditure is generally associated with higher revenue*, suggesting that `spend` is a promising predictor for modeling `revenue`. This correlation reflects the type of relationship we studied in Section [-@sec-ch5-correlation-test], where we examined how to quantify and test linear associations between numeric variables.
+From the correlation coefficients, we observe that `spend` and `revenue` exhibit a strong positive correlation of `r round(cor(marketing$spend, marketing$revenue), 2)`. This indicates that higher advertising expenditure is generally associated with higher revenue, suggesting that `spend` is a promising predictor for modeling `revenue`. This finding is consistent with the type of linear association discussed in Section [-@sec-ch5-correlation-test], where we explored how to quantify and test correlations between numeric variables.
 
 In the next section, we formalize this relationship using a *simple linear regression model*.
 
@@ -426,7 +435,7 @@ However, these metrics do not tell the full story. For example, a high $R^2$ can
 
 ::: {#tbl-reg-quality-matrics .table}
 | Metric                    | What It Tells You                       | What to Look For                 |
-|---------------------------|-----------------------------------------|----------------------------------|
+|-------------------|-----------------------------|------------------------|
 | RSE (Residual Std. Error) | Average prediction error                | Lower is better                  |
 | $R^2$                     | Proportion of variance explained        | Higher is better                 |
 | Adjusted $R^2$            | $R^2$ adjusted for number of predictors | Higher (but realistic) is better |
