@@ -279,17 +279,13 @@ The `native.country` variable is consolidated into five geographic regions:
 ```{r}
 library(forcats)
 
-Europe = c("England", "France", "Germany", "Greece", "Holand-Netherlands", "Hungary", 
-           "Ireland", "Italy", "Poland", "Portugal", "Scotland", "Yugoslavia")
+Europe = c("England", "France", "Germany", "Greece", "Holand-Netherlands", "Hungary", "Ireland", "Italy", "Poland", "Portugal", "Scotland", "Yugoslavia")
 
-Asia = c("China", "Hong", "India", "Iran", "Cambodia", "Japan", "Laos", 
-         "Philippines", "Vietnam", "Taiwan", "Thailand")
+Asia = c("China", "Hong", "India", "Iran", "Cambodia", "Japan", "Laos", "Philippines", "Vietnam", "Taiwan", "Thailand")
 
 N.America = c("Canada", "United-States", "Puerto-Rico")
 
-S.America = c("Columbia", "Cuba", "Dominican-Republic", "Ecuador", "El-Salvador", 
-              "Guatemala", "Haiti", "Honduras", "Mexico", "Nicaragua", 
-              "Outlying-US(Guam-USVI-etc)", "Peru", "Jamaica", "Trinadad&Tobago")
+S.America = c("Columbia", "Cuba", "Dominican-Republic", "Ecuador", "El-Salvador", "Guatemala", "Haiti", "Honduras", "Mexico", "Nicaragua", "Outlying-US(Guam-USVI-etc)", "Peru", "Jamaica", "Trinadad&Tobago")
 
 # Reclassify into broader regions
 adult$native.country = fct_collapse(adult$native.country, 
@@ -311,8 +307,7 @@ adult$workclass = fct_collapse(adult$workclass, "Unemployed" = c("Never-worked",
 -   For `race`, long or uncommon labels are simplified:
 
 ```{r}
-adult$race = fct_recode(adult$race, "Amer-Indian" = "Amer-Indian-Eskimo", 
-                                    "Asian" = "Asian-Pac-Islander")
+adult$race = fct_recode(adult$race, "Amer-Indian" = "Amer-Indian-Eskimo", "Asian" = "Asian-Pac-Islander")
 ```
 
 These transformations reduce the risk of overfitting and help the tree-based models generalize better. With these steps complete, the dataset is ready for training and evaluation, which we turn to in the next section.
@@ -338,12 +333,7 @@ Here, `set.seed()` ensures reproducibility of the split. The `train_set` is used
 
 To ensure the training and test sets reflect the structure of the original dataset, we verified that the distribution of the `income` variable remains balanced after partitioning. While we do not show this diagnostic here, we refer interested readers to [Section -@sec-ch6-validate-partition] for more on validation techniques.
 
-The set of predictors used for modeling includes variables spanning demographic, economic, and employment dimensions:
-
-``` r
-age, workclass, education.num, marital.status, occupation,
-race, gender, capital.gain, capital.loss, hours.per.week, native.country
-```
+The set of predictors used for modeling includes variables spanning demographic, economic, and employment dimensions: `age`, `workclass`, `education.num`, `marital.status`, `occupation`, `race`, `gender`, `capital.gain`, `capital.loss`, `hours.per.week`, and `native.country`.
 
 The following variables are excluded for the reasons below:
 
@@ -356,8 +346,7 @@ The following variables are excluded for the reasons below:
 We now define the formula that will be used across all three models:
 
 ```{r}
-formula = income ~ age + workclass + education.num + marital.status + occupation +
-          race + gender + capital.gain + capital.loss + hours.per.week + native.country
+formula = income ~ age + workclass + education.num + marital.status + occupation + race + gender + capital.gain + capital.loss + hours.per.week + native.country
 ```
 
 This formula will be used consistently across CART, C5.0, and Random Forest models to facilitate a fair comparison of predictive performance.
@@ -486,7 +475,8 @@ Here, `formula` specifies the relationship between the target variable (`income`
 To evaluate which predictors contribute most to model accuracy, we can visualize variable importance:
 
 ```{r}
-varImpPlot(forest_model)
+varImpPlot(forest_model, col = "#377EB8", 
+           main = "Variable Importance in Random Forest Model")
 ```
 
 The resulting plot ranks predictors by their influence. In this case, `marital.status` emerges as the most important, followed by `capital.gain` and `education.num`.
@@ -494,7 +484,8 @@ The resulting plot ranks predictors by their influence. In this case, `marital.s
 We can also assess how model error evolves as more trees are added:
 
 ```{r}
-plot(forest_model)
+plot(forest_model, col = "#377EB8",
+     main = "Random Forest Error Rate vs. Number of Trees")
 ```
 
 This plot shows classification error as a function of the number of trees. Notice that the error rate stabilizes after about 40 trees, suggesting that adding further trees yields diminishing returns.
@@ -539,10 +530,12 @@ conf.mat.plot(cart_probs, test_labels, cutoff = 0.5, reference = "<=50K", main =
 ```
 
 ```{r out.width = "95%"}
+ 
 conf.mat.plot(C50_probs, test_labels, cutoff = 0.5, reference = "<=50K", main = "C5.0 Prediction")
 ```
 
 ```{r out.width = "95%"}
+ 
 conf.mat.plot(forest_probs, test_labels, cutoff = 0.5, reference = "<=50K", main = "Random Forest Prediction")
 ```
 
