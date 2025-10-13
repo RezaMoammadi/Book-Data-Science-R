@@ -600,8 +600,8 @@ Figure&nbsp;11.6: C5.0 Decision Tree trained on the risk dataset. Unlike CART, t
 <p>For example, <code>education.num</code> captures the total years of formal education, while <code>capital.gain</code> and <code>capital.loss</code> reflect financial investment outcomes (factors that plausibly affect earning potential). Some predictors, such as <code>native.country</code>, include many unique categories (42 levels), which we will address during preprocessing.</p>
 <p>This diversity of attributes makes the <em>adult</em> dataset well suited for exploring classification models like decision trees and random forests. For full documentation, see the <a href="https://www.rdocumentation.org/packages/liver/versions/1.3/topics/adult">package reference</a>.</p>
 </section><section id="data-preparation" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="data-preparation">Data Preparation</h3>
-<p>Before building predictive models, it is essential to clean and preprocess the dataset to address missing values and simplify complex categorical variables. The <em>adult</em> dataset includes several features that require attention, particularly for improving model interpretability and robustness.</p>
-<p>As discussed in Chapter <a href="3-Data-preparation.html" class="quarto-xref"><span>3</span></a>, data preparation is a foundational step in the Data Science Workflow. In this case study, we summarize the most relevant transformations applied to prepare the <em>adult</em> dataset for modeling.</p>
+<p>Before building predictive models, it is crucial to clean and preprocess the data to ensure consistency and interpretability. The <em>adult</em> dataset includes several features with missing values and complex categorical variables that must be addressed to improve model robustness.</p>
+<p>In Chapter <a href="3-Data-preparation.html#sec-ch3-data-pre-adult" class="quarto-xref"><span>3.16</span></a>, we introduced the <em>adult</em> dataset as part of the <em>Data Science Workflow</em> and demonstrated how to handle missing values and transform categorical features. Here, we summarize the key preprocessing steps applied before training the tree-based models.</p>
 <section id="handling-missing-values" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="handling-missing-values">Handling Missing Values</h4>
 <p>Missing values in the dataset are encoded as <code>"?"</code>. These need to be replaced with standard <code>NA</code> values before proceeding. Unused factor levels are removed, and categorical variables with missing entries are imputed using random sampling from the observed categories (a simple but effective strategy for preserving variable distributions).</p>
 <div class="cell" data-layout-align="center">
@@ -616,47 +616,40 @@ Figure&nbsp;11.6: C5.0 Decision Tree trained on the risk dataset. Unlike CART, t
 <span><span class="va">adult</span><span class="op">$</span><span class="va">native.country</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/Hmisc/man/impute.html">impute</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">adult</span><span class="op">$</span><span class="va">native.country</span><span class="op">)</span>, <span class="st">'random'</span><span class="op">)</span></span>
 <span><span class="va">adult</span><span class="op">$</span><span class="va">occupation</span>     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/Hmisc/man/impute.html">impute</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">adult</span><span class="op">$</span><span class="va">occupation</span><span class="op">)</span>, <span class="st">'random'</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</section><section id="transforming-categorical-variables" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="transforming-categorical-variables">Transforming Categorical Variables</h4>
-<p>Several categorical variables, such as <code>native.country</code> and <code>occupation</code>, contain a large number of unique levels. To improve model interpretability and reduce complexity, we group these levels into broader, conceptually meaningful categories.</p>
-<p>The <code>native.country</code> variable is consolidated into five geographic regions:</p>
+</section><section id="transforming-categorical-features" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="transforming-categorical-features">Transforming Categorical Features</h4>
+<p>Some categorical variables in the <em>adult</em> dataset, such as <code>native.country</code> and <code>workclass</code>, include many distinct categories. Models can struggle with such features because rare or overly specific levels add unnecessary complexity and may lead to overfitting. To improve both interpretability and generalization, we group related categories into broader, conceptually meaningful classes.</p>
+<p>We begin with the <code>native.country</code> variable, which originally includes 40 unique country names. To simplify interpretation while retaining geographic information, these countries are grouped into five major regions: Europe, North America, Latin America, the Caribbean, and Asia. This grouping also reduces the number of factor levels, allowing models to focus on regional patterns rather than specific countries.</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://forcats.tidyverse.org/">forcats</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">Europe</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"England"</span>, <span class="st">"France"</span>, <span class="st">"Germany"</span>, <span class="st">"Greece"</span>, <span class="st">"Holand-Netherlands"</span>, <span class="st">"Hungary"</span>, <span class="st">"Ireland"</span>, <span class="st">"Italy"</span>, <span class="st">"Poland"</span>, <span class="st">"Portugal"</span>, <span class="st">"Scotland"</span>, <span class="st">"Yugoslavia"</span><span class="op">)</span></span>
+<span><span class="va">Europe</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"France"</span>, <span class="st">"Germany"</span>, <span class="st">"Greece"</span>, <span class="st">"Hungary"</span>, <span class="st">"Ireland"</span>, <span class="st">"Italy"</span>, <span class="st">"Netherlands"</span>, <span class="st">"Poland"</span>, <span class="st">"Portugal"</span>, <span class="st">"United-Kingdom"</span>, <span class="st">"Yugoslavia"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">Asia</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"China"</span>, <span class="st">"Hong"</span>, <span class="st">"India"</span>, <span class="st">"Iran"</span>, <span class="st">"Cambodia"</span>, <span class="st">"Japan"</span>, <span class="st">"Laos"</span>, <span class="st">"Philippines"</span>, <span class="st">"Vietnam"</span>, <span class="st">"Taiwan"</span>, <span class="st">"Thailand"</span><span class="op">)</span></span>
+<span><span class="va">North_America</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"United-States"</span>, <span class="st">"Canada"</span>, <span class="st">"Outlying-US(Guam-USVI-etc)"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">N.America</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Canada"</span>, <span class="st">"United-States"</span>, <span class="st">"Puerto-Rico"</span><span class="op">)</span></span>
+<span><span class="va">Latin_America</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Mexico"</span>, <span class="st">"El-Salvador"</span>, <span class="st">"Guatemala"</span>, <span class="st">"Honduras"</span>, <span class="st">"Nicaragua"</span>, <span class="st">"Cuba"</span>, <span class="st">"Dominican-Republic"</span>, <span class="st">"Puerto-Rico"</span>, <span class="st">"Colombia"</span>, <span class="st">"Ecuador"</span>, <span class="st">"Peru"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">S.America</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Columbia"</span>, <span class="st">"Cuba"</span>, <span class="st">"Dominican-Republic"</span>, <span class="st">"Ecuador"</span>, <span class="st">"El-Salvador"</span>, <span class="st">"Guatemala"</span>, <span class="st">"Haiti"</span>, <span class="st">"Honduras"</span>, <span class="st">"Mexico"</span>, <span class="st">"Nicaragua"</span>, <span class="st">"Outlying-US(Guam-USVI-etc)"</span>, <span class="st">"Peru"</span>, <span class="st">"Jamaica"</span>, <span class="st">"Trinadad&amp;Tobago"</span><span class="op">)</span></span>
+<span><span class="va">Caribbean</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Jamaica"</span>, <span class="st">"Haiti"</span>, <span class="st">"Trinidad&amp;Tobago"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Reclassify into broader regions</span></span>
-<span><span class="va">adult</span><span class="op">$</span><span class="va">native.country</span> <span class="op">=</span> <span class="fu"><a href="https://forcats.tidyverse.org/reference/fct_collapse.html">fct_collapse</a></span><span class="op">(</span><span class="va">adult</span><span class="op">$</span><span class="va">native.country</span>, </span>
-<span>                                    <span class="st">"Europe"</span>    <span class="op">=</span> <span class="va">Europe</span>,</span>
-<span>                                    <span class="st">"Asia"</span>      <span class="op">=</span> <span class="va">Asia</span>,</span>
-<span>                                    <span class="st">"N.America"</span> <span class="op">=</span> <span class="va">N.America</span>,</span>
-<span>                                    <span class="st">"S.America"</span> <span class="op">=</span> <span class="va">S.America</span>,</span>
-<span>                                    <span class="st">"Other"</span>     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"South"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="va">Asia</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Cambodia"</span>, <span class="st">"China"</span>, <span class="st">"Hong-Kong"</span>, <span class="st">"India"</span>, <span class="st">"Iran"</span>, <span class="st">"Japan"</span>, <span class="st">"Laos"</span>, <span class="st">"Philippines"</span>, <span class="st">"South"</span>, <span class="st">"Taiwan"</span>, <span class="st">"Thailand"</span>, <span class="st">"Vietnam"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">adult</span><span class="op">$</span><span class="va">native.country</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://forcats.tidyverse.org/reference/fct_collapse.html">fct_collapse</a></span><span class="op">(</span><span class="va">adult</span><span class="op">$</span><span class="va">native.country</span>,</span>
+<span>      <span class="st">"Europe"</span>        <span class="op">=</span> <span class="va">Europe</span>,</span>
+<span>      <span class="st">"North America"</span> <span class="op">=</span> <span class="va">North_America</span>,</span>
+<span>      <span class="st">"Latin America"</span> <span class="op">=</span> <span class="va">Latin_America</span>,</span>
+<span>      <span class="st">"Caribbean"</span>     <span class="op">=</span> <span class="va">Caribbean</span>,</span>
+<span>      <span class="st">"Asia"</span>          <span class="op">=</span> <span class="va">Asia</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Other categorical variables are adjusted to improve consistency:</p>
-<ul>
-<li>The <code>workclass</code> variable includes rare categories that reflect a lack of formal employment. These are grouped as <code>"Unemployed"</code>:</li>
-</ul>
+<p>Next, we simplify the <code>workclass</code> variable, which contains rare categories representing individuals without formal employment. To improve consistency and interpretability, we group these categories into a single <code>"Unemployed"</code> class:</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">adult</span><span class="op">$</span><span class="va">workclass</span> <span class="op">=</span> <span class="fu"><a href="https://forcats.tidyverse.org/reference/fct_collapse.html">fct_collapse</a></span><span class="op">(</span><span class="va">adult</span><span class="op">$</span><span class="va">workclass</span>, <span class="st">"Unemployed"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Never-worked"</span>, <span class="st">"Without-pay"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<ul>
-<li>For <code>race</code>, long or uncommon labels are simplified:</li>
-</ul>
-<div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">adult</span><span class="op">$</span><span class="va">race</span> <span class="op">=</span> <span class="fu"><a href="https://forcats.tidyverse.org/reference/fct_recode.html">fct_recode</a></span><span class="op">(</span><span class="va">adult</span><span class="op">$</span><span class="va">race</span>, <span class="st">"Amer-Indian"</span> <span class="op">=</span> <span class="st">"Amer-Indian-Eskimo"</span>, <span class="st">"Asian"</span> <span class="op">=</span> <span class="st">"Asian-Pac-Islander"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>These transformations reduce the risk of overfitting and help the tree-based models generalize better. With these steps complete, the dataset is ready for training and evaluation, which we turn to in the next section.</p>
+<p>These transformations make the data more interpretable and reduce sparsity in categorical variables. By consolidating infrequent levels, we help tree-based models focus on meaningful distinctions rather than noise, ultimately improving model stability and generalization. With these adjustments complete, the dataset is now well-prepared for the modeling and evaluation steps discussed in the next section.</p>
 </section></section><section id="data-setup-to-model" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="data-setup-to-model">Data Setup to Model</h3>
 <p>With the dataset cleaned and categorical variables simplified, we are ready to set up the data for training and evaluation. This corresponds to <em>Step 4: Data Setup to Model</em> in the Data Science Workflow introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a> and discussed in detail in Chapter <a href="6-Setup-data.html" class="quarto-xref"><span>6</span></a>. It marks the transition from data preparation to model development.</p>
-<p>To evaluate how well our models generalize to new data, we divide the dataset into two parts: a <em>training set</em> (80%) for model building and a <em>testing set</em> (20%) for performance assessment. This ensures an unbiased estimate of model accuracy on unseen data. Following the convention used in previous chapters, we use the <code>partition()</code> function from the <strong>liver</strong> package:</p>
+<p>To evaluate how well our models generalize to new data, we divide the dataset into two parts: a training set (80%) for model building and a testing set (20%) for performance assessment. This ensures an unbiased estimate of model accuracy on unseen data. Following the convention used in previous chapters, we use the <code>partition()</code> function from the <strong>liver</strong> package:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">6</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">6</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">data_sets</span> <span class="op">=</span> <span class="fu">partition</span><span class="op">(</span>data <span class="op">=</span> <span class="va">adult</span>, ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.8</span>, <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -667,16 +660,17 @@ Figure&nbsp;11.6: C5.0 Decision Tree trained on the risk dataset. Unlike CART, t
 </div>
 <p>Here, <code><a href="https://rdrr.io/r/base/Random.html">set.seed()</a></code> ensures reproducibility of the split. The <code>train_set</code> is used to train the classification models, and <code>test_set</code> serves as a holdout sample for evaluation. The vector <code>test_labels</code> contains the true income classes for the test observations, which will later be compared with predicted values from the CART, C5.0, and Random Forest models.</p>
 <p>To ensure the training and test sets reflect the structure of the original dataset, we verified that the distribution of the <code>income</code> variable remains balanced after partitioning. While we do not show this diagnostic here, we refer interested readers to <a href="6-Setup-data.html#sec-ch6-validate-partition" class="quarto-xref">Section&nbsp;<span>6.4</span></a> for more on validation techniques.</p>
-<p>The set of predictors used for modeling includes variables spanning demographic, economic, and employment dimensions: <code>age</code>, <code>workclass</code>, <code>education.num</code>, <code>marital.status</code>, <code>occupation</code>, <code>race</code>, <code>gender</code>, <code>capital.gain</code>, <code>capital.loss</code>, <code>hours.per.week</code>, and <code>native.country</code>.</p>
+<p>The set of predictors used for modeling includes variables spanning demographic, economic, and employment dimensions: <code>age</code>, <code>workclass</code>, <code>education.num</code>, <code>marital.status</code>, <code>occupation</code>, <code>gender</code>, <code>capital.gain</code>, <code>capital.loss</code>, <code>hours.per.week</code>, and <code>native.country</code>.</p>
 <p>The following variables are excluded for the reasons below:</p>
 <ul>
 <li><p><code>demogweight</code>: Treated as an identifier and does not contain predictive information.</p></li>
 <li><p><code>education</code>: Duplicates the information in <code>education.num</code>, which captures years of education numerically.</p></li>
 <li><p><code>relationship</code>: Strongly correlated with <code>marital.status</code> and unlikely to provide additional value.</p></li>
+<li><p><code>race</code>: Excluded for ethical reasons.</p></li>
 </ul>
 <p>We now define the formula that will be used across all three models:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">formula</span> <span class="op">=</span> <span class="va">income</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">workclass</span> <span class="op">+</span> <span class="va">education.num</span> <span class="op">+</span> <span class="va">marital.status</span> <span class="op">+</span> <span class="va">occupation</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">capital.gain</span> <span class="op">+</span> <span class="va">capital.loss</span> <span class="op">+</span> <span class="va">hours.per.week</span> <span class="op">+</span> <span class="va">native.country</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">formula</span> <span class="op">=</span> <span class="va">income</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">workclass</span> <span class="op">+</span> <span class="va">education.num</span> <span class="op">+</span> <span class="va">marital.status</span> <span class="op">+</span> <span class="va">occupation</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">capital.gain</span> <span class="op">+</span> <span class="va">capital.loss</span> <span class="op">+</span> <span class="va">hours.per.week</span> <span class="op">+</span> <span class="va">native.country</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>This formula will be used consistently across CART, C5.0, and Random Forest models to facilitate a fair comparison of predictive performance.</p>
 <div class="rmdnote">
@@ -686,11 +680,11 @@ Figure&nbsp;11.6: C5.0 Decision Tree trained on the risk dataset. Unlike CART, t
 <p>What happens inside a decision tree once it starts learning from data? Let us walk through the building process using the CART algorithm. To build a decision tree with CART in R, we use the <a href="https://CRAN.R-project.org/package=rpart"><strong>rpart</strong></a> package (Recursive Partitioning and Regression Trees), which provides a widely used implementation. This package includes functions for building, visualizing, and evaluating decision trees.</p>
 <p>First, ensure that the <strong>rpart</strong> package is installed. If needed, install it with <code>install.packages("rpart")</code>. Then, load the package into your R session:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/bethatkinson/rpart">rpart</a></span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/bethatkinson/rpart">rpart</a></span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Once the package is loaded, we can build the decision tree model using the <code><a href="https://rdrr.io/pkg/rpart/man/rpart.html">rpart()</a></code> function:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cart_model</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/rpart/man/rpart.html">rpart</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">formula</span>, data <span class="op">=</span> <span class="va">train_set</span>, method <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cart_model</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/rpart/man/rpart.html">rpart</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">formula</span>, data <span class="op">=</span> <span class="va">train_set</span>, method <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The main arguments of <code><a href="https://rdrr.io/pkg/rpart/man/rpart.html">rpart()</a></code> are:</p>
 <ul>
@@ -705,14 +699,14 @@ Figure&nbsp;11.6: C5.0 Decision Tree trained on the risk dataset. Unlike CART, t
 <section id="visualizing-the-decision-tree" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="visualizing-the-decision-tree">Visualizing the Decision Tree</h4>
 <p>After building the model, it is helpful to visualize the decision tree to better understand the learned decision rules. For this, we use the <a href="https://CRAN.R-project.org/package=rpart.plot"><strong>rpart.plot</strong></a> package, which provides intuitive graphical tools for displaying <strong>rpart</strong> models (install it with <code>install.packages("rpart.plot")</code> if needed):</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://www.milbo.org/rpart-plot/index.html">rpart.plot</a></span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://www.milbo.org/rpart-plot/index.html">rpart.plot</a></span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The tree can be visualized with the following command:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/rpart.plot/man/rpart.plot.html">rpart.plot</a></span><span class="op">(</span><span class="va">cart_model</span>, type <span class="op">=</span> <span class="fl">4</span>, extra <span class="op">=</span> <span class="fl">104</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/rpart.plot/man/rpart.plot.html">rpart.plot</a></span><span class="op">(</span><span class="va">cart_model</span>, type <span class="op">=</span> <span class="fl">4</span>, extra <span class="op">=</span> <span class="fl">104</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="11-Tree-based-models_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H"></p>
+<figure class="figure"><p><img src="11-Tree-based-models_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H"></p>
 </figure>
 </div>
 </div>
@@ -720,21 +714,21 @@ Figure&nbsp;11.6: C5.0 Decision Tree trained on the risk dataset. Unlike CART, t
 <p>The <code>type = 4</code> argument places decision rules inside the nodes for clarity, while the <code>extra = 104</code> argument displays both the predicted class and the probability of the most probable class at each terminal node.</p>
 <p>If the tree is too large to fit within a single plot, an alternative is to examine a text-based structure using the <code><a href="https://rdrr.io/r/base/print.html">print()</a></code> function:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cart_model)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>   n<span class="ot">=</span> <span class="dv">38878</span> </span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>   node<span class="er">)</span>, split, n, loss, yval, (yprob)</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>         <span class="sc">*</span> denotes terminal node</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span><span class="er">)</span> root <span class="dv">38878</span> <span class="dv">9217</span> <span class="sc">&lt;=</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.76292505</span> <span class="fl">0.23707495</span>)  </span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>      <span class="dv">2</span><span class="er">)</span> marital.status<span class="ot">=</span>Divorced,Never<span class="sc">-</span>married,Separated,Widowed <span class="dv">20580</span> <span class="dv">1282</span> <span class="sc">&lt;=</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.93770651</span> <span class="fl">0.06229349</span>)  </span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        <span class="dv">4</span><span class="er">)</span> capital.gain<span class="sc">&lt;</span> <span class="fl">7055.5</span> <span class="dv">20261</span>  <span class="dv">978</span> <span class="sc">&lt;=</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.95172992</span> <span class="fl">0.04827008</span>) <span class="sc">*</span></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        <span class="dv">5</span><span class="er">)</span> capital.gain<span class="sc">&gt;=</span><span class="fl">7055.5</span> <span class="dv">319</span>   <span class="dv">15</span> <span class="sc">&gt;</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.04702194</span> <span class="fl">0.95297806</span>) <span class="sc">*</span></span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>      <span class="dv">3</span><span class="er">)</span> marital.status<span class="ot">=</span>Married <span class="dv">18298</span> <span class="dv">7935</span> <span class="sc">&lt;=</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.56634605</span> <span class="fl">0.43365395</span>)  </span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>        <span class="dv">6</span><span class="er">)</span> education.num<span class="sc">&lt;</span> <span class="fl">12.5</span> <span class="dv">12944</span> <span class="dv">4163</span> <span class="sc">&lt;=</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.67838381</span> <span class="fl">0.32161619</span>)  </span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>         <span class="dv">12</span><span class="er">)</span> capital.gain<span class="sc">&lt;</span> <span class="fl">5095.5</span> <span class="dv">12350</span> <span class="dv">3582</span> <span class="sc">&lt;=</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.70995951</span> <span class="fl">0.29004049</span>) <span class="sc">*</span></span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>         <span class="dv">13</span><span class="er">)</span> capital.gain<span class="sc">&gt;=</span><span class="fl">5095.5</span> <span class="dv">594</span>   <span class="dv">13</span> <span class="sc">&gt;</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.02188552</span> <span class="fl">0.97811448</span>) <span class="sc">*</span></span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>        <span class="dv">7</span><span class="er">)</span> education.num<span class="sc">&gt;=</span><span class="fl">12.5</span> <span class="dv">5354</span> <span class="dv">1582</span> <span class="sc">&gt;</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.29548001</span> <span class="fl">0.70451999</span>) <span class="sc">*</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(cart_model)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>   n<span class="ot">=</span> <span class="dv">38878</span> </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>   node<span class="er">)</span>, split, n, loss, yval, (yprob)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>         <span class="sc">*</span> denotes terminal node</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span><span class="er">)</span> root <span class="dv">38878</span> <span class="dv">9217</span> <span class="sc">&lt;=</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.76292505</span> <span class="fl">0.23707495</span>)  </span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>      <span class="dv">2</span><span class="er">)</span> marital.status<span class="ot">=</span>Divorced,Never<span class="sc">-</span>married,Separated,Widowed <span class="dv">20580</span> <span class="dv">1282</span> <span class="sc">&lt;=</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.93770651</span> <span class="fl">0.06229349</span>)  </span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>        <span class="dv">4</span><span class="er">)</span> capital.gain<span class="sc">&lt;</span> <span class="fl">7055.5</span> <span class="dv">20261</span>  <span class="dv">978</span> <span class="sc">&lt;=</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.95172992</span> <span class="fl">0.04827008</span>) <span class="sc">*</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>        <span class="dv">5</span><span class="er">)</span> capital.gain<span class="sc">&gt;=</span><span class="fl">7055.5</span> <span class="dv">319</span>   <span class="dv">15</span> <span class="sc">&gt;</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.04702194</span> <span class="fl">0.95297806</span>) <span class="sc">*</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>      <span class="dv">3</span><span class="er">)</span> marital.status<span class="ot">=</span>Married <span class="dv">18298</span> <span class="dv">7935</span> <span class="sc">&lt;=</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.56634605</span> <span class="fl">0.43365395</span>)  </span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>        <span class="dv">6</span><span class="er">)</span> education.num<span class="sc">&lt;</span> <span class="fl">12.5</span> <span class="dv">12944</span> <span class="dv">4163</span> <span class="sc">&lt;=</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.67838381</span> <span class="fl">0.32161619</span>)  </span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>         <span class="dv">12</span><span class="er">)</span> capital.gain<span class="sc">&lt;</span> <span class="fl">5095.5</span> <span class="dv">12350</span> <span class="dv">3582</span> <span class="sc">&lt;=</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.70995951</span> <span class="fl">0.29004049</span>) <span class="sc">*</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>         <span class="dv">13</span><span class="er">)</span> capital.gain<span class="sc">&gt;=</span><span class="fl">5095.5</span> <span class="dv">594</span>   <span class="dv">13</span> <span class="sc">&gt;</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.02188552</span> <span class="fl">0.97811448</span>) <span class="sc">*</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>        <span class="dv">7</span><span class="er">)</span> education.num<span class="sc">&gt;=</span><span class="fl">12.5</span> <span class="dv">5354</span> <span class="dv">1582</span> <span class="sc">&gt;</span><span class="dv">50</span><span class="fu">K</span> (<span class="fl">0.29548001</span> <span class="fl">0.70451999</span>) <span class="sc">*</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>This textual output lists the nodes, splits, and predicted outcomes, offering a compact summary when graphical space is limited.</p>
 </section><section id="interpreting-the-decision-tree" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="interpreting-the-decision-tree">Interpreting the Decision Tree</h4>
@@ -746,11 +740,11 @@ Figure&nbsp;11.6: C5.0 Decision Tree trained on the risk dataset. Unlike CART, t
 <p>Now that we have seen how CART builds decision trees, let us turn to <em>C5.0</em> (an algorithm designed to build faster, deeper, and often more accurate trees). In this part of the case study, you will see how easily C5.0 can be applied to real-world data, using just a few lines of R code.</p>
 <p>To fit a decision tree using the C5.0 algorithm in R, we use the <a href="https://CRAN.R-project.org/package=C50"><strong>C50</strong></a> package. If it is not already installed, it can be added with <code>install.packages("C50")</code>. After installation, load the package into your R session:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://topepo.github.io/C5.0/">C50</a></span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://topepo.github.io/C5.0/">C50</a></span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The model is constructed using the <code><a href="https://topepo.github.io/C5.0/reference/C5.0.html">C5.0()</a></code> function:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">C50_model</span> <span class="op">=</span> <span class="fu"><a href="https://topepo.github.io/C5.0/reference/C5.0.html">C5.0</a></span><span class="op">(</span><span class="va">formula</span>, data <span class="op">=</span> <span class="va">train_set</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">C50_model</span> <span class="op">=</span> <span class="fu"><a href="https://topepo.github.io/C5.0/reference/C5.0.html">C5.0</a></span><span class="op">(</span><span class="va">formula</span>, data <span class="op">=</span> <span class="va">train_set</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The key arguments are:</p>
 <ul>
@@ -762,18 +756,18 @@ Figure&nbsp;11.6: C5.0 Decision Tree trained on the risk dataset. Unlike CART, t
 <p>Compared to CART, C5.0 introduces several enhancements. It allows for multi-way splits, automatically assigns weights to predictors, and creates deeper but more compact trees when needed. This flexibility often results in stronger performance, especially when handling categorical variables with many levels.</p>
 <p>Since the resulting tree can be quite large, we focus on summarizing the model rather than plotting its full structure. The <code><a href="https://rdrr.io/r/base/print.html">print()</a></code> function provides an overview:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(C50_model)</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>   Call<span class="sc">:</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">C5.0.formula</span>(<span class="at">formula =</span> formula, <span class="at">data =</span> train_set)</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>   Classification Tree</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>   Number of samples<span class="sc">:</span> <span class="dv">38878</span> </span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>   Number of predictors<span class="sc">:</span> <span class="dv">11</span> </span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>   Tree size<span class="sc">:</span> <span class="dv">120</span> </span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>   Non<span class="sc">-</span>standard options<span class="sc">:</span> attempt to group attributes</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(C50_model)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>   Call<span class="sc">:</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">C5.0.formula</span>(<span class="at">formula =</span> formula, <span class="at">data =</span> train_set)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>   Classification Tree</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>   Number of samples<span class="sc">:</span> <span class="dv">38878</span> </span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>   Number of predictors<span class="sc">:</span> <span class="dv">10</span> </span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>   Tree size<span class="sc">:</span> <span class="dv">73</span> </span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>   Non<span class="sc">-</span>standard options<span class="sc">:</span> attempt to group attributes</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The output displays important details, including the number of predictors used, the number of observations, and the total tree size. In this case, the tree consists of 74 decision nodes (substantially larger and potentially more powerful than the simpler CART tree).</p>
 <p>By allowing richer splitting strategies and prioritizing informative features, C5.0 offers a step forward in sophistication over earlier decision tree algorithms.</p>
@@ -782,20 +776,20 @@ Figure&nbsp;11.6: C5.0 Decision Tree trained on the risk dataset. Unlike CART, t
 <p>What if instead of relying on a single decision tree, we could build hundreds of trees and combine their predictions to make smarter decisions? <em>Random forests</em> offer exactly this approach, dramatically improving robustness and accuracy.</p>
 <p>In R, random forests are implemented using the <a href="https://CRAN.R-project.org/package=randomForest"><strong>randomForest</strong></a> package, one of the most widely used and reliable implementations. If it is not already installed, add it with <code>install.packages("randomForest")</code>. Load the package into your R session:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://www.stat.berkeley.edu/~breiman/RandomForests/">randomForest</a></span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://www.stat.berkeley.edu/~breiman/RandomForests/">randomForest</a></span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Using the same set of predictors as before, we construct a random forest model with 100 decision trees:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">forest_model</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/randomForest/man/randomForest.html">randomForest</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">formula</span>, data <span class="op">=</span> <span class="va">train_set</span>, ntree <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">forest_model</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/randomForest/man/randomForest.html">randomForest</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">formula</span>, data <span class="op">=</span> <span class="va">train_set</span>, ntree <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Here, <code>formula</code> specifies the relationship between the target variable (<code>income</code>) and the predictors, <code>data</code> defines the training dataset, and <code>ntree = 100</code> sets the number of trees to grow. Increasing <code>ntree</code> generally improves accuracy but requires more computational time.</p>
 <p>To evaluate which predictors contribute most to model accuracy, we can visualize variable importance:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/randomForest/man/varImpPlot.html">varImpPlot</a></span><span class="op">(</span><span class="va">forest_model</span>, col <span class="op">=</span> <span class="st">"#377EB8"</span>, </span>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/randomForest/man/varImpPlot.html">varImpPlot</a></span><span class="op">(</span><span class="va">forest_model</span>, col <span class="op">=</span> <span class="st">"#377EB8"</span>, </span>
 <span>           main <span class="op">=</span> <span class="st">"Variable Importance in Random Forest Model"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="11-Tree-based-models_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H"></p>
+<figure class="figure"><p><img src="11-Tree-based-models_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H"></p>
 </figure>
 </div>
 </div>
@@ -803,11 +797,11 @@ Figure&nbsp;11.6: C5.0 Decision Tree trained on the risk dataset. Unlike CART, t
 <p>The resulting plot ranks predictors by their influence. In this case, <code>marital.status</code> emerges as the most important, followed by <code>capital.gain</code> and <code>education.num</code>.</p>
 <p>We can also assess how model error evolves as more trees are added:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">forest_model</span>, col <span class="op">=</span> <span class="st">"#377EB8"</span>,</span>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">forest_model</span>, col <span class="op">=</span> <span class="st">"#377EB8"</span>,</span>
 <span>     main <span class="op">=</span> <span class="st">"Random Forest Error Rate vs. Number of Trees"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="11-Tree-based-models_files/figure-html/unnamed-chunk-21-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" data-fig-pos="H"></p>
+<figure class="figure"><p><img src="11-Tree-based-models_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" data-fig-pos="H"></p>
 </figure>
 </div>
 </div>
@@ -825,7 +819,7 @@ Figure&nbsp;11.6: C5.0 Decision Tree trained on the risk dataset. Unlike CART, t
 </ul>
 <p>To begin, we use the <code><a href="https://rdrr.io/r/stats/predict.html">predict()</a></code> function to generate predicted class probabilities for the test set. For all three models, we specify <code>type = "prob"</code> to obtain probabilities rather than discrete class labels:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cart_probs</span>   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">cart_model</span>,   <span class="va">test_set</span>, type <span class="op">=</span> <span class="st">"prob"</span><span class="op">)</span><span class="op">[</span>, <span class="st">"&lt;=50K"</span><span class="op">]</span></span>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cart_probs</span>   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">cart_model</span>,   <span class="va">test_set</span>, type <span class="op">=</span> <span class="st">"prob"</span><span class="op">)</span><span class="op">[</span>, <span class="st">"&lt;=50K"</span><span class="op">]</span></span>
 <span><span class="va">C50_probs</span>    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">C50_model</span>,    <span class="va">test_set</span>, type <span class="op">=</span> <span class="st">"prob"</span><span class="op">)</span><span class="op">[</span>, <span class="st">"&lt;=50K"</span><span class="op">]</span></span>
 <span><span class="va">forest_probs</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">forest_model</span>, <span class="va">test_set</span>, type <span class="op">=</span> <span class="st">"prob"</span><span class="op">)</span><span class="op">[</span>, <span class="st">"&lt;=50K"</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -834,7 +828,7 @@ Figure&nbsp;11.6: C5.0 Decision Tree trained on the risk dataset. Unlike CART, t
 <section id="confusion-matrix-and-classification-errors" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="confusion-matrix-and-classification-errors">Confusion Matrix and Classification Errors</h4>
 <p>How well do our models separate high earners from others? A confusion matrix gives us an immediate snapshot by showing how many predictions were correct and what types of mistakes each model tends to make.</p>
 <p>We generate confusion matrices for each model using the <code>conf.mat.plot()</code> function from the <strong>liver</strong> package, which creates easy-to-read graphical summaries:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">conf.mat.plot</span><span class="op">(</span><span class="va">cart_probs</span>, <span class="va">test_labels</span>, cutoff <span class="op">=</span> <span class="fl">0.5</span>, reference <span class="op">=</span> <span class="st">"&lt;=50K"</span>, main <span class="op">=</span> <span class="st">"CART Prediction"</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">conf.mat.plot</span><span class="op">(</span><span class="va">cart_probs</span>, <span class="va">test_labels</span>, cutoff <span class="op">=</span> <span class="fl">0.5</span>, reference <span class="op">=</span> <span class="st">"&lt;=50K"</span>, main <span class="op">=</span> <span class="st">"CART Prediction"</span><span class="op">)</span></span>
 <span> </span>
 <span><span class="fu">conf.mat.plot</span><span class="op">(</span><span class="va">C50_probs</span>, <span class="va">test_labels</span>, cutoff <span class="op">=</span> <span class="fl">0.5</span>, reference <span class="op">=</span> <span class="st">"&lt;=50K"</span>, main <span class="op">=</span> <span class="st">"C5.0 Prediction"</span><span class="op">)</span></span>
 <span> </span>
@@ -842,6 +836,14 @@ Figure&nbsp;11.6: C5.0 Decision Tree trained on the risk dataset. Unlike CART, t
 <div id="fig-ch11-conf-plots" class="quarto-layout-panel">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch11-conf-plots-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="quarto-layout-row">
+<div class="cell quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="11-Tree-based-models_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:95.0%" data-fig-pos="H"></p>
+</figure>
+</div>
+</div>
+</div>
 <div class="cell quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -858,14 +860,6 @@ Figure&nbsp;11.6: C5.0 Decision Tree trained on the risk dataset. Unlike CART, t
 </div>
 </div>
 </div>
-<div class="cell quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
-<div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="11-Tree-based-models_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:95.0%" data-fig-pos="H"></p>
-</figure>
-</div>
-</div>
-</div>
 </div>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch11-conf-plots-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -876,27 +870,27 @@ Figure&nbsp;11.7: Confusion matrices for CART, C5.0, and Random Forest models us
 <p>Because confusion matrices depend on the cutoff value, changing the threshold would alter the number of true positives, false positives, and other entries. Thus, each confusion matrix reflects model performance at a particular decision point.</p>
 <p>If you want to retrieve the numeric confusion matrices directly, you can use the <code>conf.mat()</code> function:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">conf.mat</span>(cart_probs, test_labels, <span class="at">cutoff =</span> <span class="fl">0.5</span>, <span class="at">reference =</span> <span class="st">"&lt;=50K"</span>)</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>          Predict</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>   Actual  <span class="sc">&lt;=</span><span class="dv">50</span>K <span class="sc">&gt;</span><span class="dv">50</span>K</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>     <span class="sc">&lt;=</span><span class="dv">50</span>K  <span class="dv">7091</span>  <span class="dv">403</span></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>     <span class="sc">&gt;</span><span class="dv">50</span>K   <span class="dv">1115</span> <span class="dv">1111</span></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="fu">conf.mat</span>(C50_probs, test_labels, <span class="at">cutoff =</span> <span class="fl">0.5</span>, <span class="at">reference =</span> <span class="st">"&lt;=50K"</span>)</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>          Predict</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>   Actual  <span class="sc">&lt;=</span><span class="dv">50</span>K <span class="sc">&gt;</span><span class="dv">50</span>K</span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>     <span class="sc">&lt;=</span><span class="dv">50</span>K  <span class="dv">7084</span>  <span class="dv">410</span></span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>     <span class="sc">&gt;</span><span class="dv">50</span>K    <span class="dv">866</span> <span class="dv">1360</span></span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a><span class="fu">conf.mat</span>(forest_probs, test_labels, <span class="at">cutoff =</span> <span class="fl">0.5</span>, <span class="at">reference =</span> <span class="st">"&lt;=50K"</span>)</span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>          Predict</span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>   Actual  <span class="sc">&lt;=</span><span class="dv">50</span>K <span class="sc">&gt;</span><span class="dv">50</span>K</span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>     <span class="sc">&lt;=</span><span class="dv">50</span>K  <span class="dv">7053</span>  <span class="dv">441</span></span>
-<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>     <span class="sc">&gt;</span><span class="dv">50</span>K    <span class="dv">891</span> <span class="dv">1335</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">conf.mat</span>(cart_probs, test_labels, <span class="at">cutoff =</span> <span class="fl">0.5</span>, <span class="at">reference =</span> <span class="st">"&lt;=50K"</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>          Predict</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>   Actual  <span class="sc">&lt;=</span><span class="dv">50</span>K <span class="sc">&gt;</span><span class="dv">50</span>K</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>     <span class="sc">&lt;=</span><span class="dv">50</span>K  <span class="dv">7091</span>  <span class="dv">403</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>     <span class="sc">&gt;</span><span class="dv">50</span>K   <span class="dv">1115</span> <span class="dv">1111</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">conf.mat</span>(C50_probs, test_labels, <span class="at">cutoff =</span> <span class="fl">0.5</span>, <span class="at">reference =</span> <span class="st">"&lt;=50K"</span>)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>          Predict</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>   Actual  <span class="sc">&lt;=</span><span class="dv">50</span>K <span class="sc">&gt;</span><span class="dv">50</span>K</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>     <span class="sc">&lt;=</span><span class="dv">50</span>K  <span class="dv">7120</span>  <span class="dv">374</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>     <span class="sc">&gt;</span><span class="dv">50</span>K    <span class="dv">873</span> <span class="dv">1353</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="fu">conf.mat</span>(forest_probs, test_labels, <span class="at">cutoff =</span> <span class="fl">0.5</span>, <span class="at">reference =</span> <span class="st">"&lt;=50K"</span>)</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>          Predict</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>   Actual  <span class="sc">&lt;=</span><span class="dv">50</span>K <span class="sc">&gt;</span><span class="dv">50</span>K</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>     <span class="sc">&lt;=</span><span class="dv">50</span>K  <span class="dv">7068</span>  <span class="dv">426</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>     <span class="sc">&gt;</span><span class="dv">50</span>K    <span class="dv">886</span> <span class="dv">1340</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Here is the total number of correctly classified individuals for each model:</p>
 <ul>
 <li><p><em>CART</em>: “7091 + 1111 = 8202” correct predictions;</p></li>
-<li><p><em>C5.0</em>: “7084 + 1360 = 8444” correct predictions;</p></li>
-<li><p><em>Random Forest</em>: “7053 + 1335 = 8388” correct predictions.</p></li>
+<li><p><em>C5.0</em>: “7120 + 1353 = 8473” correct predictions;</p></li>
+<li><p><em>Random Forest</em>: “7068 + 1340 = 8408” correct predictions.</p></li>
 </ul>
 <p>Among the three models, C5.0 leads the pack, making the fewest misclassifications. Its flexible tree structure appears to provide a real advantage.</p>
 <p><em>Try it yourself:</em> What happens if you change the cutoff to 0.6 instead of 0.5? Re-run the <code>conf.mat.plot()</code> and <code>conf.mat()</code> functions with <code>cutoff = 0.6</code> and see how the confusion matrices shift. This small change can reveal important trade-offs between sensitivity and specificity (a topic we explore further with ROC curves and AUC values in the next part).</p>
@@ -904,17 +898,17 @@ Figure&nbsp;11.7: Confusion matrices for CART, C5.0, and Random Forest models us
 <p>What happens if we shift the decision threshold? Could our models behave differently? To answer this, we turn to the ROC curve and the AUC, two powerful tools that reveal how well a model separates the two income groups across all possible cutoff points.</p>
 <p>We use the <strong>pROC</strong> package for these evaluations. If it is not installed yet, add it with <code>install.packages("pROC")</code>, and then load it:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://xrobin.github.io/pROC/">pROC</a></span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://xrobin.github.io/pROC/">pROC</a></span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Next, we calculate the ROC curves for all three models:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cart_roc</span>   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/pROC/man/roc.html">roc</a></span><span class="op">(</span><span class="va">test_labels</span>, <span class="va">cart_probs</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cart_roc</span>   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/pROC/man/roc.html">roc</a></span><span class="op">(</span><span class="va">test_labels</span>, <span class="va">cart_probs</span><span class="op">)</span></span>
 <span><span class="va">C50_roc</span>    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/pROC/man/roc.html">roc</a></span><span class="op">(</span><span class="va">test_labels</span>, <span class="va">C50_probs</span><span class="op">)</span></span>
 <span><span class="va">forest_roc</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/pROC/man/roc.html">roc</a></span><span class="op">(</span><span class="va">test_labels</span>, <span class="va">forest_probs</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Instead of viewing the models separately, let us put them all on the same plot using <code><a href="https://rdrr.io/pkg/pROC/man/ggroc.html">ggroc()</a></code>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/pROC/man/ggroc.html">ggroc</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">cart_roc</span>, <span class="va">C50_roc</span>, <span class="va">forest_roc</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span> <span class="op">+</span></span>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/pROC/man/ggroc.html">ggroc</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">cart_roc</span>, <span class="va">C50_roc</span>, <span class="va">forest_roc</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">scale_color_manual</span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"#377EB8"</span>, <span class="st">"#E66101"</span>, <span class="st">"#4DAF4A"</span><span class="op">)</span>,</span>
 <span>                     labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
 <span>                       <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span><span class="st">"CART (AUC ="</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/pROC/man/auc.html">auc</a></span><span class="op">(</span><span class="va">cart_roc</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">")"</span><span class="op">)</span>,</span>
@@ -925,7 +919,7 @@ Figure&nbsp;11.7: Confusion matrices for CART, C5.0, and Random Forest models us
 <span>  <span class="fu">theme</span><span class="op">(</span>legend.title <span class="op">=</span> <span class="fu">element_blank</span><span class="op">(</span><span class="op">)</span>, legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">.7</span>, <span class="fl">.3</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="11-Tree-based-models_files/figure-html/unnamed-chunk-30-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%" data-fig-pos="H"></p>
+<figure class="figure"><p><img src="11-Tree-based-models_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%" data-fig-pos="H"></p>
 </figure>
 </div>
 </div>
@@ -936,11 +930,11 @@ Figure&nbsp;11.7: Confusion matrices for CART, C5.0, and Random Forest models us
 <li>
 <em>CART</em>: AUC = 0.841,</li>
 <li>
-<em>C5.0</em>: AUC = 0.903,</li>
+<em>C5.0</em>: AUC = 0.895,</li>
 <li>
-<em>Random Forest</em>: AUC = 0.899.</li>
+<em>Random Forest</em>: AUC = 0.898.</li>
 </ul>
-<p>C5.0 scores the highest, but notice that Random Forest is very close behind. While these AUC differences are real, they are relatively small, reminding us that model choice should also weigh factors like simplicity, speed, and interpretability.</p>
+<p>Random Forest scores the highest, but notice that C5.0 is very close behind. While these AUC differences are real, they are relatively small, reminding us that model choice should also weigh factors like simplicity, speed, and interpretability.</p>
 <p>In the next section, we wrap up the case study by reflecting on what these results mean for practical decision-making.</p>
 </section></section><section id="reflections-and-takeaways" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="reflections-and-takeaways">Reflections and Takeaways</h3>
 <p>This case study demonstrated how tree-based models (such as <em>CART</em>, <em>C5.0</em>, and <em>Random Forest</em>) can be applied to a real-world classification problem, following the Data Science Workflow from data preparation through model evaluation.</p>
@@ -1020,7 +1014,7 @@ Figure&nbsp;11.7: Confusion matrices for CART, C5.0, and Random Forest models us
 </section><section id="data-setup-to-model-2" class="level5 unnumbered"><h5 class="unnumbered anchored" data-anchor-id="data-setup-to-model-2">Data Setup to Model</h5>
 <p>Load the <em>redWines</em> dataset and partition it into a training set (70%) and a test set (30%).</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">redWines</span>, package <span class="op">=</span> <span class="st">"liver"</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">redWines</span>, package <span class="op">=</span> <span class="st">"liver"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span></span>

@@ -249,9 +249,9 @@ This diversity of attributes makes the *adult* dataset well suited for exploring
 
 ### Data Preparation {.unnumbered}
 
-Before building predictive models, it is essential to clean and preprocess the dataset to address missing values and simplify complex categorical variables. The *adult* dataset includes several features that require attention, particularly for improving model interpretability and robustness.
+Before building predictive models, it is crucial to clean and preprocess the data to ensure consistency and interpretability. The *adult* dataset includes several features with missing values and complex categorical variables that must be addressed to improve model robustness.
 
-As discussed in Chapter [-@sec-ch3-data-preparation], data preparation is a foundational step in the Data Science Workflow. In this case study, we summarize the most relevant transformations applied to prepare the *adult* dataset for modeling.
+In Chapter [-@sec-ch3-data-pre-adult], we introduced the *adult* dataset as part of the *Data Science Workflow* and demonstrated how to handle missing values and transform categorical features. Here, we summarize the key preprocessing steps applied before training the tree-based models.
 
 #### Handling Missing Values {.unnumbered}
 
@@ -270,53 +270,47 @@ adult$native.country = impute(factor(adult$native.country), 'random')
 adult$occupation     = impute(factor(adult$occupation), 'random')
 ```
 
-#### Transforming Categorical Variables {.unnumbered}
+#### Transforming Categorical Features {.unnumbered}
 
-Several categorical variables, such as `native.country` and `occupation`, contain a large number of unique levels. To improve model interpretability and reduce complexity, we group these levels into broader, conceptually meaningful categories.
+Some categorical variables in the *adult* dataset, such as `native.country` and `workclass`, include many distinct categories. Models can struggle with such features because rare or overly specific levels add unnecessary complexity and may lead to overfitting. To improve both interpretability and generalization, we group related categories into broader, conceptually meaningful classes.
 
-The `native.country` variable is consolidated into five geographic regions:
+We begin with the `native.country` variable, which originally includes `r length(levels(adult$native.country))` unique country names. To simplify interpretation while retaining geographic information, these countries are grouped into five major regions: Europe, North America, Latin America, the Caribbean, and Asia. This grouping also reduces the number of factor levels, allowing models to focus on regional patterns rather than specific countries.
 
 ```{r}
 library(forcats)
 
-Europe = c("England", "France", "Germany", "Greece", "Holand-Netherlands", "Hungary", "Ireland", "Italy", "Poland", "Portugal", "Scotland", "Yugoslavia")
+Europe <- c("France", "Germany", "Greece", "Hungary", "Ireland", "Italy", "Netherlands", "Poland", "Portugal", "United-Kingdom", "Yugoslavia")
 
-Asia = c("China", "Hong", "India", "Iran", "Cambodia", "Japan", "Laos", "Philippines", "Vietnam", "Taiwan", "Thailand")
+North_America <- c("United-States", "Canada", "Outlying-US(Guam-USVI-etc)")
 
-N.America = c("Canada", "United-States", "Puerto-Rico")
+Latin_America <- c("Mexico", "El-Salvador", "Guatemala", "Honduras", "Nicaragua", "Cuba", "Dominican-Republic", "Puerto-Rico", "Colombia", "Ecuador", "Peru")
 
-S.America = c("Columbia", "Cuba", "Dominican-Republic", "Ecuador", "El-Salvador", "Guatemala", "Haiti", "Honduras", "Mexico", "Nicaragua", "Outlying-US(Guam-USVI-etc)", "Peru", "Jamaica", "Trinadad&Tobago")
+Caribbean <- c("Jamaica", "Haiti", "Trinidad&Tobago")
 
-# Reclassify into broader regions
-adult$native.country = fct_collapse(adult$native.country, 
-                                    "Europe"    = Europe,
-                                    "Asia"      = Asia,
-                                    "N.America" = N.America,
-                                    "S.America" = S.America,
-                                    "Other"     = c("South"))
+Asia <- c("Cambodia", "China", "Hong-Kong", "India", "Iran", "Japan", "Laos", "Philippines", "South", "Taiwan", "Thailand", "Vietnam")
+
+adult$native.country <- fct_collapse(adult$native.country,
+      "Europe"        = Europe,
+      "North America" = North_America,
+      "Latin America" = Latin_America,
+      "Caribbean"     = Caribbean,
+      "Asia"          = Asia
+)
 ```
 
-Other categorical variables are adjusted to improve consistency:
-
--   The `workclass` variable includes rare categories that reflect a lack of formal employment. These are grouped as `"Unemployed"`:
+Next, we simplify the `workclass` variable, which contains rare categories representing individuals without formal employment. To improve consistency and interpretability, we group these categories into a single `"Unemployed"` class:
 
 ```{r}
 adult$workclass = fct_collapse(adult$workclass, "Unemployed" = c("Never-worked", "Without-pay"))
 ```
 
--   For `race`, long or uncommon labels are simplified:
-
-```{r}
-adult$race = fct_recode(adult$race, "Amer-Indian" = "Amer-Indian-Eskimo", "Asian" = "Asian-Pac-Islander")
-```
-
-These transformations reduce the risk of overfitting and help the tree-based models generalize better. With these steps complete, the dataset is ready for training and evaluation, which we turn to in the next section.
+These transformations make the data more interpretable and reduce sparsity in categorical variables. By consolidating infrequent levels, we help tree-based models focus on meaningful distinctions rather than noise, ultimately improving model stability and generalization. With these adjustments complete, the dataset is now well-prepared for the modeling and evaluation steps discussed in the next section.
 
 ### Data Setup to Model {.unnumbered}
 
 With the dataset cleaned and categorical variables simplified, we are ready to set up the data for training and evaluation. This corresponds to *Step 4: Data Setup to Model* in the Data Science Workflow introduced in Chapter [-@sec-ch2-intro-data-science] and discussed in detail in Chapter [-@sec-ch6-setup-data]. It marks the transition from data preparation to model development.
 
-To evaluate how well our models generalize to new data, we divide the dataset into two parts: a *training set* (80%) for model building and a *testing set* (20%) for performance assessment. This ensures an unbiased estimate of model accuracy on unseen data. Following the convention used in previous chapters, we use the `partition()` function from the **liver** package:
+To evaluate how well our models generalize to new data, we divide the dataset into two parts: a training set (80%) for model building and a testing set (20%) for performance assessment. This ensures an unbiased estimate of model accuracy on unseen data. Following the convention used in previous chapters, we use the `partition()` function from the **liver** package:
 
 ```{r}
 set.seed(6)
@@ -333,7 +327,7 @@ Here, `set.seed()` ensures reproducibility of the split. The `train_set` is used
 
 To ensure the training and test sets reflect the structure of the original dataset, we verified that the distribution of the `income` variable remains balanced after partitioning. While we do not show this diagnostic here, we refer interested readers to [Section -@sec-ch6-validate-partition] for more on validation techniques.
 
-The set of predictors used for modeling includes variables spanning demographic, economic, and employment dimensions: `age`, `workclass`, `education.num`, `marital.status`, `occupation`, `race`, `gender`, `capital.gain`, `capital.loss`, `hours.per.week`, and `native.country`.
+The set of predictors used for modeling includes variables spanning demographic, economic, and employment dimensions: `age`, `workclass`, `education.num`, `marital.status`, `occupation`, `gender`, `capital.gain`, `capital.loss`, `hours.per.week`, and `native.country`.
 
 The following variables are excluded for the reasons below:
 
@@ -343,10 +337,12 @@ The following variables are excluded for the reasons below:
 
 -   `relationship`: Strongly correlated with `marital.status` and unlikely to provide additional value.
 
+-   `race`: Excluded for ethical reasons.
+
 We now define the formula that will be used across all three models:
 
 ```{r}
-formula = income ~ age + workclass + education.num + marital.status + occupation + race + gender + capital.gain + capital.loss + hours.per.week + native.country
+formula = income ~ age + workclass + education.num + marital.status + occupation + gender + capital.gain + capital.loss + hours.per.week + native.country
 ```
 
 This formula will be used consistently across CART, C5.0, and Random Forest models to facilitate a fair comparison of predictive performance.
@@ -614,7 +610,7 @@ The AUC values confirm what the eye suggests:
 -   *C5.0*: AUC = `r round(auc(C50_roc), 3)`,
 -   *Random Forest*: AUC = `r round(auc(forest_roc), 3)`.
 
-C5.0 scores the highest, but notice that Random Forest is very close behind. While these AUC differences are real, they are relatively small, reminding us that model choice should also weigh factors like simplicity, speed, and interpretability.
+Random Forest scores the highest, but notice that C5.0 is very close behind. While these AUC differences are real, they are relatively small, reminding us that model choice should also weigh factors like simplicity, speed, and interpretability.
 
 In the next section, we wrap up the case study by reflecting on what these results mean for practical decision-making.
 

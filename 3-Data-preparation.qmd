@@ -329,13 +329,13 @@ These plots illustrate that after removing implausible values and imputing missi
 
 ### Other Imputation Approaches {.unnumbered}
 
-The `impute()` function also supports statistical imputation methods such as mean, median, and mode. By default, it performs *median imputation*. For more advanced tasks, `aregImpute()` (also from **Hmisc**) enables predictive imputation using techniques like additive regression and bootstrapping.
+The `impute()` function also supports several simple statistical methods, such as mean, median, and mode imputation. By default, it performs *median imputation*. For more flexible approaches, the `aregImpute()` function from **Hmisc** can be used. It performs predictive imputation using additive regression and bootstrapping, which often produces more realistic estimates than single-value replacements.
 
-While removing missing records via `na.omit()` is a simple option, it is usually discouraged unless the missingness is widespread or systematically biased. Properly addressing missing data helps maintain data integrity and prepares the dataset for subsequent steps, such as encoding categorical variables and aggregating country-level categories.
+Another practical option is the **mice** (Multivariate Imputation by Chained Equations) package. Its `mice()` function performs *multivariate* imputation, modeling each variable with missing values as a function of the others in an iterative process. This method is particularly useful when multiple variables contain missing values that are correlated, as it accounts for their joint relationships and better reflects uncertainty in the imputations. In the case study in Chapter [-@sec-ch13-case-study], we use the `mice()` function from the **mice** package to handle missing values in the *cereal* dataset, demonstrating its application in a realistic data preparation workflow.
 
-In later sections, including the case study in Chapter [-@sec-ch13-case-study], we will revisit this topic using more advanced methods such as *k*-nearest neighbors imputation, which estimates missing values based on the similarity across multiple variables.
+Although removing missing records with `na.omit()` is quick and easy, it is usually discouraged unless a large portion of the data is missing or the missingness is systematic. Thoughtful imputation helps preserve valuable information and leads to more reliable results in the next steps, such as encoding categorical variables or scaling numerical ones.
 
-Now that missing values have been identified and imputed, the dataset is more complete and ready for further preparation. The next key step is feature scaling, which ensures that numerical variables are on comparable scales.
+With missing values now properly handled, the dataset is ready for feature scaling, which ensures that numerical variables are on comparable scales.
 
 ## Feature Scaling {#sec-ch3-feature-scaling}
 
@@ -362,11 +362,9 @@ One caution: scaling can obscure real-world units or exaggerate the effect of ou
 When one feature ranges from 0 to 1 and another spans thousands, models that rely on distances, like *k*-nearest neighbors, may be skewed toward features with larger scales. Min-max scaling addresses this by rescaling each feature to a common range, typically $[0, 1]$, so that no single variable dominates due to its units.
 
 The transformation is defined by the formula:
-
 $$
 x_{\text{scaled}} = \frac{x - x_{\text{min}}}{x_{\text{max}} - x_{\text{min}}},
 $$
-
 where $x$ is the original value, and $x_{\text{min}}$ and $x_{\text{max}}$ are the minimum and maximum values of the feature. This method ensures that the minimum value becomes 0 and the maximum becomes 1.
 
 Min-max scaling is especially useful for algorithms that use distance or gradient information, including neural networks and support vector machines. However, this technique is sensitive to outliers: extreme values can stretch the scale, compressing most of the data into a narrow band and reducing resolution for typical values.
@@ -447,29 +445,42 @@ In the sections that follow, we demonstrate these encoding techniques in practic
 
 ## Ordinal Encoding {#sec-ch3-ordinal-encoding}
 
-When a categorical variable has a meaningful ranking, *ordinal encoding* provides a simple and effective transformation. Instead of treating each category as unrelated, we assign numerical values that reflect the natural order, allowing models to capture rank-based patterns.
+When a categorical feature follows a meaningful order or ranking, ordinal encoding offers a straightforward way to represent that information numerically. Rather than treating each category as independent, this approach assigns numerical values that reflect the inherent order, enabling models to capture rank-based relationships.
 
-Take the `cut` variable in the *diamonds* dataset, which reflects increasing quality:
+Consider the `cut` feature in the *diamonds* dataset, which represents increasing levels of quality:
 
--   "Fair" $\mapsto$ 1;
--   "Good" $\mapsto$ 2;
--   "Very Good" $\mapsto$ 3;
--   "Premium" $\mapsto$ 4;
--   "Ideal" $\mapsto$ 5.
+* "Fair" $\mapsto$ 1
+* "Good" $\mapsto$ 2
+* "Very Good" $\mapsto$ 3
+* "Premium" $\mapsto$ 4
+* "Ideal" $\mapsto$ 5
 
-We can convert this variable to numeric scores in R as follows:
+In this dataset, `cut` is already stored as a *factor* variable. We can use the `factor()` function to explicitly define its levels and assign corresponding numeric labels:
 
 ```{r}
-# Convert an ordinal variable to numeric scores
-diamonds$cut_level <- factor(diamonds$cut, 
-                      levels = c("Fair", "Good", "Very Good", "Premium", "Ideal"), 
-                      labels = c(1, 2, 3, 4, 5))
+# Convert an ordinal feature to numeric scores
+diamonds$cut_level <- factor(
+  diamonds$cut,
+  levels = c("Fair", "Good", "Very Good", "Premium", "Ideal"),
+  labels = c(1, 2, 3, 4, 5)
+)
 ```
-This numeric representation preserves the ordinal structure and can enhance the performance of models that recognize order, such as linear regression or decision trees.
 
-However, ordinal encoding should only be used when the order of categories is *truly meaningful*. Applying this method to *nominal* variables, like "red", "green", and "blue", can be misleading. Encoding those as 1, 2, and 3 suggests a false hierarchy and may bias the model.
+If the feature were stored as a *character* variable instead, we would first convert it to a factor before applying this transformation:
 
-Always match the encoding method to the nature of the variable. For unordered categories, consider one-hot or frequency encoding instead. In the next section, we explore one-hot encoding, which treats each category as distinct, ideal for variables without any natural ordering.
+```{r}
+diamonds$cut <- factor(diamonds$cut, levels = c("Fair", "Good", "Very Good", "Premium", "Ideal"))
+
+diamonds$cut_level <- as.numeric(diamonds$cut)
+```
+
+Both approaches ensure that the encoded values preserve the correct order of categories.
+
+This transformation retains the ordinal structure and allows models that recognize ordered relationships—such as linear regression, decision trees, or ordinal logistic regression—to make more informed predictions.
+
+However, ordinal encoding should only be used when the order of categories is genuinely meaningful. Applying it to nominal variables such as “red,” “green,” and “blue” would wrongly imply a numerical hierarchy, which can distort model interpretation and performance.
+
+In summary, ordinal encoding is well suited for variables with a natural ranking, where numerical values meaningfully represent category order. For variables without inherent order, a different approach is needed. The next section introduces one-hot encoding, a method designed specifically for nominal features.
 
 ## One-Hot Encoding {#sec-ch3-one-hot-encoding}
 
@@ -634,34 +645,38 @@ Categorical variables often contain many unique values, which can complicate mod
 
 #### Grouping `native.country` by Region {.unnumbered}
 
-The `native.country` variable includes `r length(levels(adult$native.country))` distinct countries. Modeling each one as a separate category could dilute predictive power and inflate the feature space. A more structured approach is to group countries by geographic region:
+The `native.country` variable includes `r length(levels(adult$native.country))` distinct countries. Modeling each country as a separate category would unnecessarily expand the feature space and dilute predictive power. To improve interpretability and reduce sparsity, we group the countries into broader geographic regions that reflect cultural and linguistic proximity:
 
--   Europe: England, France, Germany, Greece, Netherlands, Hungary, Ireland, Italy, Poland, Portugal, Scotland, Yugoslavia.
+- *Europe:* France, Germany, Greece, Hungary, Ireland, Italy, Netherlands, Poland, Portugal, United Kingdom, Yugoslavia.
 
--   Asia: China, Hong Kong, India, Iran, Cambodia, Japan, Laos, Philippines, Vietnam, Taiwan, Thailand.
+- *North America:* United States, Canada, Outlying US territories (Guam, US Virgin Islands, etc.).
 
--   North America: Canada, United States, Puerto Rico.
+- *Latin America:* Mexico, El Salvador, Guatemala, Honduras, Nicaragua, Cuba, Dominican Republic, Puerto Rico, Colombia, Ecuador, Peru.
 
--   South America: Colombia, Cuba, Dominican Republic, Ecuador, El Salvador, Guatemala, Haiti, Honduras, Mexico, Nicaragua, Outlying US territories, Peru, Jamaica, Trinidad and Tobago.
+- *Caribbean:* Jamaica, Haiti, Trinidad and Tobago.
 
--   Other: Includes the ambiguous category `"South"`, which lacks clear documentation in the dataset. We treat it as a separate group.
+- *Asia:* Cambodia, China, Hong Kong, India, Iran, Japan, Laos, Philippines, South Korea (recorded as “South” in the dataset), Taiwan, Thailand, Vietnam.
 
-We use the `fct_collapse()` function from the **forcats** package to perform the reclassification:
-
+The reclassification is performed using the `fct_collapse()` function from the **forcats** package. This function is designed for factor manipulation and allows you to combine multiple existing levels into broader, user-defined categories. It takes a factor variable as input and a set of named groups, where each name defines a new level and the associated vector lists the original levels to be merged. This approach keeps the factor variable tidy and avoids manual recoding.
 ```{r message = FALSE}
 library(forcats)
 
-Europe <- c("England", "France", "Germany", "Greece", "Holand-Netherlands", "Hungary", "Ireland", "Italy", "Poland", "Portugal", "Scotland", "Yugoslavia")
-Asia <- c("China", "Hong", "India", "Iran", "Cambodia", "Japan", "Laos", "Philippines", "Vietnam", "Taiwan", "Thailand")
-N.America <- c("Canada", "United-States", "Puerto-Rico")
-S.America <- c("Columbia", "Cuba", "Dominican-Republic", "Ecuador", "El-Salvador", "Guatemala", "Haiti", "Honduras", "Mexico", "Nicaragua", "Outlying-US(Guam-USVI-etc)", "Peru", "Jamaica", "Trinadad&Tobago")
+Europe <- c("France", "Germany", "Greece", "Hungary", "Ireland", "Italy", "Netherlands", "Poland", "Portugal", "United-Kingdom", "Yugoslavia")
+
+North_America <- c("United-States", "Canada", "Outlying-US(Guam-USVI-etc)")
+
+Latin_America <- c("Mexico", "El-Salvador", "Guatemala", "Honduras", "Nicaragua", "Cuba", "Dominican-Republic", "Puerto-Rico", "Colombia", "Ecuador", "Peru")
+
+Caribbean <- c("Jamaica", "Haiti", "Trinidad&Tobago")
+
+Asia <- c("Cambodia", "China", "Hong-Kong", "India", "Iran", "Japan", "Laos", "Philippines", "South", "Taiwan", "Thailand", "Vietnam")
 
 adult$native.country <- fct_collapse(adult$native.country,
-  "Europe"    = Europe,
-  "Asia"      = Asia,
-  "N.America" = N.America,
-  "S.America" = S.America,
-  "Other"     = c("South")
+        "Europe"        = Europe,
+        "North America" = North_America,
+        "Latin America" = Latin_America,
+        "Caribbean"     = Caribbean,
+        "Asia"          = Asia
 )
 ```
 
@@ -671,7 +686,7 @@ To verify the transformation:
 table(adult$native.country)
 ```
 
-This grouping reduces sparsity, enhances interpretability, and avoids overfitting caused by excessive fragmentation of categories.
+This regional grouping provides a balance between detail and interpretability. It retains key cultural and geographic distinctions (for example, between Latin America and the Caribbean) while minimizing sparsity and reducing the risk of overfitting when the variable is used in predictive modeling.
 
 #### Simplifying `workclass` {.unnumbered}
 
