@@ -8,7 +8,7 @@ Imagine a bank evaluating loan applications. Given details such as income, age, 
 
 Decision trees are used across diverse domains, from medical diagnosis and fraud detection to customer segmentation and automation. Their intuitive nature makes them highly interpretable, enabling data-driven decisions without requiring deep mathematical expertise. However, while individual trees are easy to understand, they are prone to overfitting: capturing noise in the data rather than general patterns. *Random forests* address this limitation by combining multiple decision trees to produce a more accurate and stable model.
 
-In the previous chapter, you learned how to build and evaluate regression models to predict continuous outcomes. In this chapter, we return to supervised learning from a new angle: *tree-based models*, which unify classification and regression under a single, flexible framework. Decision trees can automatically capture nonlinear relationships and interactions between variables, without requiring manual feature engineering or transformations.
+In the previous chapter, you learned how to build and evaluate regression models for continuous outcomes. We now turn to *tree-based models*, which unify both *classification* and *regression* within a single, flexible framework. Decision trees can predict categorical outcomes such as customer churn or loan default, as well as continuous variables like house prices or sales revenue. This versatility, combined with their ability to automatically capture nonlinear relationships and interactions, makes them a powerful and interpretable modeling tool.
 
 To see decision trees in action, consider the example in @fig-ch11-simple-tree, which predicts whether a customer’s credit risk is classified as "good" or "bad" based on features such as `age` and `income`. This tree is trained on the *risk* dataset, introduced in Chapter [-@sec-ch9-bayes], and consists of decision nodes representing yes/no questions, such as whether yearly income is below 36,000 (`income < 36e+3`) or whether age is greater than 29. The final classification is determined at the terminal nodes, also known as leaves.
 
@@ -348,7 +348,7 @@ formula = income ~ age + workclass + education.num + marital.status + occupation
 This formula will be used consistently across CART, C5.0, and Random Forest models to facilitate a fair comparison of predictive performance.
 
 ::: rmdnote
-**Note:** Similar to regression models discussed in the previous chapter, tree-based models such as CART, C5.0, and Random Forests do *not* require dummy variable encoding for nominal variables or rescaling of numeric features. These models can directly handle categorical variables and are invariant to monotonic transformations of numeric variables. However, this is not the case for algorithms such as *k*-Nearest Neighbors (see Chapter [-@sec-ch7-classification-knn]), which require both dummy encoding and feature scaling for optimal performance.
+**Note:** Tree-based models such as CART, C5.0, and Random Forests do *not* require dummy encoding for categorical variables or rescaling of numeric features. These models can directly process mixed data types and are invariant to monotonic transformations of numerical predictors, making them especially convenient for datasets that include both categorical and continuous features. In contrast, algorithms like *k*-Nearest Neighbors* (see Chapter [-@sec-ch7-classification-knn]) rely on distance computations and therefore require both dummy encoding and feature scaling to achieve optimal performance.
 :::
 
 ### Building a Decision Tree with CART {.unnumbered}
@@ -538,12 +538,13 @@ conf.mat.plot(forest_probs, test_labels, cutoff = 0.5, reference = "<=50K", main
 Confusion matrices for CART, C5.0, and Random Forest models using a cutoff value of $0.5$. Each matrix summarizes the number of true positives, true negatives, false positives, and false negatives for the corresponding model.
 :::
 
-In these plots, we set `cutoff = 0.5`, meaning that if the predicted probability for "`<=50K`" is at least 0.5, the model predicts "`<=50K`"; otherwise, it predicts "`>50K`". We also specify `reference = "<=50K"`, indicating that the `<=50K` group is treated as the positive class.
+In these plots, the cutoff value determines the decision boundary between the two income classes. By default, we set `cutoff = 0.5`, meaning that if the predicted probability of earning `<=50K` is at least 0.5, the model predicts "`<=50K`"; otherwise, it predicts "`>50K`". The argument `reference = "<=50K"` specifies that `<=50K` is treated as the positive class.
 
-Because confusion matrices depend on the cutoff value, changing the threshold would alter the number of true positives, false positives, and other entries. Thus, each confusion matrix reflects model performance at a particular decision point.
+Because model predictions depend on this threshold, changing the cutoff alters the balance between true positives, false positives, and other outcomes in the confusion matrix. Each confusion matrix, therefore, represents model performance at a specific decision threshold rather than an absolute measure of accuracy.
 
-If you want to retrieve the numeric confusion matrices directly, you can use the `conf.mat()` function:
+In practice, a fixed cutoff of 0.5 may not be optimal. A more robust approach is to tune the cutoff using a *validation set* (see Section [-@sec-cross-validation]). The optimal threshold can be chosen to maximize a particular performance metric, such as the F1-score or balanced accuracy, depending on the problem context. Once this threshold is determined, it should be applied to the test set to obtain an unbiased estimate of generalization performance. This process also reveals how the relative ranking of models (CART, C5.0, and Random Forest) can change when using tuned rather than fixed thresholds.
 
+To access the numeric confusion matrices directly, use the `conf.mat()` function:
 ```{r echo=TRUE}
 conf.mat(cart_probs, test_labels, cutoff = 0.5, reference = "<=50K")
 conf.mat(C50_probs, test_labels, cutoff = 0.5, reference = "<=50K")
