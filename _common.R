@@ -87,15 +87,71 @@ options(dplyr.print_min = 6, dplyr.print_max = 6)
 # for pdf output
 options(knitr.graphics.auto_pdf = TRUE)
 
-ggplot2::theme_set(ggplot2::theme( 
-                            panel.background = ggplot2::element_rect(fill = "white", colour = "white", linewidth = 0.5, linetype = "solid"),
-                            panel.grid.major = ggplot2::element_line(linewidth = 0.2, linetype = 'solid', colour = "gray77"), 
-                            panel.grid.minor = ggplot2::element_line(linewidth = 0.1, linetype = 'solid', colour = "gray90"),
-                            axis.text  = ggplot2::element_text(size = 11), 
-                            axis.title = ggplot2::element_text(size = 12, face = "bold"),
-                            title = ggplot2::element_text(size = 14, face = "bold"), 
-                            plot.title = ggplot2::element_text(hjust = 0.5)
-                  ))
+# =========================================================
+# Common ggplot2 Theme for Book
+# Springer-style: neutral structure, clear hierarchy, print-safe
+# =========================================================
+
+# Base brand colors (for 2-class cases)
+book_fill_colors  <- c("#F4A582", "#A8D5BA")
+book_color_colors <- c("#F4A582", "#A8D5BA")
+
+# Palette functions that expand to n colors when needed
+pal_book_fill <- function(n) {
+  base <- book_fill_colors
+  if (n <= length(base)) base[seq_len(n)] 
+  else grDevices::colorRampPalette(base)(n)  # interpolate extra hues
+}
+pal_book_color <- function(n) {
+  base <- book_color_colors
+  if (n <= length(base)) base[seq_len(n)] 
+  else grDevices::colorRampPalette(base)(n)
+}
+
+# Global defaults for discrete scales (no need to add + scale_* manually)
+scale_fill_discrete  <- function(...) ggplot2::discrete_scale("fill",   "book_fill",  palette = pal_book_fill,  ...)
+scale_colour_discrete <- function(...) ggplot2::discrete_scale("colour","book_color", palette = pal_book_color, ...)
+scale_color_discrete  <- function(...) ggplot2::discrete_scale("color", "book_color", palette = pal_book_color, ...)
+
+# ---- Global Springer-style theme ----
+ggplot2::theme_set(
+  ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      # Panel background and gridlines
+      panel.background = ggplot2::element_rect(fill = "white", colour = NA),
+      panel.grid.major = ggplot2::element_line(
+        linewidth = 0.25, colour = "gray80", linetype = "solid"
+      ),
+      panel.grid.minor = ggplot2::element_line(
+        linewidth = 0.15, colour = "gray90", linetype = "solid"
+      ),
+      
+      # Axis lines — clear and dark for structure
+      # axis.line = ggplot2::element_line(colour = "black", linewidth = 0.4, lineend = "square"),
+      
+      # Axis text and titles
+      axis.text  = ggplot2::element_text(size = 11, colour = "black"),
+      axis.title = ggplot2::element_text(size = 12, face = "bold", colour = "black"),
+      
+      # Plot titles and subtitles
+      plot.title = ggplot2::element_text(
+        size = 14, face = "bold", hjust = 0.5, colour = "black"
+      ),
+      plot.subtitle = ggplot2::element_text(
+        size = 11, hjust = 0.5, colour = "gray20"
+      ),
+      
+      # Legends — simple and light
+      legend.title = ggplot2::element_text(size = 11, face = "bold", colour = "black"),
+      legend.text  = ggplot2::element_text(size = 10, colour = "black"),
+      legend.background = ggplot2::element_rect(fill = "white", colour = "white"),
+      
+      # Margins
+      plot.margin = ggplot2::margin(6, 6, 6, 6, "pt")
+    )
+)
+
+# =========================================================
 
 # For LaTeX output
 options(tinytex.verbose = TRUE)
