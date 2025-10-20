@@ -68,7 +68,7 @@ Unlike many algorithms that involve an explicit training phase, kNN follows a *l
 
 When classifying a new observation, the kNN algorithm first computes its *distance* to all data points in the training set, typically using the *Euclidean distance*. It then identifies the *k* nearest neighbors and assigns the most frequent class label among them as the predicted outcome.
 
-@fig-ch7-knn-image illustrates this idea using a toy dataset with two classes: [Class A (red circles)]{style="color: red;"} and [Class B (blue squares)]{style="color: blue;"}. A new data point, shown as a *dark star*, must be assigned to one of the two classes. The classification result depends on the chosen value of *k*:
+@fig-ch7-knn-image illustrates this idea using a toy dataset with two classes: [Class A (orange circles)]{style="color: orange;"} and [Class B (blue squares)]{style="color: blue;"}. A new data point, shown as a *dark star*, must be assigned to one of the two classes. The classification result depends on the chosen value of *k*:
 
 -   When $k = 3$, the three closest neighbors include two blue squares and one red circle. Since the majority class is *Class B*, the new point is labeled accordingly.
 
@@ -92,12 +92,15 @@ Finally, the effectiveness of kNN often hinges on proper data preprocessing. Fea
 
 ## A Simple Example of kNN Classification
 
-To further illustrate how kNN operates in practice, consider a simplified classification example involving drug prescriptions. We use a synthetic dataset of 200 patients that records each patient’s *age*, *sodium-to-potassium (Na/K) ratio* in the blood, and the prescribed drug type. Although artificially generated, the dataset mimics patterns commonly found in real clinical data. Details of the data generation process are provided in Section [-@sec-intro-R-exercises]. The dataset is available in the **liver** package under the name `drug`.
+To illustrate how kNN operates in practice, consider a simplified classification example involving drug prescriptions. We use a synthetic dataset of 200 patients that records each patient’s *age*, *sodium-to-potassium (Na/K) ratio* in the blood, and the prescribed drug type. Although artificially generated, the dataset mimics patterns commonly found in real clinical data. Details of the data generation process are provided in Section [-@sec-intro-R-exercises]. The dataset is available in the **liver** package under the name `drug`. @fig-ch7-ex-drug-2 visualizes the distribution of patient records, where each point represents a patient. The dataset includes three drug types—Drug A, Drug B, and Drug C—indicated by different colors and shapes.
 
-@fig-ch7-ex-drug-1 visualizes the distribution of patient records. Each point represents a patient, with different shapes and colors used to indicate drug type. [Red circles]{style="color: red;"} correspond to Drug A, [green triangles]{style="color: green;"} to Drug B, and [blue squares]{style="color: blue;"} to Drug C.
+Suppose three new patients arrive at the clinic, and we need to determine which drug is most suitable for them based on their *age* and *sodium-to-potassium ratio*. Patient 1 is 40 years old with a Na/K ratio of 30.5. Patient 2 is 28 years old with a ratio of 9.6, and Patient 3 is 61 years old with a ratio of 10.5. These patients are shown as dark stars in @fig-ch7-ex-drug-2, with their three nearest neighbors highlighted in gray.
 
-```{r fig-ch7-ex-drug-1, echo = FALSE, out.width = "90%", fig.cap = "Scatter plot of Age vs. Sodium/Potassium Ratio for 200 patients, with drug type indicated by color and shape."}
-# Simulated data for illustration
+```{r}
+#| label: fig-ch7-ex-drug-2
+#| echo: false
+#| out-width: 90%
+#| fig-cap: "Scatter plot of age versus sodium-to-potassium ratio for 200 patients, with drug type indicated by color and shape. The three new patients are shown as dark stars, and their three nearest neighbors are highlighted with gray circles."
 
 data(drug)
 train_set = drug
@@ -106,82 +109,64 @@ p = ggplot(train_set, aes(x = age, y = ratio, color = type, shape = type)) +
   geom_point(alpha = 0.7) +
   scale_color_brewer(palette = "Set2") +
   labs(x = "Age", 
-       y = "Sodium/Potassium Ratio", 
+       y = "Sodium-to-Potassium Ratio", 
        color = "Type", 
        shape = "Type") +
   theme(legend.text = element_text(size = 8),
         legend.title = element_text(size = 10))
 
-p
-```
-
-Suppose three new patients arrive at the clinic, and we need to determine which drug is most suitable for them based on their *age* and *sodium-to-potassium ratio*. Patient 1 is a 40-year-old with a Na/K ratio of 30.5. Patient 2 is 28 years old with a Na/K ratio of 9.6. Patient 3 is 61 years old with a Na/K ratio of 10.5.
-
-These patients are represented by large orange circles with cross markers in @fig-ch7-ex-drug-2. The following analysis explores how kNN assigns drug classifications to these individuals based on proximity to labeled cases in the training data.
-
-```{r fig-ch7-ex-drug-2, echo = FALSE, out.width = "90%", fig.cap = "Scatter plot of age versus sodium/potassium ratio for 200 patients, with drug type shown by color and shape. The three new patients are highlighted with large orange circles."}
-
 size = if(knitr::is_latex_output()) 13.5 else 14.5
-
-# To create a data frame for new patients
 test_set = data.frame(age = c(40, 28, 61), ratio = c(30.5, 9.6, 10.5))
 
-# To plot train data and new patients
-p + geom_point(data = test_set, aes(x = age, y = ratio), colour = "#E66101", size = size, shape = 1) +
-    geom_point(data = test_set, aes(x = age, y = ratio), colour = "#E66101", size = 1   , shape = 8)
+p + 
+  geom_point(data = test_set, aes(x = age, y = ratio), colour = "gray50", size = size, shape = 1) +
+  geom_point(data = test_set, aes(x = age, y = ratio), colour = "black", size = 1, shape = 8)
 ```
 
-For Patient 1, who lies deep within a cluster of green-circle points (Drug A), the classification is straightforward. All nearest neighbors belong to Drug A, making the prediction confident and unambiguous.
+For new Patient 1, located deep within a cluster of green-circle points (Drug A), the classification is straightforward. All nearest neighbors belong to Drug A, making the prediction clear and confident.
 
-For Patient 2, the outcome depends on the choice of *k*. When $k = 1$, the nearest neighbor is a blue square, so the predicted class is Drug C. With $k = 2$, there is a tie between Drug B and Drug C, leaving no clear majority. At $k = 3$, two of the three nearest neighbors are blue squares, so the prediction is again Drug C.
+For new Patient 2, the outcome depends on the chosen value of *k*, as shown in the left panel of @fig-ch7-ex-drug-3. When $k = 1$, the nearest neighbor is a blue square, so the predicted class is Drug C. With $k = 2$, there is a tie between Drug B and Drug C, leaving no clear majority. At $k = 3$, two of the three nearest neighbors are blue squares, so the prediction remains Drug C. What happens if we increase *k* even further? The model begins to smooth the decision boundary, reducing noise sensitivity but potentially missing finer local details.
 
-For Patient 3, the classification is more uncertain. With $k = 1$ or $k = 2$, the patient is equally close to both red and blue points, so voting provides no decisive result. At $k = 3$, the three nearest neighbors each represent a different class, making the prediction entirely ambiguous.
+For new Patient 3, the classification is more uncertain, as seen in the right panel of @fig-ch7-ex-drug-3. With $k = 1$ or $k = 2$, the patient lies nearly equidistant from both red and blue points, leading to an unstable classification. At $k = 3$, the three nearest neighbors each represent a different class, making the prediction entirely ambiguous. What would happen if the patient’s sodium-to-potassium ratio were slightly higher or lower? Even a small shift could move this patient closer to one cluster or another, changing the predicted class entirely. This highlights a key limitation of kNN: when observations fall near class boundaries, prediction confidence decreases sharply.
 
-```{r, out.width  = '100%'}
+```{r}
 #| label: fig-ch7-ex-drug-3
 #| echo: false
-#| layout-nrow: 2
-#| fig-cap: "Zoom-in plots for the three new patients and their nearest neighbors. The left plot is for Patient 1, the middle plot is for Patient 2, and the right plot is for Patient 3."
-#| fig-subcap: 
-#|   - "Patient 1"
-#|   - "Patient 2"
-#|   - "Patient 3"
+#| fig-cap: "Zoomed-in views of new Patient 2 (left) and new Patient 3 (right) with their three nearest neighbors."
+#| fig-width: 8
+#| fig-height: 4
+#| out-width: 100%
 
 p = ggplot(train_set, aes(x = age, y = ratio, color = type, shape = type)) +
   geom_point(alpha = 0.7, size = 4, show.legend = FALSE) +
   scale_color_brewer(palette = "Set2") +
-  labs(x = "Age", y = "Sodium/Potassium Ratio") 
+  labs(x = "Age", y = "Sodium-to-Potassium Ratio") 
 
-r_x = 3; r_y = 2
-
-# For patient 1
-x = test_set$age[1]
-y = test_set$ratio[1]
-
-size = if(knitr::is_latex_output()) 97 else 120
-
-p + coord_cartesian(xlim = c(x - r_x, x + r_x), ylim = c(y - r_y, y + r_y)) +
-    geom_point(aes(x = x, y = y), colour = "#E66101", size = size, shape = 1) +
-    geom_point(aes(x = x, y = y), colour = "#E66101", size = 4, shape = 8) 
+r_x = 3.2; r_y = 2
+size = if(knitr::is_latex_output()) 112 else 113
 
 # For patient 2
 x = test_set$age[2]
 y = test_set$ratio[2]
 
-p + coord_cartesian(xlim = c(x - r_x, x + r_x), ylim = c(y - r_y, y + r_y)) +
-    geom_point(aes(x = x, y = y), colour = "#E66101", size = size, shape = 1) +
-    geom_point(aes(x = x, y = y), colour = "#E66101", size = 4, shape = 8) 
+p2 = p + coord_cartesian(xlim = c(x - r_x, x + r_x), ylim = c(y - r_y, y + r_y)) +
+  geom_point(aes(x = test_set$age[2], y = test_set$ratio[2]), colour = "gray50", size = size, shape = 1) +
+  geom_point(aes(x = test_set$age[2], y = test_set$ratio[2]), colour = "black", size = 4, shape = 8) +
+  annotate("text", x = x, y = y + r_y - 0.3, label = "New Patient 2", size = 4.2, fontface = "bold")
 
 # For patient 3
 x = test_set$age[3]
 y = test_set$ratio[3]
 
-p + coord_cartesian(xlim = c(x - r_x, x + r_x), ylim = c(y - r_y, y + r_y)) +
-    geom_point(aes(x = x, y = y), colour = "#E66101", size = size, shape = 1) +
-    geom_point(aes(x = x, y = y), colour = "#E66101", size = 4, shape = 8)
+p3 = p + coord_cartesian(xlim = c(x - r_x, x + r_x), ylim = c(y - r_y, y + r_y)) +
+  geom_point(aes(x = x, y = y), colour = "gray50", size = size, shape = 1) +
+  geom_point(aes(x = x, y = y), colour = "black", size = 4, shape = 8) +
+  annotate("text", x = x, y = y + r_y - 0.3, label = "New Patient 3", size = 4.2, fontface = "bold")
+
+p2 + p3
 ```
 
-This example highlights key considerations for using kNN effectively. The choice of *k* strongly influences the decision boundary, with smaller values emphasizing local variation and larger values yielding smoother classifications. The distance metric shapes how similarity is assessed, and appropriate feature scaling ensures that all features contribute meaningfully. Together, these design decisions play a critical role in the success of kNN in practice.
+This example highlights key considerations for using kNN effectively. The choice of *k* strongly influences the decision boundary: smaller values emphasize local variation, while larger values yield smoother classifications. The distance metric determines how similarity is assessed, and proper feature scaling ensures that all variables contribute meaningfully. Together, these design choices play a crucial role in the success of kNN in practice. In the next sections, we explain how kNN measures similarity and explore how to choose the optimal value of *k*.
 
 ## How Does kNN Measure Similarity? {#sec-ch7-knn-distance-metrics}
 

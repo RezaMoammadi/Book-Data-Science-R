@@ -404,14 +404,14 @@ window.Quarto = {
 <p>Unlike many algorithms that involve an explicit training phase, kNN follows a <em>lazy learning</em> strategy. It stores the entire training dataset and postpones computation until a prediction is needed. When a new observation arrives, the algorithm calculates its distance from all training points, identifies the <em>k</em> closest neighbors, and assigns the most common class among them. The choice of <em>k</em>, the number of neighbors used, is crucial: small values make the model sensitive to local patterns, while larger values promote broader generalization. Because kNN defers all computation until prediction, it avoids upfront model fitting but shifts the computational burden to the prediction phase.</p>
 <section id="how-does-knn-classify-a-new-observation" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="how-does-knn-classify-a-new-observation">How Does kNN Classify a New Observation?</h3>
 <p>When classifying a new observation, the kNN algorithm first computes its <em>distance</em> to all data points in the training set, typically using the <em>Euclidean distance</em>. It then identifies the <em>k</em> nearest neighbors and assigns the most frequent class label among them as the predicted outcome.</p>
-<p><a href="#fig-ch7-knn-image" class="quarto-xref">Figure&nbsp;<span>7.1</span></a> illustrates this idea using a toy dataset with two classes: <span style="color: red;">Class A (red circles)</span> and <span style="color: blue;">Class B (blue squares)</span>. A new data point, shown as a <em>dark star</em>, must be assigned to one of the two classes. The classification result depends on the chosen value of <em>k</em>:</p>
+<p><a href="#fig-ch7-knn-image" class="quarto-xref">Figure&nbsp;<span>7.1</span></a> illustrates this idea using a toy dataset with two classes: <span style="color: orange;">Class A (orange circles)</span> and <span style="color: blue;">Class B (blue squares)</span>. A new data point, shown as a <em>dark star</em>, must be assigned to one of the two classes. The classification result depends on the chosen value of <em>k</em>:</p>
 <ul>
 <li><p>When <span class="math inline">\(k = 3\)</span>, the three closest neighbors include two blue squares and one red circle. Since the majority class is <em>Class B</em>, the new point is labeled accordingly.</p></li>
 <li><p>When <span class="math inline">\(k = 6\)</span>, the nearest neighbors include four red circles and two blue squares, resulting in a prediction of <em>Class A</em>.</p></li>
 </ul>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch7-knn-image" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-ch7-knn-image" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch7-knn-image-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch7_knn.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:52.0%" data-fig-pos="H">
 </div>
@@ -429,81 +429,36 @@ Figure&nbsp;7.1: A two-dimensional toy dataset with two classes (Class A and Cla
 <p>Finally, the effectiveness of kNN often hinges on proper data preprocessing. Feature selection, scaling, and outlier handling all play a significant role in ensuring that distance computations reflect meaningful structure in the data, topics we address in the next sections.</p>
 </section></section><section id="a-simple-example-of-knn-classification" class="level2" data-number="7.3"><h2 data-number="7.3" class="anchored" data-anchor-id="a-simple-example-of-knn-classification">
 <span class="header-section-number">7.3</span> A Simple Example of kNN Classification</h2>
-<p>To further illustrate how kNN operates in practice, consider a simplified classification example involving drug prescriptions. We use a synthetic dataset of 200 patients that records each patient’s <em>age</em>, <em>sodium-to-potassium (Na/K) ratio</em> in the blood, and the prescribed drug type. Although artificially generated, the dataset mimics patterns commonly found in real clinical data. Details of the data generation process are provided in Section <a href="1-Intro-R.html#sec-intro-R-exercises" class="quarto-xref"><span>1.20</span></a>. The dataset is available in the <strong>liver</strong> package under the name <code>drug</code>.</p>
-<p><a href="#fig-ch7-ex-drug-1" class="quarto-xref">Figure&nbsp;<span>7.2</span></a> visualizes the distribution of patient records. Each point represents a patient, with different shapes and colors used to indicate drug type. <span style="color: red;">Red circles</span> correspond to Drug A, <span style="color: green;">green triangles</span> to Drug B, and <span style="color: blue;">blue squares</span> to Drug C.</p>
+<p>To illustrate how kNN operates in practice, consider a simplified classification example involving drug prescriptions. We use a synthetic dataset of 200 patients that records each patient’s <em>age</em>, <em>sodium-to-potassium (Na/K) ratio</em> in the blood, and the prescribed drug type. Although artificially generated, the dataset mimics patterns commonly found in real clinical data. Details of the data generation process are provided in Section <a href="1-Intro-R.html#sec-intro-R-exercises" class="quarto-xref"><span>1.20</span></a>. The dataset is available in the <strong>liver</strong> package under the name <code>drug</code>. <a href="#fig-ch7-ex-drug-2" class="quarto-xref">Figure&nbsp;<span>7.2</span></a> visualizes the distribution of patient records, where each point represents a patient. The dataset includes three drug types—Drug A, Drug B, and Drug C—indicated by different colors and shapes.</p>
+<p>Suppose three new patients arrive at the clinic, and we need to determine which drug is most suitable for them based on their <em>age</em> and <em>sodium-to-potassium ratio</em>. Patient 1 is 40 years old with a Na/K ratio of 30.5. Patient 2 is 28 years old with a ratio of 9.6, and Patient 3 is 61 years old with a ratio of 10.5. These patients are shown as dark stars in <a href="#fig-ch7-ex-drug-2" class="quarto-xref">Figure&nbsp;<span>7.2</span></a>, with their three nearest neighbors highlighted in gray.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch7-ex-drug-1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
-<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch7-ex-drug-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="7-Classification-kNN_files/figure-html/fig-ch7-ex-drug-1-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%" data-fig-pos="H">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch7-ex-drug-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;7.2: Scatter plot of Age vs.&nbsp;Sodium/Potassium Ratio for 200 patients, with drug type indicated by color and shape.
-</figcaption></figure>
-</div>
-</div>
-</div>
-<p>Suppose three new patients arrive at the clinic, and we need to determine which drug is most suitable for them based on their <em>age</em> and <em>sodium-to-potassium ratio</em>. Patient 1 is a 40-year-old with a Na/K ratio of 30.5. Patient 2 is 28 years old with a Na/K ratio of 9.6. Patient 3 is 61 years old with a Na/K ratio of 10.5.</p>
-<p>These patients are represented by large orange circles with cross markers in <a href="#fig-ch7-ex-drug-2" class="quarto-xref">Figure&nbsp;<span>7.3</span></a>. The following analysis explores how kNN assigns drug classifications to these individuals based on proximity to labeled cases in the training data.</p>
-<div class="cell" data-layout-align="center">
-<div class="cell-output-display">
-<div id="fig-ch7-ex-drug-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-ch7-ex-drug-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch7-ex-drug-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="7-Classification-kNN_files/figure-html/fig-ch7-ex-drug-2-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%" data-fig-pos="H">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch7-ex-drug-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;7.3: Scatter plot of age versus sodium/potassium ratio for 200 patients, with drug type shown by color and shape. The three new patients are highlighted with large orange circles.
+Figure&nbsp;7.2: Scatter plot of age versus sodium-to-potassium ratio for 200 patients, with drug type indicated by color and shape. The three new patients are shown as dark stars, and their three nearest neighbors are highlighted with gray circles.
 </figcaption></figure>
 </div>
 </div>
 </div>
-<p>For Patient 1, who lies deep within a cluster of green-circle points (Drug A), the classification is straightforward. All nearest neighbors belong to Drug A, making the prediction confident and unambiguous.</p>
-<p>For Patient 2, the outcome depends on the choice of <em>k</em>. When <span class="math inline">\(k = 1\)</span>, the nearest neighbor is a blue square, so the predicted class is Drug C. With <span class="math inline">\(k = 2\)</span>, there is a tie between Drug B and Drug C, leaving no clear majority. At <span class="math inline">\(k = 3\)</span>, two of the three nearest neighbors are blue squares, so the prediction is again Drug C.</p>
-<p>For Patient 3, the classification is more uncertain. With <span class="math inline">\(k = 1\)</span> or <span class="math inline">\(k = 2\)</span>, the patient is equally close to both red and blue points, so voting provides no decisive result. At <span class="math inline">\(k = 3\)</span>, the three nearest neighbors each represent a different class, making the prediction entirely ambiguous.</p>
-<div class="cell" data-layout-nrow="2" data-layout-align="center">
-<div id="fig-ch7-ex-drug-3" class="quarto-layout-panel">
+<p>For new Patient 1, located deep within a cluster of green-circle points (Drug A), the classification is straightforward. All nearest neighbors belong to Drug A, making the prediction clear and confident.</p>
+<p>For new Patient 2, the outcome depends on the chosen value of <em>k</em>, as shown in the left panel of <a href="#fig-ch7-ex-drug-3" class="quarto-xref">Figure&nbsp;<span>7.3</span></a>. When <span class="math inline">\(k = 1\)</span>, the nearest neighbor is a blue square, so the predicted class is Drug C. With <span class="math inline">\(k = 2\)</span>, there is a tie between Drug B and Drug C, leaving no clear majority. At <span class="math inline">\(k = 3\)</span>, two of the three nearest neighbors are blue squares, so the prediction remains Drug C. What happens if we increase <em>k</em> even further? The model begins to smooth the decision boundary, reducing noise sensitivity but potentially missing finer local details.</p>
+<p>For new Patient 3, the classification is more uncertain, as seen in the right panel of <a href="#fig-ch7-ex-drug-3" class="quarto-xref">Figure&nbsp;<span>7.3</span></a>. With <span class="math inline">\(k = 1\)</span> or <span class="math inline">\(k = 2\)</span>, the patient lies nearly equidistant from both red and blue points, leading to an unstable classification. At <span class="math inline">\(k = 3\)</span>, the three nearest neighbors each represent a different class, making the prediction entirely ambiguous. What would happen if the patient’s sodium-to-potassium ratio were slightly higher or lower? Even a small shift could move this patient closer to one cluster or another, changing the predicted class entirely. This highlights a key limitation of kNN: when observations fall near class boundaries, prediction confidence decreases sharply.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch7-ex-drug-3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch7-ex-drug-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div class="quarto-layout-row">
-<div class="cell-output-display quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ch7-ex-drug-3" style="flex-basis: 50.0%;justify-content: center;">
-<div id="fig-ch7-ex-drug-3-1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
-<figure class="quarto-float quarto-subfloat-fig figure"><div aria-describedby="fig-ch7-ex-drug-3-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="7-Classification-kNN_files/figure-html/fig-ch7-ex-drug-3-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H" data-ref-parent="fig-ch7-ex-drug-3">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ch7-ex-drug-3-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-(a) Patient 1
-</figcaption></figure>
-</div>
-</div>
-<div class="cell-output-display quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ch7-ex-drug-3" style="flex-basis: 50.0%;justify-content: center;">
-<div id="fig-ch7-ex-drug-3-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
-<figure class="quarto-float quarto-subfloat-fig figure"><div aria-describedby="fig-ch7-ex-drug-3-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="7-Classification-kNN_files/figure-html/fig-ch7-ex-drug-3-2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H" data-ref-parent="fig-ch7-ex-drug-3">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ch7-ex-drug-3-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-(b) Patient 2
-</figcaption></figure>
-</div>
-</div>
-</div>
-<div class="quarto-layout-row">
-<div class="cell-output-display quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-ch7-ex-drug-3" style="flex-basis: 50.0%;justify-content: center;">
-<div id="fig-ch7-ex-drug-3-3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
-<figure class="quarto-float quarto-subfloat-fig figure"><div aria-describedby="fig-ch7-ex-drug-3-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="7-Classification-kNN_files/figure-html/fig-ch7-ex-drug-3-3.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H" data-ref-parent="fig-ch7-ex-drug-3">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-ch7-ex-drug-3-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-(c) Patient 3
-</figcaption></figure>
-</div>
-</div>
-</div>
+<img src="7-Classification-kNN_files/figure-html/fig-ch7-ex-drug-3-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch7-ex-drug-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;7.4: Zoom-in plots for the three new patients and their nearest neighbors. The left plot is for Patient 1, the middle plot is for Patient 2, and the right plot is for Patient 3.
+Figure&nbsp;7.3: Zoomed-in views of new Patient 2 (left) and new Patient 3 (right) with their three nearest neighbors.
 </figcaption></figure>
 </div>
 </div>
-<p>This example highlights key considerations for using kNN effectively. The choice of <em>k</em> strongly influences the decision boundary, with smaller values emphasizing local variation and larger values yielding smoother classifications. The distance metric shapes how similarity is assessed, and appropriate feature scaling ensures that all features contribute meaningfully. Together, these design decisions play a critical role in the success of kNN in practice.</p>
+</div>
+<p>This example highlights key considerations for using kNN effectively. The choice of <em>k</em> strongly influences the decision boundary: smaller values emphasize local variation, while larger values yield smoother classifications. The distance metric determines how similarity is assessed, and proper feature scaling ensures that all variables contribute meaningfully. Together, these design choices play a crucial role in the success of kNN in practice. In the next sections, we explain how kNN measures similarity and explore how to choose the optimal value of <em>k</em>.</p>
 </section><section id="sec-ch7-knn-distance-metrics" class="level2" data-number="7.4"><h2 data-number="7.4" class="anchored" data-anchor-id="sec-ch7-knn-distance-metrics">
 <span class="header-section-number">7.4</span> How Does kNN Measure Similarity?</h2>
 <p>Suppose you are a physician comparing two patients based on age and sodium-to-potassium (Na/K) ratio. One patient is 40 years old with a Na/K ratio of 30.5, and the other is 28 years old with a ratio of 9.6. Which of these patients is more similar to a new case you are evaluating?</p>
@@ -517,18 +472,18 @@ Figure&nbsp;7.4: Zoom-in plots for the three new patients and their nearest neig
 \text{dist}(x, y) = \sqrt{(x_1 - y_1)^2 + (x_2 - y_2)^2 + \ldots + (x_n - y_n)^2},
 \]</span></p>
 <p>where <span class="math inline">\(x = (x_1, x_2, \ldots, x_n)\)</span> and <span class="math inline">\(y = (y_1, y_2, \ldots, y_n)\)</span> are the feature vectors.</p>
-<p>For example, suppose we want to compute the Euclidean distance between two new patients from the previous section, using their <em>age</em> and <em>sodium-to-potassium (Na/K) ratio</em>. Patient 1 is 40 years old with a Na/K ratio of 30.5, and Patient 2 is 28 years old with a Na/K ratio of 9.6. The Euclidean distance between these two patients is visualized in <a href="#fig-ch7-euclidean-distance" class="quarto-xref">Figure&nbsp;<span>7.5</span></a> in a two-dimensional feature space, where each axis represents one of the features (age and Na/K ratio). The line connecting Patient 1 <span class="math inline">\((40, 30.5)\)</span> and Patient 2 <span class="math inline">\((28, 9.6)\)</span> represents their Euclidean distance:</p>
+<p>For example, suppose we want to compute the Euclidean distance between two new patients from the previous section, using their <em>age</em> and <em>sodium-to-potassium (Na/K) ratio</em>. Patient 1 is 40 years old with a Na/K ratio of 30.5, and Patient 2 is 28 years old with a Na/K ratio of 9.6. The Euclidean distance between these two patients is visualized in <a href="#fig-ch7-euclidean-distance" class="quarto-xref">Figure&nbsp;<span>7.4</span></a> in a two-dimensional feature space, where each axis represents one of the features (age and Na/K ratio). The line connecting Patient 1 <span class="math inline">\((40, 30.5)\)</span> and Patient 2 <span class="math inline">\((28, 9.6)\)</span> represents their Euclidean distance:</p>
 <p><span class="math display">\[
 \text{dist}(x, y) = \sqrt{(40 - 28)^2 + (30.5 - 9.6)^2} = \sqrt{144 + 436.81} = 24.11
 \]</span></p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch7-euclidean-distance" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-ch7-euclidean-distance" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch7-euclidean-distance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="7-Classification-kNN_files/figure-html/fig-ch7-euclidean-distance-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" data-fig-pos="H">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch7-euclidean-distance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;7.5: Visual representation of Euclidean distance between two patients in 2D space.
+Figure&nbsp;7.4: Visual representation of Euclidean distance between two patients in 2D space.
 </figcaption></figure>
 </div>
 </div>
@@ -607,7 +562,7 @@ x_{\text{scaled}} = \frac{x - \text{mean}(x)}{\text{sd}(x)}.
 </section><section id="sec-ch7-knn-proper-scaling" class="level3" data-number="7.5.3"><h3 data-number="7.5.3" class="anchored" data-anchor-id="sec-ch7-knn-proper-scaling">
 <span class="header-section-number">7.5.3</span> Preventing Data Leakage during Scaling</h3>
 <p>Scaling should be performed <em>after</em> splitting the dataset into training and test sets. This prevents <em>data leakage</em>, a common pitfall in predictive modeling where information from the test set inadvertently influences the model during training. Specifically, parameters such as the mean, standard deviation, minimum, and maximum must be computed <em>only</em> from the training data, and then applied to scale both the training and test sets.</p>
-<p>The comparison in <a href="#fig-ch7-ex-proper-scaling" class="quarto-xref">Figure&nbsp;<span>7.6</span></a> visualizes the importance of applying scaling correctly. The middle panel shows proper scaling using training-derived parameters; the right panel shows the distortion caused by scaling the test data independently.</p>
+<p>The comparison in <a href="#fig-ch7-ex-proper-scaling" class="quarto-xref">Figure&nbsp;<span>7.5</span></a> visualizes the importance of applying scaling correctly. The middle panel shows proper scaling using training-derived parameters; the right panel shows the distortion caused by scaling the test data independently.</p>
 <p>To illustrate, consider the drug classification task from earlier. Suppose <code>age</code> and <code>Na/K ratio</code> are the two predictors. The following code demonstrates both correct and incorrect approaches to scaling, using the <code><a href="https://rdrr.io/pkg/liver/man/minmax.html">minmax()</a></code> function from the <strong>liver</strong> package:</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://book-data-science-r.netlify.app">liver</a></span><span class="op">)</span></span>
@@ -663,7 +618,7 @@ x_{\text{scaled}} = \frac{x - \text{mean}(x)}{\text{sd}(x)}.
 </div>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch7-ex-proper-scaling-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;7.6: Visualization illustrating the difference between proper scaling and improper scaling. The left panel shows the original data without scaling. The middle panel shows the results of proper scaling. The right panel shows the results of improper scaling.
+Figure&nbsp;7.5: Visualization illustrating the difference between proper scaling and improper scaling. The left panel shows the original data without scaling. The middle panel shows the results of proper scaling. The right panel shows the results of improper scaling.
 </figcaption></figure>
 </div>
 </div>
@@ -678,7 +633,7 @@ Figure&nbsp;7.6: Visualization illustrating the difference between proper scalin
 <p>When <em>k</em> is too small, such as <span class="math inline">\(k = 1\)</span>, the model becomes overly sensitive to individual training points. Each new observation is classified based solely on its nearest neighbor, making the model highly reactive to noise and outliers. This often leads to <em>overfitting</em>, where the model performs well on the training data but generalizes poorly to new cases. A small cluster of mislabeled examples, for instance, could disproportionately influence the results.</p>
 <p>As <em>k</em> increases, the algorithm includes more neighbors in its classification decisions, smoothing the decision boundary and reducing the influence of noisy observations. However, when <em>k</em> becomes too large, the model may begin to overlook meaningful patterns, leading to <em>underfitting</em>. If <em>k</em> approaches the size of the training set, predictions may default to the majority class label.</p>
 <p>To determine a suitable value of <em>k</em>, it is common to evaluate a range of options using a validation set or cross-validation. Performance metrics such as accuracy, precision, recall, and the F1-score can guide this choice. These metrics are discussed in detail in Chapter <a href="8-Model-evaluation.html" class="quarto-xref"><span>8</span></a>. For simplicity, we focus here on <em>accuracy</em> (also called the success rate), which measures the proportion of correct predictions.</p>
-<p>As an example, Figure <a href="#fig-ch7-kNN-plot" class="quarto-xref"><span>7.7</span></a> presents the accuracy of the kNN classifier for <em>k</em> values ranging from 1 to 30, generated with the <code><a href="https://rdrr.io/pkg/liver/man/kNN.plot.html">kNN.plot()</a></code> function from the <strong>liver</strong> package in R. Accuracy fluctuates as <em>k</em> increases, with the best performance achieved at <span class="math inline">\(k = 9\)</span>, where the algorithm reaches its highest accuracy.</p>
+<p>As an example, Figure <a href="#fig-ch7-kNN-plot" class="quarto-xref"><span>7.6</span></a> presents the accuracy of the kNN classifier for <em>k</em> values ranging from 1 to 30, generated with the <code><a href="https://rdrr.io/pkg/liver/man/kNN.plot.html">kNN.plot()</a></code> function from the <strong>liver</strong> package in R. Accuracy fluctuates as <em>k</em> increases, with the best performance achieved at <span class="math inline">\(k = 9\)</span>, where the algorithm reaches its highest accuracy.</p>
 <p>Choosing <em>k</em> is ultimately an empirical process informed by validation and domain knowledge. There is no universal rule, but careful experimentation helps identify a value that generalizes well for the problem at hand. A detailed case study in the following section revisits this example and walks through the complete modeling process.</p>
 </section><section id="sec-ch7-knn-churn" class="level2" data-number="7.7"><h2 data-number="7.7" class="anchored" data-anchor-id="sec-ch7-knn-churn">
 <span class="header-section-number">7.7</span> Case Study: Predicting Customer Churn with kNN</h2>
@@ -795,12 +750,12 @@ Figure&nbsp;7.6: Visualization illustrating the difference between proper scalin
 <p>We now apply the <code><a href="https://rdrr.io/pkg/liver/man/kNN.plot.html">kNN.plot()</a></code> function:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch7-kNN-plot" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-ch7-kNN-plot" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch7-kNN-plot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="7-Classification-kNN_files/figure-html/fig-ch7-kNN-plot-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:85.0%" data-fig-pos="H">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch7-kNN-plot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;7.7: Accuracy of the kNN algorithm on the churn dataset for values of k ranging from 1 to 30.
+Figure&nbsp;7.6: Accuracy of the kNN algorithm on the churn dataset for values of k ranging from 1 to 30.
 </figcaption></figure>
 </div>
 </div>
@@ -825,7 +780,7 @@ Figure&nbsp;7.7: Accuracy of the kNN algorithm on the churn dataset for values o
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/liver/man/conf.mat.plot.html">conf.mat.plot</a></span><span class="op">(</span><span class="va">kNN_predict</span>, <span class="va">test_labels</span>, reference <span class="op">=</span> <span class="st">"yes"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="7-Classification-kNN_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:30.0%" data-fig-pos="H"></p>
+<figure class="figure"><p><img src="7-Classification-kNN_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:30.0%" data-fig-pos="H"></p>
 </figure>
 </div>
 </div>
