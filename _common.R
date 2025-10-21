@@ -113,6 +113,82 @@ scale_fill_discrete  <- function(...) ggplot2::discrete_scale("fill",   "book_fi
 scale_colour_discrete <- function(...) ggplot2::discrete_scale("colour","book_color", palette = pal_book_color, ...)
 scale_color_discrete  <- function(...) ggplot2::discrete_scale("color", "book_color", palette = pal_book_color, ...)
 
+# ---- Consistent defaults for geoms ----
+# Histogram
+ggplot2::update_geom_defaults("histogram", list(colour = "white", fill = "#377EB8"))
+
+# Bar plots (discrete data)
+ggplot2::update_geom_defaults("bar", list(colour = "white", fill = "#377EB8"))
+
+# Column plots (used for summarized data, often numeric x)
+ggplot2::update_geom_defaults("col", list(colour = "white", fill = "#377EB8"))
+
+# Default (theoretical reference)
+ggplot2::update_geom_defaults("abline", list(colour = "#377EB8", linewidth = 1))
+
+# Boxplots (distribution plots)
+ggplot2::update_geom_defaults("boxplot", list(
+  colour = "#1B3B6F",      # outline: medium-dark blue
+  fill   = "#E5F4FB",      # fill: very light blue
+  outlier.colour = "#F4A582",  # warm accent for outliers (keeps palette link)
+  outlier.shape  = 16,
+  outlier.size   = 2
+))
+
+# =========================================================
+# Global defaults for points, lines, paths, and smooths
+# (harmonized with your palette)
+# =========================================================
+
+# Points (scatter)
+ggplot2::update_geom_defaults("point", list(
+  colour = "#377EB8",   # warm accent for series
+  size   = 2.2,
+  alpha  = 0.85
+))
+
+# Jittered points (same look as points)
+ggplot2::update_geom_defaults("jitter", list(
+  colour = "#377EB8",
+  size   = 2.0,
+  alpha  = 0.75,
+  width  = 0.15,
+  height = 0.15
+))
+
+# Lines (time series / trends)
+ggplot2::update_geom_defaults("line", list(
+  colour   = "#377EB8",
+  linewidth = 0.8,
+  alpha    = 0.95
+))
+
+# Paths (polylines without ordering by x)
+ggplot2::update_geom_defaults("path", list(
+  colour   = "#377EB8",
+  linewidth = 0.8,
+  alpha    = 0.95
+))
+
+# Smooths (regression lines/bands)
+ggplot2::update_geom_defaults("smooth", list(
+  colour = "#F4A582",   # line
+  fill   = "#A8D5BA",   # band
+  linewidth = 0.9,
+  alpha  = 0.20,        # band transparency
+  se     = TRUE,
+  method = "loess"      # sensible default for small/medium n
+))
+
+# Optional: density (area-style)
+ggplot2::update_geom_defaults("density", list(
+  colour = NA,
+  fill   = "#377EB8",
+  alpha  = 0.8,
+  linewidth = 0
+))
+# =========================================================
+
 # ---- Global Springer-style theme ----
 ggplot2::theme_set(
   ggplot2::theme_minimal(base_size = 11) +

@@ -161,10 +161,10 @@ To see this in action, let us apply a boxplot to the `y` variable (diamond width
 #| fig-height: 4
 
 ggplot(data = diamonds) +
-  geom_boxplot(mapping = aes(y = y), color = "#377EB8", fill = "#e5f4fb")
+  geom_boxplot(mapping = aes(y = y))
 
 ggplot(data = diamonds) +
-  geom_boxplot(mapping = aes(y = y), color = "#377EB8", fill = "#e5f4fb") +
+  geom_boxplot(mapping = aes(y = y)) +
   coord_cartesian(ylim = c(0, 15))
 ```
 
@@ -180,7 +180,7 @@ The following histogram visualizes the distribution of the `y` variable (diamond
 
 ```{r, out.width = "60%"}
 ggplot(data = diamonds) +
-  geom_histogram(aes(x = y), binwidth = 0.5, color = "white", fill = "#2C7BB6")
+  geom_histogram(aes(x = y), binwidth = 0.5)
 ```
 
 In this full-scale view, the concentration of values between 2 and 6 mm is clear, but less frequent values, especially those beyond 15 mm, are hard to see due to scale compression.
@@ -189,7 +189,7 @@ To focus on the rare and extreme cases, we zoom in on the lower portion of the f
 
 ```{r, out.width = "60%"}
 ggplot(data = diamonds) +
-  geom_histogram(mapping = aes(x = y), binwidth = 0.5, color = "white", fill = "#2C7BB6") +
+  geom_histogram(mapping = aes(x = y), binwidth = 0.5) +
   coord_cartesian(ylim = c(0, 30))
 ```
 
@@ -314,12 +314,12 @@ To assess the effect of imputation visually, the scatter plots below show the re
 #| fig-width: 4
 #| fig-height: 4
 
-ggplot(diamonds, aes(x = y, y = price)) + 
-  geom_point(color = "#377EB8", size = 0.5, alpha = 0.6) +
+ggplot(diamonds) + 
+  geom_point(aes(x = y, y = price), size = 0.5, alpha = 0.6) +
   labs(title = "With Outliers", x = "Diamond Size (y)", y = "Price") 
 
-ggplot(diamonds_2, aes(x = y, y = price)) + 
-  geom_point(color = "#377EB8", size = 0.5, alpha = 0.6) +
+ggplot(diamonds_2) + 
+  geom_point(aes(x = y, y = price), size = 0.5, alpha = 0.6) +
   labs(title = "After Imputation", x = "Diamond Size (y)", y = "Price") 
 ```
 
@@ -361,11 +361,9 @@ One caution: scaling can obscure real-world units or exaggerate the effect of ou
 
 When one feature ranges from 0 to 1 and another spans thousands, models that rely on distances, like *k*-nearest neighbors, may be skewed toward features with larger scales. Min-max scaling addresses this by rescaling each feature to a common range, typically $[0, 1]$, so that no single variable dominates due to its units.
 
-The transformation is defined by the formula:
-$$
+The transformation is defined by the formula: $$
 x_{\text{scaled}} = \frac{x - x_{\text{min}}}{x_{\text{max}} - x_{\text{min}}},
-$$
-where $x$ is the original value, and $x_{\text{min}}$ and $x_{\text{max}}$ are the minimum and maximum values of the feature. This method ensures that the minimum value becomes 0 and the maximum becomes 1.
+$$ where $x$ is the original value, and $x_{\text{min}}$ and $x_{\text{max}}$ are the minimum and maximum values of the feature. This method ensures that the minimum value becomes 0 and the maximum becomes 1.
 
 Min-max scaling is especially useful for algorithms that use distance or gradient information, including neural networks and support vector machines. However, this technique is sensitive to outliers: extreme values can stretch the scale, compressing most of the data into a narrow band and reducing resolution for typical values.
 
@@ -378,13 +376,11 @@ To see min-max scaling in action, we apply it to the `carat` variable in the *di
 #| fig-height: 4
 
 ggplot(data = diamonds) +
-  geom_histogram(mapping = aes(x = carat), bins = 30,
-                 color = "white", fill = "#2C7BB6") +
+  geom_histogram(mapping = aes(x = carat)) +
   ggtitle("Before Min-Max Scaling") 
 
 ggplot(data = diamonds) +
-  geom_histogram(mapping = aes(x = minmax(carat)), bins = 30,
-                 color = "white", fill = "#2C7BB6") +
+  geom_histogram(mapping = aes(x = minmax(carat))) +
   ggtitle("After Min-Max Scaling") 
 ```
 
@@ -414,13 +410,11 @@ To illustrate, let us apply z-score scaling to the `carat` variable in the *diam
 #| fig-height: 4
 
 ggplot(data = diamonds) +
-  geom_histogram(mapping = aes(x = carat), bins = 30,
-                 color = "white", fill = "#2C7BB6") +
+  geom_histogram(mapping = aes(x = carat)) +
   ggtitle("Before Z-Score Scaling") 
 
 ggplot(data = diamonds) +
-  geom_histogram(mapping = aes(x = zscore(carat)), bins = 30,
-                 color = "white", fill = "#2C7BB6") +
+  geom_histogram(mapping = aes(x = zscore(carat))) +
   ggtitle("After Z-Score Scaling") 
 ```
 
@@ -449,11 +443,11 @@ When a categorical feature follows a meaningful order or ranking, ordinal encodi
 
 Consider the `cut` feature in the *diamonds* dataset, which represents increasing levels of quality:
 
-* "Fair" $\mapsto$ 1
-* "Good" $\mapsto$ 2
-* "Very Good" $\mapsto$ 3
-* "Premium" $\mapsto$ 4
-* "Ideal" $\mapsto$ 5
+-   "Fair" $\mapsto$ 1
+-   "Good" $\mapsto$ 2
+-   "Very Good" $\mapsto$ 3
+-   "Premium" $\mapsto$ 4
+-   "Ideal" $\mapsto$ 5
 
 In this dataset, `cut` is already stored as a *factor* variable. We can use the `factor()` function to explicitly define its levels and assign corresponding numeric labels:
 
@@ -647,17 +641,18 @@ Categorical variables often contain many unique values, which can complicate mod
 
 The `native.country` variable includes `r length(levels(adult$native.country))` distinct countries. Modeling each country as a separate category would unnecessarily expand the feature space and dilute predictive power. To improve interpretability and reduce sparsity, we group the countries into broader geographic regions that reflect cultural and linguistic proximity:
 
-- *Europe:* France, Germany, Greece, Hungary, Ireland, Italy, Netherlands, Poland, Portugal, United Kingdom, Yugoslavia.
+-   *Europe:* France, Germany, Greece, Hungary, Ireland, Italy, Netherlands, Poland, Portugal, United Kingdom, Yugoslavia.
 
-- *North America:* United States, Canada, Outlying US territories (Guam, US Virgin Islands, etc.).
+-   *North America:* United States, Canada, Outlying US territories (Guam, US Virgin Islands, etc.).
 
-- *Latin America:* Mexico, El Salvador, Guatemala, Honduras, Nicaragua, Cuba, Dominican Republic, Puerto Rico, Colombia, Ecuador, Peru.
+-   *Latin America:* Mexico, El Salvador, Guatemala, Honduras, Nicaragua, Cuba, Dominican Republic, Puerto Rico, Colombia, Ecuador, Peru.
 
-- *Caribbean:* Jamaica, Haiti, Trinidad and Tobago.
+-   *Caribbean:* Jamaica, Haiti, Trinidad and Tobago.
 
-- *Asia:* Cambodia, China, Hong Kong, India, Iran, Japan, Laos, Philippines, South Korea (recorded as “South” in the dataset), Taiwan, Thailand, Vietnam.
+-   *Asia:* Cambodia, China, Hong Kong, India, Iran, Japan, Laos, Philippines, South Korea (recorded as “South” in the dataset), Taiwan, Thailand, Vietnam.
 
 The reclassification is performed using the `fct_collapse()` function from the **forcats** package. This function is designed for factor manipulation and allows you to combine multiple existing levels into broader, user-defined categories. It takes a factor variable as input and a set of named groups, where each name defines a new level and the associated vector lists the original levels to be merged. This approach keeps the factor variable tidy and avoids manual recoding.
+
 ```{r message = FALSE}
 library(forcats)
 
@@ -723,12 +718,12 @@ To explore this further, we visualize the distribution using both a boxplot and 
 #| fig-width: 4
 #| fig-height: 4
 
-ggplot(data = adult, aes(y = capital.loss)) +
-     geom_boxplot(color = "#377EB8", fill = "#e5f4fb") +
+ggplot(data = adult) +
+     geom_boxplot(aes(y = capital.loss)) +
      ggtitle("Boxplot of Capital Loss")
 
-ggplot(data = adult, aes(x = capital.loss)) +
-     geom_histogram(bins = 30, color = "white", fill = "#2C7BB6") +
+ggplot(data = adult) +
+     geom_histogram(aes(x = capital.loss)) +
      ggtitle("Histogram of Capital Loss")
 ```
 
@@ -743,12 +738,12 @@ To focus more closely on the nonzero values, we restrict our analysis to rows wh
 
 subset_adult <- subset(adult, capital.loss > 0)
 
-ggplot(data = subset_adult, aes(y = capital.loss)) +
-     geom_boxplot(color = "#377EB8", fill = "#e5f4fb") +
+ggplot(data = subset_adult) +
+     geom_boxplot(aes(y = capital.loss)) +
      ggtitle("Boxplot of Nonzero Capital Loss")
 
-ggplot(data = subset_adult, aes(x = capital.loss)) +
-     geom_histogram(bins = 30, color = "white", fill = "#2C7BB6") +
+ggplot(data = subset_adult) +
+     geom_histogram(aes(x = capital.loss)) +
      ggtitle("Histogram of Nonzero Capital Loss")
 ```
 
