@@ -128,11 +128,21 @@ ggplot2::update_geom_defaults("abline", list(colour = "#377EB8", linewidth = 1))
 
 # Boxplots (distribution plots)
 ggplot2::update_geom_defaults("boxplot", list(
-  colour = "#1B3B6F",      # outline: medium-dark blue
-  fill   = "#E5F4FB",      # fill: very light blue
-  outlier.colour = "#F4A582",  # warm accent for outliers (keeps palette link)
+  colour = "#001F3F",      # very dark navy for outlines
+  fill   = "#E5F4FB",      # soft light blue fill
+  alpha  = 0.6,            # slight transparency
+  outlier.colour = "#F4A582",
   outlier.shape  = 16,
   outlier.size   = 2
+))
+
+# Boxplots (distribution plots)
+ggplot2::update_geom_defaults("violin", list(
+  colour = "#001F3F",      # very dark navy for outlines
+  fill   = "#E5F4FB",      # soft light blue fill
+  alpha  = 0.6,            # slight transparency
+  linewidth = 0.4
+  #draw_quantiles = c(0.25, 0.5, 0.75)  # show quartiles (consistent summary)
 ))
 
 # =========================================================
@@ -184,7 +194,7 @@ ggplot2::update_geom_defaults("smooth", list(
 ggplot2::update_geom_defaults("density", list(
   colour = NA,
   fill   = "#377EB8",
-  alpha  = 0.8,
+  alpha  = 0.6,
   linewidth = 0
 ))
 # =========================================================
