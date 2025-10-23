@@ -64,19 +64,46 @@ This mindset is well captured by James Clear’s concept of *The Power of Tiny G
 x <- 0:365
 df <- data.frame(
   x = rep(x, 3),
-  y = c((1.01)^x, (0.99)^x, rep(1, length(x))),
-  function_label = factor(rep(c("y = (1.01)^x", "y = (0.99)^x", "y = 1"), each = length(x)))
+  y = c((1.01)^x, rep(1, length(x)), (0.99)^x),
+  function_label = factor(
+    rep(c("y = (1.01)^x", "y = 1", "y = (0.99)^x"), each = length(x)),
+    levels = c("y = (1.01)^x", "y = 1", "y = (0.99)^x")
+  )
 )
 
-ggplot(df, aes(x = x, y = y, color = function_label)) +
-  geom_line(size = 0.6, arrow = arrow(length = unit(0.2, "cm"))) +
-  annotate("text", x = 210, y = 27, label = "1% Better Every Day", color = "darkgreen", size = 5) +
-  annotate("text", x = 295, y = 3, label = "Static", color = "blue", size = 5) +
-  labs(title = "The Power of Tiny Gains",
-       x = "Days",
-       y = "Improvement",
-       color = "Function") + #scale_color_manual(values=c("#CC6666", "#9999CC", "#66CC99"))
-  scale_color_manual(values=c("red", "darkgreen", "blue"))
+ggplot(df, aes(x = x, y = y, color = function_label, linetype = function_label)) +
+  geom_line(
+    size = 0.8,
+    lineend = "round",
+    arrow = arrow(length = unit(0.18, "cm"), type = "closed", ends = "last")
+  ) +
+  scale_color_manual(values = c(
+    "y = (1.01)^x" = "#4E9F3D",  # growth
+    "y = 1"        = "#6C8CD9",  # static
+    "y = (0.99)^x" = "#D55E00"   # decline
+  )) +
+  scale_linetype_manual(values = c(
+    "y = (1.01)^x" = "solid",
+    "y = 1"        = "dashed",
+    "y = (0.99)^x" = "dotdash"
+  )) +
+  annotate("text", x = 210, y = 27, label = "1% Better Every Day", color = "#4E9F3D", size = 5) +
+  annotate("text", x = 295, y = 3,  label = "Static", color = "#6C8CD9", size = 5) +
+  labs(
+    title = "The Power of Tiny Gains",
+    x = "Days", y = "Improvement",
+    color = "Function", linetype = "Function"
+  ) +
+  guides(
+    color = guide_legend(override.aes = list(size = 1.5)),
+    linetype = guide_legend(override.aes = list(size = 1.5))
+  ) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.02))) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
+  )
 ```
 
 Learning R is not about mastering everything at once. It is about making steady progress, one concept at a time. With each small success (loading a dataset, creating a plot, writing a function), you are building skills that will support you throughout your data science journey. Be patient, stay curious, and trust the process. Growth in programming, as in data, is often exponential, just like the green line in [Figure @fig-ch1-tiny-gains].
