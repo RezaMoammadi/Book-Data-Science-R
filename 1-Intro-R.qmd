@@ -378,6 +378,81 @@ You will encounter many functions throughout this book, from basic operations li
 
 Throughout this book, you will use many built-in functions, often combining them to perform complex tasks in just a few lines of code. For now, focus on understanding how functions are structured and practicing with common examples.
 
+## Special Operators in R
+
+As you begin composing multi-step analyses, a few operators can make R code clearer and easier to read. This section introduces three that you will often encounter in examples, documentation, and online resources: the pipe operators `%>%` (from the *magrittr* and *dplyr* packages) and `|>` (base R), and the namespace operator `::`.
+
+Pipes express a sequence of operations from left to right. Instead of nesting functions, you write one step per line, which improves the readability of data manipulation code. The two pipe operators serve the same purpose but differ slightly in syntax and origin.
+
+### The `%>%` Operator (from *magrittr*/*dplyr*) {.unnumbered}
+
+The `%>%` operator passes the left-hand side (LHS) as the first argument to the function on the right-hand side (RHS). It is part of *magrittr* and widely used in *dplyr* workflows.
+
+```{r}
+library(dplyr)
+
+mtcars %>%
+  filter(cyl == 6) %>%
+  summarise(mean_hp = mean(hp), n = n())
+```
+
+This can be read as: take `mtcars`, filter to six cylinders, then compute a summary.
+
+Two useful patterns demonstrate its flexibility:
+
+```r
+# Pipe into a non–first argument using the placeholder `.`
+mtcars %>% mutate(hp_scaled = hp / 100) %>% quantile(., probs = 0.9)
+
+# Apply a short inline expression
+mtcars %>% { .[.$mpg > 25, c("mpg", "hp")] }
+```
+
+Good practice with `%>%`:
+
+* Keep each step short and purposeful (for example, `filter → mutate → summarise`).
+* If a step becomes complex, assign it to a variable rather than extending the pipeline.
+* Prefer named arguments for readability.
+
+The next operator, `|>`, was introduced in base R and provides a similar but simpler mechanism for chaining functions without loading additional packages.
+
+### The `|>` Operator (base R, R ≥ 4.1) {.unnumbered}
+
+The base pipe `|>` behaves much like `%>%`, passing the LHS as the first argument to the RHS function. Because it is built into R, no extra packages are needed.
+
+```{r}
+mtcars |>
+  subset(gear == 4) |>
+  with(mean(mpg))
+```
+
+> **Readability tip:** Pipes make code clearer, but they are not mandatory. Use them when they simplify logic, and break pipelines that become long or difficult to follow.
+
+While pipes simplify the flow of data between functions, the `::` operator serves a different role: it identifies exactly which package a function belongs to, improving transparency.
+
+### Calling Functions from a Specific Package with `::` {.unnumbered}
+
+When multiple packages define functions with the same name, `::` ensures that you call the intended one without loading the entire package.
+
+```r
+# Call a function explicitly from a package's namespace
+liver::partition()
+
+# Build a plot using ggplot2 functions without loading the package
+ggplot2::ggplot(mtcars, ggplot2::aes(mpg, hp)) + ggplot2::geom_point()
+```
+
+This approach clarifies dependencies and supports reproducibility, especially in collaborative projects.
+(Advanced users may encounter `:::`, which accesses non-exported functions, but this is generally discouraged.)
+
+Quick comparison of the three operators:
+
+* `%>%` (*magrittr*): Common in tidyverse workflows; supports the `.` placeholder and inline expressions.
+* `|>` (base R): Built-in and dependency-free; use anonymous functions for non–first arguments.
+* `::`: Calls a function explicitly from a specific package, improving clarity and reproducibility.
+
+Although this book focuses on data science applications rather than programming conventions, familiarity with these operators is valuable. They make code concise, expressive, and easier to share. Later chapters use them selectively to balance clarity with accessibility.
+
 ## Import Data into R {#sec-ch1-import-data}
 
 Before you can explore, model, or visualize anything in R, you first need to bring data into your session. Importing data is the starting point for any analysis, and R supports a wide range of formats, including text files, Excel spreadsheets, and datasets hosted on the web. Depending on your needs and the file type, you can choose from several efficient methods to load your data.
@@ -513,7 +588,7 @@ Once loaded, `churn` will appear in your Environment tab and can be used like an
 
 Using datasets embedded in packages like **liver** ensures that your analysis is reproducible and portable across systems, since the data can be loaded consistently in any R session.
 
-## Why Data Types Matter in R
+## Data Types in R
 
 In R, every object (whether a number, string, or logical value) has a data type. These types play a critical role in how R stores, processes, and interprets data. Recognizing the correct type is essential for ensuring that computations behave as expected and that analyses yield valid results.
 
