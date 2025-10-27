@@ -306,7 +306,7 @@
 \title{{Data Science Foundations and Machine Learning with R: From Data
 to Decisions}}
 \author{\href{https://www.uva.nl/profile/a.mohammadi}{{Reza Mohammadi}}}
-\date{23 October 2025}
+\date{26 October 2025}
 
 \begin{document}
 \maketitle
@@ -1529,6 +1529,150 @@ combining them to perform complex tasks in just a few lines of code. For
 now, focus on understanding how functions are structured and practicing
 with common examples.
 
+\section{Special Operators in R}\label{special-operators-in-r}
+
+As you begin composing multi-step analyses, a few operators can make R
+code clearer and easier to read. This section introduces three that you
+will often encounter in examples, documentation, and online resources:
+the pipe operators \texttt{\%\textgreater{}\%} (from the \emph{magrittr}
+and \emph{dplyr} packages) and \texttt{\textbar{}\textgreater{}} (base
+R), and the namespace operator \texttt{::}.
+
+Pipes express a sequence of operations from left to right. Instead of
+nesting functions, you write one step per line, which improves the
+readability of data manipulation code. The two pipe operators serve the
+same purpose but differ slightly in syntax and origin.
+
+\subsection*{\texorpdfstring{The \texttt{\%\textgreater{}\%} Operator
+(from
+\emph{magrittr}/\emph{dplyr})}{The \%\textgreater\% Operator (from magrittr/dplyr)}}\label{the-operator-from-magrittrdplyr}
+\addcontentsline{toc}{subsection}{The \texttt{\%\textgreater{}\%}
+Operator (from \emph{magrittr}/\emph{dplyr})}
+
+The \texttt{\%\textgreater{}\%} operator passes the left-hand side (LHS)
+as the first argument to the function on the right-hand side (RHS). It
+is part of \emph{magrittr} and widely used in \emph{dplyr} workflows.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(dplyr)}
+
+\NormalTok{mtcars }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{filter}\NormalTok{(cyl }\SpecialCharTok{==} \DecValTok{6}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarise}\NormalTok{(}\AttributeTok{mean\_hp =} \FunctionTok{mean}\NormalTok{(hp), }\AttributeTok{n =} \FunctionTok{n}\NormalTok{())}
+\NormalTok{      mean\_hp n}
+   \DecValTok{1} \FloatTok{122.2857} \DecValTok{7}
+\end{Highlighting}
+\end{Shaded}
+
+This can be read as: take \texttt{mtcars}, filter to six cylinders, then
+compute a summary.
+
+Two useful patterns demonstrate its flexibility:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Pipe into a non–first argument using the placeholder \textasciigrave{}.\textasciigrave{}}
+\NormalTok{mtcars }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{mutate}\NormalTok{(}\AttributeTok{hp\_scaled =}\NormalTok{ hp }\SpecialCharTok{/} \DecValTok{100}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{quantile}\NormalTok{(., }\AttributeTok{probs =} \FloatTok{0.9}\NormalTok{)}
+
+\CommentTok{\# Apply a short inline expression}
+\NormalTok{mtcars }\SpecialCharTok{\%\textgreater{}\%}\NormalTok{ \{ .[.}\SpecialCharTok{$}\NormalTok{mpg }\SpecialCharTok{\textgreater{}} \DecValTok{25}\NormalTok{, }\FunctionTok{c}\NormalTok{(}\StringTok{"mpg"}\NormalTok{, }\StringTok{"hp"}\NormalTok{)] \}}
+\end{Highlighting}
+\end{Shaded}
+
+Good practice with \texttt{\%\textgreater{}\%}:
+
+\begin{itemize}
+\tightlist
+\item
+  Keep each step short and purposeful (for example,
+  \texttt{filter\ →\ mutate\ →\ summarise}).
+\item
+  If a step becomes complex, assign it to a variable rather than
+  extending the pipeline.
+\item
+  Prefer named arguments for readability.
+\end{itemize}
+
+The next operator, \texttt{\textbar{}\textgreater{}}, was introduced in
+base R and provides a similar but simpler mechanism for chaining
+functions without loading additional packages.
+
+\subsection*{\texorpdfstring{The \texttt{\textbar{}\textgreater{}}
+Operator (base R, R ≥
+4.1)}{The \textbar\textgreater{} Operator (base R, R ≥ 4.1)}}\label{the-operator-base-r-r-4.1}
+\addcontentsline{toc}{subsection}{The \texttt{\textbar{}\textgreater{}}
+Operator (base R, R ≥ 4.1)}
+
+The base pipe \texttt{\textbar{}\textgreater{}} behaves much like
+\texttt{\%\textgreater{}\%}, passing the LHS as the first argument to
+the RHS function. Because it is built into R, no extra packages are
+needed.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{mtcars }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{subset}\NormalTok{(gear }\SpecialCharTok{==} \DecValTok{4}\NormalTok{) }\SpecialCharTok{|\textgreater{}}
+  \FunctionTok{with}\NormalTok{(}\FunctionTok{mean}\NormalTok{(mpg))}
+\NormalTok{   [}\DecValTok{1}\NormalTok{] }\FloatTok{24.53333}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{quote}
+\textbf{Readability tip:} Pipes make code clearer, but they are not
+mandatory. Use them when they simplify logic, and break pipelines that
+become long or difficult to follow.
+\end{quote}
+
+While pipes simplify the flow of data between functions, the \texttt{::}
+operator serves a different role: it identifies exactly which package a
+function belongs to, improving transparency.
+
+\subsection*{\texorpdfstring{Calling Functions from a Specific Package
+with
+\texttt{::}}{Calling Functions from a Specific Package with ::}}\label{calling-functions-from-a-specific-package-with}
+\addcontentsline{toc}{subsection}{Calling Functions from a Specific
+Package with \texttt{::}}
+
+When multiple packages define functions with the same name, \texttt{::}
+ensures that you call the intended one without loading the entire
+package.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Call a function explicitly from a package\textquotesingle{}s namespace}
+\NormalTok{liver}\SpecialCharTok{::}\FunctionTok{partition}\NormalTok{()}
+
+\CommentTok{\# Build a plot using ggplot2 functions without loading the package}
+\NormalTok{ggplot2}\SpecialCharTok{::}\FunctionTok{ggplot}\NormalTok{(mtcars, ggplot2}\SpecialCharTok{::}\FunctionTok{aes}\NormalTok{(mpg, hp)) }\SpecialCharTok{+}\NormalTok{ ggplot2}\SpecialCharTok{::}\FunctionTok{geom\_point}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+This approach clarifies dependencies and supports reproducibility,
+especially in collaborative projects. (Advanced users may encounter
+\texttt{:::}, which accesses non-exported functions, but this is
+generally discouraged.)
+
+Quick comparison of the three operators:
+
+\begin{itemize}
+\tightlist
+\item
+  \texttt{\%\textgreater{}\%} (\emph{magrittr}): Common in tidyverse
+  workflows; supports the \texttt{.} placeholder and inline expressions.
+\item
+  \texttt{\textbar{}\textgreater{}} (base R): Built-in and
+  dependency-free; use anonymous functions for non--first arguments.
+\item
+  \texttt{::}: Calls a function explicitly from a specific package,
+  improving clarity and reproducibility.
+\end{itemize}
+
+Although this book focuses on data science applications rather than
+programming conventions, familiarity with these operators is valuable.
+They make code concise, expressive, and easier to share. Later chapters
+use them selectively to balance clarity with accessibility.
+
 \section{Import Data into R}\label{sec-ch1-import-data}
 
 Before you can explore, model, or visualize anything in R, you first
@@ -1790,7 +1934,7 @@ Using datasets embedded in packages like \textbf{liver} ensures that
 your analysis is reproducible and portable across systems, since the
 data can be loaded consistently in any R session.
 
-\section{Why Data Types Matter in R}\label{why-data-types-matter-in-r}
+\section{Data Types in R}\label{data-types-in-r}
 
 In R, every object (whether a number, string, or logical value) has a
 data type. These types play a critical role in how R stores, processes,
@@ -2574,7 +2718,7 @@ the built-in \emph{mtcars} dataset:
 \end{Shaded}
 
 \begin{center}
-\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-53-1.pdf}
+\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-55-1.pdf}
 \end{center}
 
 In this example:
@@ -2645,7 +2789,7 @@ using a smoothed trend line:
 \end{Shaded}
 
 \begin{center}
-\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-55-1.pdf}
+\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-57-1.pdf}
 \end{center}
 
 This plot shows the general pattern in the data, helping you see whether
@@ -2663,7 +2807,7 @@ instance, layering a scatter plot with a smooth trend line:
 \end{Shaded}
 
 \begin{center}
-\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-56-1.pdf}
+\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-58-1.pdf}
 \end{center}
 
 The order of layers matters: here, the trend line is plotted first, and
@@ -2708,7 +2852,7 @@ the color of each point to the number of cylinders in a car:
 \end{Shaded}
 
 \begin{center}
-\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-58-1.pdf}
+\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-60-1.pdf}
 \end{center}
 
 Because \texttt{color\ =\ cyl} is inside \texttt{aes()}, the color is
@@ -2735,13 +2879,13 @@ Other aesthetics you can vary include \texttt{size}, \texttt{alpha}
 
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-59-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-61-1.pdf}}
 \end{center}
 \end{minipage}%
 %
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-59-2.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-61-2.pdf}}
 \end{center}
 \end{minipage}%
 
@@ -2761,7 +2905,7 @@ all points blue or using a custom color---set the attributes
 \end{Shaded}
 
 \begin{center}
-\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-60-1.pdf}
+\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-62-1.pdf}
 \end{center}
 
 You can specify colors either by name (e.g., \texttt{color\ =\ "blue"})
@@ -2933,7 +3077,7 @@ mean 10 and standard deviation 2.
 \end{Shaded}
 
 \begin{center}
-\includegraphics[width=0.6\linewidth,height=\textheight,keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-64-1.pdf}
+\includegraphics[width=0.6\linewidth,height=\textheight,keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-66-1.pdf}
 \end{center}
 
 You can also simulate multiple variables and combine them into a data
@@ -3573,7 +3717,7 @@ Exercises}\label{more-challenging-exercises}
 \end{Shaded}
 
 \begin{center}
-\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-69-1.pdf}
+\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{1-Intro-R_files/figure-pdf/unnamed-chunk-71-1.pdf}
 \end{center}
 
 \begin{enumerate}
