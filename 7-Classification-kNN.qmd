@@ -6,7 +6,7 @@ source("_common.R")
 
 *Classification* is a foundational task in machine learning that enables algorithms to assign observations to specific categories based on patterns learned from labeled data. Whether filtering spam emails, detecting fraudulent transactions, or predicting customer churn, classification plays a vital role in many real-world decision systems. This chapter introduces classification as a form of supervised learning, emphasizing accessible and practical methods for those beginning their journey into predictive modeling.
 
-This chapter also marks the start of *Step 5: Modeling* in the Data Science Workflow (Figure @fig-ch2_DSW). Building on earlier chapters, where we cleaned and explored data, developed statistical reasoning, and prepared datasets for modeling, we now turn to the exciting stage of applying machine learning techniques.
+This chapter also marks the start of *Step 5: Modeling* in the Data Science Workflow (Figure @fig-ch2_DSW). Building on earlier chapters—where we cleaned and explored data, developed statistical reasoning, and prepared datasets for modeling—we now turn to the stage of applying machine learning techniques. In particular, this chapter builds directly on *Step 4: Data Setup to Model* (Chapter [-@sec-ch6-setup-data]), where datasets were partitioned, validated, and prepared (including encoding and scaling) to ensure fair, leakage-free evaluation.
 
 ### What This Chapter Covers {.unnumbered}
 
@@ -181,15 +181,12 @@ In this medical scenario, similarity is measured by comparing numerical features
 A widely used measure of similarity in kNN is *Euclidean distance*, which corresponds to the straight-line, or “as-the-crow-flies,” distance between two points. It is intuitive, easy to compute, and well-suited to numerical data with comparable scales.
 
 Mathematically, the Euclidean distance between two points $x$ and $y$ in $n$-dimensional space is given by:
-
 $$
 \text{dist}(x, y) = \sqrt{(x_1 - y_1)^2 + (x_2 - y_2)^2 + \ldots + (x_n - y_n)^2},
 $$
-
 where $x = (x_1, x_2, \ldots, x_n)$ and $y = (y_1, y_2, \ldots, y_n)$ are the feature vectors.
 
 For example, suppose we want to compute the Euclidean distance between two new patients from the previous section, using their *age* and *sodium-to-potassium (Na/K) ratio*. Patient 1 is 40 years old with a Na/K ratio of 30.5, and Patient 2 is 28 years old with a Na/K ratio of 9.6. The Euclidean distance between these two patients is visualized in @fig-ch7-euclidean-distance in a two-dimensional feature space, where each axis represents one of the features (age and Na/K ratio). The line connecting Patient 1 $(40, 30.5)$ and Patient 2 $(28, 9.6)$ represents their Euclidean distance:
-
 $$
 \text{dist}(x, y) = \sqrt{(40 - 28)^2 + (30.5 - 9.6)^2} = \sqrt{144 + 436.81} = 24.11
 $$
@@ -243,87 +240,31 @@ Although other distance metrics exist, such as Manhattan distance, Hamming dista
 
 In the next section, we will examine how preprocessing steps like feature scaling ensure that Euclidean distance yields meaningful and balanced comparisons across features.
 
-## Data Preparation for the kNN Algorithm {#sec-ch7-knn-prep}
+## Data Setup for kNN {#sec-ch7-knn-prep}
 
-The performance of the kNN algorithm is highly sensitive to how the data is preprocessed. Because kNN relies on distance calculations to assess similarity between observations, careful preparation of the feature space is essential. Two key steps, *encoding categorical variables* and *feature scaling*, ensure that both categorical and numerical features are properly represented in these computations.
+The performance of the kNN algorithm is highly sensitive to how the data is set up. Because kNN relies on distance calculations to assess similarity between observations, careful setup of the feature space is essential. Two key steps—encoding categorical variables and feature scaling—ensure that both categorical and numerical features are properly represented in these computations. These tasks belong to the *Data Setup to Model* phase introduced in Chapter [-@sec-ch6-setup-data] (see @fig-ch2_DSW).
 
-These tasks fall under the *Data Preparation* phase of the Data Science Workflow introduced in Chapter [-@sec-ch3-data-preparation] (see @fig-ch2_DSW), and they also connect to the broader *Data Setup to Model* stage discussed in Chapter [-@sec-ch6-setup-data]. Regardless of where they appear in the workflow, these steps are crucial for ensuring that kNN's similarity measures are both consistent and reliable.
+To make this idea concrete, imagine working with patient data that includes *age*, *sodium-to-potassium (Na/K) ratio*, *marital status*, and *education level*. While *age* and *Na/K ratio* are numeric, *marital status* and *education* are categorical. To prepare these features for a distance-based model, we must convert them into numerical form in a way that preserves their original meaning.
 
-To make this concrete, imagine you are working with patient data that includes age, sodium-to-potassium (Na/K) ratio, marital status, and education level. While age and Na/K ratio are numeric, marital status and education are categorical. To prepare these features for use in a distance-based model, we must convert them into numerical form in a way that preserves their original meaning.
+In most tabular datasets (such as the *bank* and *churn* datasets introduced earlier), features include a mix of categorical and numerical variables. A recommended approach is to first *encode* the categorical features into numeric format and then *scale* all numerical features. This sequence ensures that distance calculations occur on a unified numerical scale without introducing artificial distortions. 
 
-In most tabular datasets (such as the *bank* and *churn* datasets introduced earlier), features include a mix of categorical and numerical variables. A common and recommended approach is to begin by *encoding* the categorical features into numeric format and then *scaling* all numeric features. This sequence ensures that distance calculations are performed on a unified numerical scale, without introducing artificial distortions. In the next subsection, we begin with the challenge of encoding categorical variables.
+The appropriate encoding strategy depends on whether a variable is *binary*, *nominal*, or *ordinal*. These techniques were detailed in Chapter [-@sec-ch6-setup-data]: general guidance in Section [-@sec-ch6-encoding], ordinal handling in Section [-@sec-ch6-ordinal-encoding], and one-hot encoding in Section [-@sec-ch6-one-hot-encoding].
 
-### Encoding Categorical Variables for kNN
+Once categorical variables have been encoded, all numerical features—both original and derived—should be scaled so that they contribute fairly to similarity calculations. Even after encoding, features can differ widely in range. For example, *age* might vary from 20 to 70, while *income* could range from 20,000 to 150,000. Without proper scaling, features with larger magnitudes may dominate the distance computation, leading to biased neighbor selection.
 
-Categorical features, such as marital status or education level, are common in real-world datasets. But before they can be used in kNN, they must be transformed into numerical form in a way that aligns with how distances are computed. Since kNN cannot interpret text labels or non-numeric values directly, all categorical variables must be encoded. The appropriate encoding strategy depends on whether the variable is binary, nominal, or ordinal.
+Two widely used scaling methods address this issue: *min–max scaling* (introduced in Section [-@sec-ch6-minmax]) and *z-score scaling* (introduced in Section [-@sec-ch6-zscore]). Min–max scaling rescales values to a fixed range, typically $[0, 1]$, ensuring that all features contribute on the same numerical scale. Z-score scaling centers features at zero and scales them by their standard deviation, making it preferable when features have different units or contain outliers.
 
-These techniques were introduced in Chapter [-@sec-ch3-data-preparation], with general guidance in Section [-@sec-ch3-encoding], ordinal handling in Section [-@sec-ch3-ordinal-encoding], and one-hot encoding in Section [-@sec-ch3-one-hot-encoding].
+Min–max scaling is generally suitable when feature values are bounded and preserving relative distances is important. Z-score scaling is better when features are measured in different units or affected by outliers, as it reduces the influence of extreme values.
 
-#### Binary and Nominal Variables: One-Hot Encoding {.unnumbered}
-
-For *binary* variables (such as `yes`/`no`) and *nominal* variables (such as `marital status` with categories `single`, `married`, `divorced`), the recommended approach is *one-hot encoding*. This technique creates one binary column per category, omitting one to avoid redundancy, a practice that avoids the so-called dummy variable trap, where perfectly collinear columns interfere with computation.
-
-For example, the `marital` variable in the *bank* dataset can be one-hot encoded using the `one.hot()` function from the **liver** package:
-
-```{r}
-data(bank)
-
-# One-hot encode the "marital" variable from the bank dataset
-bank_encoded <- one.hot(bank, cols = c("marital"), dropCols = FALSE)
-str(bank_encoded)
-```
-
-This transformation results in three new binary columns: `marital_single`, `marital_married`, and `marital_divorced`. Each column indicates whether the corresponding category is present (1) or absent (0) for each observation. This approach ensures that categories are treated as equidistant in the feature space, which is appropriate for variables with no inherent order.
-
-#### Ordinal Variables: Numeric Encoding {.unnumbered}
-
-For *ordinal* variables with a meaningful ranking (such as `low`, `medium`, `high`), it is preferable to assign numeric values that reflect their order (e.g., `low = 1`, `medium = 2`, `high = 3`). This preserves the ordinal relationship in the distance calculations, which would otherwise be ignored by one-hot encoding.
-
-For instance, consider the `education` variable in the *bank* dataset, which has levels `primary`, `secondary`, and `tertiary`. We can convert this variable to numeric scores as follows:
-
-```{r}
-# Convert an ordinal variable to numeric scores
-bank$education_level <- factor(bank$education, 
-                               levels = c("primary", "secondary", "tertiary"), 
-                               labels = c(1, 2, 3))
-```
-
-This numeric encoding preserves the order of education levels and allows the kNN model to treat higher education levels as more distant from lower ones, reflecting real-world meaning.
-
-In summary, binary and nominal variables should be transformed using one-hot encoding to ensure that each category contributes fairly and independently to the distance computation. For ordinal variables, assigning numeric values that reflect their inherent order allows kNN to capture meaningful relationships. By contrast, treating unordered categories as numeric, such as assigning `red = 1`, `blue = 2`, `green = 3`, can mislead the model by introducing artificial structure. Careful attention to encoding choices helps preserve the integrity of similarity calculations and improves classification accuracy.
-
-### Scaling Features for Fair Distance Computation
-
-Once categorical variables have been encoded, all numeric features, both original and derived, should be scaled to ensure they contribute fairly to similarity calculations. Even after proper encoding, features may vary substantially in scale. For example, *age* might range from 20 to 70, while *income* could vary from 20,000 to 150,000. Without appropriate scaling, variables with larger ranges may disproportionately influence the distance calculation, resulting in biased neighbor selection.
-
-Two widely used methods address this issue: *min-max scaling* and *z-score standardization*. These approaches were introduced in Section [-@sec-ch3-feature-scaling].
-
-*Min-max scaling* transforms each feature to a fixed range, typically $[0, 1]$, using the formula:
-
-$$
-x_{\text{scaled}} = \frac{x - \min(x)}{\max(x) - \min(x)},
-$$
-
-where $\min(x)$ and $\max(x)$ are calculated from the training data. This method ensures that all features contribute on the same numerical scale.
-
-*Z-score standardization* rescales features so that they have a mean of 0 and a standard deviation of 1:
-
-$$
-x_{\text{scaled}} = \frac{x - \text{mean}(x)}{\text{sd}(x)}.
-$$
-
-This method is more appropriate when features contain outliers or have differing units or distributions.
-
-Min-max scaling is generally appropriate when feature values are bounded and preserving relative distances is important. Z-score standardization is preferable when features are measured on different units or contain outliers, as it reduces the influence of extreme values.
+Before moving on, it is essential to apply scaling correctly, only after the dataset has been partitioned, to avoid *data leakage*. The next subsection explains this principle in detail.
 
 ### Preventing Data Leakage during Scaling {#sec-ch7-knn-proper-scaling}
 
-Scaling should be performed *after* splitting the dataset into training and test sets. This prevents *data leakage*, a common pitfall in predictive modeling where information from the test set inadvertently influences the model during training. Specifically, parameters such as the mean, standard deviation, minimum, and maximum must be computed *only* from the training data, and then applied to scale both the training and test sets.
+Scaling should be performed *after* splitting the dataset into training and test sets. This prevents *data leakage*, a common pitfall in predictive modeling where information from the test set inadvertently influences the model during training. Specifically, parameters such as the mean, standard deviation, minimum, and maximum must be computed *only* from the training data and then applied to scale both the training and test sets.
 
 The comparison in @fig-ch7-ex-proper-scaling visualizes the importance of applying scaling correctly. The middle panel shows proper scaling using training-derived parameters; the right panel shows the distortion caused by scaling the test data independently.
 
-To illustrate, consider the drug classification task from earlier. Suppose `age` and `Na/K ratio` are the two predictors. The following code demonstrates both correct and incorrect approaches to scaling, using the `minmax()` function from the **liver** package:
-
+To illustrate, consider the drug classification task from earlier. Suppose `age` and `Na/K ratio` are the two predictors. The following code demonstrates both correct and incorrect approaches to scaling using the `minmax()` function from the **liver** package:
 ```{r}
 library(liver)
 
@@ -483,7 +424,7 @@ test_scaled  = minmax(test_onehot,  col = numeric_vars, min = min_train, max = m
 
 Here, the `sapply()` function is used to compute the column-wise minimum and maximum values across the selected numeric variables in the training set. These values define the scaling range. The `minmax()` function from the **liver** package then applies min-max scaling to both the training and test sets, using the training-set values as reference.
 
-This step ensures that all features are on a comparable scale, preventing those with larger ranges from disproportionately influencing the kNN distance calculations. For a more detailed discussion of scaling methods and best practices, see Section [-@sec-ch3-feature-scaling] and the preparation overview in Section [-@sec-ch7-knn-prep]. Now that the data are properly encoded and scaled, we are ready to choose the optimal number of neighbors (k) for the kNN algorithm.
+This step ensures that all features are on a comparable scale, preventing those with larger ranges from disproportionately influencing the kNN distance calculations. For a more detailed discussion of scaling methods and best practices, see Section [-@sec-ch6-feature-scaling] and the preparation overview in Section [-@sec-ch7-knn-prep]. Now that the data are properly encoded and scaled, we are ready to choose the optimal number of neighbors (k) for the kNN algorithm.
 
 ### Finding the Best Value for (k)
 
@@ -504,9 +445,13 @@ formula = churn ~ voice.plan_yes + intl.plan_yes + account.length +
 
 We now apply the `kNN.plot()` function:
 
-```{r fig-ch7-kNN-plot, echo = FALSE, out.width = "85%", fig.cap = "Accuracy of the kNN algorithm on the churn dataset for values of k ranging from 1 to 30."}
-kNN.plot(formula = formula, train = train_scaled, test = test_scaled, 
-         k.max = 30, reference = "yes", set.seed = 42)
+```{r fig-ch7-kNN-plot, echo = TRUE, out.width = "85%", fig.cap = "Accuracy of the kNN algorithm on the churn dataset for values of k ranging from 1 to 30."}
+kNN.plot(formula = formula, 
+         train = train_scaled, 
+         test = test_scaled, 
+         k.max = 30, 
+         reference = "yes", 
+         set.seed = 42)
 ```
 
 The arguments to `kNN.plot()` play distinct roles in shaping the evaluation. The `train` and `test` inputs specify the scaled datasets used for training and testing, respectively, ensuring that distance calculations are made on comparable feature scales. The `k.max = 30` argument defines the maximum number of neighbors to evaluate, allowing us to observe model behavior across a range of values. Setting `reference = "yes"` indicates that the `"yes"` class represents the positive outcome of interest, i.e., customer churn. Finally, `set.seed = 42` ensures reproducibility by fixing the random seed for any internal random processes.

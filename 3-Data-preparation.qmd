@@ -4,33 +4,27 @@ source("_common.R")
 
 # Data Preparation in Practice: From Raw Data to Insight {#sec-ch3-data-preparation}
 
-You have just been handed a spreadsheet with hundreds of columns and thousands of rows—missing entries, inconsistent labels, strange codes like `-999`, and values that make no sense. How do you begin to turn this chaos into insight?
+You have just been handed a spreadsheet with hundreds of columns and thousands of rows—full of missing entries, inconsistent labels, strange codes like `-999`, and values that defy logic. How do you begin to turn this chaos into insight?
 
-In this chapter, we explore one of the most underestimated yet indispensable stages in the Data Science Workflow: *data preparation*. No matter how sophisticated your algorithm, the quality of your data will ultimately shape the trustworthiness of your results. It is often said that data scientists spend *up to 80% of their time* preparing data, and with good reason.
+In this chapter, we explore one of the most underestimated yet indispensable stages in the Data Science Workflow: *data preparation*. No matter how sophisticated your algorithm, the quality of your data ultimately determines the credibility of your results. It is often said that data scientists spend *up to 80% of their time* preparing data—and with good reason.
 
-In real-world settings, data rarely arrives in a clean, analysis-ready format. Instead, it often includes missing values, outliers, inconsistent entries, and a mix of numerical and categorical variables. Preparing such data means more than just "cleaning"; it involves thoughtful transformation, encoding, and restructuring to support both exploration and modeling.
+In real-world settings, data rarely arrives in a clean, analysis-ready format. It often contains missing values, outliers, and inconsistent entries. By contrast, datasets on platforms such as [Kaggle](https://www.kaggle.com) are typically curated and neatly labeled, often with a clear target variable and well-posed analytical question. These are excellent for learning, but they can give a misleading impression of what real data science work involves. In practice, data is collected for operational rather than analytical purposes, and significant effort is required to make it suitable for decision-making.
 
-By contrast, datasets found on platforms like [Kaggle](https://www.kaggle.com) are typically curated and neatly labeled, often with a clear target variable and well-posed questions. These are excellent for learning, but they can give a misleading impression of what real data science work entails. In practice, data is collected for operational, not analytical, purposes, and significant effort is required to make it useful for decision-making.
+To illustrate data preparation techniques, we begin with the *diamonds* dataset from the **ggplot2** package—a structured and relatively clean dataset ideal for learning foundational skills. Later in the chapter, we turn to the *adult* income dataset, where the same techniques are applied in a more realistic and challenging context.
 
-To bring data preparation techniques to life, we begin with the *diamonds* dataset from the **ggplot2** package, a structured and relatively clean dataset that allows us to practice foundational skills. Later in the chapter, we shift to the *adult* income dataset, where we apply the same techniques to a more realistic, messier context.
+Although this chapter focuses on preparing and cleaning data, several steps—such as detecting outliers and handling missing values—overlap with *Exploratory Data Analysis* (Chapter [-@sec-ch4-EDA]) and *Setting Up Data for Modeling* (Chapter [-@sec-ch6-setup-data]). These stages are often revisited in practice, reflecting the iterative nature of the Data Science Workflow.
 
-Although this chapter focuses on data preparation, many of the steps, such as detecting outliers, handling missing values, and transforming variables, overlap with *Exploratory Data Analysis* (Chapter [-@sec-ch4-EDA]) and *Data Setup to Model* (Chapter [-@sec-ch6-setup-data]). These stages are often revisited in practice, reflecting the iterative nature of the Data Science Workflow.
-
-With a clear understanding of the problem and its connection to the available data, we now move to the next step: preparing the dataset for analysis. This step builds the foundation for meaningful insights and reliable machine learning models, transforming raw information into structured knowledge.
+With a clear understanding of the problem and its relationship to the available data, we now move to the practical task of preparing the dataset for analysis. This step builds the foundation for meaningful insights and reliable machine learning models, transforming raw information into structured knowledge.
 
 ### What This Chapter Covers {.unnumbered}
 
 This chapter introduces the essential techniques for transforming raw data into a format suitable for analysis and modeling. You will learn how to:
 
--   Spot and manage outliers using visualization and filtering to reduce distortion,
+- Identify and manage outliers using visualization and filtering to reduce distortion.  
 
--   Detect and impute missing values to preserve data quality and completeness,
+- Detect and impute missing values to maintain data quality and completeness.  
 
--   Scale numerical features using min-max and z-score methods to ensure comparability,
-
--   Encode categorical variables through ordinal, one-hot, and frequency encoding for use in machine learning algorithms.
-
-To ground these techniques, we begin by clarifying the analytical goals of our first dataset, the *diamonds* dataset, and frame the task of price estimation as a data science problem. The chapter concludes with a hands-on case study using the *adult* income dataset, where you will apply the full data preparation pipeline in a more complex, real-world setting. Together, these skills form a crucial step in the Data Science Workflow and prepare you to build models with clean, structured, and meaningful data.
+We begin by clarifying the analytical goals of the *diamonds* dataset and framing the task of price estimation as a data science problem. The chapter concludes with a hands-on case study using the *adult* income dataset, where you will apply the complete data preparation pipeline in a more complex, real-world context. Together, these skills form a crucial part of the Data Science Workflow and prepare you to build models with clean, structured, and meaningful data.
 
 ## Data Preparation in Action: The *diamonds* Dataset {#sec-ch3-problem-understanding}
 
@@ -327,201 +321,15 @@ These plots illustrate that after removing implausible values and imputing missi
 
 *Try it yourself:* Apply the same technique to the `x` and `z` variables, which represent diamond length and depth. First identify implausible values, recode them as `NA`, and then impute them using random sampling. Reflect on how these changes affect the variables' relationships with price.
 
+
+
 ### Other Imputation Approaches {.unnumbered}
 
 The `impute()` function also supports several simple statistical methods, such as mean, median, and mode imputation. By default, it performs *median imputation*. For more flexible approaches, the `aregImpute()` function from **Hmisc** can be used. It performs predictive imputation using additive regression and bootstrapping, which often produces more realistic estimates than single-value replacements.
 
 Another practical option is the **mice** (Multivariate Imputation by Chained Equations) package. Its `mice()` function performs *multivariate* imputation, modeling each variable with missing values as a function of the others in an iterative process. This method is particularly useful when multiple variables contain missing values that are correlated, as it accounts for their joint relationships and better reflects uncertainty in the imputations. In the case study in Chapter [-@sec-ch13-case-study], we use the `mice()` function from the **mice** package to handle missing values in the *cereal* dataset, demonstrating its application in a realistic data preparation workflow.
 
-Although removing missing records with `na.omit()` is quick and easy, it is usually discouraged unless a large portion of the data is missing or the missingness is systematic. Thoughtful imputation helps preserve valuable information and leads to more reliable results in the next steps, such as encoding categorical variables or scaling numerical ones.
-
-With missing values now properly handled, the dataset is ready for feature scaling, which ensures that numerical variables are on comparable scales.
-
-## Feature Scaling {#sec-ch3-feature-scaling}
-
-What happens when one variable, such as price in dollars, spans tens of thousands, while another, like carat weight, ranges only from 0 to 5? Without scaling, machine learning models that rely on distances or gradients may give disproportionate weight to features with larger numerical ranges, regardless of their actual importance.
-
-*Feature scaling* addresses this imbalance by adjusting the range or distribution of numerical features to make them comparable. It is particularly important for algorithms such as *k*-nearest neighbors (Chapter [-@sec-ch7-classification-knn]), support vector machines, and neural networks. Scaling can also improve optimization stability in models like logistic regression and enhance the interpretability of coefficients.
-
-In the *diamonds* dataset, for example, `carat` ranges from `r round(min(diamonds$carat), 1)` to `r round(max(diamonds$carat), 1)`, while `price` spans from `r min(diamonds$price)` to `r max(diamonds$price)`. Without scaling, features like `price` may dominate the learning process, not because they are more predictive, but simply because of their magnitude.
-
-This section introduces two widely used scaling techniques:
-
--   *Min-Max Scaling* rescales values to a fixed range, typically $[0, 1]$.
-
--   *Z-Score Scaling* centers values at zero with a standard deviation of one.
-
-Choosing between these methods depends on the model and the structure of the data. min-max scaling is preferred when a fixed input range is required (as in neural networks), whereas z-score scaling is better suited for algorithms that assume standardized input distributions or rely on variance-sensitive optimization.
-
-Note that scaling is not always necessary. Tree-based models, such as decision trees and random forests, are scale-invariant and do not require rescaled inputs. But for many other algorithms, scaling improves model performance, convergence speed, and fairness across features.
-
-One caution: scaling can obscure real-world units or exaggerate the effect of outliers, especially when using min-max scaling. As always, the choice of technique should reflect your modeling objectives and the nature of your dataset. In the following sections, we demonstrate how to apply each technique using the *diamonds* dataset.
-
-## Min-Max Scaling
-
-When one feature ranges from 0 to 1 and another spans thousands, models that rely on distances, like *k*-nearest neighbors, may be skewed toward features with larger scales. Min-max scaling addresses this by rescaling each feature to a common range, typically $[0, 1]$, so that no single variable dominates due to its units.
-
-The transformation is defined by the formula: $$
-x_{\text{scaled}} = \frac{x - x_{\text{min}}}{x_{\text{max}} - x_{\text{min}}},
-$$ where $x$ is the original value, and $x_{\text{min}}$ and $x_{\text{max}}$ are the minimum and maximum values of the feature. This method ensures that the minimum value becomes 0 and the maximum becomes 1.
-
-Min-max scaling is especially useful for algorithms that use distance or gradient information, including neural networks and support vector machines. However, this technique is sensitive to outliers: extreme values can stretch the scale, compressing most of the data into a narrow band and reducing resolution for typical values.
-
-::: {#ex-min-max .example}
-To see min-max scaling in action, we apply it to the `carat` variable in the *diamonds* dataset. This variable ranges from approximately `r round(min(diamonds$carat), 1)` to `r round(max(diamonds$carat), 1)`. We use the `minmax()` function from the **liver** package to rescale the values to the $[0, 1]$ interval:
-
-```{r out.width = "100%"}
-#| layout-ncol: 2
-#| fig-width: 4
-#| fig-height: 4
-
-ggplot(data = diamonds) +
-  geom_histogram(mapping = aes(x = carat)) +
-  ggtitle("Before Min-Max Scaling") 
-
-ggplot(data = diamonds) +
-  geom_histogram(mapping = aes(x = minmax(carat))) +
-  ggtitle("After Min-Max Scaling") 
-```
-
-The left panel shows the raw distribution of carat values, while the right panel displays the scaled version. After transformation, all values fall within the $[0, 1]$ range, making this feature numerically comparable to others. This is particularly important when modeling techniques depend on distance or gradient magnitude.
-:::
-
-## Z-Score Scaling
-
-While min-max scaling compresses values into a fixed range, z-score scaling, also known as standardization, centers each numerical feature around zero and scales it to have unit variance. This technique is especially useful for algorithms that assume normally distributed input or rely on gradient-based optimization, such as linear regression, logistic regression, and support vector machines.
-
-The formula for z-score scaling is:
-
-$$
-x_{\text{scaled}} = \frac{x - \text{mean}(x)}{\text{sd}(x)},
-$$
-
-where $x$ is the original feature value, $\text{mean}(x)$ is the mean of the feature, and $\text{sd}(x)$ is its standard deviation. The result, $x_{\text{scaled}}$, tells us how many standard deviations the value is from the mean.
-
-Z-score scaling helps place features with different units or magnitudes on a common footing. However, it is still sensitive to outliers, since both the mean and standard deviation can be influenced by extreme values.
-
-::: {#ex-zscore .example}
-To illustrate, let us apply z-score scaling to the `carat` variable in the *diamonds* dataset. The mean and standard deviation of `carat` are approximately `r round(mean(diamonds$carat), 2)` and `r round(sd(diamonds$carat), 2)`, respectively. We use the `zscore()` function from the **liver** package:
-
-```{r out.width = "100%"}
-#| layout-ncol: 2
-#| fig-width: 4
-#| fig-height: 4
-
-ggplot(data = diamonds) +
-  geom_histogram(mapping = aes(x = carat)) +
-  ggtitle("Before Z-Score Scaling") 
-
-ggplot(data = diamonds) +
-  geom_histogram(mapping = aes(x = zscore(carat))) +
-  ggtitle("After Z-Score Scaling") 
-```
-
-The left panel shows the original distribution of `carat` values. The right panel displays the z-score scaled version, where the values are centered around 0 and spread in units of standard deviation. While the location and scale are adjusted, the shape of the distribution, including any skewness, remains unchanged.
-:::
-
-Note that z-score scaling does not make a variable normally distributed. It standardizes the location and spread but preserves the shape. If the original variable is skewed, it will remain skewed after transformation.
-
-With numerical features now on a comparable scale, the next step is to turn our attention to *categorical variables*. Unlike numerical features, these cannot be used directly in most models—they must be encoded numerically. In the next section, we explore encoding strategies for different types of categorical data, including ordinal and nominal variables.
-
-## Encoding Categorical Features {#sec-ch3-encoding}
-
-Categorical features often need to be transformed into numeric format before they can be used in machine learning models. Algorithms such as *k*-Nearest Neighbors and neural networks require numerical inputs, and failure to encode categorical data properly can lead to misleading results or even errors during model training.
-
-Encoding categorical variables is a critical step in data preparation. It allows us to incorporate qualitative information, such as quality ratings, group memberships, or types, into models that operate on numerical representations. In this section, we explore several encoding techniques and illustrate their use with examples from the *diamonds* dataset, which includes the categorical variables `cut`, `color`, and `clarity`.
-
-The appropriate encoding strategy depends on the nature of the categorical variable. For ordinal variables, those with an inherent ranking, ordinal encoding preserves the order of categories using numerical values. For example, the `cut` variable in the *diamonds* dataset ranges from "Fair" to "Ideal" and benefits from ordinal encoding.
-
-In contrast, nominal variables, categories without intrinsic order, are better served by one-hot encoding. This approach creates binary indicators for each category and is particularly effective for features such as marital status in the *bank* dataset introduced in Chapter [-@sec-ch12-case-study].
-
-In the sections that follow, we demonstrate these encoding techniques in practice, starting with ordinal encoding and one-hot, using the *diamonds* and *bank* datasets as guiding examples.
-
-## Ordinal Encoding {#sec-ch3-ordinal-encoding}
-
-When a categorical feature follows a meaningful order or ranking, ordinal encoding offers a straightforward way to represent that information numerically. Rather than treating each category as independent, this approach assigns numerical values that reflect the inherent order, enabling models to capture rank-based relationships.
-
-Consider the `cut` feature in the *diamonds* dataset, which represents increasing levels of quality:
-
--   "Fair" $\mapsto$ 1
--   "Good" $\mapsto$ 2
--   "Very Good" $\mapsto$ 3
--   "Premium" $\mapsto$ 4
--   "Ideal" $\mapsto$ 5
-
-In this dataset, `cut` is already stored as a *factor* variable. We can use the `factor()` function to explicitly define its levels and assign corresponding numeric labels:
-
-```{r}
-# Convert an ordinal feature to numeric scores
-diamonds$cut_level <- factor(
-  diamonds$cut,
-  levels = c("Fair", "Good", "Very Good", "Premium", "Ideal"),
-  labels = c(1, 2, 3, 4, 5)
-)
-```
-
-If the feature were stored as a *character* variable instead, we would first convert it to a factor before applying this transformation:
-
-```{r}
-diamonds$cut <- factor(diamonds$cut, levels = c("Fair", "Good", "Very Good", "Premium", "Ideal"))
-
-diamonds$cut_level <- as.numeric(diamonds$cut)
-```
-
-Both approaches ensure that the encoded values preserve the correct order of categories.
-
-This transformation retains the ordinal structure and allows models that recognize ordered relationships—such as linear regression, decision trees, or ordinal logistic regression—to make more informed predictions.
-
-However, ordinal encoding should only be used when the order of categories is genuinely meaningful. Applying it to nominal variables such as “red,” “green,” and “blue” would wrongly imply a numerical hierarchy, which can distort model interpretation and performance.
-
-In summary, ordinal encoding is well suited for variables with a natural ranking, where numerical values meaningfully represent category order. For variables without inherent order, a different approach is needed. The next section introduces one-hot encoding, a method designed specifically for nominal features.
-
-## One-Hot Encoding {#sec-ch3-one-hot-encoding}
-
-How can we represent unordered categories, like marital status or race, so that machine learning algorithms can work with them? *One-hot encoding* is a widely used solution. It transforms each unique category into a separate binary column, allowing algorithms to process categorical data without introducing artificial order.
-
-This method is especially useful for *nominal variables*, categorical features with no inherent ranking. For example, a variable like `marital.status` in the *adult* dataset includes categories such as `Divorced`, `Married`, and `Never-married`. One-hot encoding creates binary variables like:
-
--   `marital.status_Divorced`;
--   `marital.status_Married`;
--   `marital.status_Never-married`;
--   `marital.status_Separated`.
-
-Each column indicates the presence (1) or absence (0) of a specific category. If there are $k$ levels, only $k - 1$ binary columns are needed to avoid multicollinearity—the omitted category is implicitly captured when all others are zero.
-
-Let us take a quick look at the `marital.status` variable in the *adult* dataset:
-
-```{r}
-data(adult)
-
-table(adult$marital.status)
-```
-
-The output shows the distribution of values across the five categories. We will use one-hot encoding to transform these into model-ready binary features. This approach ensures that all categories are represented without assuming any order or relationship among them.
-
-Note that one-hot encoding is essential for models that rely on distance metrics (e.g., k-nearest neighbors, neural networks) or linear models where numeric input is required.
-
-### One-Hot Encoding in R
-
-To apply one-hot encoding in practice, we use the `one.hot()` function from the **liver** package. This function automatically detects categorical variables and generates a new column for each unique level, converting them into binary indicators.
-
-Let us apply it to the `marital.status` variable in the *adult* dataset:
-
-```{r}
-# One-hot encode the 'marital.status' variable
-adult_encoded <- one.hot(adult, cols = c("marital.status"), dropCols = FALSE)
-
-# Examine the structure of the resulting dataset
-str(adult_encoded)
-```
-
-The `cols` argument specifies which variable(s) to encode. Setting `dropCols = FALSE` keeps the original variable alongside the new binary columns; use `TRUE` if you prefer to remove it after encoding.
-
-This transformation adds new columns such as `marital.status_Divorced`, `marital.status_Married`, and so on, each indicating whether a given observation belongs to that category.
-
-> *Try it yourself:* What happens if you encode multiple variables at once? Try applying `one.hot()` to both `marital.status` and `race` and inspect the output.
-
-While one-hot encoding is simple and effective, it can quickly increase the number of features, especially when applied to high-cardinality variables (e.g., zip codes or product names). Before encoding, consider whether the added dimensionality is manageable for your model and whether all categories are meaningful for the analysis.
+Although removing missing records with `na.omit()` is quick and easy, it is generally discouraged unless a large portion of the data is missing or the missingness is systematic. Thoughtful imputation preserves valuable information and enhances the quality of subsequent analysis. In the next section, we bring together the methods introduced so far—handling missing values, addressing outliers, and cleaning inconsistent entries—in a hands-on case study that demonstrates how data preparation enables meaningful and trustworthy insights.
 
 ## Case Study: Preparing Data to Predict High Earners {#sec-ch3-data-pre-adult}
 
@@ -631,11 +439,11 @@ Finally, we recheck for missingness to confirm that the imputation succeeded:
 gg_miss_var(adult, show_pct = TRUE)
 ```
 
-The updated plot should confirm that all missing values have been addressed. With this step complete, we are ready to encode categorical variables and scale numerical features, two more critical tasks in preparing the dataset for modeling.
+The updated plot should confirm that all missing values have been addressed. With this step complete, we are ready to prepare categorical features.
 
-### Encoding Categorical Variables
+### Preparing Categorical Features {.unnumbered}
 
-Categorical variables often contain many unique values, which can complicate modeling and lead to overfitting if not handled carefully. In the *adult* dataset, two features, `native.country` and `workclass`, have a relatively high number of categories. To simplify modeling while preserving interpretability, we group related categories into broader, more informative classes.
+Categorical features often contain many unique values, which can complicate analysis and make interpretation less clear. In the *adult* dataset, two features, `native.country` and `workclass`, have a relatively high number of categories. To simplify the analysis while preserving interpretability, we group related categories into broader, more informative classes.
 
 #### Grouping `native.country` by Region {.unnumbered}
 
@@ -755,100 +563,115 @@ Understanding the structure of `capital.loss` also prepares us for handling the 
 
 ## Chapter Summary and Takeaways
 
-This chapter covered the essential steps of data preparation, showing how to transform raw data into a format suitable for analysis. Using the *diamonds* and *adult* datasets, we practiced identifying outliers, handling missing values, scaling numerical features, and encoding categorical variables.
+This chapter introduced the core steps of data preparation, focusing on how to transform raw and inconsistent data into a clean, reliable format suitable for analysis. Using the *diamonds* and *adult* datasets, we practiced identifying and managing outliers, detecting and imputing missing values, and resolving data inconsistencies.
 
-We emphasized that data preparation is not just technical; it is driven by the structure and meaning of each feature. Outliers can distort results, missing values must be addressed carefully, and categorical variables require appropriate encoding. Scaling ensures fairness across features for many algorithms.
+We emphasized that data preparation is not merely a technical exercise but one guided by the structure and meaning of each feature. Outliers can distort relationships, missing values require thoughtful imputation, and inconsistent entries must be corrected to ensure interpretability and validity.
 
-These techniques, though often overlooked, are crucial for building reliable and interpretable models. Clean, well-structured data forms the foundation of every successful data science project.
+These techniques, though often overlooked, are essential for producing trustworthy insights and building models that reflect real patterns rather than noise. Clean, well-organized data forms the foundation of every effective data science project.
 
-Next chapter, we move to exploratory data analysis, where we begin uncovering patterns and relationships that inform our modeling choices.
+In the next chapter, we move from cleaning to *exploring*, using visualization and summary statistics to uncover patterns and relationships that guide our modeling choices.
 
 ## Exercises {#sec-ch3-exercises}
 
-This section includes exercises designed to deepen your understanding of data preparation. They cover conceptual questions, hands-on practice with the *diamonds* and *adult* datasets, and reflection on ethical and real-world issues. These exercises can be completed in R and build on the examples discussed in this chapter.
+The exercises in this chapter are designed to strengthen both conceptual understanding and practical skills in data preparation. They move from foundational questions about data types and missingness to hands-on applications using the *diamonds*, *adult*, and *housePrice* datasets. Through these activities, you will practice identifying outliers, imputing missing values, and cleaning categorical features in real data contexts. The final self-reflection section encourages critical thinking about the role of data preparation in ensuring reliable, ethical, and interpretable analyses.
 
-#### Understanding Data Types {.unnumbered}
+#### Conceptual Questions {.unnumbered}
 
-1.  Explain the difference between continuous and discrete numerical variables, and give a real-world example of each.
+1. Explain the difference between continuous and discrete numerical variables, and provide a real-world example of each.  
 
-2.  How do ordinal and nominal categorical variables differ? Provide one example for each type.
+2. Describe how ordinal and nominal categorical variables differ. Provide one example for each type.  
 
-3.  Use the `typeof()` and `class()` functions in R to investigate how numerical and categorical variables are represented internally.
+3. Use the `typeof()` and `class()` functions in **R** to investigate how numerical and categorical variables are represented internally.  
 
-4.  Why is it important to identify the correct data types before modeling?
+4. Explain why it is important to identify the correct data types before modeling.  
 
-#### Working with the Diamonds Dataset {.unnumbered}
+5. Discuss the advantages and disadvantages of removing outliers versus applying a transformation.  
 
-5.  Use `summary()` to inspect the *diamonds* dataset. What patterns or irregularities do you notice?
+6. In a dataset where 25% of income values are missing, explain which imputation strategy you would use and justify your choice.  
 
-6.  Classify the variables in the *diamonds* dataset as numerical, ordinal, or nominal.
+7. Define the difference between *Missing Completely at Random (MCAR)*, *Missing at Random (MAR)*, and *Missing Not at Random (MNAR)*. Why is this distinction important for selecting an imputation method?  
 
-7.  Create histograms of `carat` and `price`. Describe their distributions and note any skewness or gaps.
+8. Explain why outlier detection should often be performed separately for numerical and categorical variables. Provide one example for each type.  
 
-#### Detecting and Treating Outliers {.unnumbered}
+9. Discuss how data preparation choices, such as imputation or outlier removal, can influence the fairness and interpretability of a predictive model.  
 
-8.  Identify outliers in the `x` variable using boxplots and histograms. If outliers are found, apply a method to handle them as done for `y` in Section [-@sec-ch3-data-pre-outliers].
+10. Describe how reproducibility can be ensured during data preparation. What practices or tools in **R** help document cleaning and transformation steps effectively?
 
-9.  Repeat the process for the `z` variable and comment on the results.
 
-10. Examine the `depth` variable. What method would you use to detect and treat outliers in this case?
+#### Hands-On Practice: Data Preparation for *diamonds* Dataset {.unnumbered}
 
-11. Discuss the pros and cons of removing outliers versus applying a transformation. Use examples from this chapter to support your answer.
+11. Use `summary()` to inspect the *diamonds* dataset. What patterns or irregularities do you observe?  
 
-#### Encoding Categorical Variables {.unnumbered}
+12. Classify all variables in the *diamonds* dataset as numerical, ordinal, or nominal.  
 
-12. Show how to apply ordinal encoding to the `cut` variable in the *diamonds* dataset.
+13. Create histograms of `carat` and `price`. Describe their distributions and note any skewness or gaps.  
 
-13. Demonstrate one-hot encoding for the `color` variable using appropriate R functions.
+14. Identify outliers in the `x` variable using boxplots and histograms. If outliers are found, handle them using a method similar to the one applied to `y` in Section [-@sec-ch3-data-pre-outliers].  
 
-14. What problems can arise when applying ordinal encoding to a nominal variable?
+15. Repeat the outlier detection process for the `z` variable and comment on the results.  
 
-15. Under what conditions is frequency encoding more appropriate than one-hot encoding?
+16. Examine the `depth` variable. Suggest an appropriate method to detect and address outliers in this case.  
 
-#### Exploring the Adult Dataset {.unnumbered}
+17. Compute summary statistics for the variables `x`, `y`, and `z` after outlier handling. How do the results differ from the original summaries?  
 
-16. Load the *adult* dataset from the **liver** package and classify its categorical variables as nominal or ordinal.
+18. Visualize the relationship between `carat` and `price` using a scatter plot. What pattern do you observe, and how might outliers influence it?  
 
-17. Compute the proportion of individuals earning more than \$50K. What does this tell you about income distribution?
+19. Using the `dplyr` package, create a new variable representing the volume of each diamond (`x * y * z`). Summarize and visualize this variable to detect any unrealistic or extreme values.  
 
-18. Generate a boxplot and histogram of `capital.gain`. What insights or anomalies can you identify?
+#### Hands-On Practice: Data Preparation for *adult* Dataset {.unnumbered}
 
-19. Are there any outliers in `capital.gain`? If so, suggest how you would handle them.
+20. Load the *adult* dataset from the **liver** package and classify its categorical variables as nominal or ordinal.  
 
-20. Create a correlation matrix for the numerical variables. What do the correlations reveal about the relationships between features?
+21. Compute the proportion of individuals earning more than \$50K and interpret what this reveals about income distribution.  
 
-#### Feature Engineering and Scaling {.unnumbered}
+22. Create a boxplot and histogram of `capital.gain`. Describe any patterns, anomalies, or extreme values.  
 
-21. Use the `cut()` function to group `age` into three categories: Young ($\le 30$), Middle-aged (31–50), and Senior ($>50$). Name the new variable `Age_Group`.
+23. Identify outliers in `capital.gain` and suggest an appropriate method for handling them.  
 
-22. Calculate the mean `capital.gain` for each `Age_Group`. What does this reveal?
+24. Compute and visualize a correlation matrix for the numerical variables. What do the correlations reveal about the relationships among features?  
 
-23. Create a binary variable indicating whether an individual has nonzero `capital.gain`, and use it to create an exploratory plot.
+25. Use the `cut()` function to group `age` into three categories: Young ($\le 30$), Middle-aged (31–50), and Senior ($>50$). Name the new variable `Age_Group`.  
 
-24. Group the 16 education levels into broader categories using `fct_collapse()`. Propose at least three meaningful groupings.
+26. Calculate the mean `capital.gain` for each `Age_Group`. What trends do you observe?  
 
-25. Define a new variable `net.capital` as the difference between `capital.gain` and `capital.loss`. Analyze its distribution using plots.
+27. Create a binary variable indicating whether an individual has nonzero `capital.gain`, and use it to produce an exploratory plot.  
 
-26. Apply min-max scaling to `age`, `capital.gain`, `capital.loss`, and `hours.per.week` using `mutate()` and summarize the results.
+28. Use `fct_collapse()` to group the 16 education levels into broader categories. Propose at least three meaningful groupings and justify your choices.  
 
-27. Apply z-score scaling to the same variables. How do the results compare to min-max scaling?
+29. Define a new variable `net.capital` as the difference between `capital.gain` and `capital.loss`. Visualize its distribution and comment on your findings.  
 
-#### Modeling and Real-World Scenarios {.unnumbered}
+30. Investigate the relationship between `hours.per.week` and income level using boxplots or violin plots. What differences do you observe between income groups?  
 
-28. If you were designing a credit scoring system, how would you encode features like `employment.type` or `loan.purpose`?
+31. Detect missing or undefined values in the `occupation` variable and replace them with an appropriate imputation method. Justify your choice.  
 
-29. In a dataset where 25% of income values are missing, which imputation strategy would you use, and why?
+32. Examine whether combining certain rare `native.country` categories (for example, by continent or region) improves interpretability without losing important variation. Discuss your reasoning.  
 
-30. A customer satisfaction variable includes five levels from “Very satisfied” to “Very dissatisfied.” Which encoding method is most appropriate, and why?
+#### Hands-On Practice: Data Preparation for *housePrice* Dataset {.unnumbered}
 
-31. Would you handle outliers in patient temperature data differently than outliers in income data? Explain your reasoning.
+33. Load the *housePrice* dataset from the **liver** package. Identify variables with missing values and describe any observable patterns of missingness.  
 
-#### Ethics and Reflection {.unnumbered}
+34. Detect outliers in `SalePrice` using boxplots and histograms. Discuss whether they appear to be data entry errors or meaningful extremes.  
 
-32. What ethical concerns might arise from dropping rows with missing data, particularly for underrepresented groups?
+35. Apply median imputation to one variable with missing data and comment on how the imputed values affect the summary statistics.  
 
-33. How can careless encoding of categorical variables lead to biased or unfair model outcomes? Provide an example.
+36. Suggest two or more improvements you would make to prepare this dataset for modeling.  
 
-34. A model performs well in training but poorly in production. How might decisions made during data preparation explain this discrepancy?
+37. Use the `skimr` package (or `summary()`) to generate an overview of all variables. Which variables may require transformation or grouping before modeling?  
 
-35. Reflect on a dataset you have worked with (or the *housePrice* dataset from the **liver** package). Which data preparation steps would you revise based on the techniques from this chapter?
+38. Create a scatter plot of `GrLivArea` versus `SalePrice`. Identify any potential non-linear relationships or influential points that may warrant further investigation.  
+
+39. Compute the correlation between `OverallQual`, `GrLivArea`, and `SalePrice`. What insights do these relationships provide about property value drivers?  
+
+40. Create a new categorical feature by grouping houses into price tiers (e.g., *Low*, *Medium*, *High*) based on quantiles of `SalePrice`. Visualize the distribution of `OverallQual` across these groups and interpret your findings.  
+
+#### Self-Reflection {.unnumbered}
+
+41. Explain how your approach to handling outliers might differ between patient temperature data and income data.  
+
+42. Consider a model that performs well in training but poorly in production. Reflect on how decisions made during data preparation could contribute to this discrepancy.  
+
+43. Reflect on a dataset you have worked with (or use the *housePrice* dataset). Which data preparation steps would you revise based on the techniques covered in this chapter?  
+
+44. Describe how data preparation choices, such as grouping categories or removing extreme values, can influence the fairness and interpretability of machine learning models.  
+
+45. Summarize the most important lesson you learned from working through this chapter’s exercises. How will it change the way you approach raw data in future projects?  

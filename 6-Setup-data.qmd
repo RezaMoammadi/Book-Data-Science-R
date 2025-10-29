@@ -2,39 +2,45 @@
 source("_common.R")
 ```
 
-# Setting Up Data for Modeling {#sec-ch6-setup-data}
+# Data Setup to Model {#sec-ch6-setup-data}
 
 Suppose a churn prediction model reports 95% accuracy, yet consistently fails to identify customers who actually churn. What went wrong? In many cases, the issue lies not in the algorithm itself but in how the data was prepared for modeling. Before reliable machine learning models can be built, the dataset must be not only clean but also properly structured to support learning, validation, and generalization.
 
-This chapter focuses on the final preparatory step in the Data Science Workflow introduced in @fig-ch2_DSW: *Step 4: Data Setup to Model*. This step involves structuring the dataset in a way that enables fair training, reliable testing, and robust model evaluation.
+This chapter focuses on the fourth stage of the Data Science Workflow shown in @fig-ch2_DSW: *Data Setup to Model*. This stage involves organizing the dataset so that it enables fair training, trustworthy validation, and robust generalization to unseen data.
 
-To accomplish this, we complete three essential tasks:
+To accomplish this, we cover four essential tasks:
 
-1.  *Partitioning*: Splitting the dataset into training and testing subsets.
+1. *Partitioning*: Splitting the dataset into training, validation, and testing subsets.  
 
-2.  *Validating*: Verifying that the subsets are representative of the original data.
+2. *Validating*: Ensuring that the subsets are representative of the overall data distribution.  
 
-3.  *Balancing*: Addressing class imbalance when one class dominates in classification tasks.
+3. *Balancing*: Addressing class imbalance when one category dominates in classification problems.  
 
-The work in previous chapters lays the foundation for this step. In @sec-ch2-Problem-Understanding, you defined the modeling objective. In @sec-ch3-data-preparation, you cleaned the data and transformed key features. Chapter @sec-ch4-EDA guided your exploratory analysis, while @sec-ch5-statistics introduced tools to test whether datasets are statistically comparable.
+4. *Feature Preparation*: Encoding categorical variables and scaling numerical features.
 
-Now, we move to the *setup phase*, a critical, yet often overlooked step. It ensures that the data is not only clean but also statistically sound and properly balanced for modeling. These preparations help prevent common issues such as overfitting, biased evaluation, and data leakage.
+The work in the previous chapters forms the foundation for this stage. In @sec-ch2-Problem-Understanding, you defined the modeling objective. In @sec-ch3-data-preparation, you cleaned the data and handled issues such as missing values and outliers. Chapter @sec-ch4-EDA guided your exploratory analysis, and Chapter @sec-ch5-statistics introduced tools to test whether differences between datasets are statistically meaningful.
 
-This process, particularly for newcomers, raises important questions, such as, *Why is it necessary to partition the data?*, *How can we verify that training and test sets are truly comparable?*, and *What can we do if one class is severely underrepresented?*
+We now move to the *modeling setup phase*, a crucial but often underestimated step. It ensures that the data is not only clean but also statistically sound, well-structured, and ready for modeling. Proper data setup helps prevent common issues such as overfitting, biased evaluation, and data leakage, all of which can undermine model performance in practice.
 
-These are not just technical details. They reflect essential principles in modern data science: *fairness, reproducibility,* and *trust*. By walking through partitioning, validating, and balancing, we lay the groundwork for building models that perform well, and do so credibly, in real-world settings.
+This stage, particularly for newcomers, raises important questions: *Why is it necessary to partition the data?* *How can we verify that training and test sets are truly comparable?* *What can we do if one class is severely underrepresented?* *When and how should we scale or encode features?*
+
+These are not just technical details; they reflect essential principles in modern data science—*fairness, reproducibility,* and *trust*. By walking through partitioning, validation, balancing, and feature preparation, we lay the groundwork for building models that not only perform well but also do so reliably and transparently in real-world settings.
 
 ### What This Chapter Covers {.unnumbered}
 
-This chapter completes *Step 4 of the Data Science Workflow*, *Data Setup to Model*. You will learn how to:
+This chapter completes Step 4 of the Data Science Workflow, *Data Setup to Model*. You will learn how to:
 
--   *Partition* a dataset into training and testing subsets to simulate deployment scenarios.
+- Partition a dataset into training and testing subsets to simulate deployment scenarios.  
 
--   *Validate* that your split is statistically representative and free from data leakage.
+- Validate that the data split is statistically representative and free from data leakage.  
 
--   *Address class imbalance* using oversampling, undersampling, or class weighting techniques.
+- Address class imbalance using oversampling, undersampling, or class weighting techniques.  
 
-By mastering these tasks, you ensure that your data is not only clean but also structured for training machine learning models that are robust, fair, and generalizable.
+- Scale numerical features with min–max and z-score methods to ensure comparability across predictors.  
+
+- Encode categorical variables using ordinal, one-hot, and frequency encoding to make them compatible with machine learning algorithms.  
+
+By mastering these tasks, you will ensure that your data is not only clean but also properly structured for training machine learning models that are robust, fair, and generalizable.
 
 ## Why Is It Necessary to Partition the Data?
 
@@ -107,7 +113,7 @@ While the train–test split is widely used for its simplicity, the resulting pe
 
 Cross-validation is a resampling method that offers a more comprehensive evaluation than a single train–test split. In *k*-fold cross-validation, the dataset is randomly partitioned into *k* non-overlapping subsets (folds) of approximately equal size. The model is trained on *k*–1 folds and evaluated on the remaining fold. This process is repeated *k* times, with each fold serving once as the validation set. The overall performance is then estimated by averaging the metrics across all *k* iterations. Common choices for *k* include 5 or 10, as illustrated in @fig-cross-validation.
 
-```{r fig-cross-validation, echo = FALSE, out.width = "55%", fig.cap = "Illustration of k-fold cross-validation. The dataset is randomly split into k non-overlapping folds (k = 5 shown). In each iteration, the model is trained on k–1 folds (shown in green) and evaluated on the remaining fold (shown in yellow)."}
+```{r fig-cross-validation, echo = FALSE, out.width = "65%", fig.cap = "Illustration of k-fold cross-validation. The dataset is randomly split into k non-overlapping folds (k = 5 shown). In each iteration, the model is trained on k–1 folds (shown in green) and evaluated on the remaining fold (shown in yellow)."}
 knitr::include_graphics("images/ch6_cross_validation.png")
 ```
 
@@ -115,7 +121,7 @@ Cross-validation is especially useful for comparing models or tuning hyperparame
 
 This approach is depicted in @fig-cross-validation-2. It eliminates the need for a fixed validation subset and makes more efficient use of the training data, while preserving an unbiased test set for final performance reporting.
 
-```{r fig-cross-validation-2, echo = FALSE, out.width = "70%", fig.cap = "Cross-validation applied within the training set. The test set is held out for final evaluation only. This strategy eliminates the need for a separate validation set and maximizes the use of available data for both training and validation."}
+```{r fig-cross-validation-2, echo = FALSE, out.width = "80%", fig.cap = "Cross-validation applied within the training set. The test set is held out for final evaluation only. This strategy eliminates the need for a separate validation set and maximizes the use of available data for both training and validation."}
 knitr::include_graphics("images/ch6_cross_validation_2.png")
 ```
 
@@ -230,61 +236,266 @@ Balancing is not always necessary. Many modern algorithms incorporate internal s
 
 In summary, dealing with class imbalance helps the model focus on the right outcomes and make more equitable predictions. It is a crucial preparatory step in classification workflows, particularly when the minority class holds the greatest value.
 
+With class imbalance addressed, the next task is to prepare the predictors for modeling. Many datasets include categorical variables that must be converted into numerical form before they can be used by most machine learning algorithms. In the following section, we explore common strategies for encoding categorical features, followed by scaling methods for numerical variables to ensure consistent measurement across predictors.
+
+## Encoding Categorical Features {#sec-ch6-encoding}
+
+Categorical features often need to be transformed into numerical format before they can be used in machine learning models. Algorithms such as *k*-Nearest Neighbors and neural networks require numerical inputs, and failing to encode categorical data properly can lead to misleading results or even errors during model training.
+
+Encoding categorical variables is a critical part of setting up data for modeling. It allows qualitative information—such as ratings, group memberships, or item types—to be incorporated into models that operate on numerical representations. In this section, we explore common encoding strategies and illustrate their use with examples from the *bank* dataset, which includes the categorical variables `marital` and `education`.
+
+The choice of encoding method depends on the nature of the categorical variable. For *ordinal* variables—those with an inherent ranking—ordinal encoding preserves the order of categories using numeric values. For example, the `education` variable in the *bank* dataset ranges from `primary` to `tertiary` and benefits from ordinal encoding.
+
+In contrast, *nominal* variables, which represent categories without intrinsic order, are better served by one-hot encoding. This approach creates binary indicators for each category and is particularly effective for features such as `marital`, where categories like `single`, `married`, and `divorced` are distinct but unordered.
+
+The following subsections demonstrate these encoding techniques in practice, beginning with ordinal encoding and one-hot encoding. Together, these transformations ensure that categorical predictors are represented in a form that machine learning algorithms can interpret effectively.
+
+## Ordinal Encoding {#sec-ch6-ordinal-encoding}
+
+For *ordinal* features with a meaningful ranking (such as `low`, `medium`, `high`), it is preferable to assign numeric values that reflect their order (e.g., `low = 1`, `medium = 2`, `high = 3`). This preserves the ordinal relationship in distance-based calculations, which would otherwise be lost with one-hot encoding.
+
+Consider the `education` variable in the *bank* dataset, which has levels `primary`, `secondary`, and `tertiary`. We can convert this variable to numeric scores as follows:
+
+```{r}
+data(bank)
+
+# Convert an ordinal variable to numeric scores
+bank$education_level <- factor(bank$education, 
+                         levels = c("primary", "secondary", "tertiary"), 
+                         labels = c(1, 2, 3))
+
+bank$education_level <- as.numeric(bank$education_level)
+```
+
+If the feature were stored as a *character* variable, it should first be converted to a factor before applying this transformation:
+
+```{r}
+bank$education_level <- factor(bank$education, 
+                         levels = c("primary", "secondary", "tertiary"))
+
+bank$education_level <- as.numeric(bank$education_level)
+```
+
+Both approaches ensure that the encoded values preserve the intended order of categories.
+
+> *Try it yourself:* Apply ordinal encoding to the `cut` variable in the *diamonds* dataset. The levels of `cut` are `Fair`, `Good`, `Very Good`, `Premium`, and `Ideal`. Assign numeric values from 1 to 5, reflecting their order from lowest to highest quality.
+
+This transformation retains the ordinal structure and allows models that recognize ordered relationships—such as linear regression, decision trees, or ordinal logistic regression—to make more meaningful predictions.
+
+However, ordinal encoding should only be applied when the order of categories is genuinely meaningful. Using it for nominal variables such as “red,” “green,” and “blue” would falsely imply a numerical hierarchy and could distort model interpretation and performance.
+
+In summary, ordinal encoding is appropriate for variables with a natural ranking, where numerical values meaningfully represent category order. For variables without inherent order, a different approach is needed. The next section introduces *one-hot encoding*, a method designed specifically for nominal features.
+
+## One-Hot Encoding {#sec-ch6-one-hot-encoding}
+
+How can we represent unordered categories, such as marital status, so that machine learning algorithms can use them effectively? *One-hot encoding* is a widely used solution. It transforms each unique category into a separate binary column, allowing algorithms to process categorical data without introducing an artificial order.
+
+This method is particularly useful for *nominal variables*—categorical features with no inherent ranking. For example, the variable `marital` in the *bank* dataset includes categories such as `divorced`, `married`, and `single`. One-hot encoding creates binary indicators for each category:
+
+- `marital_divorced`;  
+- `marital_married`; 
+- `marital_single`.
+
+Each column indicates the presence (1) or absence (0) of a specific category. If there are $k$ levels, only $k - 1$ binary columns are required to avoid multicollinearity; the omitted category is implicitly represented when all others are zero.
+
+Let us take a quick look at the `marital` variable in the *bank* dataset:
+
+```{r}
+data(bank)
+
+table(bank$marital)
+```
+
+The output shows the distribution of observations across the categories. We will now use one-hot encoding to convert these into model-ready binary features. This transformation ensures that all categories are represented without assuming any order or relationship among them.
+
+One-hot encoding is essential for models that rely on distance metrics (e.g., *k*-nearest neighbors, neural networks) or for linear models that require numeric inputs.
+
+### One-Hot Encoding in R
+
+To apply one-hot encoding in practice, we can use the `one.hot()` function from the **liver** package. This function automatically detects categorical variables and creates a new column for each unique level, converting them into binary indicators.
+
+```{r}
+# One-hot encode the "marital" variable from the bank dataset
+bank_encoded <- one.hot(bank, cols = c("marital"), dropCols = FALSE)
+
+str(bank_encoded)
+```
+
+The `cols` argument specifies which variable(s) to encode. Setting `dropCols = FALSE` retains the original variable alongside the new binary columns; use `TRUE` to remove it after encoding. This transformation adds new columns such as `marital_divorced`, `marital_married`, and `marital_single`, each indicating whether a given observation belongs to that category.
+
+> *Try it yourself:* What happens if you encode multiple variables at once? Try applying `one.hot()` to both `marital` and `poutcome`, and inspect the resulting structure.
+
+While one-hot encoding is simple and effective, it can substantially increase the number of features, especially when applied to high-cardinality variables (e.g., zip codes or product names). Before encoding, consider whether the added dimensionality is manageable and whether all categories are meaningful for analysis.
+
+Once categorical features are properly encoded, attention turns to numerical variables. These often differ in range and scale, which can affect model performance. The next section introduces feature scaling, a crucial step that ensures comparability across numeric predictors.
+
+## Feature Scaling {#sec-ch6-feature-scaling}
+
+What happens when one variable, such as price in dollars, spans tens of thousands, while another, like carat weight, ranges only from 0 to 5? Without scaling, machine learning models that rely on distances or gradients may give disproportionate weight to features with larger numerical ranges, regardless of their actual importance.
+
+*Feature scaling* addresses this imbalance by adjusting the range or distribution of numerical variables to make them comparable. It is particularly important for algorithms such as *k*-Nearest Neighbors (Chapter [-@sec-ch7-classification-knn]), support vector machines, and neural networks. Scaling can also improve optimization stability in models such as logistic regression and enhance the interpretability of coefficients.
+
+In the *bank* dataset, for example, `balance` ranges from `r min(bank$balance)` to `r max(bank$balance)`, while `age` spans from `r min(bank$age)` to `r max(bank$age)`. Without scaling, features such as `balance` may dominate the learning process—not because they are more predictive, but simply because of their larger magnitude.
+
+This section introduces two widely used scaling techniques:
+
+- *Min–Max Scaling* rescales values to a fixed range, typically $[0, 1]$.  
+
+- *Z-Score Scaling* centers values at zero with a standard deviation of one.
+
+Choosing between these methods depends on the modeling approach and the data structure. Min–max scaling is preferred when a fixed input range is required, such as in neural networks, whereas z-score scaling is more suitable for algorithms that assume standardized input distributions or rely on variance-sensitive optimization.
+
+Scaling is not always necessary. Tree-based models, including decision trees and random forests, are *scale-invariant* and do not require rescaled inputs. However, for many other algorithms, scaling improves model performance, convergence speed, and fairness across features.
+
+One caution: scaling can obscure real-world interpretability or exaggerate the influence of outliers, particularly when using min–max scaling. The choice of method should always reflect your modeling objectives and the characteristics of the dataset.
+
+In the following sections, we demonstrate how to apply each technique in R using the *bank* dataset. We begin with min–max scaling, a straightforward method for bringing all numerical variables into a consistent range.
+
+## Min–Max Scaling {#sec-ch6-minmax}
+
+When one feature ranges from 0 to 1 and another spans thousands, models that rely on distances—such as *k*-Nearest Neighbors—can become biased toward features with larger numerical scales. *Min–max scaling* addresses this by rescaling each feature to a common range, typically $[0, 1]$, so that no single variable dominates because of its units or magnitude.
+
+The transformation is defined by the formula  
+$$
+x_{\text{scaled}} = \frac{x - x_{\text{min}}}{x_{\text{max}} - x_{\text{min}}},
+$$  
+where $x$ is the original value and $x_{\text{min}}$ and $x_{\text{max}}$ are the minimum and maximum of the feature. This operation ensures that the smallest value becomes 0 and the largest becomes 1.
+
+Min–max scaling is particularly useful for algorithms that depend on distance or gradient information, such as neural networks and support vector machines. However, this technique is sensitive to outliers: extreme values can stretch the scale, compressing the majority of observations into a narrow band and reducing the resolution for typical values.
+
+::: {#ex-min-max .example}
+To illustrate min–max scaling, consider the variable `age` in the *bank* dataset, which ranges from approximately `r min(bank$age)` to `r max(bank$age)`. We use the `minmax()` function from the **liver** package to rescale its values to the $[0, 1]$ interval:
+
+```{r out.width="100%"}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+ggplot(data = bank) +
+  geom_histogram(aes(x = age)) +
+  ggtitle("Before Min–Max Scaling")
+
+ggplot(data = bank) +
+  geom_histogram(aes(x = minmax(age))) +
+  ggtitle("After Min–Max Scaling")
+```
+
+The left panel shows the raw distribution of `age`, while the right panel displays the scaled version. After transformation, all values fall within the $[0, 1]$ range, making this feature numerically comparable to others—a crucial property when modeling techniques depend on distance or gradient magnitude.
+:::
+
+While min–max scaling ensures all features fall within a fixed range, some algorithms perform better when variables are standardized around zero. The next section introduces *z-score scaling*, an alternative approach based on statistical standardization.
+
+## Z-Score Scaling {#sec-ch6-zscore}
+
+While min–max scaling rescales values into a fixed range, *z-score scaling*—also known as *standardization*—centers each numerical feature around zero and scales it to have unit variance. This technique is particularly useful for algorithms that assume normally distributed inputs or rely on gradient-based optimization, such as linear regression, logistic regression, and support vector machines.
+
+The formula for z-score scaling is  
+$$
+x_{\text{scaled}} = \frac{x - \text{mean}(x)}{\text{sd}(x)},
+$$  
+where $x$ is the original feature value, $\text{mean}(x)$ is the mean of the feature, and $\text{sd}(x)$ is its standard deviation. The result, $x_{\text{scaled}}$, indicates how many standard deviations a given value is from the mean.
+
+Z-score scaling places features with different units or magnitudes on a comparable scale. However, it remains sensitive to outliers, since both the mean and standard deviation can be influenced by extreme values.
+
+::: {#ex-zscore .example}
+To illustrate, let us apply z-score scaling to the `age` variable in the *bank* dataset. The mean and standard deviation of `age` are approximately `r round(mean(bank$age), 2)` and `r round(sd(bank$age), 2)`, respectively. We use the `zscore()` function from the **liver** package:
+
+```{r out.width="100%"}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+ggplot(data = bank) +
+  geom_histogram(aes(x = age)) +
+  ggtitle("Before Z-Score Scaling")
+
+ggplot(data = bank) +
+  geom_histogram(aes(x = zscore(age))) +
+  ggtitle("After Z-Score Scaling")
+```
+
+The left panel shows the original distribution of `age` values, while the right panel displays the standardized version, where values are centered around 0 and expressed in units of standard deviation. Although the location and scale are adjusted, the shape of the distribution—including any skewness—remains unchanged.
+:::
+
+It is important to note that z-score scaling does not make a variable normally distributed. It standardizes the location and spread but preserves the underlying shape of the data. If a variable is skewed before scaling, it will remain skewed after transformation.
+
+### Preventing Data Leakage during Scaling {.unnumbered}
+
+When applying feature scaling, it is essential to perform the transformation *after* partitioning the data.  
+If scaling parameters (such as the mean, standard deviation, minimum, or maximum) are computed using the entire dataset before the split, information from the test set can inadvertently influence the training process—a phenomenon known as *data leakage*.  
+
+To prevent this, always fit the scaling transformation on the training set and then apply the same parameters to the test set. This ensures that the model is evaluated under true deployment conditions.  
+A practical example of this principle is demonstrated in Section [-@sec-ch7-knn-proper-scaling], where scaling is applied correctly in a k-Nearest Neighbors model.
+
+With both categorical and numerical features now properly encoded and scaled, and with safeguards in place to prevent data leakage, the dataset is ready for modeling. The next section summarizes the key concepts and best practices introduced in this chapter.
+  
 ## Chapter Summary and Takeaways
 
-This chapter finalized *Step 4: Data Setup to Model* in the Data Science Workflow by preparing the dataset for valid and generalizable model development.
+This chapter completed *Step 4 – Data Setup to Model* in the Data Science Workflow, preparing the dataset for valid, generalizable, and trustworthy model development.
 
--   The partitioning of data into training and testing sets was established as a safeguard against overfitting and a way to simulate real-world prediction tasks.
+- Partitioning data into training and testing sets was presented as a safeguard against overfitting and a means to simulate real-world prediction tasks.  
 
--   The validation of train-test splits ensured that both subsets were statistically representative, supporting reliable model evaluation.
+- Validating the train–test split ensured that both subsets were statistically representative, supporting reliable model evaluation.  
 
--   The handling of class imbalance through methods such as oversampling, undersampling, and class weighting improved model sensitivity to underrepresented outcomes.
+- Addressing class imbalance through techniques such as oversampling, undersampling, and class weighting improved model sensitivity to underrepresented outcomes.  
 
-Some modeling algorithms, such as k-Nearest Neighbors introduced in the next chapter, require additional preprocessing steps like *feature rescaling*. These techniques were presented earlier in Chapter [-@sec-ch3-data-preparation] and will be applied when appropriate in the modeling chapters that follow.
+- Encoding categorical variables and scaling numerical features helped standardize data inputs, ensuring that all predictors contribute appropriately during model training.  
 
-Unlike other chapters in this book, this chapter does not include a dedicated case study. This is because the procedures introduced here, partitioning, validating, and balancing, are integrated into the case studies in the remainder of the book. For example, the churn classification example in Section [-@sec-ch7-knn-churn] illustrates how these steps are applied in practice.
+Unlike other chapters in this book, this chapter does not include a dedicated case study. The techniques introduced here—partitioning, validation, balancing, and feature preparation—are integrated throughout the modeling chapters that follow. For instance, the churn classification case study in Section [-@sec-ch7-knn-churn] demonstrates how these steps are applied in practice.
 
-Together, these preparatory steps mitigate common risks such as biased evaluation and data leakage, providing a sound foundation for predictive modeling. The next chapter builds on this foundation by introducing and evaluating classification models, beginning with logistic regression.
+Together, these preparatory steps mitigate common risks such as biased evaluation, data leakage, and unfair comparisons between models. They provide a solid foundation for predictive modeling and ensure that model performance reflects genuine learning rather than artifacts of data structure. The next chapter builds on this foundation by introducing and evaluating classification models, beginning with *k*-Nearest Neighbors.
+
+
 
 ## Exercises {#sec-ch6-exercises}
 
-This section includes both *conceptual questions* and *applied programming exercises* that reinforce key ideas from the chapter. The goal is to consolidate essential preparatory steps for predictive modeling, with a focus on partitioning, validating, and, when necessary, balancing datasets to support fair and generalizable learning.
+This section combines *conceptual questions* and *applied programming exercises* designed to reinforce the key ideas introduced in this chapter. The goal is to consolidate essential preparatory steps for predictive modeling, focusing on partitioning, validating, balancing, and preparing features to support fair and generalizable learning.
 
 #### Conceptual Questions {.unnumbered}
 
-1.  Why is partitioning the dataset crucial before training a machine learning model? Explain its role in ensuring generalization.
+1. Why is partitioning the dataset crucial before training a machine learning model? Explain its role in ensuring generalization.  
 
-2.  What is the main risk of training a model without separating the dataset into training and testing subsets? Provide an example where this could lead to misleading results.
+2. What is the main risk of training a model without separating the dataset into training and testing subsets? Provide an example where this could lead to misleading results.  
 
-3.  Explain the difference between *overfitting* and *underfitting*. How does proper partitioning help address these issues?
+3. Explain the difference between *overfitting* and *underfitting*. How does proper partitioning help address these issues?  
 
-4.  Describe the role of the *training set* and the *testing set* in machine learning. Why should the test set remain unseen during model training?
+4. Describe the role of the *training set* and the *testing set* in machine learning. Why should the test set remain unseen during model training?  
 
-5.  What is *data leakage*, and how can it occur during data partitioning? Provide an example of a scenario where data leakage could lead to overly optimistic model performance.
+5. What is *data leakage*, and how can it occur during data partitioning? Provide an example of a scenario where data leakage could lead to overly optimistic model performance.  
 
-6.  Compare and contrast *random partitioning* and *stratified partitioning*. When would stratified partitioning be preferred?
+6. Why is it necessary to validate the partition after splitting the dataset? What could go wrong if the training and test sets are significantly different?  
 
-7.  Why is it necessary to validate the partition after splitting the dataset? What could go wrong if the training and test sets are significantly different?
+7. How would you test whether numerical features, such as `customer.calls` in the *churn* dataset, have similar distributions in both the training and testing sets?  
 
-8.  How would you test whether numerical features, such as `customer.calls` in the *churn* dataset, have similar distributions in both the training and testing sets?
+8. If a dataset is highly imbalanced, why might a model trained on it fail to generalize well? Provide an example from a real-world domain where class imbalance is a serious issue.  
 
-9.  If a dataset is highly imbalanced, why might a model trained on it fail to generalize well? Provide an example from a real-world domain where class imbalance is a serious issue.
+9. Why should balancing techniques be applied *only* to the training dataset and *not* to the test dataset?  
 
-10. Compare *oversampling*, *undersampling*, and *hybrid methods* for handling imbalanced datasets. What are the advantages and disadvantages of each?
+10. Some machine learning algorithms are robust to class imbalance, while others require explicit handling of imbalance. Which types of models typically require class balancing, and which can handle imbalance naturally?  
 
-11. Why should balancing techniques be applied *only* to the training dataset and *not* to the test dataset?
+11. When dealing with class imbalance, why is *accuracy* not always the best metric to evaluate model performance? Which alternative metrics should be considered?  
 
-12. Some machine learning algorithms are robust to class imbalance, while others require explicit handling of imbalance. Which types of models typically require class balancing, and which can handle imbalance naturally?
+12. Suppose a dataset has a rare but critical class (e.g., fraud detection). What steps should be taken during the *data partitioning and balancing* phase to ensure effective model learning?  
 
-13. When dealing with class imbalance, why is *accuracy* not always the best metric to evaluate model performance? Which alternative metrics should be considered?
+13. Why must categorical variables often be converted to numeric form before being used in machine learning models?  
 
-14. Suppose a dataset has a rare but critical class (e.g., fraud detection). What steps should be taken in the *data partitioning and balancing phase* to ensure an effective model?
+14. What is the key difference between *ordinal* and *nominal* categorical variables, and how does this difference determine the appropriate encoding technique?  
 
-15. After completing this chapter, which preparatory step (partitioning, validating, or balancing) do you find most critical for building trustworthy models, and why?
+15. Explain how *one-hot encoding* represents categorical variables and why this method avoids imposing artificial order on nominal features.  
+
+16. What is the main drawback of one-hot encoding when applied to variables with many categories (high cardinality)?  
+
+17. When is *ordinal encoding* preferred over one-hot encoding, and what risks arise if it is incorrectly applied to nominal variables?  
+
+18. Compare *min–max scaling* and *z-score scaling*. How do these transformations differ in their handling of outliers?  
+
+19. Why is it important to apply feature scaling *after* data partitioning rather than before?  
+
+20. What type of data leakage can occur if scaling is performed using both training and test sets simultaneously?
 
 #### Hands-On Practice {.unnumbered}
 
-The following exercises use the *churn*, *bank*, and *risk* datasets from the **liver** package. The *churn* and *bank* datasets have been introduced previously; *risk* will be used in Chapter [-@sec-ch9-bayes].
+The following exercises use the *churn*, *bank*, and *risk* datasets from the **liver** package. The *churn* and *bank* datasets were introduced earlier, while *risk* will be used again in Chapter [-@sec-ch9-bayes].
 
 ```{r}
 library(liver)
@@ -296,40 +507,58 @@ data(risk)
 
 ##### Partitioning the Data {.unnumbered}
 
-16. Partition the *churn* dataset into 75 percent training and 25 percent testing. Set a reproducible seed.
+21. Partition the *churn* dataset into 75% training and 25% testing. Set a reproducible seed for consistency.
 
-17. Perform a 90–10 split on the *bank* dataset. Report the number of observations in each subset.
+22. Perform a 90–10 split on the *bank* dataset. Report the number of observations in each subset.
 
-18. Use stratified sampling to ensure that the churn rate is consistent across both subsets of the *churn* dataset.
+23. Use stratified sampling to ensure that the churn rate is consistent across both subsets of the *churn* dataset.
 
-19. Apply a 60–40 split on the *risk* dataset. Save the outputs as `train_risk` and `test_risk`.
+24. Apply a 60–40 split to the *risk* dataset. Save the outputs as `train_risk` and `test_risk`.
 
-20. Generate density plots to compare the distribution of `income` between training and test sets in the *bank* dataset.
+25. Generate density plots to compare the distribution of `income` between the training and test sets in the *bank* dataset.
 
 ##### Validating the Partition {.unnumbered}
 
-21. Use a two-sample Z-test to assess whether the churn proportion differs significantly between training and test sets.
+26. Use a two-sample Z-test to assess whether the churn proportion differs significantly between the training and test sets.
 
-22. Apply a two-sample t-test to evaluate whether average age differs across subsets in the *bank* dataset.
+27. Apply a two-sample t-test to evaluate whether average `age` differs across subsets in the *bank* dataset.
 
-23. Conduct a Chi-square test to assess whether the distribution of `marital` status differs between subsets in the *bank* dataset.
+28. Conduct a Chi-square test to assess whether the distribution of `marital` status differs between subsets in the *bank* dataset.
 
-24. Suppose the churn proportion is 30 percent in training and 15 percent in testing. Identify an appropriate statistical test and explain a correction strategy.
+29. Suppose the churn proportion is 30% in training and 15% in testing. Identify an appropriate statistical test and propose a corrective strategy.
 
-25. Select three numerical variables in the *risk* dataset and assess whether their distributions differ between the two subsets.
+30. Select three numerical variables in the *risk* dataset and assess whether their distributions differ between the two subsets.
 
 ##### Balancing the Training Dataset {.unnumbered}
 
-26. Examine the class distribution of `churn` in the training set. Report the proportion of churners.
+31. Examine the class distribution of `churn` in the training set and report the proportion of churners.
 
-27. Apply random oversampling to increase the churner class to 40 percent of the training data using the **ROSE** package.
+32. Apply random oversampling to increase the churner class to 40% of the training data using the **ROSE** package.
 
-28. Use undersampling to equalize the `deposit = "yes"` and `deposit = "no"` classes in the training set of the *bank* dataset.
+33. Use undersampling to equalize the `deposit = "yes"` and `deposit = "no"` classes in the training set of the *bank* dataset.
 
-29. Create bar plots to compare the class distribution in the *churn* dataset before and after balancing.
+34. Create bar plots to compare the class distribution in the *churn* dataset before and after balancing.
+
+##### Preparing Features for Modeling {.unnumbered}
+
+35. Identify two categorical variables in the *bank* dataset. Decide whether each should be encoded using *ordinal* or *one-hot encoding*, and justify your choice.
+
+36. Apply one-hot encoding to the `marital` variable in the *bank* dataset using the `one.hot()` function from the **liver** package. Display the resulting column names.
+
+37. Perform ordinal encoding on the `education` variable in the *bank* dataset, ordering the levels from `primary` to `tertiary`. Confirm that the resulting values reflect the intended order.
+
+38. Compare the number of variables in the dataset before and after applying one-hot encoding. How might this expansion affect model complexity and training time?
+
+39. Apply min–max scaling to the numerical variables `age` and `balance` in the *bank* dataset using the `minmax()` function. Verify that all scaled values fall within the $[0, 1]$ range.
+
+40. Use z-score scaling on the same variables with the `zscore()` function. Report the mean and standard deviation of each scaled variable and interpret the results.
+
+41. In your own words, explain how scaling before partitioning could cause *data leakage*. Suggest a correct workflow for avoiding this issue (see Section [-@sec-ch7-knn-proper-scaling]).
+
+42. Compare the histograms of one variable before and after applying z-score scaling. What stays the same, and what changes in the distribution?
 
 #### Self-Reflection {.unnumbered}
 
-30. Which of the three preparation steps (partitioning, validation, and balancing) currently feels most intuitive, and which would benefit from additional practice? Justify the response.
+43. Which of the three preparation steps—partitioning, validation, or balancing—currently feels most intuitive, and which would benefit from further practice? Explain your reasoning.
 
-31. How does a deeper understanding of data preparation influence perceptions of model evaluation and fairness?
+44. How does a deeper understanding of data setup influence your perception of model evaluation and fairness in predictive modeling?
