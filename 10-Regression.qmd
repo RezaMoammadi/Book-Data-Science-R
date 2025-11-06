@@ -178,7 +178,6 @@ One of the key advantages of a fitted regression model is its ability to generat
 
 Suppose a company wants to estimate the expected daily revenue when 25 euros are spent on pay-per-click (PPC) advertising. Using the fitted regression equation:
 
-```{=tex}
 \begin{equation} 
 \begin{split}
 \widehat{\text{revenue}} & = b_0 + b_1 \times 25 \\
@@ -186,7 +185,7 @@ Suppose a company wants to estimate the expected daily revenue when 25 euros are
                      & = `r round(simple_reg$coefficients[1] + simple_reg$coefficients[2] * 25, 2)`
 \end{split}
 \end{equation}
-```
+
 Thus, if the company spends 25 euros on advertising, the model estimates a daily revenue of approximately *`r round(simple_reg$coefficients[1] + simple_reg$coefficients[2] * 25, 2)` euros*.
 
 This kind of predictive insight is particularly useful for marketing teams seeking to plan and evaluate advertising budgets. For example, if the objective is to maximize returns while staying within a cost constraint, the regression model offers a data-driven estimate of how revenue is likely to respond to changes in spending.
@@ -235,7 +234,6 @@ ggplot(marketing, aes(x = spend, y = revenue)) +
 
 For example, suppose the 21st day in the dataset has a marketing spend of 25 euros and an actual revenue of `r marketing$revenue[21]`. The residual for this observation is:
 
-```{=tex}
 \begin{equation} 
 \begin{split}
 \text{Residual} & = y - \hat{y} \\
@@ -243,7 +241,7 @@ For example, suppose the 21st day in the dataset has a marketing spend of 25 eur
                 & = `r marketing$revenue[21] - round(simple_reg$coefficients[1] + simple_reg$coefficients[2] * 25, 2)`
 \end{split}
 \end{equation}
-```
+
 Residuals play a crucial role in assessing model adequacy. Ideally, they should be randomly distributed around zero, suggesting that the model appropriately captures the relationship between variables. However, if residuals show systematic patterns, such as curves, clusters, or increasing spread, this may indicate the need to include additional predictors, transform variables, or use a non-linear model.
 
 The regression line is estimated using the *least squares* method, which finds the line that minimizes the *sum of squared residuals*, also known as the *sum of squared errors (SSE)*: $$
@@ -276,8 +274,8 @@ $$
 
 We formalize this question using the following hypotheses: $$
 \begin{cases}
-  H_0: \beta_1 = 0 \quad \text{(no linear relationship between $x$ and $y$)} \\
-  H_a: \beta_1 \neq 0 \quad \text{(a linear relationship exists between $x$ and $y$)}
+  H_0: \beta_1 = 0 \quad \text{(No linear relationship between $x$ and $y$.)} \\
+  H_a: \beta_1 \neq 0 \quad \text{(A linear relationship exists between $x$ and $y$.)}
 \end{cases}
 $$ To test these hypotheses, we compute the *t-statistic* for the slope: $$
 t = \frac{b_1}{SE(b_1)},
@@ -388,11 +386,11 @@ However, these metrics do not tell the full story. For example, a high $R^2$ can
 @tbl-reg-quality-matrics presents a summary of model quality metrics. Understanding these measures enables us to evaluate regression models more critically and prepares us to move beyond models with a single predictor.
 
 ::: {#tbl-reg-quality-matrics .table}
-| Metric                    | What It Tells You                       | What to Look For                 |
+| Metric | What It Tells You | What to Look For |
 |-------------------|-----------------------------|------------------------|
-| RSE (Residual Std. Error) | Average prediction error                | Lower is better                  |
-| $R^2$                     | Proportion of variance explained        | Higher is better                 |
-| Adjusted $R^2$            | $R^2$ adjusted for number of predictors | Higher (but realistic) is better |
+| RSE (Residual Std. Error) | Average prediction error | Lower is better |
+| $R^2$ | Proportion of variance explained | Higher is better |
+| Adjusted $R^2$ | $R^2$ adjusted for number of predictors | Higher (but realistic) is better |
 
 Overview of commonly used regression model quality metrics.
 :::
@@ -484,22 +482,21 @@ This is Simpson’s Paradox, a phenomenon where trends within groups reverse whe
 ```{r}
 #| echo: false
 
-# Simulating data for Simpson's Paradox
+
+# --- Simulate data ---
 set.seed(42)
-n = 100
-b0 = 5
-b1 = 0.35
+n <- 100; b0 <- 5; b1 <- 0.35
 
-x1 = runif(n, 40, 50); y1 = 0 * b0 + b1 * x1 + rnorm(n)
-x2 = runif(n, 30, 40); y2 = 1 * b0 + b1 * x2 + rnorm(n)
-x3 = runif(n, 20, 30); y3 = 2 * b0 + b1 * x3 + rnorm(n)
-x4 = runif(n, 10, 20); y4 = 3 * b0 + b1 * x4 + rnorm(n)
-x5 = runif(n,  0, 10); y5 = 4 * b0 + b1 * x5 + rnorm(n)
+x1 <- runif(n, 40, 50); y1 <- 0 * b0 + b1 * x1 + rnorm(n)
+x2 <- runif(n, 30, 40); y2 <- 1 * b0 + b1 * x2 + rnorm(n)
+x3 <- runif(n, 20, 30); y3 <- 2 * b0 + b1 * x3 + rnorm(n)
+x4 <- runif(n, 10, 20); y4 <- 3 * b0 + b1 * x4 + rnorm(n)
+x5 <- runif(n,  0, 10); y5 <- 4 * b0 + b1 * x5 + rnorm(n)
 
-sim_data = data.frame(
+sim_data <- data.frame(
   x = c(x1, x2, x3, x4, x5),
   y = c(y1, y2, y3, y4, y5),
-  Groups = rep(c("Group 1", "Group 2", "Group 3", "Group 4", "Group 5"), each = n)
+  Groups = rep(paste("Group", 1:5), each = n)
 )
 ```
 
@@ -510,30 +507,45 @@ In the plots below (@fig-ch10-Simpson-Paradox), the left panel displays a regres
 #| echo: false
 #| fig-cap: "Simpson’s Paradox: The left plot shows a regression line fitted to the full dataset, ignoring group structure. The right plot fits separate regression lines for each group, revealing positive trends within groups that are hidden when data are aggregated."
 
+# --- Left plot: ignoring groups ---
 p1 <- ggplot(sim_data, aes(x = x, y = y)) +
-  geom_point(alpha = 0.6, color = "gray50") +
-  geom_smooth(method = "lm", se = FALSE, color = "#377EB8", linewidth = 1) +
+  geom_point(alpha = 0.5, color = "gray55", size = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "#377EB8", linewidth = 0.8) +
   labs(title = "Ignoring Groups", x = "Predictor (X)", y = "Response (Y)") +
-  theme(plot.title = element_text(hjust = 0.5))
-
-p2 <- ggplot(sim_data, aes(x = x, y = y, color = Groups)) +
-  geom_point(alpha = 0.6) +
-  geom_smooth(method = "lm", se = FALSE, linewidth = 1) +
-  scale_color_brewer(palette = "Set2") +
-  labs(title = "Separate Trends by Group", x = "Predictor (X)", y = "Response (Y)", color = "Group") +
-  theme(plot.title = element_text(hjust = 0.5))
-
-#(p1 + p2) + plot_layout(guides = "collect") + theme(legend.position = "bottom")
-
-(p1 + p2) + plot_layout(guides = "collect") +
+  theme_minimal(base_size = 8) +
   theme(
-    legend.position = "bottom",
-    plot.title = element_text(hjust = 0.5, size = 9),
-    axis.title  = element_text(size = 9),
-    axis.text   = element_text(size = 9),
-    legend.text = element_text(size = 9),
-    legend.title = element_text(size = 9)
+    plot.title = element_text(hjust = 0.5, size = 8, face = "bold"),
+    legend.position = "none"
   )
+
+# --- Right plot: by group ---
+p2 <- ggplot(sim_data, aes(x = x, y = y, color = Groups)) +
+  geom_point(alpha = 0.5, size = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 0.8) +
+  scale_color_brewer(palette = "Set2") +
+  labs(
+    title = "Separate Trends by Group",
+    x = "Predictor (X)", y = "Response (Y)", color = "Group"
+  ) +
+  theme_minimal(base_size = 8) +
+  theme(
+    plot.title   = element_text(hjust = 0.5, size = 8, face = "bold"),
+    legend.position = "bottom",
+    legend.direction = "horizontal",
+    legend.box = "horizontal",
+    legend.margin = ggplot2::margin(t = -4, b = -4),
+    legend.title = element_text(size = 8, face = "bold"),
+    legend.text  = element_text(size = 8)
+  )
+
+# --- Extract legend and clean right plot ---
+legend <- cowplot::get_legend(p2)
+p2_clean <- p2 + theme(legend.position = "none")
+
+# --- Combine two panels and legend ---
+final_plot <- (p1 + p2_clean) / patchwork::wrap_elements(legend)
+
+final_plot + plot_layout(heights = c(1, 0.06))
 ```
 
 This example underscores the importance of including relevant variables. Omitting key groupings can lead to flawed conclusions, even when regression coefficients appear statistically sound. This phenomenon connects directly to our earlier analysis of the *marketing* dataset. In the simple regression model, we considered only `spend` as a predictor of revenue. However, once we added `display` in the multiple regression model, the interpretation of `spend` changed. This shift illustrates how omitted variables, such as group membership or campaign status, can confound observed associations. Simpson’s Paradox reminds us that *a variable’s effect can reverse or diminish once other important predictors are included*. Careful modeling and exploratory analysis are essential for uncovering such subtleties.

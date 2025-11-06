@@ -106,17 +106,14 @@ Suppose a company reports that the average number of customer service calls made
 Confidence intervals help quantify the uncertainty associated with estimates of population parameters. Rather than reporting only a point estimate, such as “the average is 4,” a confidence interval might say, “we are 95% confident that the true average lies between 3.8 and 4.2.” This interval accounts for the natural variability that arises when working with sample data.
 
 Formally, a confidence interval combines a point estimate, such as the sample mean or proportion, with a margin of error that reflects expected sampling variability. The general form is:
-
 $$
-\text{Point Estimate} \pm \text{Margin of Error}
+\text{Point Estimate} \pm \text{Margin of Error}.
 $$
 
 For a population mean, the confidence interval is calculated using the following formula:
-
 $$
 \bar{x} \pm z_{\frac{\alpha}{2}} \times \left( \frac{s}{\sqrt{n}} \right),
 $$
-
 where $\bar{x}$ is the sample mean, $s$ is the sample standard deviation, $n$ is the sample size, and $z_{\frac{\alpha}{2}}$ is the critical value from the standard normal distribution (for example, 1.96 for a 95% confidence level).
 
 ```{r fig-confidence-interval, echo = FALSE, out.width = "70%", fig.cap = "Confidence interval for the population mean. The interval is centered around the point estimate, with the width determined by the margin of error. The confidence level specifies the probability that the interval contains the true population parameter."}
@@ -197,10 +194,10 @@ The structure of a hypothesis test depends on the nature of the question and the
 To better understand the logic behind these decisions, consider the analogy of a criminal trial. The *null hypothesis* represents the presumption of innocence. The *alternative hypothesis* corresponds to a claim of guilt. The jury weighs the evidence and must either convict (reject $H_0$) or acquit (do not reject $H_0$ due to insufficient evidence). Just as legal verdicts can result in mistakes, hypothesis testing is subject to two types of error, summarized in @tbl-hypothesis-errors.
 
 ::: {#tbl-hypothesis-errors .table}
-| *Decision*          | *Reality:* $H_0$ is True                               | *Reality:* $H_0$ is False                          |
-|---------------------|--------------------------------------------------------|----------------------------------------------------|
-| Do not Reject $H_0$ | *Correct Decision*: Acquit an innocent person.         | *Type II Error (*$\beta$): Acquit a guilty person. |
-| Reject $H_0$        | *Type I Error (*$\alpha$): Convict an innocent person. | *Correct Decision*: Convict a guilty person.       |
+| *Decision* | *Reality:* $H_0$ is True | *Reality:* $H_0$ is False |
+|----------------|-----------------------------|---------------------------|
+| Do not Reject $H_0$ | *Correct Decision*: Acquit an innocent person. | *Type II Error (*$\beta$): Acquit a guilty person. |
+| Reject $H_0$ | *Type I Error (*$\alpha$): Convict an innocent person. | *Correct Decision*: Convict a guilty person. |
 
 Possible outcomes of hypothesis testing, with two correct decisions and two types of error.
 :::
@@ -469,13 +466,13 @@ This result highlights a potential link between Voice Mail Plan usage and custom
 
 The two-sample Z-test provides a rigorous way to compare proportions and complements visual exploration. By combining statistical inference with domain knowledge, companies can make informed decisions to improve retention strategies.
 
-## Chi-square Test
+## Chi-square Test {#sec-ch5-chi-square-test}
 
-Do deposit subscription rates vary by marital status? And if so, can banks use this information to better target their campaigns? These are typical questions in marketing analytics, where categorical variables often have more than two levels. The *Chi-square test* is a statistical method designed to answer such questions. It evaluates whether two categorical variables are associated, making it especially useful in business contexts such as customer segmentation and marketing strategy.
+Do deposit subscription rates vary by marital status? And if so, can banks use this information to better target their campaigns? These are typical questions in marketing analytics, where categorical variables often have more than two levels. The Chi-square test is a statistical method designed to answer such questions. It evaluates whether two categorical variables are associated, making it especially useful in business contexts such as customer segmentation and marketing strategy.
 
 While earlier tests focused on comparing means or proportions between two groups, the Chi-square test examines whether the distribution of outcomes across categories deviates from what we would expect under the assumption of independence. It quantifies whether observed discrepancies in frequencies are too large to be attributed to random variation.
 
-To illustrate, we analyze whether marital status is associated with deposit purchases in the *bank* dataset (from the **liver** package). The variable `marital` includes "divorced," "married," and "single" categories. The outcome variable `deposit` indicates whether a customer purchased a term deposit ("yes" or "no"). This dataset will also appear in later chapters for classification modeling.
+To illustrate, we analyze whether marital status is associated with deposit purchases in the *bank* dataset (from the **liver** package). The variable `marital` includes “divorced,” “married,” and “single” categories. The outcome variable `deposit` indicates whether a customer purchased a term deposit (“yes” or “no”). This dataset will also appear in later chapters for classification modeling.
 
 We begin by visualizing the relationship between marital status and deposit subscription using bar plots:
 
@@ -489,7 +486,6 @@ data(bank)
 ggplot(data = bank) + 
   geom_bar(aes(x = marital, fill = deposit)) +
   labs(
-    #title = "Term Deposit Subscription by Marital Status",
     x = "Marital Status",
     y = "Number of Clients",
     fill = "Deposit"
@@ -498,7 +494,6 @@ ggplot(data = bank) +
 ggplot(data = bank) + 
   geom_bar(aes(x = marital, fill = deposit), position = "fill") +
   labs(
-    #title = "Proportion of Clients Subscribing by Marital Status",
     x = "Marital Status",
     y = "Proportion",
     fill = "Deposit"
@@ -514,15 +509,13 @@ table_marital <- table(bank$deposit, bank$marital, dnn = c("deposit", "marital")
 table_marital
 ```
 
-This table serves as the input to the `chisq.test()` function, which is designed to assess whether two categorical variables are independent. The hypotheses are:
-
+This table serves as the input to the `chisq.test()` function, which assesses whether two categorical variables are independent. The hypotheses are:
 $$
 \begin{cases}
-H_0: \text{marital and deposit are independent} \\
-H_a: \text{marital and deposit are not independent}
+    H_0: \pi_{divorced, \ yes} = \pi_{married, \ yes} = \pi_{single, \ yes} \quad \text{(All proportions are equal);} \\
+    H_a: \text{At least one proportion differs.}
 \end{cases}
 $$
-
 We conduct the test as follows:
 
 ```{r}
@@ -530,13 +523,25 @@ chisq_test <- chisq.test(table_marital)
 chisq_test
 ```
 
-The `chisq.test()` function compares the observed counts in the table with the expected counts under the assumption of independence. It returns the Chi-square statistic, degrees of freedom, expected frequencies, and a corresponding *p*-value. In this case, because the *p*-value is less than the significance level ($\alpha = 0.05$), we reject the null hypothesis and conclude that marital status and deposit purchase are associated rather than independent.
+The `chisq.test()` function compares the observed counts in the table with the expected counts under the assumption of independence. It returns the Chi-square statistic, degrees of freedom, expected frequencies, and a corresponding *p*-value.
 
-The expected counts are especially useful. They show how many deposit purchases would be expected in each marital category if no association existed. By comparing these to the observed counts, we can identify which group differences are driving the result. For instance, if married customers subscribe to deposits more frequently than expected, they may be a key contributor to the observed association.
+The Chi-square test relies on large-sample approximations, meaning that its results are valid only when the expected cell counts are sufficiently large. As a general guideline, each expected frequency should be at least 5. If several cells contain smaller expected counts, the Chi-square approximation to the test statistic may become unreliable. In such cases, especially with small samples or sparse contingency tables, alternatives such as Fisher’s exact test are more appropriate.
 
-From a business standpoint, this finding supports the idea that marketing strategies can be tailored based on marital status. Banks might promote family-oriented savings plans for married clients, while designing more flexible, goal-oriented offers for single individuals.
+To inspect the expected cell counts directly, we can use:
 
-The Chi-square test is a tool for uncovering associations between categorical variables. It complements visualizations and provides a rigorous foundation for exploring customer behavior patterns and designing more targeted outreach strategies.
+```{r}
+chisq_test$expected
+```
+
+This output shows how many observations would be expected in each cell if the variables were independent. Comparing these expected counts with the observed ones helps identify which groups contribute most to the association.
+
+In this example, because the *p*-value is less than the significance level ($\alpha = 0.05$), we reject the null hypothesis and conclude that marital status and deposit purchase are associated rather than independent.
+
+The expected counts are particularly informative. They show how many deposit purchases would be expected in each marital category if no association existed. By comparing these to the observed counts, we can identify which group differences are driving the result. For instance, if married customers subscribe to deposits more frequently than expected, they may be a key contributor to the observed association.
+
+From a business standpoint, this finding supports the idea that marketing strategies can be tailored based on marital status. Banks might promote family-oriented savings plans for married clients while designing more flexible, goal-oriented offers for single individuals.
+
+The Chi-square test thus provides a rigorous foundation for uncovering associations between categorical variables. It complements visualization-based insights and supports data-driven decision-making in customer behavior analysis.
 
 ## Analysis of Variance (ANOVA) Test
 
@@ -557,11 +562,10 @@ ggplot(data = diamonds) +
 The box plot shows the distribution and median prices for each cut category. The plots suggest some variation in price across the different cut categories, but they do not reveal a clear association between `price` and `cut`. Therefore, we proceed with statistical testing to determine whether the observed differences are statistically meaningful.
 
 To evaluate whether cut quality affects diamond price, we compare the mean price across all five categories. Our hypotheses are:
-
 $$
 \begin{cases}
-    H_0: \mu_1 = \mu_2 = \mu_3 = \mu_4 = \mu_5 \quad \text{(All group means are equal)} \\
-    H_a: \text{At least one group mean differs}
+    H_0: \mu_1 = \mu_2 = \mu_3 = \mu_4 = \mu_5 \quad \text{(All group means are equal);} \\
+    H_a: \text{At least one group mean differs.}
 \end{cases}
 $$
 
