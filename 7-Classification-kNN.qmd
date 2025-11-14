@@ -12,7 +12,7 @@ This chapter also marks the start of *Step 5: Modeling* in the Data Science Work
 
 We begin by defining classification and contrasting it with regression, then introduce common applications and categories of classification algorithms. The focus then shifts to one of the most intuitive and interpretable methods: *k-Nearest Neighbors (kNN)* as a distance-based algorithm that predicts the class of a new observation by examining its closest neighbors in the training set.
 
-To demonstrate the method in action, we apply kNN to the *churn* dataset, where the goal is to predict whether a customer will discontinue a service. The chapter walks through the full modeling workflow, data preparation, selecting an appropriate value of *k*, implementing the model in R, and evaluating its predictive performance, offering a step-by-step blueprint for real-world classification problems.
+To demonstrate the method in action, we apply kNN to the *churnCredit* dataset, where the goal is to predict whether a customer will discontinue a service. The chapter walks through the full modeling workflow, data preparation, selecting an appropriate value of *k*, implementing the model in R, and evaluating its predictive performance, offering a step-by-step blueprint for real-world classification problems.
 
 By the end of this chapter, readers will have a clear understanding of how classification models operate, how kNN translates similarity into prediction, and how to apply this method effectively to real-world data.
 
@@ -56,7 +56,7 @@ Choosing an appropriate algorithm depends on several factors, including dataset 
 
 To illustrate, consider the *bank* dataset, where the task is to predict whether a customer will subscribe to a term deposit (`deposit = yes`). Predictor variables such as `age`, `education`, and `marital status` can be used to build a classification model. Such a model can support targeted marketing by identifying customers more likely to respond positively.
 
-Among these algorithms, kNN stands out for its ease of use and intuitive decision-making process. Because it makes minimal assumptions about the underlying data, kNN is often used as a baseline model, helping to gauge how challenging a classification problem is before considering more complex approaches. In the sections that follow, we explore how the kNN algorithm works, how to implement it in R, and how to apply it to a real-world classification task using the *churn* dataset.
+Among these algorithms, kNN stands out for its ease of use and intuitive decision-making process. Because it makes minimal assumptions about the underlying data, kNN is often used as a baseline model, helping to gauge how challenging a classification problem is before considering more complex approaches. In the sections that follow, we explore how the kNN algorithm works, how to implement it in R, and how to apply it to a real-world classification task using the *churnCredit* dataset.
 
 ## How k-Nearest Neighbors Works
 
@@ -180,14 +180,11 @@ In this medical scenario, similarity is measured by comparing numerical features
 
 A widely used measure of similarity in kNN is *Euclidean distance*, which corresponds to the straight-line, or “as-the-crow-flies,” distance between two points. It is intuitive, easy to compute, and well-suited to numerical data with comparable scales.
 
-Mathematically, the Euclidean distance between two points $x$ and $y$ in $n$-dimensional space is given by:
-$$
+Mathematically, the Euclidean distance between two points $x$ and $y$ in $n$-dimensional space is given by: $$
 \text{dist}(x, y) = \sqrt{(x_1 - y_1)^2 + (x_2 - y_2)^2 + \ldots + (x_n - y_n)^2},
-$$
-where $x = (x_1, x_2, \ldots, x_n)$ and $y = (y_1, y_2, \ldots, y_n)$ are the feature vectors.
+$$ where $x = (x_1, x_2, \ldots, x_n)$ and $y = (y_1, y_2, \ldots, y_n)$ are the feature vectors.
 
-For example, suppose we want to compute the Euclidean distance between two new patients from the previous section, using their *age* and *sodium-to-potassium (Na/K) ratio*. Patient 1 is 40 years old with a Na/K ratio of 30.5, and Patient 2 is 28 years old with a Na/K ratio of 9.6. The Euclidean distance between these two patients is visualized in @fig-ch7-euclidean-distance in a two-dimensional feature space, where each axis represents one of the features (age and Na/K ratio). The line connecting Patient 1 $(40, 30.5)$ and Patient 2 $(28, 9.6)$ represents their Euclidean distance:
-$$
+For example, suppose we want to compute the Euclidean distance between two new patients from the previous section, using their *age* and *sodium-to-potassium (Na/K) ratio*. Patient 1 is 40 years old with a Na/K ratio of 30.5, and Patient 2 is 28 years old with a Na/K ratio of 9.6. The Euclidean distance between these two patients is visualized in @fig-ch7-euclidean-distance in a two-dimensional feature space, where each axis represents one of the features (age and Na/K ratio). The line connecting Patient 1 $(40, 30.5)$ and Patient 2 $(28, 9.6)$ represents their Euclidean distance: $$
 \text{dist}(x, y) = \sqrt{(40 - 28)^2 + (30.5 - 9.6)^2} = \sqrt{144 + 436.81} = 24.11
 $$
 
@@ -246,7 +243,7 @@ The performance of the kNN algorithm is highly sensitive to how the data is set 
 
 To make this idea concrete, imagine working with patient data that includes *age*, *sodium-to-potassium (Na/K) ratio*, *marital status*, and *education level*. While *age* and *Na/K ratio* are numeric, *marital status* and *education* are categorical. To prepare these features for a distance-based model, we must convert them into numerical form in a way that preserves their original meaning.
 
-In most tabular datasets (such as the *bank* and *churn* datasets introduced earlier), features include a mix of categorical and numerical variables. A recommended approach is to first *encode* the categorical features into numeric format and then *scale* all numerical features. This sequence ensures that distance calculations occur on a unified numerical scale without introducing artificial distortions. 
+In most tabular datasets (such as the *churnCredit* and *bank* datasets introduced earlier), features include a mix of categorical and numerical variables. A recommended approach is to first *encode* the categorical features into numeric format and then *scale* all numerical features. This sequence ensures that distance calculations occur on a unified numerical scale without introducing artificial distortions.
 
 The appropriate encoding strategy depends on whether a variable is *binary*, *nominal*, or *ordinal*. These techniques were detailed in Chapter [-@sec-ch6-setup-data]: general guidance in Section [-@sec-ch6-encoding], ordinal handling in Section [-@sec-ch6-ordinal-encoding], and one-hot encoding in Section [-@sec-ch6-one-hot-encoding].
 
@@ -265,6 +262,7 @@ Scaling should be performed *after* splitting the dataset into training and test
 The comparison in @fig-ch7-ex-proper-scaling visualizes the importance of applying scaling correctly. The middle panel shows proper scaling using training-derived parameters; the right panel shows the distortion caused by scaling the test data independently.
 
 To illustrate, consider the drug classification task from earlier. Suppose `age` and `Na/K ratio` are the two predictors. The following code demonstrates both correct and incorrect approaches to scaling using the `minmax()` function from the **liver** package:
+
 ```{r}
 library(liver)
 
@@ -350,35 +348,50 @@ Choosing *k* is ultimately an empirical process informed by validation and domai
 
 ## Case Study: Predicting Customer Churn with kNN {#sec-ch7-knn-churn}
 
-In this case study, we demonstrate how to apply the kNN algorithm to a real-world classification problem. Using the *churn* dataset from the **liver** package in R, we follow the complete modeling workflow, from data preparation to model training and evaluation. This provides a practical context to reinforce the concepts introduced earlier in the chapter.
+In this case study, we apply the kNN algorithm to a real-world classification problem. Using the *churnCredit* dataset from the **liver** package in **R**, we follow the complete modeling workflow: data setup, model training, and evaluation. This provides a practical context to reinforce concepts introduced earlier in the chapter.
 
-The *churn* dataset captures customer behavior and service usage across multiple dimensions, including account length, service plans, call metrics, and customer service interactions. The modeling task is to predict whether a customer has churned (`yes`) or not (`no`) based on these features.
-
-Readers unfamiliar with the dataset are encouraged to review the exploratory analysis presented in Section [-@sec-ch4-EDA-churn], which provides important context and preliminary findings. We begin here by inspecting the dataset structure:
+The *churnCredit* dataset summarizes customer characteristics and service usage across multiple dimensions, including account tenure, product holdings, transaction activity, and customer service interactions. Our goal is to predict whether a customer has churned (`yes`) or not (`no`) based on these features. Readers unfamiliar with the dataset are encouraged to review the exploratory analysis in Section [-@sec-ch4-EDA-churn], which provides context and preliminary findings. We begin by inspecting the structure:
 
 ```{r}
-data(churn)
-str(churn)
+library(liver)
+
+data(churnCredit)
+str(churnCredit)
 ```
 
-The dataset is an R data frame containing `r nrow(churn)` observations and `r ncol(churn) - 1` predictor variables, along with a binary outcome variable, `churn`.
+The dataset is an R data frame containing `r nrow(churnCredit)` observations and `r ncol(churnCredit) - 1` predictor variables, along with a binary outcome variable, `churn`. Consistent with the earlier analysis in Chapter [-@sec-ch4-EDA], we exclude `customer.ID` (identifier) and `available.credit` (a deterministic transformation of other credit variables) from the predictor set. The candidate predictors for kNN are:
 
-Based on the earlier exploratory analysis and domain relevance, we focus on the following features for building the kNN model:
+`age`, `gender`, `education`, `marital`, `income`, `card.category`, `dependent.count`, `months.on.book`, `relationship.count`, `months.inactive`, `contacts.count.12`, `credit.limit`, `revolving.balance`, `transaction.amount.12`, `transaction.count.12`, `ratio.amount.Q4.Q1`, `ratio.count.Q4.Q1`, `utilization.ratio`.
 
-`account.length`, `voice.plan`, `voice.messages`, `intl.plan`, `intl.mins`, `intl.calls`, `day.mins`, `day.calls`, `eve.mins`, `eve.calls`, `night.mins`, `night.calls`, and `customer.calls`.
+Before proceeding to *Data Setup to Model* (Chapter [-@sec-ch6-setup-data]), we harmonize missing and unknown values, following the approach in Section [-@sec-ch4-EDA-churn]. Because random imputation is involved, we set a seed for reproducibility. We also ensure the outcome is a factor with levels `no` and `yes`.
 
-In the remainder of this section, we proceed step by step: partitioning and preprocessing the data, selecting an appropriate value of *k*, fitting the kNN model, making predictions, and evaluating classification performance.
+```{r}
+library(Hmisc)
 
-### Partitioning and Preprocessing the Data for kNN
+set.seed(42)  # for reproducibility of random imputations
 
-To assess how well the kNN model generalizes to new observations, we begin by splitting the dataset into training and test sets. This separation provides an unbiased estimate of predictive accuracy by evaluating model performance on previously unseen data.
+# Treat "unknown" as missing and drop unused levels
+churnCredit[churnCredit == "unknown"] <- NA
+churnCredit <- droplevels(churnCredit)
 
-Because the *churn* dataset is already cleaned and free of missing values (see Chapter [-@sec-ch3-data-preparation]), we proceed directly to data partitioning using the `partition()` function from the **liver** package. This function divides the data into an 80% training set and a 20% test set:
+# Random imputation for selected categorical/numeric fields as used in Chapter 4
+churnCredit$education <- impute(churnCredit$education, "random")
+churnCredit$income    <- impute(churnCredit$income, "random")
+churnCredit$marital   <- impute(churnCredit$marital, "random")
+```
+
+In the remainder of this section, we proceed step by step: partitioning the data, applying preprocessing *after* the split to avoid leakage (scaling numeric features and encoding categorical variables for kNN), selecting an appropriate value of $k$, fitting the model, generating predictions, and evaluating classification performance.
+
+### Data Setup for kNN
+
+To evaluate how well the kNN model generalizes to new observations, we begin by splitting the dataset into training and test sets. This separation provides an unbiased estimate of predictive accuracy by testing the model on data not used during training.
+
+Since the *churnCredit* dataset has already been cleaned and imputed (see Chapter [-@sec-ch3-data-preparation]), we proceed directly to data partitioning using the `partition()` function from the liver package. This function divides the data into an 80% training set and a 20% test set:
 
 ```{r}
 set.seed(42)
 
-data_sets = partition(data = churn, ratio = c(0.8, 0.2))
+data_sets = partition(data = churnCredit, ratio = c(0.8, 0.2))
 
 train_set = data_sets$part1
 test_set  = data_sets$part2
@@ -386,16 +399,14 @@ test_set  = data_sets$part2
 test_labels = test_set$churn
 ```
 
-The `partition()` function preserves the class distribution of the target variable (`churn`) across both sets, ensuring that the test set remains representative of the population. This stratified sampling approach is especially important for classification tasks with imbalanced outcomes. For additional background on data partitioning and validation strategies, refer to Section [-@sec-ch6-validate-partition].
+The `partition()` function preserves the class distribution of the target variable (`churn`) across both sets, ensuring that the test set remains representative of the population. This stratified sampling approach is especially important for classification problems with imbalanced outcomes. For a discussion of partitioning and validation strategies, see Section [-@sec-ch6-validate-partition].
 
 #### Encoding Categorical Features for kNN {.unnumbered}
 
-Because the kNN algorithm requires numerical inputs and relies on distance calculations, categorical features must be converted into numeric format. In the *churn* dataset, `voice.plan` and `intl.plan` are binary categorical variables that require transformation.
-
-The `one.hot()` function from the **liver** package automates this process by generating binary indicator features:
+Because the kNN algorithm relies on distance calculations between observations, all input features must be numeric. Therefore, categorical variables need to be transformed into numerical representations. In the *churnCredit* dataset, the variables `gender`, `education`, `marital`, `income`, and `card.category` are categorical and require encoding. The `one.hot()` function from the liver package automates this step by generating binary indicator variables:
 
 ```{r}
-categorical_vars = c("voice.plan", "intl.plan")
+categorical_vars = c("gender", "education", "marital", "income", "card.category")
 
 train_onehot = one.hot(train_set, cols = categorical_vars)
 test_onehot  = one.hot(test_set,  cols = categorical_vars)
@@ -403,82 +414,83 @@ test_onehot  = one.hot(test_set,  cols = categorical_vars)
 str(test_onehot)
 ```
 
-For each binary variable, the function creates two columns (e.g., `voice.plan_yes` and `voice.plan_no`). Since the presence of one category implies the absence of the other, only one indicator variable (e.g., `voice.plan_yes`) is retained. This avoids redundancy and maintains interpretability while ensuring compatibility with distance-based modeling.
+For each categorical variable with $k$ categories, the function creates $k$ binary columns (dummy variables). In practice, it is often preferable to use $k - 1$ dummy variables to avoid redundancy and multicollinearity, while maintaining interpretability and compatibility with distance-based algorithms.
+
+
+
 
 #### Feature Scaling for kNN {.unnumbered}
 
-To ensure that all numerical features contribute equally to distance calculations, we apply *min-max scaling*. This technique rescales each feature to the $[0,1]$ range using the minimum and maximum values calculated from the *training set*. The same scaling parameters are then applied to the test set to prevent data leakage:
+To ensure that all numerical variables contribute equally to distance calculations, we apply *min–max scaling*. This technique rescales each variable to the $[0, 1]$ range based on the minimum and maximum values computed from the training set. The same scaling parameters are then applied to the test set to prevent data leakage:
 
 ```{r}
-numeric_vars = c("account.length", "voice.messages", "intl.mins", 
-                 "intl.calls", "day.mins", "day.calls", "eve.mins", 
-                 "eve.calls", "night.mins", "night.calls", 
-                 "customer.calls")
+numeric_vars = c("age", "dependent.count", "months.on.book", "relationship.count", 
+               "months.inactive", "contacts.count.12", "credit.limit", 
+               "revolving.balance", "transaction.amount.12", "transaction.count.12", 
+               "ratio.amount.Q4.Q1", "ratio.count.Q4.Q1", "utilization.ratio")
 
-min_train = sapply(train_set[, numeric_vars], min)   # Compute column-wise minimums
-max_train = sapply(train_set[, numeric_vars], max)   # Compute column-wise maximums
+min_train = sapply(train_set[, numeric_vars], min)   # Column-wise minimums
+max_train = sapply(train_set[, numeric_vars], max)   # Column-wise maximums
 
 train_scaled = minmax(train_onehot, col = numeric_vars, min = min_train, max = max_train)
 test_scaled  = minmax(test_onehot,  col = numeric_vars, min = min_train, max = max_train)
 ```
 
-Here, the `sapply()` function is used to compute the column-wise minimum and maximum values across the selected numeric variables in the training set. These values define the scaling range. The `minmax()` function from the **liver** package then applies min-max scaling to both the training and test sets, using the training-set values as reference.
+Here, `sapply()` computes the column-wise minimum and maximum values across the selected numeric variables in the training set. These values define the scaling range. The `minmax()` function from the liver package then applies min–max scaling to both the training and test sets, using the training-set values as reference.
 
-This step ensures that all features are on a comparable scale, preventing those with larger ranges from disproportionately influencing the kNN distance calculations. For a more detailed discussion of scaling methods and best practices, see Section [-@sec-ch6-feature-scaling] and the preparation overview in Section [-@sec-ch7-knn-prep]. Now that the data are properly encoded and scaled, we are ready to choose the optimal number of neighbors (k) for the kNN algorithm.
+This step places all variables on a comparable scale, ensuring that those with larger ranges do not dominate the distance calculations. For further discussion of scaling methods and their implications, see Section [-@sec-ch6-feature-scaling] and the preparation overview in Section [-@sec-ch7-knn-prep]. With the data now encoded and scaled, we can proceed to determine the optimal number of neighbors ($k$) for the kNN model.
 
-### Finding the Best Value for (k)
+### Finding the Best Value for $k$
 
-The number of neighbors, *k*, is a key hyperparameter in the kNN algorithm. Choosing too small a *k* can make the model overly sensitive to noise in the data, while a very large *k* can oversmooth the decision boundary, potentially missing important local patterns.
+The number of neighbors ($k$) is a key hyperparameter in the kNN algorithm. Choosing a very small $k$ can make the model overly sensitive to noise, whereas a very large $k$ can oversmooth decision boundaries and obscure meaningful local patterns.
 
-In R, there are several ways to choose the optimal value of *k*. A common approach is to evaluate the classification accuracy of the kNN algorithm across a range of values (e.g., from 1 to 30), and then select the *k* that yields the highest accuracy. This can be implemented manually using a `for` loop and tracking performance for each *k*.
+In R, there are several ways to identify the optimal value of $k$. A common approach is to assess model accuracy across a range of values (for example, from 1 to 30) and select the $k$ that yields the highest performance. This can be implemented manually with a `for` loop that records the accuracy for each value of $k$.
 
-To simplify this process, the **liver** package provides the `kNN.plot()` function, which automates this task. It computes accuracy across a specified range of *k* values and produces a visual summary of the results, making it easier to identify the best-performing *k*.
+The liver package simplifies this process with the `kNN.plot()` function, which automatically computes accuracy across a specified range of $k$ values and visualizes the results. This enables quick identification of the best-performing model.
 
-Before running the function, we define a `formula` object that specifies the relationship between the target variable (`churn`) and the predictor variables. The predictors include all scaled numerical features as well as the binary indicators generated through one-hot encoding, namely `intl.plan_yes` and `voice.plan_yes`:
+Before running the function, we define a `formula` object that specifies the relationship between the target variable (`churn`) and the predictor variables. The predictors include all scaled numeric variables and the binary indicators generated through one-hot encoding, such as `gender_female`, `education_uneducated`, and others:
 
 ```{r}
-formula = churn ~ voice.plan_yes + intl.plan_yes + account.length + 
-                  voice.messages + intl.mins + intl.calls + 
-                  day.mins + day.calls + eve.mins + eve.calls + 
-                  night.mins + night.calls + customer.calls
+formula = churn ~ gender_female + age + 
+    education_uneducated  + education_highschool + education_college  + education_graduate + `education_post-graduate` +
+    marital_married + marital_single +
+    `income_<40K` + `income_40K-60K` + `income_60K-80K` + `income_80K-120K` + 
+    card.category_blue + card.category_silver + card.category_gold +
+    dependent.count + months.on.book + relationship.count + months.inactive + contacts.count.12 +
+    credit.limit + revolving.balance + transaction.amount.12 + transaction.count.12 + 
+    ratio.amount.Q4.Q1 + ratio.count.Q4.Q1 + utilization.ratio
 ```
 
 We now apply the `kNN.plot()` function:
 
-```{r fig-ch7-kNN-plot, echo = TRUE, out.width = "85%", fig.cap = "Accuracy of the kNN algorithm on the churn dataset for values of k ranging from 1 to 30."}
+```{r fig-ch7-kNN-plot, echo = TRUE, out.width = "85%", fig.cap = "Accuracy of the kNN algorithm on the churnCredit dataset for values of k ranging from 1 to 20."}
 kNN.plot(formula = formula, 
          train = train_scaled, 
          test = test_scaled, 
-         k.max = 30, 
+         k.max = 20, 
          reference = "yes", 
          set.seed = 42)
 ```
 
-The arguments to `kNN.plot()` play distinct roles in shaping the evaluation. The `train` and `test` inputs specify the scaled datasets used for training and testing, respectively, ensuring that distance calculations are made on comparable feature scales. The `k.max = 30` argument defines the maximum number of neighbors to evaluate, allowing us to observe model behavior across a range of values. Setting `reference = "yes"` indicates that the `"yes"` class represents the positive outcome of interest, i.e., customer churn. Finally, `set.seed = 42` ensures reproducibility by fixing the random seed for any internal random processes.
+The arguments in `kNN.plot()` control various aspects of the evaluation. The `train` and `test` inputs specify the scaled datasets, ensuring comparable feature scales for distance computation. The argument `k.max = 20` defines the largest number of neighbors to test, allowing us to visualize model performance over a meaningful range. Setting `reference = "yes"` designates the `"yes"` class as the positive outcome (customer churn), and `set.seed = 42` ensures reproducibility.
 
-The resulting plot shows how model accuracy varies with *k*. In this case, the highest accuracy is achieved when $k = 9$, suggesting that this value offers a good balance between capturing local structure and maintaining generalization. With the optimal value of $k$ identified, we are now ready to apply the kNN algorithm to classify new customer records in the test set.
+The resulting plot shows how model accuracy changes with $k$. In this case, accuracy peaks at $k = 5$, suggesting that this value strikes a good balance between capturing local patterns and maintaining generalization. With the optimal $k$ determined, we can now apply the kNN model to classify new customer records in the test set.
 
 ### Applying the kNN Classifier
 
-With the optimal value $k = 9$ identified, we now apply the kNN algorithm to classify customer churn in the test set. This step brings together the work from the previous sections, data preparation, feature encoding, scaling, and hyperparameter tuning.
+With the optimal value $k = 5$ identified, we now apply the kNN algorithm to classify customer churn in the test set. This step brings together the work from the previous sections—data preparation, feature encoding, scaling, and hyperparameter tuning. Unlike many machine learning algorithms, kNN does not build an explicit predictive model during training. Instead, it retains the training data and performs classification *on demand* by computing distances to identify the closest training observations.
 
-Unlike many machine learning algorithms, kNN does not build an explicit predictive model during training. Instead, it retains the training data and performs classification *on demand* by computing distances to determine the closest training examples.
-
-In R, we use the `kNN()` function from the **liver** package to apply the *k*-Nearest Neighbors algorithm. This function provides a formula-based interface, consistent with other modeling functions in R, making the syntax more readable and the modeling process more transparent. An alternative is the `knn()` function from the **class** package, which requires manually specifying input matrices and class labels. While effective, this approach is less intuitive for beginners and is not used in this book:
+In R, we use the `kNN()` function from the liver package to implement the k-Nearest Neighbors algorithm. This function provides a formula-based interface consistent with other modeling functions in R, making the syntax more readable and the workflow more transparent. An alternative is the `knn()` function from the class package, which requires specifying input matrices and class labels manually. While effective, this approach is less intuitive for beginners and is not used in this book:
 
 ```{r}
-kNN_predict = kNN(formula = formula, train = train_scaled, test = test_scaled, k = 9)
+kNN_predict = kNN(formula = formula, train = train_scaled, test = test_scaled, k = 5)
 ```
 
-In this command, `formula` defines the relationship between the response variable (`churn`) and the predictors. The `train` and `test` arguments specify the scaled datasets prepared in earlier steps. The parameter `k = 9` sets the number of nearest neighbors to use, as determined in the tuning step.
-
-The `kNN()` function classifies each test observation by computing its distance to all records in the training set and assigning the majority class among the nine nearest neighbors.
+In this command, `formula` defines the relationship between the response variable (`churn`) and the predictors. The `train` and `test` arguments specify the scaled datasets prepared in earlier steps. The parameter `k = 5` sets the number of nearest neighbors, as determined in the tuning step. The `kNN()` function classifies each test observation by computing its distance to all training records and assigning the majority class among the **five** nearest neighbors.
 
 ### Evaluating Model Performance of the kNN Model
 
-With predictions in hand, the final step is to assess how well the kNN model performs. A fundamental and intuitive evaluation tool is the *confusion matrix*, which summarizes the correspondence between predicted and actual class labels in the test set.
-
-We use the `conf.mat.plot()` function from the **liver** package to compute and visualize this matrix. The argument `reference = "yes"` specifies that the positive class refers to customers who have churned:
+With predictions in hand, the final step is to assess how well the kNN model performs. A fundamental and intuitive evaluation tool is the *confusion matrix*, which summarizes the correspondence between predicted and actual class labels in the test set. We use the `conf.mat.plot()` function from the **liver** package to compute and visualize this matrix. The argument `reference = "yes"` specifies that the positive class refers to customers who have churned:
 
 ```{r, out.width  = '30%'}
 conf.mat.plot(kNN_predict, test_labels, reference = "yes")
@@ -502,7 +514,7 @@ While the confusion matrix provides an initial evaluation of model performance, 
 
 This chapter introduced the kNN algorithm, a simple yet effective method for classification. We began by revisiting the concept of classification and its practical applications, distinguishing between binary and multi-class problems. We then examined how kNN classifies observations by identifying their nearest neighbors using distance metrics.
 
-To ensure meaningful distance comparisons, we discussed essential preprocessing steps such as one-hot encoding of categorical variables and feature scaling. We also explored how to select the optimal number of neighbors ($k$), emphasizing the trade-off between overfitting and underfitting. These concepts were demonstrated through a complete case study using the **liver** package in R and the *churn* dataset, highlighting the importance of thoughtful data preparation and parameter tuning.
+To ensure meaningful distance comparisons, we discussed essential preprocessing steps such as one-hot encoding of categorical variables and feature scaling. We also explored how to select the optimal number of neighbors ($k$), emphasizing the trade-off between overfitting and underfitting. These concepts were demonstrated through a complete case study using the **liver** package in R and the *churnCredit* dataset, highlighting the importance of thoughtful data preparation and parameter tuning.
 
 The simplicity and interpretability of kNN make it a valuable introductory model. However, its limitations, including sensitivity to noise, reliance on proper scaling, and inefficiency with large datasets, can reduce its practicality for large-scale applications. Despite these drawbacks, kNN remains a strong baseline for classification tasks and a useful reference point for model comparison.
 

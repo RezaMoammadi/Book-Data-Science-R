@@ -306,7 +306,7 @@
 \title{{Data Science Foundations and Machine Learning with R: From Data
 to Decisions}}
 \author{\href{https://www.uva.nl/profile/a.mohammadi}{{Reza Mohammadi}}}
-\date{29 October 2025}
+\date{6 November 2025}
 
 \begin{document}
 \maketitle
@@ -656,7 +656,7 @@ ggplot2 package.}
 Name & Description & Chapter\\
 \midrule
 \textcolor{black}{churn} & Customer churn dataset. & Chapters 4, 6, 7, 8, 10\\
-\textcolor{black}{bank} & Direct marketing data from a Portuguese bank. & Chapters 7, 12\\
+\textcolor{black}{bank} & Direct marketing data from a Portuguese bank. & Chapters 6, 7, 12\\
 \textcolor{black}{adult} & US Census data for income prediction. & Chapters 3, 11\\
 \textcolor{black}{risk} & Credit risk dataset. & Chapter 9\\
 \textcolor{black}{marketing} & Marketing campaign performance data. & Chapter 10\\
@@ -8509,20 +8509,14 @@ when working with sample data.
 
 Formally, a confidence interval combines a point estimate, such as the
 sample mean or proportion, with a margin of error that reflects expected
-sampling variability. The general form is:
-
-\[
-\text{Point Estimate} \pm \text{Margin of Error}
+sampling variability. The general form is: \[
+\text{Point Estimate} \pm \text{Margin of Error}.
 \]
 
 For a population mean, the confidence interval is calculated using the
-following formula:
-
-\[
+following formula: \[
 \bar{x} \pm z_{\frac{\alpha}{2}} \times \left( \frac{s}{\sqrt{n}} \right),
-\]
-
-where \(\bar{x}\) is the sample mean, \(s\) is the sample standard
+\] where \(\bar{x}\) is the sample mean, \(s\) is the sample standard
 deviation, \(n\) is the sample size, and \(z_{\frac{\alpha}{2}}\) is the
 critical value from the standard normal distribution (for example, 1.96
 for a 95\% confidence level).
@@ -8724,9 +8718,9 @@ hypothesis testing is subject to two types of error, summarized in
 Table~\ref{tbl-hypothesis-errors}.
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.1628}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.4341}}
-  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.4031}}@{}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.2222}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.4028}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 4\tabcolsep) * \real{0.3750}}@{}}
 \caption{Possible outcomes of hypothesis testing, with two correct
 decisions and two types of
 error.}\label{tbl-hypothesis-errors}\tabularnewline
@@ -9276,16 +9270,15 @@ complements visual exploration. By combining statistical inference with
 domain knowledge, companies can make informed decisions to improve
 retention strategies.
 
-\section{Chi-square Test}\label{chi-square-test}
+\section{Chi-square Test}\label{sec-ch5-chi-square-test}
 
 Do deposit subscription rates vary by marital status? And if so, can
 banks use this information to better target their campaigns? These are
 typical questions in marketing analytics, where categorical variables
-often have more than two levels. The \emph{Chi-square test} is a
-statistical method designed to answer such questions. It evaluates
-whether two categorical variables are associated, making it especially
-useful in business contexts such as customer segmentation and marketing
-strategy.
+often have more than two levels. The Chi-square test is a statistical
+method designed to answer such questions. It evaluates whether two
+categorical variables are associated, making it especially useful in
+business contexts such as customer segmentation and marketing strategy.
 
 While earlier tests focused on comparing means or proportions between
 two groups, the Chi-square test examines whether the distribution of
@@ -9343,17 +9336,13 @@ outcome:
 \end{Shaded}
 
 This table serves as the input to the \texttt{chisq.test()} function,
-which is designed to assess whether two categorical variables are
-independent. The hypotheses are:
-
-\[
+which assesses whether two categorical variables are independent. The
+hypotheses are: \[
 \begin{cases}
-H_0: \text{marital and deposit are independent} \\
-H_a: \text{marital and deposit are not independent}
+    H_0: \pi_{divorced, \ yes} = \pi_{married, \ yes} = \pi_{single, \ yes} \quad \text{(All proportions are equal);} \\
+    H_a: \text{At least one proportion differs.}
 \end{cases}
-\]
-
-We conduct the test as follows:
+\] We conduct the test as follows:
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -9370,28 +9359,55 @@ We conduct the test as follows:
 The \texttt{chisq.test()} function compares the observed counts in the
 table with the expected counts under the assumption of independence. It
 returns the Chi-square statistic, degrees of freedom, expected
-frequencies, and a corresponding \emph{p}-value. In this case, because
-the \emph{p}-value is less than the significance level
-(\(\alpha = 0.05\)), we reject the null hypothesis and conclude that
-marital status and deposit purchase are associated rather than
-independent.
+frequencies, and a corresponding \emph{p}-value.
 
-The expected counts are especially useful. They show how many deposit
-purchases would be expected in each marital category if no association
-existed. By comparing these to the observed counts, we can identify
-which group differences are driving the result. For instance, if married
-customers subscribe to deposits more frequently than expected, they may
-be a key contributor to the observed association.
+The Chi-square test relies on large-sample approximations, meaning that
+its results are valid only when the expected cell counts are
+sufficiently large. As a general guideline, each expected frequency
+should be at least 5. If several cells contain smaller expected counts,
+the Chi-square approximation to the test statistic may become
+unreliable. In such cases, especially with small samples or sparse
+contingency tables, alternatives such as Fisher's exact test are more
+appropriate.
+
+To inspect the expected cell counts directly, we can use:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{chisq\_test}\SpecialCharTok{$}\NormalTok{expected}
+\NormalTok{          marital}
+\NormalTok{   deposit  divorced   married   single}
+\NormalTok{       no  }\FloatTok{467.15328} \FloatTok{2474.6737} \FloatTok{1058.173}
+\NormalTok{       yes  }\FloatTok{60.84672}  \FloatTok{322.3263}  \FloatTok{137.827}
+\end{Highlighting}
+\end{Shaded}
+
+This output shows how many observations would be expected in each cell
+if the variables were independent. Comparing these expected counts with
+the observed ones helps identify which groups contribute most to the
+association.
+
+In this example, because the \emph{p}-value is less than the
+significance level (\(\alpha = 0.05\)), we reject the null hypothesis
+and conclude that marital status and deposit purchase are associated
+rather than independent.
+
+The expected counts are particularly informative. They show how many
+deposit purchases would be expected in each marital category if no
+association existed. By comparing these to the observed counts, we can
+identify which group differences are driving the result. For instance,
+if married customers subscribe to deposits more frequently than
+expected, they may be a key contributor to the observed association.
 
 From a business standpoint, this finding supports the idea that
 marketing strategies can be tailored based on marital status. Banks
-might promote family-oriented savings plans for married clients, while
+might promote family-oriented savings plans for married clients while
 designing more flexible, goal-oriented offers for single individuals.
 
-The Chi-square test is a tool for uncovering associations between
-categorical variables. It complements visualizations and provides a
-rigorous foundation for exploring customer behavior patterns and
-designing more targeted outreach strategies.
+The Chi-square test thus provides a rigorous foundation for uncovering
+associations between categorical variables. It complements
+visualization-based insights and supports data-driven decision-making in
+customer behavior analysis.
 
 \section{Analysis of Variance (ANOVA)
 Test}\label{analysis-of-variance-anova-test}
@@ -9427,7 +9443,7 @@ What can we learn from the distribution of prices across cut categories?
 \end{Shaded}
 
 \begin{center}
-\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{5-Statistics_files/figure-pdf/unnamed-chunk-17-1.pdf}
+\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{5-Statistics_files/figure-pdf/unnamed-chunk-18-1.pdf}
 \end{center}
 
 The box plot shows the distribution and median prices for each cut
@@ -9438,12 +9454,10 @@ testing to determine whether the observed differences are statistically
 meaningful.
 
 To evaluate whether cut quality affects diamond price, we compare the
-mean price across all five categories. Our hypotheses are:
-
-\[
+mean price across all five categories. Our hypotheses are: \[
 \begin{cases}
-    H_0: \mu_1 = \mu_2 = \mu_3 = \mu_4 = \mu_5 \quad \text{(All group means are equal)} \\
-    H_a: \text{At least one group mean differs}
+    H_0: \mu_1 = \mu_2 = \mu_3 = \mu_4 = \mu_5 \quad \text{(All group means are equal);} \\
+    H_a: \text{At least one group mean differs.}
 \end{cases}
 \]
 
@@ -9523,7 +9537,7 @@ visually assess the relationship:
 \end{Shaded}
 
 \begin{center}
-\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{5-Statistics_files/figure-pdf/unnamed-chunk-19-1.pdf}
+\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{5-Statistics_files/figure-pdf/unnamed-chunk-20-1.pdf}
 \end{center}
 
 The scatter plot reveals a clear upward trend, suggesting that as carat
@@ -16142,8 +16156,8 @@ y = \beta_0 + \epsilon.
 
 We formalize this question using the following hypotheses: \[
 \begin{cases}
-  H_0: \beta_1 = 0 \quad \text{(no linear relationship between $x$ and $y$)} \\
-  H_a: \beta_1 \neq 0 \quad \text{(a linear relationship exists between $x$ and $y$)}
+  H_0: \beta_1 = 0 \quad \text{(No linear relationship between $x$ and $y$.)} \\
+  H_a: \beta_1 \neq 0 \quad \text{(A linear relationship exists between $x$ and $y$.)}
 \end{cases}
 \] To test these hypotheses, we compute the \emph{t-statistic} for the
 slope: \[
@@ -21632,7 +21646,7 @@ Predictors}\label{feature-scaling-for-numerical-predictors}
 Predictors}
 
 Neural networks perform best when input features are on a similar scale.
-To achieve this, we normalize numerical variables using min-max scaling,
+To achieve this, we scale numerical variables using min-max scaling,
 transforming all inputs into a standardized range between 0 and 1. This
 prevents features with larger numerical ranges from dominating the
 learning process and helps improve model convergence.
@@ -22228,7 +22242,7 @@ and tree-based models (CART, C5.0, and random forest).
 \item
   Preprocess the categorical features using one-hot encoding.
 \item
-  Normalize the numerical features using min-max scaling.
+  Scale the numerical features using min-max scaling.
 \item
   Split the dataset into training (80\%) and testing (20\%) sets.
 \item
@@ -23053,7 +23067,7 @@ As shown in the histograms, the sodium feature is rescaled to the
 (originally measured in large units) from overpowering the clustering
 process.
 
-With the dataset cleaned, imputed, and normalized, we are now ready to
+With the dataset cleaned, imputed, and scaled, we are now ready to
 explore how cereals naturally group together. But first, how many
 clusters should we use?
 
@@ -23311,8 +23325,7 @@ clustering techniques to real-world data.
   Describe a scenario where Euclidean distance might not be an
   appropriate similarity measure for clustering.
 \item
-  Why do we need to normalize or scale variables before applying K-means
-  clustering?
+  Why do we need to scale features before applying K-means clustering?
 \item
   How does clustering help in dimensionality reduction and preprocessing
   for supervised learning?
@@ -23382,8 +23395,8 @@ Analysis}
   Since clustering requires numerical features, remove any non-numeric
   columns from the dataset.
 \item
-  Apply min-max scaling to normalize all numerical variables before
-  clustering. Why is this step necessary?
+  Apply min-max scaling to all numerical features before clustering. Why
+  is this step necessary?
 \end{enumerate}
 
 \paragraph*{Applying k-means

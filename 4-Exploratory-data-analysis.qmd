@@ -18,13 +18,13 @@ Finally, EDA is closely tied to data quality. Outliers, missing values, inconsis
 
 ### What This Chapter Covers {.unnumbered}
 
-This chapter introduces EDA as a critical phase in the data science workflow. You will learn how to apply summary statistics and visual techniques to examine variable distributions, detect anomalies, and uncover relationships that inform downstream modeling. In addition, you will explore how correlation analysis can identify redundancy and how multivariate patterns contribute to predictive insight.
+This chapter introduces exploratory data analysis (EDA) as a critical phase in the data science workflow. You will learn how to apply summary statistics and visual techniques to examine variable distributions, detect anomalies, and uncover relationships that inform downstream modeling. The chapter also demonstrates how correlation analysis helps identify redundancy and how multivariate exploration can reveal patterns that enhance predictive insight.
 
-We begin with two foundational sections: *Key Objectives and Guiding Questions for EDA*, which frame the exploratory mindset, and *EDA as Data Storytelling*, which emphasizes the importance of communicating insights clearly and effectively.
+We begin with two foundational sections: *Key Objectives and Guiding Questions for EDA*, which frame the exploratory mindset, and *EDA as Data Storytelling*, which emphasizes the importance of communicating analytical findings with clarity and context.
 
-Following these conceptual foundations, we walk you through a guided EDA of the *churn* dataset. You will explore how real-world patterns emerge from the data, how visualizations reveal customer behavior, and how these insights prepare the ground for classification modeling using k-nearest neighbors in Chapter [-@sec-ch7-classification-knn].
+Building on these concepts, the chapter provides a guided exploration of the *churnCredit* dataset from the **liver** package. Through this example, you will see how real-world patterns emerge from data, how visualizations uncover customer behavior, and how exploratory insights prepare the ground for classification modeling using k-nearest neighbors in Chapter [-@sec-ch7-classification-knn].
 
-The chapter concludes with hands-on exercises and a guided project using the *bank* dataset. This project offers further opportunities to practice EDA techniques and lays the foundation for the neural network case study presented in Chapter [-@sec-ch12-neural-networks].
+The chapter concludes with a comprehensive set of exercises and hands-on projects using two real-world datasets (*bank* and *churn*, also from the **liver** package). These activities provide additional practice with EDA techniques and lay the groundwork for the neural network case study in Chapter [-@sec-ch12-neural-networks].
 
 ## Objectives and Guiding Questions for EDA {#sec-EDA-objectives-questions}
 
@@ -193,529 +193,834 @@ As you conduct EDA, it is worth asking not only *what* the data shows, but also 
 
 To illustrate these principles in practice, the next section walks through a detailed EDA of customer churn, demonstrating how statistical summaries, visual tools, and domain reasoning can uncover meaningful patterns that guide predictive modeling.
 
-## EDA in Practice: The *Churn* Dataset {#sec-ch4-EDA-churn}
+## EDA in Practice: The *churnCredit* Dataset {#sec-ch4-EDA-churn}
 
-EDA is most effective when applied to real data with real questions. In this section, we demonstrate how to conduct EDA using the *churn* dataset, which contains behavioral and demographic information about customers—along with a binary outcome indicating whether each customer has churned (i.e., discontinued the service).
+Exploratory data analysis (EDA) is most meaningful when applied to real data and practical questions. In this section, we illustrate the process using the *churnCredit* dataset, which contains demographic, behavioral, and financial information about customers, along with a binary variable indicating whether each customer has churned—that is, discontinued the service.
 
-This walkthrough follows the structure of the Data Science Workflow introduced in Chapter [-@sec-ch2-intro-data-science]. We begin by briefly revisiting the first two steps, *Problem Understanding* and *Data Understanding*, to set the business context and examine the structure of the dataset. The main emphasis here is on *Step 3: Exploratory Data Analysis*, where we use summary statistics, visualizations, and guiding questions to uncover meaningful patterns related to customer churn.
+This walkthrough follows the structure of the Data Science Workflow introduced in Chapter [-@sec-ch2-intro-data-science]. We begin by revisiting the first two steps, *Problem Understanding* and *Data Preparation*, to establish the business context and examine the dataset’s structure. The main emphasis is on *Step 3: Exploratory Data Analysis*, where visualizations, summary statistics, and guiding questions are used to uncover meaningful patterns related to customer churn.
 
-The insights developed in this section serve as a springboard for the next phases of analysis: preparing the data for modeling in Chapter [-@sec-ch6-setup-data], building predictive models using k-Nearest Neighbors in Chapter [-@sec-ch7-classification-knn], and evaluating model performance in Chapter [-@sec-ch8-evaluation]. By working through these steps in sequence, you will see how a well-executed EDA not only enhances understanding but also improves the quality of decisions made through modeling.
+The insights developed in this section provide a foundation for the subsequent stages of analysis: preparing the data for modeling in Chapter [-@sec-ch6-setup-data], constructing predictive models using k-nearest neighbors in Chapter [-@sec-ch7-classification-knn], and assessing model performance in Chapter [-@sec-ch8-evaluation]. Working through these stages in sequence demonstrates how a thorough exploratory analysis enhances understanding and strengthens the decisions made through modeling.
 
-### Understanding the Churn Problem {.unnumbered}
+### Problem Understanding for the *churnCredit* Dataset {.unnumbered}
 
-Customer churn (the loss of existing customers) is a central concern in subscription-based industries such as telecommunications, finance, and streaming services. Because retaining customers is typically more cost-effective than acquiring new ones, identifying the drivers of churn is a priority for both analysts and decision-makers.
+A manager at a bank has become increasingly concerned about the growing number of customers closing their credit card accounts. Understanding why customers leave—and being able to anticipate who is at risk of doing so—has become a strategic priority. Predicting churn would allow the bank to intervene proactively, offering improved services or incentives to retain valuable customers.
 
-From a business standpoint, this challenge prompts three key questions:
+Customer churn, the loss of existing clients, is a persistent challenge in subscription-based industries such as banking, telecommunications, and streaming services. Because retaining an existing customer is typically more cost-effective than acquiring a new one, identifying the factors that drive churn is a central task for both analysts and decision-makers.
 
--   *Why* are customers deciding to leave?
+From a business perspective, this problem gives rise to three key questions:
 
--   *What* behavioral or demographic patterns are associated with higher churn risk?
+* *Why* are customers choosing to leave?
 
--   *How* can these insights inform strategies to improve customer retention?
+* *What* behavioral or demographic characteristics are associated with higher churn risk?
 
-EDA provides the foundation for addressing these questions. By identifying relevant patterns in the data, EDA uncovers potential signals that can inform targeted interventions. It also helps frame the predictive modeling task that follows.
+* *How* can these insights guide strategies for improving customer retention?
 
-In Chapter [-@sec-ch7-classification-knn], we will develop a k-nearest neighbors (kNN) model to predict customer churn. Before building that model, however, it is essential to understand the structure of the data, the types of variables available, and the relationships they reveal.
+Exploratory data analysis provides a foundation for addressing these questions. By identifying patterns, anomalies, and relationships in the data, EDA uncovers potential signals that can inform targeted retention initiatives. It also clarifies how customer attributes and behaviors interact—insights that later support predictive modeling.
 
-### Overview of the *churn* Dataset {.unnumbered}
+In Chapter [-@sec-ch7-classification-knn], we will develop a k-nearest neighbors (kNN) model to predict customer churn. Before building that model, however, it is crucial to understand the structure of the dataset, the nature of its variables, and the relationships they reveal. The next step is to examine the *churnCredit* dataset in detail, gaining an understanding of its structure, variables, and the types of information it provides about customer behavior and churn.
 
-Before diving into visualizations and summary statistics, it is important to understand the dataset we will explore throughout this chapter. The *churn* dataset, included in the **liver** package, provides a realistic example for practicing EDA. It includes 5,000 customer records across 20 variables, combining demographic information, service usage, account attributes, and customer support interactions.
+### Overview of the *churnCredit* Dataset {.unnumbered}
 
-The core variable of interest is `churn`, which indicates whether a customer has left the service (`yes`) or remained (`no`). This binary outcome will eventually serve as the target for classification modeling in Chapter [-@sec-ch7-classification-knn], but our first task is to understand the data that surrounds it.
+Before conducting visual or statistical exploration, it is essential to understand the dataset used throughout this chapter. The *churnCredit* dataset, available in the **liver** package, serves as a realistic case study for applying exploratory data analysis. It contains over 10,000 customer records and 21 variables combining demographic information, account characteristics, credit usage, and customer interaction metrics.
 
-To load and inspect the dataset, run the following code in R:
+The key variable of interest is `churn`, which indicates whether a customer has closed their credit card account (`yes`) or remained active (`no`). This binary outcome will later serve as the target variable for classification modeling in Chapter [-@sec-ch7-classification-knn]. At this stage, our objective is to understand the structure, content, and quality of the data that surround this outcome.
+
+To load and inspect the dataset, run the following commands in R:
 
 ```{r}
+library(liver)
+
+data(churnCredit)
+str(churnCredit)
+```
+
+The dataset is stored as a `data.frame` with `r nrow(churnCredit)` observations and `r ncol(churnCredit)` variables. The predictors include both numerical and categorical features describing customer demographics, spending behavior, credit management, and engagement with the bank. Among the 21 variables, eight are categorical (`gender`, `education`, `marital`, `income`, `card.category`, `churn`, and two identifiers related to grouping), while the remaining features are numerical. The categorical variables capture demographic or qualitative groupings, whereas the numerical features represent continuous measures such as credit limits, transaction amounts, and utilization ratios. This distinction will guide the choice of visualization and summary techniques in the following sections.
+
+A structured overview of the variables is provided below:
+
+* `customer.ID`: Unique identifier for each account holder.
+* `age`: Age of the customer, in years.
+* `gender`: Gender of the account holder.
+* `education`: Educational qualification (high-school, college, graduate, uneducated, post-graduate, doctorate, unknown).
+* `marital`: Marital status (married, single, divorced, unknown).
+* `income`: Annual income bracket (less than `$40K`, `$40K–$60K`, `$60K–$80K`, `$80K–$120K`, over `$120K`, unknown).
+* `card.category`: Credit card type (blue, silver, gold, platinum).
+* `dependent.count`: Number of dependents.
+* `months.on.book`: Tenure with the bank, in months.
+* `relationship.count`: Total number of products held by the customer (1–6).
+* `months.inactive`: Number of inactive months in the past 12 months.
+* `contacts.count.12`: Number of customer service contacts in the past 12 months.
+* `credit.limit`: Total credit card limit.
+* `revolving.balance`: Current revolving balance on the credit card.
+* `available.credit`: Available credit line, representing the unused portion of the credit limit. Calculated as `credit.limit - revolving.balance`.
+* `transaction.amount.12`: Total transaction amount in the past 12 months.
+* `transaction.count.12`: Total number of transactions in the past 12 months.
+* `ratio.amount.Q4.Q1`: Ratio of total transaction amount in the fourth quarter to that in the first quarter.
+* `ratio.count.Q4.Q1`: Ratio of total transaction count in the fourth quarter to that in the first quarter.
+* `utilization.ratio`: Average credit utilization ratio, defined as `revolving.balance / credit.limit`.
+* `churn`: Indicator of whether the account was closed (`yes`) or remained active (`no`).
+
+To obtain an initial overview of variable distributions and potential irregularities, we can use the `summary()` function:
+
+```{r}
+summary(churnCredit)
+```
+
+The summary statistics provide a first quantitative overview of the dataset. While most variables fall within reasonable ranges, several broad patterns emerge:
+
+* *Demographics and tenure:* Customers are primarily middle-aged (mean age around 46 years) and have maintained their accounts for an average of three years. Most fall within the 41–52 age range, suggesting a stable working-age customer base.
+
+* *Credit behavior:* The average credit limit is about $8,600 but varies widely, indicating substantial heterogeneity in financial profiles. Available credit closely mirrors the credit limit, while utilization ratios range from near zero to almost full usage, reflecting distinct groups of conservative and high-usage customers.
+
+* *Transaction activity:* On average, customers complete about 65 transactions per year with a total value near $4,400. The presence of high-value spenders in the upper quartile points to diverse spending patterns that may influence churn behavior.
+
+* *Behavioral changes:* Quarterly spending ratios show that customers generally spend slightly less toward the end of the year, though some exhibit sharp increases. These shifts may signal changing engagement or seasonal effects.
+
+* *Categorical variables:* Females make up a slight majority, and most customers are married. Education levels are concentrated in the graduate and college categories, while income skews toward lower brackets. Nearly all customers hold blue credit cards, showing limited diversity in card types.
+
+These descriptive patterns highlight the heterogeneity of the customer base and suggest that scaling and transformation may be necessary for several numerical variables. Some categorical features (particularly `education`, `marital`, and `income`) contain an `"unknown"` category, representing missing information that must be handled carefully.
+
+The next subsection focuses on preparing the *churnCredit* dataset for exploration by addressing missing values, verifying variable types, and ensuring consistent formats. Proper preparation at this stage ensures that the insights drawn from exploratory data analysis are both valid and interpretable.
+
+### Data Preparation for the *churnCredit* Dataset {.unnumbered}
+
+The initial inspection of the *churnCredit* dataset revealed several data quality issues that must be addressed before proceeding with Exploratory Data Analysis (EDA). In particular, several categorical variables (`education`, `income`, and `marital`) contain missing entries that were encoded as `"unknown"`. Treating these values appropriately is essential to prevent biased insights and ensure that the subsequent analyses reflect the true characteristics of the data.
+
+To standardize the representation of missing values, all `"unknown"` entries are replaced with `NA`. The `droplevels()` function is then applied to remove unused factor levels:
+
+```{r}
+churnCredit[churnCredit == "unknown"] <- NA
+churnCredit <- droplevels(churnCredit)
+```
+
+Before imputing missing values, it is useful to visualize their extent and distribution across variables. The **naniar** package provides intuitive tools for this purpose. The `gg_miss_var()` function displays the proportion of missing observations for each variable:
+
+```{r}
+library(naniar)
+
+gg_miss_var(churnCredit, show_pct = TRUE)
+```
+
+The resulting plot shows that three categorical variables (`education`, `income`, and `marital`) contain missing values, with `education` having the highest proportion (approximately `r round(mean(is.na(churnCredit$education)) * 100, 1)`%). Although the level of missingness is modest, addressing it is important to maintain data integrity and comparability across groups.
+
+There are several strategies for handling missing categorical data, including mode imputation, random assignment, or introducing a separate “missing” category. For this dataset, we apply *random imputation* using the **Hmisc** function `impute()`, which replaces each missing value with a randomly sampled observed value from the same variable. This method preserves the original distribution of categories and avoids overrepresentation of the most frequent class.
+
+```{r}
+library(Hmisc)
+
+churnCredit$education <- impute(churnCredit$education, "random")
+churnCredit$income    <- impute(churnCredit$income, "random")
+churnCredit$marital   <- impute(churnCredit$marital, "random")
+```
+
+After imputing missing values, it is good practice to verify that all variables are correctly typed. Categorical variables should be stored as factors, while numerical features should be numeric. This ensures that statistical summaries and visualizations behave as expected:
+
+```{r}
+str(churnCredit)
+```
+
+Once the data are clean and variables properly defined, the dataset is ready for exploratory analysis. The next section applies summary statistics and visualization techniques to uncover key patterns and relationships underlying customer churn.
+
+## Exploring Categorical Features {#sec-chapter-EDA-categorical}
+
+Categorical variables divide observations into discrete groups that capture demographic or behavioral characteristics of customers. In the *churnCredit* dataset, key categorical features include `gender`, `education`, `marital`, `card.category`, and `churn`. Exploring how these variables are distributed—and how they relate to the outcome variable `churn`—can reveal early patterns of customer loyalty or disengagement.
+
+We begin by examining the distribution of the target variable `churn`, which indicates whether a customer has closed their credit card account. Understanding this distribution is important for assessing *class balance*, a factor that directly influences model training and interpretation.
+
+```{r out.width = "50%"}
+ggplot(data = churnCredit, aes(x = churn, label = scales::percent(prop.table(after_stat(count))))) +
+  geom_bar(fill = c("#F4A582", "#A8D5BA")) + 
+  geom_text(stat = 'count', vjust = 0.4, size = 8)
+```
+
+The bar plot shows that most customers remain active (`churn = "no"`), while a smaller proportion—about `r round(prop.table(table(churnCredit$churn))["yes"] * 100, 1)`%—have closed their accounts. This imbalance suggests that customer attrition is relatively infrequent, a pattern typical in many financial and subscription-based contexts.
+
+This visualization builds on basic plotting techniques introduced in Section [-@sec-ch1-visualization]. A simpler version, without color or percentage labels, can be produced with:
+
+```r
+ggplot(data = churnCredit) + 
+  geom_bar(aes(x = churn))
+```
+
+The simpler plot offers a quick overview, whereas the enhanced version provides clearer communication by emphasizing proportions. Such refinements are valuable when presenting results to non-technical stakeholders, as they make relative differences immediately visible.
+
+Class imbalance is not just a descriptive feature—it has practical implications for modeling. Predictive algorithms trained on imbalanced data tend to favor the majority class, leading to biased predictions and lower sensitivity to minority outcomes. This issue will be revisited in Chapter [-@sec-ch6-setup-data], Section [-@sec-ch6-balancing], where methods for addressing imbalance are introduced.
+
+Having established the overall distribution of the target variable, the next step is to explore how other categorical features relate to churn. These variables may reveal distinct customer segments or behavioral patterns associated with higher attrition risk.
+
+### Relationship Between Gender and Churn {.unnumbered}
+
+Among the demographic variables, `gender` can help examine whether customer retention behavior differs between male and female account holders. Although gender is not typically a strong predictor of churn in financial services, even small differences may offer useful insights into customer engagement patterns.
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+ggplot(data = churnCredit) + 
+  geom_bar(aes(x = gender, fill = churn))    
+
+ggplot(data = churnCredit) + 
+  geom_bar(aes(x = gender, fill = churn), position = "fill") 
+```
+
+The left plot displays the absolute number of churners and non-churners by gender. The right plot, which expresses the counts as proportions within each gender group, highlights relative differences in churn rates. Both plots show that the churn rate is slightly higher among female customers, but the difference is modest—indicating that gender alone is not a major factor influencing account closure.
+
+To verify this observation numerically, we can examine the contingency table:
+
+```{r}
+addmargins(table(churnCredit$churn, churnCredit$gender, 
+                 dnn = c("Churn", "Gender")))
+```
+
+The table supports the visual impression: the proportion of female customers who churn is marginally higher than that of male customers. This small difference may reflect minor behavioral or engagement variations rather than any structural or policy-related factor.
+
+From an analytical perspective, this finding suggests that gender is not a key differentiator in churn behavior. More meaningful variation is likely to arise from behavioral and financial indicators such as transaction activity, credit utilization, and customer engagement metrics, which tend to offer stronger predictive value in modeling churn risk.
+
+### Relationship Between Card Category and Churn {.unnumbered}
+
+Credit card type is one of the most informative service features in the *churnCredit* dataset. The variable `card.category` distinguishes four tiers—blue, silver, gold, and platinum—representing different benefit levels and customer segments.
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+ggplot(data = churnCredit) + 
+  geom_bar(aes(x = card.category, fill = churn)) + 
+  labs(x = "Card Category", y = "Count", fill = "Churn")
+
+ggplot(data = churnCredit) + 
+  geom_bar(aes(x = card.category, fill = churn), position = "fill") + 
+  labs(x = "Card Category", y = "Proportion", fill = "Churn")
+```
+
+The left plot shows the absolute number of churners and non-churners within each tier, while the right plot presents proportions within card categories. The distribution is strongly imbalanced: over 93 % of customers hold a blue card, which is typically the entry-level or no-fee version. Because of this dominance, differences across categories should be interpreted cautiously, as small groups (gold and platinum) contribute little to the overall churn pattern.
+
+```{r}
+addmargins(table(churnCredit$churn, churnCredit$card.category, 
+                 dnn = c("Churn", "Card Category")))
+```
+
+The contingency table confirms that churn rates are slightly higher among holders of lower-tier cards (blue and silver) and somewhat lower among premium cardholders. Given the strong skew in category frequencies, one might consider recoding the variable into two broader groups—such as “blue” versus “silver+” (combining silver, gold, and platinum)—to ensure sufficient representation for statistical analysis and modeling.
+
+From an analytical standpoint, this feature provides an example of how category imbalance can affect interpretation and model reliability. For business interpretation, the pattern suggests that customer engagement and perceived value among lower-tier cardholders may play a role in churn risk.
+
+### Relationship Between Education and Churn {.unnumbered}
+
+Education level can influence financial habits and engagement with banking services. The variable `education` classifies customers into categories such as *high-school*, *college*, *graduate*, *post-graduate*, and *doctorate*. Exploring its relationship with churn helps assess whether financial literacy or career stage is associated with customer retention.
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+ggplot(data = churnCredit) + 
+  geom_bar(aes(x = education, fill = churn)) + 
+  labs(x = "Education Level", y = "Count", fill = "Churn") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(data = churnCredit) + 
+  geom_bar(aes(x = education, fill = churn), position = "fill") + 
+  labs(x = "Education Level", y = "Proportion", fill = "Churn") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+The bar plots show that churn rates vary only slightly across education levels. Customers with lower educational attainment exhibit marginally higher churn, while those with postgraduate or doctoral degrees show somewhat lower churn rates. However, these differences are small and unlikely to be practically significant.
+
+```{r}
+addmargins(table(churnCredit$churn, churnCredit$education, 
+                 dnn = c("Churn", "Education")))
+```
+
+The contingency table confirms that education exerts only a modest influence on churn. Since missing values were imputed earlier, comparisons across categories are now based on complete data. While education may reflect broader differences in financial literacy, it does not appear to be a major determinant of account closure in this dataset.
+
+From an analytical perspective, this suggests that education is not a key differentiating factor for churn behavior. Subsequent analyses should focus on behavioral and transactional features—such as credit utilization, spending activity, and customer engagement—which typically provide stronger indicators of churn risk.
+
+### Relationship Between Income and Churn {.unnumbered}
+
+Income level reflects purchasing power and financial stability, both of which may influence a customer’s likelihood of closing a credit account. The variable `income` in the *churnCredit* dataset includes five ordered categories, ranging from *less than $40K* to *over $120K*. Since missing values were imputed earlier, the variable now provides a complete and consistent basis for comparison.
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+ggplot(data = churnCredit) + 
+  geom_bar(aes(x = income, fill = churn)) + 
+  labs(x = "Annual Income Bracket", y = "Count", fill = "Churn") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(data = churnCredit) + 
+  geom_bar(aes(x = income, fill = churn), position = "fill") + 
+  labs(x = "Annual Income Bracket", y = "Proportion", fill = "Churn") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+The bar plots show a gradual decline in churn as income increases. Customers in the lowest income bracket (less than `$40K`) churn slightly more often than those in higher income groups, whereas customers earning over `$120K` exhibit the lowest churn rate. Although the trend is modest, the direction suggests that financial capacity is associated with account stability.
+
+```{r}
+addmargins(table(churnCredit$churn, churnCredit$income, 
+                 dnn = c("Churn", "Income")))
+```
+
+The contingency table confirms this pattern, showing small but consistent differences across income levels. Lower-income customers may be more responsive to service fees or credit limits, while higher-income customers tend to maintain longer and more stable relationships with the bank.
+
+From an analytical perspective, this variable provides a mild yet interpretable signal of churn behavior. Its ordinal structure may prove useful in modeling if treated appropriately. For instance, by encoding it as an ordered factor to preserve its inherent ranking rather than as a set of independent categories.
+
+### Relationship Between Marital Status and Churn {.unnumbered}
+
+Marital status may influence financial behavior and account management, making it a useful demographic variable to examine in the context of churn. The `marital` variable in the *churnCredit* dataset includes three main categories: *married*, *single*, and *divorced*.
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+ggplot(data = churnCredit) + 
+  geom_bar(aes(x = marital, fill = churn)) + 
+  labs(x = "Marital Status", y = "Count", fill = "Churn")
+
+ggplot(data = churnCredit) + 
+  geom_bar(aes(x = marital, fill = churn), position = "fill") + 
+  labs(x = "Marital Status", y = "Proportion", fill = "Churn")
+```
+
+The bar plots show that single customers churn slightly more often than married or divorced customers. The differences, however, are relatively small and may not be practically significant.
+
+```{r}
+addmargins(table(churnCredit$churn, churnCredit$marital, 
+                 dnn = c("Churn", "Marital Status")))
+```
+
+The contingency table confirms this observation: marital status appears to have only a minor association with churn. This pattern may reflect differences in household financial behavior or shared account responsibilities, but overall, the relationship is weak.
+
+From an analytical perspective, marital status provides limited explanatory value for predicting churn. Subsequent analysis should therefore prioritize behavioral and transactional variables, such as spending activity, utilization ratio, and frequency of customer contact, which capture engagement and account usage more directly.
+
+### Summary of Categorical Findings {.unnumbered}
+
+The exploratory analysis of categorical variables in the *churnCredit* dataset reveals several subtle yet meaningful patterns that help contextualize customer churn behavior.
+
+* *Gender:* Female customers exhibit a slightly higher churn rate than males, but the difference is small and unlikely to hold strong predictive value.
+
+* *Card Category:* Customers with higher-tier cards (gold and platinum) are less likely to churn, suggesting that premium benefits and deeper engagement foster stronger retention.
+
+* *Education:* Lower education levels are associated with marginally higher churn, though the overall differences remain minor, indicating limited explanatory strength.
+
+* *Income:* Churn rates decline gradually with increasing income, implying that greater financial capacity may support long-term account stability.
+
+* *Marital Status:* Single customers churn somewhat more often than married or divorced customers, possibly reflecting differing financial priorities or relationship-driven spending patterns.
+
+In summary, demographic characteristics such as gender, education, and marital status show only weak associations with churn, while service-related and financial features—particularly card type and income—offer more actionable insights. These results suggest that behavioral and financial indicators are likely to play a more decisive role in understanding and predicting churn.
+
+The next section continues the exploratory analysis by turning to numerical variables that capture spending activity, credit utilization, and overall customer engagement.
+
+## Exploring Numerical Features {#sec-EDA-sec-numeric}
+
+The *churnCredit* dataset contains fourteen numerical variables that describe different aspects of customer behavior, credit management, and engagement with the bank. Analyzing these variables helps uncover how customers differ in spending, activity level, financial capacity, and behavioral changes over time—factors that are often related to churn risk.
+
+To keep the analysis focused and interpretable, we examine five representative numerical features that capture key behavioral and financial dimensions of customer retention:
+
+1. `contacts.count.12`: number of customer service contacts in the past 12 months, reflecting engagement and potential dissatisfaction  
+2. `transaction.amount.12`: total amount spent during the past 12 months, representing spending activity  
+3. `credit.limit`: total credit line assigned to each customer, indicating financial capacity  
+4. `months.on.book`: number of months the customer has held the account, representing relationship duration  
+5. `ratio.amount.Q4.Q1`: ratio of total transaction amount in the fourth quarter to that in the first quarter, capturing changes in spending behavior over time  
+
+Together, these variables provide a comprehensive view of customer interaction, engagement, credit strength, tenure, and behavioral change. After examining these features individually, the subsection *Assessing Correlation and Redundancy* explores how numerical variables relate to one another and identifies potential overlaps. This step ensures that later models are based on distinct, non-redundant predictors that contribute meaningfully to churn analysis.
+
+### Customer Contacts and Churn {.unnumbered}
+
+The number of customer service contacts within the past year (`contacts.count.12`) provides insight into customer engagement and potential dissatisfaction. This variable is discrete, taking small integer values that represent the number of times a customer contacted support. For such count-based variables, bar plots are preferred to boxplots or density plots, as they better convey frequency distributions and group proportions.
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+ggplot(data = churnCredit) +
+  geom_bar(aes(x = factor(contacts.count.12), fill = churn)) +
+  labs(x = "Number of Contacts in Past 12 Months", y = "Count", fill = "Churn")
+
+ggplot(data = churnCredit) +
+  geom_bar(aes(x = factor(contacts.count.12), fill = churn), position = "fill") +
+  labs(x = "Number of Contacts in Past 12 Months", y = "Proportion", fill = "Churn")
+```
+
+The bar plots show that churn rates increase among customers who contacted customer service more frequently, particularly those with four or more interactions within the year. This pattern suggests that repeated service contacts may reflect dissatisfaction or unresolved issues.
+
+From an analytical perspective, this feature offers an interpretable behavioral signal. Customers who contact support frequently are more likely to close their accounts, making this variable a useful early indicator of churn risk.
+
+### Transaction Amount and Churn {.unnumbered}
+
+The total transaction amount in the past twelve months (`transaction.amount.12`) reflects the level of customer activity and engagement with the credit card. Higher transaction volumes generally indicate active usage and satisfaction, while lower spending may signal disengagement or a shift toward other financial products.
+
+Unlike count-based variables such as `contacts.count.12`, `transaction.amount.12` is continuous, making boxplots and density plots more suitable visualization tools. These plots summarize the central tendency, spread, and distributional differences between churned and active customers.
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+ggplot(data = churnCredit) +
+  geom_boxplot(aes(x = churn, y = transaction.amount.12), fill = c("#F4A582", "#A8D5BA")) +
+  labs(x = "Churn", y = "Total Transaction Amount (12 months)")
+
+ggplot(data = churnCredit) +
+  geom_density(aes(x = transaction.amount.12, fill = churn), alpha = 0.6) +
+  labs(x = "Total Transaction Amount (12 months)", y = "Density", fill = "Churn")
+```
+
+Both plots reveal a clear distinction between churners and non-churners. Customers who churn tend to have significantly lower total transaction amounts, indicating reduced engagement with the credit card over the preceding year. In contrast, customers who remain active generally show higher and more varied transaction volumes.
+
+From a business standpoint, declining transaction activity can serve as an early warning signal of disengagement. Monitoring spending behavior and offering personalized incentives—such as cashback or loyalty rewards—may help encourage continued use and improve retention among low-activity customers.
+
+### Credit Limit and Churn {.unnumbered}
+
+The total credit line assigned to each customer (`credit.limit`) reflects both financial capacity and the bank’s confidence in the customer’s creditworthiness. Customers with higher credit limits generally represent lower-risk or more established clients, who may also be less likely to close their accounts.
+
+Because `credit.limit` is a continuous variable that can vary widely across customers, violin and histogram plots are effective tools for visualizing its distribution by churn status. These plots reveal differences in both median values and distribution shapes between the two groups.
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+ggplot(data = churnCredit, aes(x = churn, y = credit.limit, fill = churn)) +
+  geom_violin(trim = FALSE) +
+  labs(x = "Churn", y = "Credit Limit")
+
+ggplot(data = churnCredit) +
+  geom_histogram(aes(x = credit.limit, fill = churn)) +
+  labs(x = "Credit Limit", y = "Count", fill = "Churn")
+```
+
+Both plots show that customers who churn tend to have lower credit limits compared to those who remain active. The distribution for non-churners is more dispersed and shifted toward higher values, suggesting that customers with greater financial capacity are less inclined to close their accounts.
+
+From a business perspective, this pattern implies that customers with smaller credit limits might perceive limited benefits from maintaining their credit card accounts. Offering credit line increases to eligible customers, or designing products tailored to their spending capacity, could help improve retention in this segment.
+
+### Months on Book and Churn {.unnumbered}
+
+The variable `months.on.book` measures the length of time a customer has maintained their credit card account with the bank. Tenure often reflects relationship stability and long-term engagement. Customers with longer histories tend to be more loyal and may have developed stronger trust or accumulated benefits, while newer customers might be more likely to close their accounts if their expectations are not met.
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+ggplot(data = churnCredit, aes(x = churn, y = months.on.book, fill = churn)) +
+  geom_violin(alpha = 0.5, trim = TRUE) +
+  geom_boxplot(width = 0.15, fill = "white", outlier.shape = NA, color = "black") +
+  labs(x = "Churn", y = "Months on Book") +
+  theme(legend.position = "none")
+
+ggplot(data = churnCredit) +
+  geom_histogram(aes(x = months.on.book, fill = churn), bins = 20) +
+  labs(x = "Months on Book", y = "Density", fill = "Churn")
+```
+
+Both plots suggest that customers who churn tend to have slightly shorter tenures than those who remain active. Although the difference is not large, it is consistent: the median tenure of churners is a few months lower. The noticeable peak around 36 months reflects a cohort effect, likely linked to a major customer acquisition campaign that occurred three years before the observation period.
+
+From a business perspective, such findings can inform retention programs targeting newer customers. Strengthening onboarding processes, enhancing early engagement, or providing tailored incentives during the first year could help increase customer lifetime value and reduce attrition.
+
+### Ratio of Transaction Amount (Q4/Q1) and Churn {.unnumbered}
+
+The variable `ratio.amount.Q4.Q1` measures the ratio between the total transaction amount in the fourth quarter and that in the first quarter. It captures how customer spending changes over time, offering a behavioral perspective on financial activity. A declining ratio may suggest reduced engagement or satisfaction, while an increasing ratio could indicate growing usage and confidence in the service.
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+ggplot(data = churnCredit) +
+  geom_boxplot(aes(x = churn, y = ratio.amount.Q4.Q1), fill = c("#F4A582", "#A8D5BA")) +
+  labs(x = "Churn", y = "Transaction Amount Ratio (Q4/Q1)")
+
+ggplot(data = churnCredit) +
+  geom_density(aes(x = ratio.amount.Q4.Q1, fill = churn), alpha = 0.6) +
+  labs(x = "Transaction Amount Ratio (Q4/Q1)", y = "Density", fill = "Churn")
+```
+
+The plots reveal that customers who churn tend to have lower Q4-to-Q1 ratios, indicating a reduction in spending toward the end of the year. In contrast, customers who remain active typically maintain or slightly increase their transaction volumes between the two periods.
+
+This decline in spending may serve as an early signal of disengagement: customers who gradually reduce their credit card usage are more likely to close their accounts later.
+
+From a business perspective, monitoring quarterly spending patterns can help identify at-risk customers. Proactive measures, such as targeted rewards or seasonal incentives for reduced spenders, could mitigate churn risk and sustain long-term engagement.
+
+*Try it yourself:*
+Repeat the same visual analysis using other numerical features such as `age` and `months.inactive`. Do you observe similar or different patterns of behavior between churners and non-churners? Reflect on how these variables might contribute to predicting customer retention.
+
+
+### Assessing Correlation and Redundancy {#sec-ch4-EDA-correlation}
+
+Before analyzing more complex interactions among variables, it is helpful to assess how numerical features relate to one another. Correlation analysis helps identify variables that may carry overlapping information or exhibit redundancy. Recognizing such relationships early simplifies the modeling process and reduces the risk of multicollinearity.
+
+Correlation quantifies how two variables move together. A positive correlation means that as one variable increases, the other tends to increase as well; a negative correlation suggests that one decreases as the other increases. The Pearson correlation coefficient, denoted by $r$, summarizes this relationship on a scale from $-1$ to $1$. A value of $r = 1$ indicates a perfect positive relationship, $r = -1$ a perfect negative relationship, and $r = 0$ no linear association.
+
+```{r fig-correlation, echo = FALSE, out.width = "100%", fig.cap = "Example scatterplots showing different correlation coefficients."}
+knitr::include_graphics("images/ch4_correlation.png")
+```
+
+> *Note:* Correlation does not imply causation. For example, a strong positive correlation between customer contacts and churn does not mean that contacting customer service causes customers to leave. Both behaviors may stem from an underlying factor, such as dissatisfaction with service.
+
+To illustrate this point, Figure [-@fig-correlation-chocolate] shows a well-known example from @messerli2012chocolate, depicting a strong correlation between per-capita chocolate consumption and Nobel Prize wins across countries. Although amusing, it underscores the importance of caution: correlations may arise by coincidence or through the influence of unobserved factors. For readers interested in causality, *The Book of Why* by Judea Pearl and Dana Mackenzie [@pearl2018book] offers an accessible introduction to this topic.
+
+```{r fig-correlation-chocolate, echo = FALSE, out.width = "70%", fig.cap = "Scatterplot illustrating the correlation between Nobel Prize wins and chocolate consumption (per 10 million population) across countries. Adapted from @messerli2012chocolate."}
+knitr::include_graphics("images/ch4_correlation_chocolate.png")
+```
+
+Returning to the *churnCredit* dataset, we compute and visualize the correlation matrix for all numerical variables using a heatmap. This visualization helps detect redundant or related features before modeling.
+
+```{r, out.width = "100%"}
+library(ggcorrplot)
+
+numeric_features = c("age", "dependent.count", "months.on.book", "relationship.count", 
+                     "months.inactive", "contacts.count.12", "credit.limit", 
+                     "revolving.balance", "available.credit", "transaction.amount.12", 
+                     "transaction.count.12", "ratio.amount.Q4.Q1", "ratio.count.Q4.Q1", "utilization.ratio")
+
+cor_matrix = cor(churnCredit[, numeric_features])
+
+ggcorrplot(cor_matrix, type = "lower", lab = TRUE, lab_size = 2, tl.cex = 6, 
+           colors = c("#699fb3", "white", "#b3697a"),
+           title = "Visualization of the Correlation Matrix")
+```
+
+The heatmap shows that most numerical variables in the *churnCredit* dataset are only moderately or weakly correlated, suggesting that they capture distinct behavioral dimensions. The exception is the perfect correlation ($r = 1$) between `credit.limit` and `available.credit`, meaning one is mathematically derived from the other. Including both in a model would therefore add redundancy without additional information. To illustrate this visually:
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+ggplot(data = churnCredit) +
+    geom_point(aes(x = credit.limit, y = available.credit), size = 0.1) +
+    labs(x = "Credit Limit", y = "Available Credit")
+
+ggplot(data = churnCredit) +
+    geom_point(aes(x = credit.limit - revolving.balance, y = available.credit), size = 0.1) +
+    labs(x = "Credit Limit - Revolving Balance", y = "Available Credit")
+```
+
+The first plot shows a perfect linear relationship between `credit.limit` and `available.credit`. The second confirms that `available.credit` is essentially equal to `credit.limit - revolving.balance`, validating the redundancy observed in the correlation matrix.
+
+A similar relationship is observed between `utilization.ratio`, `revolving.balance`, and `credit.limit`. The utilization ratio is mathematically defined as `revolving.balance / credit.limit`, meaning it does not introduce new information but provides a normalized view of credit usage. Depending on the modeling goal, it may be preferable to retain either the ratio for interpretability or its components for more detailed financial analysis. To illustrate this visually:
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+ggplot(data = churnCredit) +
+    geom_point(aes(x = credit.limit, y = utilization.ratio), size = 0.1) +
+    labs(x = "Credit Limit", y = "Utilization Ratio")
+
+ggplot(data = churnCredit) +
+    geom_point(aes(x = revolving.balance/credit.limit, y = utilization.ratio), size = 0.1) +
+    labs(x = "Revolving Balance / Credit Limit", y = "Utilization Ratio")
+```
+
+Removing redundant variables (such as `utilization.ratio` or its derived counterparts) simplifies the dataset and reduces potential multicollinearity. The remaining variables exhibit mostly low or moderate correlations, indicating that they provide complementary information about customer behavior.
+
+### Summary of Numerical Findings {.unnumbered}
+
+The exploratory analysis of numerical features in the *churnCredit* dataset reveals several key behavioral and financial patterns:
+
+* Customers with fewer customer service contacts tend to remain active, whereas those with multiple interactions are more likely to churn, suggesting a link between frequent service issues and dissatisfaction.
+
+* Spending activity, measured by `transaction.amount.12`, shows a strong association with retention. Customers who spend more are generally more engaged and less likely to close their accounts.
+
+* Credit-related variables such as `credit.limit` and `available.credit` are perfectly correlated, capturing the same financial capacity information. Similarly, the `utilization.ratio` is mathematically derived from `revolving.balance` and `credit.limit`. Retaining only one of these measures avoids redundancy and improves model clarity.
+
+* The variable `months.on.book` indicates that customers with longer relationships are slightly less likely to churn, though the difference is modest. Early-stage customers may require targeted onboarding and retention programs.
+
+* The `ratio.amount.Q4.Q1` feature suggests that a decline in spending between the first and fourth quarters often precedes account closure, highlighting potential seasonal disengagement patterns.
+
+* Correlation analysis confirmed that, apart from these derived or perfectly correlated variables, most numerical features are only moderately or weakly correlated, meaning they provide distinct insights into customer behavior.
+
+Overall, the numerical analysis highlights that customer churn is more strongly influenced by behavioral and financial indicators—such as spending activity, utilization, and engagement—than by demographic characteristics. These findings provide a quantitative foundation for feature selection and modeling in the following chapters.
+
+## Exploring Multivariate Relationships {#sec-EDA-sec-multivariate}
+
+Univariate and pairwise analyses provide important context, but real-world customer behaviour often emerges from the interaction of multiple variables. This section examines how financial activity and demographic factors combine to explain churn, helping identify customer groups with distinct risk profiles.
+
+By analysing combinations of variables, such as joint spending and usage, or spending differences across card categories, we obtain a more complete view of how customers engage with their accounts and how this relates to account closure.
+
+### Joint Patterns in Transaction Amount and Count {.unnumbered}
+
+Transaction activity has two important dimensions: how much customers spend and how often they use their card. The variables `transaction.amount.12` and `transaction.count.12` represent these behaviours. Examining them together provides insight into usage patterns that are not visible in univariate plots. A scatter plot is particularly suitable here because it displays both dimensions simultaneously.
+
+```{r}
+ggplot(data = churnCredit) +
+  geom_point(aes(x = transaction.amount.12, 
+                 y = transaction.count.12, 
+                 color = churn),
+             size = 0.2, alpha = 0.7) +
+  labs(x = "Total Transaction Amount (12 months)",
+       y = "Total Transaction Count (12 months)",
+       color = "Churn")
+```
+
+The scatter plot shows a clear positive association: customers who spend more also tend to make more transactions. Most observations fall along a broad diagonal region of moderate spending and transaction counts. Within this region, churners and non-churners overlap, although some areas appear to contain a higher proportion of churned accounts.
+
+To make this clearer, we focus on two illustrative regions: customers with very low spending and those with moderate spending but relatively few transactions. These regions are extracted using the `subset()` function as follows:
+
+```{r out.width = "50%"}
+sub_churnCredit = subset(
+  churnCredit,
+  (transaction.amount.12 < 1000) |
+    ((2000 < transaction.amount.12) & 
+     (transaction.amount.12 < 3000) & 
+     (transaction.count.12 < 52))
+)
+
+ggplot(data = sub_churnCredit, 
+       aes(x = churn, 
+           label = scales::percent(prop.table(after_stat(count))))) +
+  geom_bar(fill = c("#F4A582", "#A8D5BA")) + 
+  geom_text(stat = "count", vjust = 0.4, size = 8) +
+  labs(x = "Churn", y = "Count")
+```
+
+Within this subset, the proportion of churners is noticeably higher than in the full dataset. These patterns suggest that low or inconsistent card usage (particularly when combined with infrequent transactions) is associated with an increased likelihood of churn.
+
+From a modelling perspective, this example illustrates how interaction effects can be important. Neither transaction amount nor transaction count alone identifies these segments, but their combination highlights customers with elevated churn risk. From a business perspective, customers with low activity represent an opportunity for targeted re-engagement, such as usage incentives or personalised communication.
+
+### Card Category and Spending Patterns {.unnumbered}
+
+The variable `card.category` divides customers into four product tiers (blue, silver, gold, and platinum). The variable `transaction.amount.12` measures the total amount spent over the past twelve months. Examining these variables together provides insight into how card tier relates to spending behaviour.
+
+Because `transaction.amount.12` is continuous and `card.category` is categorical, density plots are a natural choice. They highlight differences in the shape, centre, and spread of spending distributions across card tiers.
+
+```{r}
+ggplot(data = churnCredit, aes(x = transaction.amount.12, fill = card.category)) +
+  geom_density(alpha = 0.5) +
+  labs(x = "Total Transaction Amount (12 months)",
+       y = "Density",
+       fill = "Card Category") +
+  scale_fill_manual(values = c("#1E90FF", "#C0C0C0", "#FFD700", "#E5E4E2"))
+```
+
+The density curves show that customers with higher-tier cards, particularly gold and platinum, tend to have higher transaction amounts. Their distributions are shifted to the right relative to those of blue and silver cardholders. Blue card customers are more concentrated in the lower and middle spending ranges.
+
+It is helpful to note that blue cards represent more than 90 percent of all accounts, so the density curves reflect both within-group variation and substantial differences in group size. Despite this imbalance, the overall pattern is consistent: premium cards are associated with higher spending levels.
+
+From a business perspective, this relationship suggests that card tier is closely linked to customer engagement and perceived value. Premium cardholders tend to be high-value, active customers, while blue cardholders form a more diverse group that includes many low-activity accounts. These observations can inform differentiated retention and marketing strategies, such as targeted upgrades or benefits aimed at increasing engagement among standard-tier customers.
+
+### Transaction Analysis by Age {.unnumbered}
+
+Age is an important demographic factor that often shapes financial behaviour, spending patterns, and loyalty to service providers. In the *churnCredit* dataset, understanding how transaction activity varies across age groups can shed light on whether younger and older customers differ in their likelihood of closing their accounts. Because individual observations form a dense cloud, we use smoothed trend lines to highlight overall patterns in spending and transaction frequency.
+
+```{r}
+#| layout-ncol: 2
+#| fig-width: 5
+#| fig-height: 4
+
+# Total Transaction Amount by Age
+ggplot(data = churnCredit, aes(x = age, y = transaction.amount.12, color = churn)) +
+  geom_smooth(se = FALSE, linewidth = 1.1, alpha = 0.9) +
+  labs(x = "Customer Age", 
+       y = "Total Transaction Amount (12 months)",
+       color = "Churn") +
+  theme_minimal()
+
+# Total Transaction Count by Age
+ggplot(data = churnCredit, aes(x = age, y = transaction.count.12, color = churn)) +
+  geom_smooth(se = FALSE, linewidth = 1.1, alpha = 0.9) +
+  labs(x = "Customer Age", 
+       y = "Total Transaction Count (12 months)",
+       color = "Churn") +
+  theme_minimal()
+```
+
+The smooth curves indicate that transaction activity gradually declines with age. Younger customers tend to make more transactions and spend larger amounts, whereas older customers show lower and more stable activity levels. There is also a small indication that churn is slightly more common among younger, highly active customers, although this difference is not large.
+
+These patterns illustrate that activity level alone does not determine churn. Instead, demographic factors such as age interact with behavioural indicators to shape retention dynamics. Placing age alongside spending and engagement measures gives a more comprehensive view of customer behaviour than any single variable can provide.
+
+### Summary of Multivariate Insights {.unnumbered}
+
+The multivariate analysis of the *churnCredit* dataset highlights several interactions among behavioural, transactional, and demographic features. These patterns reveal customer segments that do not emerge through univariate exploration alone.
+
+* Spending behaviour varies across card types. Higher-tier cardholders (gold and platinum) tend to spend more and exhibit lower churn rates, while blue card customers show wider variation in spending. This suggests that product tier is closely linked to engagement and perceived value.
+
+* The joint interpretation of transaction amount and transaction count provides insight into usage patterns that neither variable captures on its own. Customers with both low spending and infrequent transactions show noticeably higher churn rates, indicating potential disengagement or limited perceived benefit.
+
+* Younger customers generally make more transactions and spend larger amounts but exhibit slightly higher churn rates than older customers with similar activity levels. This is consistent with broader trends showing that younger customers may be more responsive to alternative financial products.
+
+* These interaction patterns show that churn risk cannot be inferred from a single behavioural indicator. Instead, combinations of financial activity, usage consistency, and demographic context provide a more complete understanding of retention dynamics.
+
+Overall, the multivariate exploration indicates that customer churn arises from the interplay of several behavioural and demographic dimensions rather than isolated factors. These insights set the stage for the modelling chapters that follow, where such interactions can be quantified and used to improve predictive performance.
+
+## Insights from EDA on Customer Churn {#sec-EDA-summary}
+
+The exploratory analysis of the *churnCredit* dataset has revealed a multifaceted view of customer behavior and the factors associated with churn. By examining both categorical and numerical variables, and how they interact, it became clear that several patterns are relevant for understanding and modelling customer attrition.
+
+Churn behavior appears to be influenced by a combination of financial engagement, credit usage, and service interaction rather than by demographic attributes alone. Customers with lower credit limits, higher utilization ratios, and larger revolving balances are more likely to leave the service. This pattern suggests that financial pressure or perceived credit constraints may contribute to dissatisfaction and eventual account closure.
+
+Behavioural engagement is another important aspect. Customers who contacted customer service frequently, particularly those with four or more interactions within a year, exhibit higher churn rates. This tendency aligns with findings from other service sectors, where repeated contact often indicates unresolved issues or growing dissatisfaction. Similarly, customers who have remained with the bank for several years but have recently become inactive may be at risk of leaving. These individuals represent a valuable opportunity for reactivation.
+
+Transaction activity provides additional insight into the link between engagement and retention. Customers with higher transaction amounts and more frequent transactions tend to remain active, highlighting the role of product usage in sustaining customer relationships. When demographic information is considered, a further pattern emerges: younger, highly active customers churn slightly more often than older customers with similar activity levels. This may reflect lower brand loyalty or a greater openness to alternative financial products among younger segments.
+
+The analysis also highlights the influence of card type and customer segmentation. Holders of higher-tier cards, such as gold or platinum, generally show greater transaction activity and lower churn rates, which suggests that additional benefits and perceived value support customer loyalty. In contrast, customers with standard cards or smaller credit limits may require targeted communication or loyalty initiatives to strengthen their connection with the bank.
+
+The exploratory work also revealed two instances of redundancy. The variable `available.credit` is determined directly by subtracting the revolving balance from the credit limit. Likewise, the utilization ratio is calculated from the revolving balance and the credit limit. Because these features do not introduce new information beyond their component variables, they will be excluded when preparing the data for modelling in Chapter [-@sec-ch7-classification-knn]. This illustrates how EDA supports feature selection by identifying variables that may complicate a model without improving predictive performance.
+
+Overall, this exploratory analysis shows how systematic EDA can reveal both structural characteristics of the data and meaningful behavioural patterns. By integrating financial indicators, engagement measures, and demographic profiles, the analysis provides a sound empirical basis for the statistical inference and predictive modelling developed in the following chapter.
+
+## Chapter Summary and Takeaways {#sec-ch4-summary}
+
+This chapter illustrated how exploratory data analysis supports the transition from raw data to statistical modelling. Using the *churnCredit* dataset, we applied graphical and numerical techniques to examine the structure of the data, identify potential issues, and develop hypotheses about customer behaviour.
+
+The analysis began with an overview of the dataset and an initial preparation step, where missing values encoded as “unknown” were identified and resolved. Ensuring that variables were clean and correctly typed created a sound basis for exploration. The chapter then moved through a systematic examination of categorical and numerical features.
+Categorical variables such as gender, education, marital status, income, and card type helped describe customer profiles, while numerical variables such as credit limit, transaction activity, and utilisation ratio highlighted financial and behavioural patterns.
+
+The exploratory results revealed several consistent relationships. Customers with smaller credit limits, higher utilisation ratios, or frequent customer service interactions were more likely to churn. In contrast, customers with higher transaction amounts and lower utilisation levels tended to remain active. These observations demonstrate how EDA can point toward potential explanatory variables before any formal modelling is undertaken.
+
+Multivariate exploration further showed how combinations of features interact to shape churn behaviour. Joint patterns in transaction amount and count, connections between card category and spending, and links between age and financial activity illustrated that churn often arises from a combination of behavioural, financial, and demographic factors rather than isolated characteristics.
+
+The chapter also highlighted the importance of identifying redundant features. For instance, the variables available credit and utilisation ratio were found to be deterministically related to other variables in the dataset. Recognising such redundancy simplifies later modelling and improves interpretability.
+
+Taken together, the examples emphasise three guiding principles for effective exploratory analysis.
+First, graphical and numerical summaries should be used together to obtain complementary insights.
+Second, careful attention to data quality, including missing values and redundant variables, is essential for reliable analysis.
+Third, EDA is not only descriptive: it provides direction for statistical inference and predictive modelling by revealing patterns worth investigating further.
+
+The results of this chapter form the empirical foundation for the next stage of the analysis. Chapter [-@sec-ch5-inference] introduces the tools of statistical inference, which allow us to formalise uncertainty, quantify relationships, and test hypotheses suggested by the exploratory findings.
+
+## Exercises {#sec-ch4-exercises}
+
+This section provides exercises designed to consolidate the concepts and techniques introduced in this chapter. The questions cover conceptual understanding, hands-on data exploration, and integrative challenges. Exercises begin with short interpretive questions, followed by applied analysis using the *churn* and *bank* datasets, and conclude with advanced problems that encourage synthesis and critical reflection.
+
+#### Conceptual Questions {.unnumbered}
+
+1. Why is exploratory data analysis essential before building predictive models? What risks might arise if this step is skipped?
+
+2. If a variable does not show a clear relationship with the target during EDA, should it be excluded from modeling? Consider potential interactions, hidden effects, and the role of feature selection.
+
+3. What does it mean for two variables to be correlated? Explain the direction and strength of correlation, and contrast correlation with causation using an example.
+
+4. How can correlated predictors be detected and addressed during EDA? Describe how this improves model performance and interpretability.
+
+5. What are the potential consequences of including highly correlated variables in a predictive model? Discuss the effects on accuracy, interpretability, and model stability.
+
+6. Is it always advisable to remove one of two correlated predictors? Under what circumstances might keeping both be justified?
+
+7. For each of the following methods—histograms, box plots, density plots, scatter plots, summary statistics, correlation matrices, contingency tables, and bar plots—indicate whether it applies to categorical data, numerical data, or both. Briefly describe its role in EDA.
+
+8. A bank observes that customers with high credit utilization and frequent customer service interactions are more likely to close their accounts. What actions could the bank take in response, and how might this guide retention strategy?
+
+9. Suppose several pairs of variables in a dataset have high correlation (for example, $r > 0.9$). How would you handle this to ensure robust and interpretable modeling?
+
+10. Why is it important to consider both statistical and practical relevance when evaluating correlations? Provide an example of a statistically strong but practically weak correlation.
+
+11. Why is it important to investigate multivariate relationships in EDA? Describe a case where an interaction between two variables reveals a pattern that univariate analysis would miss.
+
+12. How does data visualization support EDA? Provide two specific examples where visual tools reveal insights that summary statistics might obscure.
+
+13. Suppose you discover that customers with both high credit utilization and frequent service calls are more likely to churn. What business strategies might be informed by this finding?
+
+14. What are some common causes of outliers in data? How would you decide whether to retain, modify, or exclude an outlier?
+
+15. Why is it important to address missing values during EDA? Discuss strategies for handling missing data and when each might be appropriate.
+
+#### Hands-On Practice: Exploring the *churn* Dataset {.unnumbered}
+
+The *churn* dataset from the R package **liver** contains information about customer behavior and service usage in a telecommunications company. The objective is to identify patterns associated with customer churn—whether a customer has left the service. This dataset was also explored earlier in this chapter and will be revisited in later chapters for classification modeling. This dataset will be used for classification in the case study of Chapter [-@sec-ch10-regression]. More details are available at [https://rdrr.io/cran/liver/man/churn.html](https://rdrr.io/cran/liver/man/churn.html).
+
+To load and inspect the dataset:
+
+```r
 library(liver)
 
 data(churn)
 str(churn)
 ```
 
-This reveals that the dataset is stored as a `data.frame` with `r nrow(churn)` observations and `r ncol(churn)` variables. Most of the predictors are numerical or categorical features that describe how customers use the service and interact with the provider.
+16. Summarize the structure of the dataset and identify variable types. What information does this provide about the nature of the data?
 
-A structured overview of the variables is provided below:
+17. Examine the target variable `churn`. What proportion of customers have left the service?
 
--   `state`: U.S. state of the customer (51 levels), categorical.
--   `area.code`: Area code assigned to the customer, categorical.
--   `account.length`: Number of days the account has been active, discrete numerical.
--   `voice.plan`: Whether the customer subscribes to a voice mail plan, binary categorical.
--   `voice.messages`: Number of voice mail messages received, discrete numerical.
--   `intl.plan`: Whether the customer has an international calling plan, binary categorical.
--   `intl.mins`: Total international call minutes, continuous numerical.
--   `intl.calls`: Number of international calls made, discrete numerical.
--   `intl.charge`: Charges for international calls, continuous numerical.
--   `day.mins`, `day.calls`, `day.charge`: Metrics for daytime usage, numerical.
--   `eve.mins`, `eve.calls`, `eve.charge`: Metrics for evening usage, numerical.
--   `night.mins`, `night.calls`, `night.charge`: Metrics for nighttime usage.
--   `customer.calls`: Number of calls to customer service, discrete numerical.
--   `churn`: Indicates whether the customer churned (`yes`/`no`), binary categorical.
+18. Explore the relationship between `intl.plan` and `churn`. Use bar plots and contingency tables to describe what you find.
 
-To get a quick sense of each variable’s distribution and spot potential issues, use the `summary()` function:
+19. Analyze the distribution of `customer.calls`. Which values occur most frequently? What might this indicate about customer engagement or dissatisfaction?
 
-```{r}
-summary(churn)
-```
+20. Investigate whether customers with higher `day.mins` are more likely to churn. Use box plots or density plots to support your reasoning.
 
-This high-level snapshot helps identify variables with unusual values, large spreads, or potential outliers. It also confirms that the dataset is clean, there are no missing values, and variable names are well-labeled and interpretable.
+21. Compute the correlation matrix for all numerical variables. Which features show strong relationships, and which appear independent?
 
-One observation worth highlighting: although there are `r length(table(churn$state))` unique states, there are only `r length(table(churn$area.code))` unique area codes. This suggests that area codes are not uniquely tied to states, which may influence how we interpret geographic information or decide which variable to use in modeling.
+22. Summarize your main EDA findings. What patterns emerge that could be relevant for predicting churn?
 
-In the next sections, we begin our exploratory analysis, starting with the categorical variables. By examining how these variables relate to churn outcomes, we lay the groundwork for uncovering the patterns and insights that EDA is designed to reveal.
-
-## Exploring Categorical Features {#sec-chapter-EDA-categorical}
-
-Categorical variables represent discrete groupings, such as labels, names, or binary flags, that encode structural information about customers and their interactions with a service. In the *churn* dataset, several such features stand out: `state`, `area.code`, `voice.plan`, and `intl.plan`. Analyzing their distributions, and how they relate to the outcome variable `churn`, can reveal early indicators of customer dissatisfaction or loyalty.
-
-To begin, we examine the distribution of the target variable `churn`, which records whether a customer has left the service. Knowing this distribution is essential for assessing class balance, an important factor in both model performance and interpretability.
-
-```{r out.width = "50%"}
-ggplot(data = churn, aes(x = churn, label = scales::percent(prop.table(after_stat(count))))) +
-  geom_bar(fill = c("#F4A582", "#A8D5BA")) + 
-  geom_text(stat = 'count', vjust = 0.4, size = 8)
-```
-
-The bar plot reveals a clear class imbalance: the majority of customers remain active (`churn = "no"`), while a smaller proportion have left the service (`churn = "yes"`). Approximately `r round(prop.table(table(churn$churn))["yes"] * 100, 1)`% of customers have churned.
-
-This visualization builds on foundational plotting techniques introduced in Section [-@sec-ch1-visualization]. A simpler version, omitting color and percentage labels, can be generated with:
-
-``` r
-ggplot(data = churn) + 
-  geom_bar(aes(x = churn))
-```
-
-While quick to produce, the simplified plot may be less informative in presentation settings. Enhancements such as color coding and annotated percentages improve clarity and are especially helpful when communicating results to stakeholders without a technical background.
-
-Class imbalance is more than a descriptive statistic; it can distort predictive modeling by encouraging algorithms to favor the majority class. We will return to this issue in Chapter [-@sec-ch6-setup-data], Section [-@sec-ch6-balancing], where methods for addressing imbalance are introduced.
-
-With this context in place, consider the next question: Are some service features more closely associated with churn than others? To explore this, we begin with the international calling plan.
-
-### Relationship Between Subscription Plans and Churn {.unnumbered}
-
-Among the features available in the *churn* dataset, the variable `intl.plan` is especially relevant from a business and customer experience standpoint. It indicates whether a customer subscribes to an international calling plan, an option that may reflect unique communication needs and cost sensitivities.
-
-As a binary categorical variable, `intl.plan` allows for a straightforward comparison of churn behavior between customers who do and do not use international services.
-
-```{r out.width = "100%"}
-#| layout-ncol: 2
-#| fig-width: 4
-#| fig-height: 4
-
-ggplot(data = churn) + 
-  geom_bar(aes(x = intl.plan, fill = churn))    
-
-ggplot(data = churn) + 
-  geom_bar(aes(x = intl.plan, fill = churn), position = "fill") 
-```
-
-The first plot shows the absolute number of churners and non-churners in each group. The second, normalized by group size, reveals a sharper insight: customers subscribed to an international plan are disproportionately more likely to churn.
-
-This observation can be formally examined using a contingency table:
-
-```{r}
-addmargins(table(churn$churn, churn$intl.plan, 
-                 dnn = c("Churn", "International Plan")))
-```
-
-The table confirms the visual pattern. Among those with an international plan, the rate of churn is noticeably elevated. This may signal customer dissatisfaction, possibly with pricing, call quality, or perceived value.
-
-Such findings have practical implications. Identifying segments with elevated churn risk supports more informed retention strategies. For example, international plan users might benefit from targeted offers, feedback surveys, or enhanced service guarantees.
-
-In the next subsection, we examine whether voice mail subscription shows a similar or contrasting association with churn behavior.
-
-### Relationship Between Voice Mail Plan and Churn {.unnumbered}
-
-We now turn to another service-related feature: the voice mail plan. The variable `voice.plan` indicates whether a customer subscribes to this additional feature. Like the international plan, it may reflect aspects of customer engagement, satisfaction, or perceived value.
-
-```{r out.width = "100%"}
-#| layout-ncol: 2
-#| fig-width: 4
-#| fig-height: 4
-
-ggplot(data = churn) + 
-  geom_bar(aes(x = voice.plan, fill = churn))
-
-ggplot(data = churn) + 
-  geom_bar(aes(x = voice.plan, fill = churn), position = "fill") 
-```
-
-The left panel displays the absolute number of customers who churned or remained, segmented by voice mail plan subscription. The right panel presents the same information in proportional form, highlighting differences in churn rates between groups. While the difference is not dramatic, customers with a voice mail plan appear to churn at slightly lower rates.
-
-To support this visual impression, we generate a contingency table:
-
-```{r}
-addmargins(table(churn$churn, churn$voice.plan, dnn = c("Churn", "Voice Mail Plan")))
-```
-
-The results confirm a modest association between voice mail usage and customer retention. While less striking than the pattern observed for the international calling plan, the trend may suggest that customers who subscribe to add-on services are more engaged, or perhaps more satisfied with their experience.
-
-Even subtle effects can be meaningful in practice. In industries where churn reduction drives profitability, small gains in retention can yield significant impact. These early observations offer a foundation for later predictive modeling and underscore the value of analyzing categorical features in detail.
-
-### Summary of Categorical Findings {.unnumbered}
-
-The exploratory analysis of categorical variables reveals several early signals that help frame the churn problem:
-
--   Customers subscribed to an international calling plan are noticeably more likely to churn. This group may warrant closer attention, as it could reflect unmet service expectations or dissatisfaction with pricing.
-
--   Those who subscribe to a voice mail plan tend to churn less frequently, hinting at a possible link between service engagement and customer loyalty.
-
--   Even modest differences in churn rates across service features can help identify vulnerable segments and guide retention efforts.
-
-These findings offer more than surface-level description; they begin to connect customer characteristics to behavioral outcomes. As we move on to numerical variables, we continue this investigative process, looking for patterns that deepen our understanding of churn dynamics.
-
-## Exploring Numerical Features {#sec-EDA-sec-numeric}
-
-Now that we have examined categorical predictors, we shift our focus to numerical features, variables that often capture the subtleties of customer behavior. In the *churn* dataset, these include patterns of service usage and support interactions that may not be obvious at first glance. While summary statistics provide a high-level overview, it is through visual tools (e.g. histograms, box plots, and density plots) that meaningful trends, outliers, and predictive signals begin to emerge. By visualizing these variables, we can uncover behavioral patterns that may help explain why some customers stay and others leave.
-
-### Customer Service Calls and Churn {.unnumbered}
-
-What can frequent support calls tell us about customer satisfaction? The variable `customer.calls` records how often each customer has contacted customer service, a potentially revealing signal. High contact frequency may indicate dissatisfaction, unresolved problems, or greater service dependency, all of which can raise the risk of churn.
-
-We begin by visualizing the distribution of this variable:
-
-```{r out.width = "60%"}
-ggplot(data = churn) +
-  geom_bar(aes(x = factor(customer.calls))) +
-  labs(x = "Number of Service Calls", y = "Count")
-```
-
-Because `customer.calls` is a count variable with a small number of discrete values (ranging from 0 to 9), we convert it to a factor and use a bar plot to highlight its distribution. While a histogram could be used, it offers little advantage here due to the limited number of distinct values. In contrast, density plots or box plots are less suitable and may obscure meaningful patterns.
-
-The bar plot reveals a right-skewed distribution: most customers contact support rarely, while a smaller group makes frequent calls. To explore how this behavior relates to churn, we compare service call frequency across churn outcomes:
-
-```{r out.width = "100%"}
-#| layout-ncol: 2
-#| fig-width: 4
-#| fig-height: 4
-
-ggplot(data = churn) +
-  geom_bar(aes(x = factor(customer.calls), fill = churn), position = "stack") +
-  labs(x = "Number of Service Calls", y = "Count", fill = "Churn") 
-
-ggplot(data = churn) +
-  geom_bar(aes(x = factor(customer.calls), fill = churn), position = "fill") +
-  labs(x = "Number of Service Calls", y = "Proportion", fill = "Churn") 
-```
-
-The left plot shows raw counts of churners and non-churners at each call level. The right plot, normalized by call frequency, reveals a clear trend: customers who make *four or more service calls* are significantly more likely to churn.
-
-This pattern suggests that frequent contact with customer service may signal dissatisfaction or unmet expectations. From a business perspective, this insight could inform retention strategies, for example, flagging at-risk customers after their third support call. From a modeling perspective, creating a binary feature such as “frequent caller” may better capture this non-linear trend than using the raw count alone.
-
-These kinds of behavioral signals are precisely what EDA is designed to uncover. In the next subsection, we shift our focus to usage patterns, starting with daytime call minutes.
-
-### Daytime Minutes and Churn {.unnumbered}
-
-Do customers who use their phone service more frequently during the day also churn more often? One variable that can help answer this is `day.mins`, which records the number of minutes each customer spends on daytime calls. High daytime usage may indicate stronger dependency on the service, along with heightened sensitivity to pricing, call quality, or reliability.
-
-Because `day.mins` is a continuous numerical variable, we use a box plot to compare distributions across churn outcomes and a density plot to visualize the shape of each distribution. These plots help detect shifts, spread, and overlap between groups. You could also explore this variable with a histogram, which offers another view of distribution—try generating one using `geom_histogram()` as an exercise.
-
-```{r out.width = "100%"}
-#| layout-ncol: 2
-#| fig-width: 4
-#| fig-height: 4
-
-ggplot(data = churn) +
-  geom_boxplot(aes(x = churn, y = day.mins), 
-               fill = c("#F4A582", "#A8D5BA")) +
-  labs(x = "Churn", y = "Daytime Minutes")
-
-ggplot(data = churn) +
-  geom_density(aes(x = day.mins, fill = churn)) +
-  labs(x = "Daytime Minutes", y = "Density", fill = "Churn")
-```
-
-The box plot shows that customers who churn tend to have higher daytime usage, and the density plot confirms this shift. While the difference is not dramatic, it is consistent, suggesting that high-usage customers may be at elevated churn risk.
-
-*Key Insights and Business Implications*: Customers with high `day.mins` usage are more likely to churn. This trend may reflect dissatisfaction driven by unmet service expectations or cost concerns. From a business perspective, proactive retention strategies, such as personalized plans or loyalty benefits, could help retain high-usage customers. From a modeling perspective, `day.mins` is a valuable predictor and may also interact with other features such as `day.charge` or `customer.calls`.
-
-### Evening and Nighttime Minutes {.unnumbered}
-
-Do customers who make more evening or nighttime calls tend to churn more often? To investigate this, we examine two numerical features: `eve.mins`, which measures total minutes of evening calls, and `night.mins`, which records nighttime usage. These time periods may reflect different customer routines, pricing structures, or service expectations compared to daytime activity.
-
-Since both variables are continuous, we begin by visualizing `eve.mins` using a violin plot layered with a box plot to show distributional shape and spread, and a density plot to examine the overlap between churners and non-churners:
-
-```{r out.width = "100%"}
-#| layout-ncol: 2
-#| fig-width: 4
-#| fig-height: 4
-
-ggplot(data = churn, aes(x = churn, y = eve.mins)) +
-  geom_violin(trim = FALSE) + 
-  geom_boxplot(width = 0.3, fill = c("#F4A582", "#A8D5BA")) +
-  labs(x = "Churn", y = "Evening Minutes")
-
-ggplot(data = churn) +
-  geom_density(aes(x = eve.mins, fill = churn)) +
-  labs(x = "Evening Minutes", y = "Density", fill = "Churn")
-```
-
-The visualizations suggest a slight shift toward higher evening call usage among churners, but the overlap between groups remains substantial. Compared to `day.mins`, the association here is clearly weaker.
-
-We now apply the same approach to `night.mins`:
-
-```{r out.width = "100%"}
-#| layout-ncol: 2
-#| fig-width: 4
-#| fig-height: 4
-
-ggplot(data = churn) +
-  geom_boxplot(aes(x = churn, y = night.mins), 
-               fill = c("#F4A582", "#A8D5BA")) +
-  labs(x = "Churn", y = "Nighttime Minutes")
-
-ggplot(data = churn) +
-  geom_density(aes(x = night.mins, fill = churn)) +
-  labs(x = "Nighttime Minutes", y = "Density", fill = "Churn")
-```
-
-The box and density plots for nighttime usage reveal no meaningful difference between churners and non-churners, suggesting little association with churn behavior.
-
-*Key Insights and Business Implications*: Evening and nighttime usage show limited individual predictive power. While `eve.mins` may be slightly elevated for churners, the effect is modest and inconsistent. These variables are unlikely to drive churn predictions on their own but may contribute in combination with other features. For practical applications, they are best interpreted as part of a broader usage pattern rather than in isolation.
-
-### International Calls and Churn {.unnumbered}
-
-In a previous section, we observed that customers subscribed to an international calling plan are more likely to churn. But does actual calling behavior support this pattern? The variable `intl.calls` records the total number of international calls placed by each customer, providing a behavioral counterpart to the plan subscription flag.
-
-Because `intl.calls` is a discrete numeric variable with moderate range, we examine its distribution by churn status using a box plot and a density plot:
-
-```{r out.width = "100%"}
-#| layout-ncol: 2
-#| fig-width: 4
-#| fig-height: 4
-
-ggplot(data = churn) +
-  geom_boxplot(aes(x = churn, y = intl.calls), 
-               fill = c("#F4A582", "#A8D5BA")) +
-  labs(x = "Churn", y = "International Calls")
-
-ggplot(data = churn) +
-  geom_density(aes(x = intl.calls, fill = churn)) +
-  labs(x = "International Calls", y = "Density", fill = "Churn")
-```
-
-The visualizations suggest that churners make slightly fewer international calls than non-churners. However, the difference is small and the distributions overlap considerably.
-
-*Key Insights and Business Implications*: The `intl.calls` variable shows only a weak association with churn. This finding suggests that subscribing to an international plan (a binary indicator) may matter more than how much it is actually used. Formal statistical testing, such as a two-sample t-test, can help assess whether the observed difference is significant. We will revisit this question in Chapter [-@sec-ch5-statistics] when discussing hypothesis testing.
-
-### Summary of Numerical Findings {.unnumbered}
-
-The exploratory analysis of numerical features in the *churn* dataset reveals the following key patterns:
-
--   `customer.calls` and `day.mins` are most strongly associated with churn. Customers making four or more service calls, and those with high daytime call usage, are more likely to leave the service.
-
--   These features are likely to play an important role in predictive modeling and may serve as effective early indicators for targeted retention strategies.
-
--   Other variables, such as `eve.mins`, `night.mins`, and `intl.calls`, show weaker or inconsistent associations with churn when analyzed individually. Their value may become clearer in multivariate contexts or when interacting with other predictors.
-
-These findings will inform both feature selection and model development in later chapters. In the next section, we examine relationships between variables to detect potential redundancy and explore more complex patterns relevant to classification tasks.
-
-## Identifying Redundancy and Correlated Features {#sec-ch4-EDA-correlation}
-
-Before analyzing more complex interactions among variables, it is helpful to assess how individual features relate to one another. Correlation analysis is a key tool in this process, revealing variables that may carry overlapping information or exhibit redundancy. Identifying such relationships early not only simplifies the modeling process but also enhances interpretability and reduces the risk of multicollinearity.
-
-Correlation quantifies the degree to which two variables move together. A positive correlation indicates that as one variable increases, the other tends to increase as well; a negative correlation suggests that one tends to decrease as the other increases. If there is little or no correlation, changes in one variable do not help predict changes in the other. This relationship is typically summarized using the Pearson correlation coefficient, denoted by $r$, which ranges from $-1$ to $1$. A value of $r = 1$ implies a perfect positive linear relationship, $r = -1$ implies a perfect negative one, and $r = 0$ suggests no linear association.
-
-@fig-correlation illustrates scatterplots with various degrees of correlation.
-
-```{r fig-correlation, echo = FALSE, out.width = "100%", fig.cap = "Example scatterplots showing different correlation coefficients."}
-knitr::include_graphics("images/ch4_correlation.png")
-```
-
-> *Note:* Correlation does not imply causation. For example, a strong positive correlation between customer service calls and churn does not mean that making service calls *causes* customers to leave. Rather, both behaviors may stem from an underlying factor, such as dissatisfaction with service.
-
-To underscore this caution, Figure [-@fig-correlation-chocolate] presents a memorable example from @messerli2012chocolate. It shows a surprisingly strong correlation between per-capita chocolate consumption and Nobel Prize wins across countries. While entertaining, the example highlights a key message: correlations may arise from coincidence, reverse causality, or the influence of a third variable. For readers interested in exploring causality and causal inference further, *The Book of Why* by Judea Pearl and Dana Mackenzie [@pearl2018book] offers an accessible treatment of the subject from both statistical and philosophical perspectives.
-
-```{r fig-correlation-chocolate, echo = FALSE, out.width = "70%", fig.cap = "Scatterplot illustrating the correlation between Nobel Prize wins and chocolate consumption (per 10 million population) across countries. Adapted from @messerli2012chocolate."}
-knitr::include_graphics("images/ch4_correlation_chocolate.png")
-```
-
-Returning to our dataset, we now compute and visualize the correlation matrix for key numerical variables using a heatmap. This is done using the `ggcorrplot()` function from the **ggcorrplot** package, an extension of **ggplot2** that produces clean, annotated correlation plots. It allows users to customize triangle display, label coefficients, and control aesthetics for better interpretation.
-
-```{r out.width = "100%"}
-library(ggcorrplot)
-
-variable_list = c("intl.mins",  "intl.calls",  "intl.charge", 
-                  "day.mins",   "day.calls",   "day.charge",
-                  "eve.mins",   "eve.calls",   "eve.charge",
-                  "night.mins", "night.calls", "night.charge")
-
-cor_matrix = cor(churn[, variable_list])
-
-ggcorrplot(cor_matrix, type = "lower", lab = TRUE, lab_size = 2, tl.cex = 8, 
-           colors = c("#699fb3", "white", "#b3697a"),
-           title = "Visualization of the Correlation Matrix")
-```
-
-The resulting heatmap highlights two main patterns. First, the *charge variables* (such as `day.charge`, `eve.charge`, and `intl.charge`) are perfectly correlated with their corresponding *minutes variables*. This is expected, as charges are calculated directly from call duration. Including both in a model would add redundancy without new information.
-
-Second, the *call count variables* (e.g., `day.calls`, `night.calls`) show only weak correlations with their corresponding *minutes variables*. This suggests that call frequency and call duration capture distinct aspects of user behavior and should be considered complementary rather than interchangeable.
-
-Based on these findings, it is advisable to remove the charge variables when preparing the dataset for modeling, while retaining both frequency and duration measures. Doing so streamlines the feature set, avoids multicollinearity, and contributes to more interpretable and stable predictive models.
-
-## Exploring Multivariate Relationships {#sec-EDA-sec-multivariate}
-
-While correlation analysis helps identify linear associations between pairs of variables, it often misses important patterns that emerge only when multiple features are considered together. Multivariate analysis enables us to explore such interactions and conditional relationships, insights that are crucial for understanding complex behaviors like customer churn.
-
-Let us begin by jointly analyzing `day.mins` (daytime call duration) and `eve.mins` (evening call duration). Are customers who use the service heavily during both periods more likely to leave?
-
-```{r}
-ggplot(data = churn) +
-    geom_point(aes(x = eve.mins, y = day.mins, color = churn), size = 0.7) +
-    geom_abline(intercept = 400, slope = -0.6) + 
-    labs(x = "Evening Minutes", y = "Daytime Minutes", color = "Churn")
-```
-
-To help identify behavioral segments, we add a diagonal line using `geom_abline()`, which overlays a reference line with a given intercept and slope. This line represents the boundary:
-
-$$
-\text{day.mins} = 400 - 0.6 \times \text{eve.mins}
-$$
-
-Customers above this line, those with *simultaneously high day and evening usage*, show a noticeably greater tendency to churn. This insight would not be visible from analyzing either variable in isolation, highlighting the importance of considering variable interactions.
-
-To quantify this finding, we isolate this high-usage group using the `subset()` function:
-
-```{r out.width = "50%"}
-sub_churn = subset(churn, (day.mins > 400 - 0.6 * eve.mins))
-
-ggplot(data = sub_churn, aes(x = churn, label = scales::percent(prop.table(after_stat(count))))) +
-    geom_bar(fill = c("#F4A582", "#A8D5BA")) + 
-    geom_text(stat = 'count', vjust = 0.4, size = 8)
-```
-
-The churn rate within this group is approximately `r round(mean(sub_churn$churn == "yes") * 100, 1)`%, compared to an overall churn rate of `r round(mean(churn$churn == "yes") * 100, 1)`%. This difference suggests that intensive usage across multiple periods may be a signal of dissatisfaction, possibly related to billing complexity or service expectations.
-
-Next, we examine another potential interaction: the relationship between `customer.calls` and `day.mins`.
-
-```{r}
-ggplot(data = churn, aes(x = day.mins, y = customer.calls, color = churn)) +
-  geom_point(size = 1) +
-  geom_point(data = data.frame(day.mins = 110, customer.calls = 5.5), colour = "#377EB8", size = 50, shape = 1) + 
-  geom_point(data = data.frame(day.mins = 310, customer.calls = 2.0), colour = "#377EB8", size = 40, shape = 1) +
-  scale_color_manual(values = c("#F4A582", "#A8D5BA")) +
-  labs(x = "Daytime Minutes", y = "Customer Service Calls", color = "Churn")
-```
-
-This scatter plot highlights an interesting pattern. Customers who contact support frequently but have low usage (blue circle, top-left) tend to churn at higher rates, perhaps reflecting frustration despite limited use of the service. In contrast, customers with both high usage and frequent support contact (blue circle, bottom-right) show more mixed churn outcomes, possibly because they value the service highly even when problems arise.
-
-Together, these examples illustrate how multivariate analysis can expose interaction effects and behavioral subgroups that are not apparent in simpler analyses. From a modeling perspective, such findings suggest opportunities to engineer features that capture joint effects, such as interaction terms or binary flags for high-risk combinations. From a business standpoint, these insights can guide proactive interventions aimed at specific customer profiles.
-
-In Chapter [-@sec-ch5-statistics], we return to these findings using formal statistical methods to assess their significance and evaluate their role in predictive modeling.
-
-## Insights from EDA on Customer Churn {#sec-EDA-summary}
-
-The exploratory analysis of the *churn* dataset has revealed several behavioral patterns and feature relationships that are relevant to both modeling and business strategy. By systematically examining individual variables and their interactions, we identified predictors of customer attrition and gained a deeper understanding of usage and support dynamics.
-
-One of the most salient findings is the association between customer service interactions and churn. Customers who contact support four or more times are substantially more likely to leave the service, pointing to dissatisfaction or unresolved problems. This pattern suggests a need for early intervention based on support behavior.
-
-High combined usage of daytime and evening minutes also emerged as a strong churn signal. Customers in this segment exhibit churn rates several times higher than the average, likely reflecting unmet expectations related to pricing, billing, or service quality. Similarly, frequent service calls paired with low daytime usage define another at-risk segment, one that would not be evident in univariate summaries alone.
-
-The presence of an international calling plan is another key predictor: customers subscribed to this plan churn at significantly higher rates. In contrast, customers with a voice mail plan are less likely to churn, suggesting that certain service features may promote retention.
-
-The analysis also highlighted opportunities to streamline the feature set. Charge variables, which are perfectly correlated with call durations, should be removed to reduce redundancy and avoid multicollinearity. In addition, variables such as `state` and `area.code` appear to offer limited predictive value and may be excluded from modeling unless interaction effects are hypothesized.
-
-These insights inform several strategic directions. Customers making their third support call could be flagged for proactive retention efforts, such as tailored offers or escalated service handling. High-usage customers may benefit from personalized rate plans or loyalty incentives. The international plan should be reevaluated for its pricing structure and value proposition. And voice mail features could be more prominently marketed or bundled as part of retention strategies.
-
-Even variables with weak individual associations, such as nighttime minutes, may still contribute predictive value in combination with other features. Their joint effects will be assessed in subsequent chapters through statistical testing and machine learning.
-
-By uncovering these behavioral patterns through exploratory analysis, we have laid the groundwork for the next phase of the data science workflow: building predictive models that quantify risk and support decision-making. In the next chapter, we introduce statistical tools to formalize the relationships observed here, setting the stage for classification models such as logistic regression and k-nearest neighbors.
-
-## Chapter Summary and Takeaways
-
-This chapter introduced EDA as a foundational step in the data science workflow, an approach that emphasizes curiosity-driven inquiry guided by patterns within the data. Unlike confirmatory analysis, EDA does not begin with fixed hypotheses; rather, it involves iterative examination through descriptive statistics, visualizations, and correlation measures to uncover structure, relationships, and irregularities.
-
-Drawing on the *churn* dataset, we investigated behavioral signals associated with customer attrition. The analysis revealed that frequent contact with customer service, heavy usage during both daytime and evening hours, and enrollment in international calling plans were linked to a heightened risk of churn. Conversely, customers subscribed to a voice mail plan were more likely to stay, suggesting that certain service features may enhance satisfaction. We also detected redundancy among variables, for instance, call charges being deterministically derived from call duration, and used multivariate plots to uncover interaction effects invisible in isolation.
-
-Several principles emerged through this exploratory process. EDA is iterative and context-sensitive, helping to surface relevant questions rather than answer predefined ones. Identifying class imbalance, outliers, and redundant predictors early supports more effective model design. Visualizations serve not only as tools for discovery but also as instruments for clear communication. Interactions between features, such as the combination of high usage and frequent support calls, can point to distinct behavioral profiles and suggest avenues for intervention. Throughout, domain knowledge played a key role in interpreting the practical meaning of patterns that might otherwise be mistaken for noise or spurious correlation.
-
-These findings lay the groundwork for the next stages of analysis. Equipped with the ability to uncover structure, spot data quality issues, and extract early insights, you are now ready to formalize these observations using statistical inference. In the following chapter, we introduce statistical tools to evaluate the significance of relationships observed here and begin building predictive models, starting with logistic regression and k-nearest neighbors, to estimate churn risk and support data-driven decisions.
-
-## Exercises {#sec-ch4-exercises}
-
-The following exercises are designed to reinforce core principles of exploratory data analysis introduced in this chapter. They span conceptual understanding, hands-on implementation, and critical thinking. The section begins with interpretive questions, followed by applied analysis using the *bank* dataset, and concludes with advanced challenge problems for synthesis and reflection.
-
-#### Conceptual Questions {.unnumbered}
-
-1.  Why is exploratory data analysis essential before building predictive models? What risks might arise if this step is skipped?
-
-2.  If a variable does not show a clear relationship with the target during EDA, should it be excluded from modeling? Consider potential interactions, hidden effects, and the role of feature selection in your response.
-
-3.  What does it mean for two variables to be correlated? Explain direction and strength of correlation and contrast correlation with causation using an example.
-
-4.  How can you detect and address correlated predictors during EDA? Describe how this helps improve modeling performance and interpretability.
-
-5.  What are the consequences of including highly correlated variables in a predictive model? Discuss the effects on performance, interpretability, and model stability.
-
-6.  Is it always advisable to remove one of two correlated predictors? When might keeping both be justified?
-
-7.  For each of the following methods—histograms, box plots, density plots, scatter plots, summary statistics, correlation analysis, contingency tables, bar plots, and heatmaps—state whether it applies to categorical data, numerical data, or both. Briefly describe its use in EDA.
-
-8.  A telecommunications firm finds that customers with high day and evening minutes tend to churn more. What actions could the company take in response, and how might this guide customer retention?
-
-9.  Suppose several pairs of variables in a dataset have high correlation (e.g., $r > 0.9$). How would you handle this to ensure robust and interpretable modeling?
-
-10. Why is it important to consider both statistical and practical relevance in evaluating correlations? Give an example of a statistically strong but practically weak correlation.
-
-11. Why is it important to investigate multivariate relationships in EDA? Describe a scenario where an interaction between two variables reveals a pattern that univariate analysis would miss.
-
-12. How does data visualization support EDA? Provide two specific examples where visual tools reveal insights that summary statistics might obscure.
-
-13. Suppose you discover that customers with both high daytime usage and frequent service calls are more likely to churn. What business strategies might be informed by this finding?
-
-14. What are some causes of outliers in data? How would you determine whether to retain, modify, or exclude an outlier?
-
-15. Why are missing values important to address during EDA? Discuss strategies for handling missing data and when each might be appropriate.
+23. Reflect on business implications. Which customer behaviors appear most strongly associated with churn, and how could these insights inform a retention strategy?
 
 #### Hands-On Practice: Exploring the *bank* Dataset {.unnumbered}
 
-The *bank* dataset from the R package **liver** contains data on direct marketing campaigns of a Portuguese bank. The objective is to predict whether a client subscribes to a term deposit. This dataset will also be used for classification in Chapters [-@sec-ch7-classification-knn] and [-@sec-ch12-neural-networks]. More details: <https://rdrr.io/cran/liver/man/bank.html>
+The *bank* dataset from the R package **liver** contains data on direct marketing campaigns of a Portuguese bank. The objective is to predict whether a client subscribes to a term deposit. This dataset will be used for classification in the case study of Chapter [-@sec-ch12-neural-networks]. More details are available at [https://rdrr.io/cran/liver/man/bank.html](https://rdrr.io/cran/liver/man/bank.html).
 
 To load and inspect the dataset:
 
-``` r
+```r
 library(liver)
 data(bank)
 str(bank)
 ```
 
-16. *Dataset Overview*: Summarize the structure and variable types. What does this reveal about the dataset?
+24. Summarize the structure and variable types. What does this reveal about the dataset?
 
-17. *Target Variable Analysis*: Plot the target variable `deposit`. What proportion of clients subscribed to a term deposit?
+25. Plot the target variable `deposit`. What proportion of clients subscribed to a term deposit?
 
-18. *Binary Variables*: Explore `default`, `housing`, and `loan`. Use bar plots and contingency tables. What patterns emerge?
+26. Explore the variables `default`, `housing`, and `loan` using bar plots and contingency tables. What patterns emerge?
 
-19. *Numerical Variables*: Visualize the distributions of numerical features using histograms and box plots. Note any skewness or unusual observations.
+27. Visualize the distributions of numerical features using histograms and box plots. Note any skewness or unusual observations.
 
-20. *Outlier Detection*: Identify outliers in numerical variables. What strategies would you consider for managing them?
+28. Identify outliers among numerical variables. What strategies would you consider for handling them?
 
-21. *Correlation Matrix*: Compute and visualize the correlation matrix. Which variables are highly correlated, and how might you address this?
+29. Compute and visualize correlations among numerical variables. Which features are highly correlated, and how might this influence modeling decisions?
 
-22. *Key Findings*: Summarize your main EDA findings. How would you present these in a report?
+30. Summarize your main EDA observations. How would you present these results in a report?
 
-23. *Business Insights*: What actionable conclusions could the bank draw from these patterns?
+31. Interpret your findings in business terms. What actionable conclusions could the bank draw from these patterns?
 
-24. *Multivariate Patterns*: Explore whether higher values of `campaign` (number of contacts) relate to greater subscription rates. Visualize and interpret.
+32. Examine whether higher values of `campaign` (number of contacts) relate to greater subscription rates. Visualize and interpret.
 
-25. *Feature Engineering Insight*: Based on your findings, propose one new variable that could help improve model performance.
+33. Propose one new variable that could improve model performance based on your EDA findings.
 
-26. *Seasonality Effects*: Investigate subscription rates by `month`. Are some months more successful than others?
+34. Investigate subscription rates by `month`. Are some months more successful than others?
 
-27. *Employment Type*: How does `job` relate to `deposit`? Which categories have higher success?
+35. Explore how `job` relates to `deposit`. Which occupational groups have higher success rates?
 
-28. *Interaction Effects*: Analyze the joint impact of `education` and `job` on subscription. What do you observe?
+36. Analyze the joint impact of `education` and `job` on subscription outcomes. What patterns do you observe?
 
-29. *Effect of Call Duration*: Does the `duration` of last contact influence deposit outcome?
+37. Examine whether the `duration` of the last contact influences the likelihood of a positive outcome.
 
-30. *Campaign Comparison*: How do success rates vary across campaigns? What strategies might this suggest?
+38. Compare success rates across campaigns. What strategies might these differences suggest?
 
 #### Challenge Problems {.unnumbered}
 
-31. *Data Storytelling from EDA*: Create a concise 1–2 plot visual summary of an EDA finding from the *bank* dataset. Focus on making the insight clear to a non-technical audience, using clean annotations and brief explanation.
+39. Create a concise one- or two-plot summary of an EDA finding from the *bank* dataset. Focus on clarity and accessibility for a non-technical audience, using brief annotations to explain the insight.
 
-32. *Segment-Based Risk Profiling*: Use the *adult* dataset to identify a subgroup likely to earn over \$50K. Describe their profile and how you uncovered it through EDA.
+40. Using the *adult* dataset, identify a subgroup likely to earn over $50K. Describe their characteristics and how you uncovered them through EDA.
 
-33. *EDA vs. Predictive Modeling*: A variable appears weakly related to the target in univariate plots. Under what conditions could it still improve model accuracy?
+41. A variable appears weakly related to the target in univariate plots. Under what conditions could it still improve model accuracy?
 
-34. *Exploring Class Imbalance by Subgroup*: Does the proportion of `deposit` outcomes differ by `marital` or `job`? What insights or hypotheses emerge?
+42. Examine whether the proportion of `deposit` outcomes differs by `marital` status or `job` category. What hypotheses could you draw from these differences?
 
-35. *Feature Pruning with EDA*: Using the *adult* dataset, identify predictors that may not add value for modeling. Justify your choices with EDA.
+43. Using the *adult* dataset, identify predictors that may not contribute meaningfully to modeling. Justify your selections with evidence from EDA.
+
+#### Self-Reflection {.unnumbered}
+
+Reflect on what you have learned in this chapter. Consider the following questions as a guide:
+
+* How has exploratory data analysis changed your understanding of the dataset before modeling?
+* Which visualizations or summary techniques did you find most effective for revealing structure or patterns?
+* When exploring data, how do you balance curiosity-driven discovery with methodological discipline?
+* How can EDA findings influence later stages of the data science workflow, such as feature engineering, model selection, or evaluation?
+* In what ways did EDA help you detect issues of data quality, such as missing values or redundancy?
+
+EDA is not a one-time step but an iterative mindset that continues throughout analysis. Revisiting exploratory findings after modeling often deepens understanding and improves both model performance and interpretability.
+
+
+
+
+
+
+
