@@ -4,135 +4,43 @@ source("_common.R")
 
 # Exploratory Data Analysis {#sec-ch4-EDA}
 
-Exploratory Data Analysis (EDA) is the essential first step before building models or conducting statistical inference. It involves examining data carefully, thoroughly, and creatively to uncover insights. EDA helps reveal unexpected patterns, spot anomalies, and highlight relationships that shape the direction of further analysis.
+Exploratory Data Analysis (EDA) is the essential first step before building models or conducting statistical inference. It involves examining data carefully, thoroughly, and creatively to uncover insights. By revealing unexpected patterns, identifying anomalies, and highlighting potential relationships, EDA shapes the direction of all subsequent analysis.
 
-EDA plays a pivotal role in the Data Science Workflow (see @fig-ch2_DSW), functioning as the bridge between Data Preparation (Chapter [-@sec-ch3-data-preparation]) and (Chapter [-@sec-ch6-setup-data]). This phase deepens our understanding of the data’s structure, quality, and potential, ensuring that downstream decisions rest on a solid foundation.
+EDA plays a pivotal role in the Data Science Workflow (see @fig-ch2_DSW), serving as the bridge between Data Preparation (Chapter [-@sec-ch3-data-preparation]) and Data Setup to Model (Chapter [-@sec-ch6-setup-data]). This stage deepens our understanding of the data’s structure, quality, and potential, ensuring that downstream decisions rest on a solid empirical foundation.
 
-Unlike formal hypothesis testing, EDA is not rigid or sequential. It is an iterative, open-ended process that invites curiosity. Different datasets pose different questions. Some exploratory paths reveal meaningful trends, while others point to data issues or dead ends. Through iterative exploration, analysts develop intuition and refine their focus, ultimately identifying the most informative features for modeling.
+Unlike formal hypothesis testing, EDA is not rigid or rule-driven. It is an iterative, open-ended process that encourages curiosity and experimentation. Different datasets raise different questions, and some exploratory paths will reveal meaningful trends while others uncover data issues or lead to dead ends. Through this process, analysts develop intuition, refine their focus, and identify the most informative features for modelling.
 
-The primary aim of EDA is not to confirm theories, but to generate insight. Summary statistics, exploratory visualizations, and correlation measures offer an initial map of the data landscape. Such exploratory findings must be interpreted with caution, as they are preliminary and may not reflect causal relationships. Later chapters, particularly Chapter [-@sec-ch5-statistics], will introduce formal tools for inference and prediction.
+The purpose of EDA is not to confirm theories but to generate insight. Summary statistics, exploratory visualisations, and correlation measures provide an initial map of the data landscape. These findings should be interpreted cautiously, as early patterns may not represent causal relationships. In Chapter [-@sec-ch5-statistics], we introduce formal tools for statistical inference that build on this exploratory foundation.
 
-EDA also emphasizes the importance of *practical relevance*. In large datasets, even weak patterns can be statistically significant but lack real-world utility. For example, a weak correlation between customer engagement and churn may appear significant due to sample size, yet offer little actionable value. Integrating domain knowledge is essential for interpreting such findings.
+EDA also highlights the importance of practical relevance. In large datasets, weak patterns can easily reach statistical significance yet offer little real-world value. For example, a slight difference in customer engagement may be statistically detectable but too small to influence business decisions. Integrating domain expertise is therefore essential when interpreting exploratory findings.
 
-Finally, EDA is closely tied to data quality. Outliers, missing values, inconsistent formats, and redundant variables often come to light during exploration. Addressing these issues early is critical for building effective and trustworthy models. The choice of EDA techniques depends on both the characteristics of the data and the analytical questions at hand. Histograms and box plots reveal distributions; scatter plots and correlation matrices highlight relationships. The next sections introduce these tools in context and explain how to apply them effectively.
+Finally, EDA is central to assessing and improving data quality. Outliers, missing values, inconsistent formats, and redundant variables often emerge during exploration. Addressing these issues early ensures that later models are both reliable and interpretable. The choice of EDA techniques depends on the nature of the data and the analytical questions at hand. Histograms and box plots reveal distributions, while scatter plots and correlation matrices expose relationships. The next sections introduce these tools in context and explain how to apply them effectively.
 
 ### What This Chapter Covers {.unnumbered}
 
-This chapter introduces exploratory data analysis (EDA) as a critical phase in the data science workflow. You will learn how to apply summary statistics and visual techniques to examine variable distributions, detect anomalies, and uncover relationships that inform downstream modeling. The chapter also demonstrates how correlation analysis helps identify redundancy and how multivariate exploration can reveal patterns that enhance predictive insight.
+This chapter introduces exploratory data analysis as a critical stage in the data science workflow. You will learn how to use summary statistics and visual techniques to examine variable distributions, detect anomalies, and uncover relationships that inform downstream modelling. The chapter also shows how correlation analysis helps identify redundancy and how multivariate exploration can reveal patterns that enhance predictive insight.
 
-We begin with two foundational sections: *Key Objectives and Guiding Questions for EDA*, which frame the exploratory mindset, and *EDA as Data Storytelling*, which emphasizes the importance of communicating analytical findings with clarity and context.
+The chapter begins with *EDA as Data Storytelling*, which emphasises the importance of communicating exploratory findings with clarity and context. This is followed by *Key Objectives and Guiding Questions for EDA*, which outline the main aims of exploration and the questions that support a structured analytical process.
 
-Building on these concepts, the chapter provides a guided exploration of the *churnCredit* dataset from the **liver** package. Through this example, you will see how real-world patterns emerge from data, how visualizations uncover customer behavior, and how exploratory insights prepare the ground for classification modeling using k-nearest neighbors in Chapter [-@sec-ch7-classification-knn].
+Building on these ideas, the chapter presents a detailed exploration of the *churnCredit* dataset from the **liver** package. This example illustrates how real-world patterns emerge from data, how visualisations illuminate customer behaviour, and how exploratory insights prepare the ground for classification modelling using k-nearest neighbours in Chapter [-@sec-ch7-classification-knn].
 
-The chapter concludes with a comprehensive set of exercises and hands-on projects using two real-world datasets (*bank* and *churn*, also from the **liver** package). These activities provide additional practice with EDA techniques and lay the groundwork for the neural network case study in Chapter [-@sec-ch12-neural-networks].
-
-## Objectives and Guiding Questions for EDA {#sec-EDA-objectives-questions}
-
-EDA marks the first substantive interaction between analyst and dataset, the moment when raw data begins to reveal its structure, surprises, and potential narratives. Rather than rushing into modeling, experienced data scientists pause to ask: *What is in the data? What patterns stand out? What problems need attention?*
-
-Before applying specific techniques, it is helpful to clarify what EDA is designed to accomplish. At its core, EDA aims to:
-
--   *Identify the structure of the data* – Detect variable types, value ranges, missing entries, and potential anomalies.
-
--   *Examine variable distributions* – Assess spread, skewness, and central tendency for numerical and categorical features.
-
--   *Investigate relationships between variables* – Uncover associations, dependencies, or interactions that may inform predictions.
-
--   *Detect patterns and outliers* – Spot unusual values or subgroups that could indicate errors, or hidden signals.
-
-Together, these objectives provide a foundation for effective modeling. They help analysts refine feature choices, anticipate modeling challenges, and surface early insights worth pursuing.
-
-EDA becomes even more powerful when guided by focused questions. These typically fall into two broad categories: *univariate analysis*, which examines variables individually, and *multivariate analysis*, which explores their relationships.
-
-**Univariate analysis** asks: What does each variable reveal on its own? This includes inspecting distributions, central tendencies, and variability, as well as checking for missing values or irregularities. Common questions include:
-
--   What is the distribution of the target variable?
-
--   How are numerical features, such as income or age, distributed?
-
--   Are there missing values, and do they follow a specific pattern?
-
-Histograms, box plots, and summary statistics (mean, median, quartiles, standard deviation) are essential tools at this stage.
-
-**Multivariate analysis** shifts the focus to interactions among variables. It uncovers dependencies, correlations, or redundancies that may affect modeling. Key questions include:
-
--   How does the target variable relate to its predictors?
-
--   Are any predictors highly correlated, raising concerns about multicollinearity?
-
--   How do categorical and numerical features interact?
-
-Scatter plots, grouped visualizations, and correlation matrices help reveal these patterns and guide thoughtful feature selection.
-
-One recurring challenge in EDA, especially for students, is deciding which plots or techniques are best suited to different types of data and questions. Table [-@tbl-EDA-table-tools] offers a concise mapping of exploratory objectives to effective tools. It serves as a practical reference to support informed, purposeful analysis.
-
-```{r}
-#| label: tbl-EDA-table-tools
-#| echo: false
-#| tbl-cap: "Overview of Recommended Tools for Common EDA Objectives."
-#| out.width: NULL
-
-format = if(knitr::is_latex_output()) "latex" else "pipe"
-
-datasets = data.frame(
-  "Exploratory Objective" = c(
-    "Examine a variable’s distribution",
-    "Summarize a categorical variable",
-    "Identify outliers",
-    "Detect missing data patterns",
-    "Explore the relationship between two numerical variables",
-    "Compare a numerical variable across groups",
-    "Analyze interactions between two categorical variables",
-    "Assess correlation among multiple numerical variables"
-  ),
-  "Applicable Data Type" = c(
-    "Numerical",
-    "Categorical",
-    "Numerical",
-    "Any",
-    "Numerical & Numerical",
-    "Numerical & Categorical",
-    "Categorical & Categorical",
-    "Multiple Numerical"
-  ),
-  "Recommended Techniques" = c(
-    "Histogram, box plot, density plot, summary statistics",
-    "Bar chart, frequency table",
-    "Box plot, histogram",
-    "Summary statistics, missingness maps",
-    "Scatter plot, correlation coefficient",
-    "Box plot, grouped bar chart, violin plot",
-    "Stacked bar chart, mosaic plot, contingency table",
-    "Correlation matrix, scatterplot matrix"
-  )
-)
-
-kbl(datasets, booktabs = T, format = format) %>%
-kable_styling(full_width = F) %>%
-column_spec(1, width = "12em")  %>%
-column_spec(2, width = "11em") %>%
-column_spec(3, width = "13em")
-```
-
-By aligning key objectives with guiding questions and appropriate methods, EDA becomes more than an exploratory routine, it becomes a strategic component of the data science workflow. It improves data quality, informs feature design, and lays the foundation for effective modeling.
-
-In the next section, we turn to the role of storytelling in EDA and explore how visual and narrative techniques can make exploratory insights more accessible and impactful.
+The chapter concludes with a comprehensive set of exercises and hands-on projects using two additional real-world datasets (*bank* and *churn*, also from the **liver** package). These activities provide further practice with EDA techniques and lay the foundation for the neural network case study in Chapter [-@sec-ch12-neural-networks].
 
 ## EDA as Data Storytelling
 
-Exploratory Data Analysis is not only a technical process for uncovering patterns, it is also a means of communicating insights clearly and persuasively. While EDA reveals structure, anomalies, and relationships, these findings become valuable only when they are communicated with clarity and purpose. This is where data storytelling becomes essential: it transforms exploration into insight.
+Exploratory data analysis is not only a technical process for uncovering patterns; it is also a way of communicating insights clearly and persuasively. While EDA reveals structure, anomalies, and relationships, these findings gain value only when they are presented with context and purpose. Data storytelling plays a central role in this process by transforming raw exploration into insight.
 
-Effective storytelling in data science weaves together analytical evidence, contextual knowledge, and visual clarity. Rather than presenting statistics or charts in isolation, strong EDA links each observation to a broader narrative. Whether the audience includes fellow analysts, business stakeholders, or policymakers, the goal remains the same: to convey insights in ways that are meaningful and relevant.
+Effective storytelling in data science weaves together analytical evidence, contextual knowledge, and visual clarity. Rather than presenting statistics or plots in isolation, strong analysis connects each observation to a broader narrative. Whether the audience includes analysts, business stakeholders, or policymakers, the goal is to convey findings in a way that is meaningful and relevant.
 
-Consider a typical finding: customers with high daytime usage are more likely to churn. Stating this fact is informative, but incomplete. A compelling narrative connects the pattern to its implication:
+Consider a typical observation: customers with high daytime usage appear more likely to churn. Stating this pattern is informative, but it does not yet offer understanding. A narrative that links the pattern to its implications brings the analysis to life:
 
-*"Customers with extensive daytime usage are significantly more likely to churn, possibly due to pricing concerns or dissatisfaction with service quality. Targeted retention strategies, such as customized discounts or flexible pricing plans, may help mitigate this risk."*
+*“Customers with extensive daytime usage show a higher tendency to churn, possibly due to pricing concerns or dissatisfaction with service quality. Targeted retention strategies, such as customised discounts or more flexible pricing plans, may help address this risk.”*
 
-This shift from raw description to interpretation is at the heart of data storytelling. It invites action and supports informed decision-making.
+This shift from description to interpretation is at the heart of data storytelling. It invites reflection and supports informed decision-making.
 
-Visualizations play a central role in this process. While summary statistics provide a structural overview, visual displays make patterns tangible. Scatter plots and correlation matrices reveal relationships among numerical features; histograms and box plots clarify distributions and skewness; bar charts and stacked visuals enable comparisons across categories. Selecting the right visual tool enhances both understanding and communication.
+Visualisation is central to this process. While summary statistics offer a structural overview, visual displays make patterns tangible. Scatter plots and correlation matrices highlight relationships among numerical features; histograms and box plots clarify distributions and skewness; bar charts and mosaic visualisations reveal differences across categories. Choosing appropriate visual tools not only strengthens analysis but also improves communication.
 
-Data storytelling is now common across domains, from business and journalism to public policy and scientific research. A well-known example appears in Hans Rosling’s TED Talk ["New insights on poverty"](https://www.ted.com/talks/hans_rosling_new_insights_on_poverty). Figure @fig-EDA-fig-1, adapted from his presentation, illustrates how GDP per capita and life expectancy have changed across global regions from 1962 to 2011. It presents decades of demographic and health data into an engaging and comprehensible format. Although this example is drawn from global development, the same principles apply when exploring customer behavior, financial trends, or healthcare outcomes.
+Storytelling through data is widely used across domains, from business and journalism to public policy and scientific research. A well-known example is Hans Rosling’s TED Talk [*New insights on poverty*](https://www.ted.com/talks/hans_rosling_new_insights_on_poverty), where decades of demographic and economic data are presented in an engaging, intuitive format. Figure @fig-EDA-fig-1, adapted from his presentation, shows how GDP per capita and life expectancy have changed across world regions from 1962 to 2011. Although drawn from global development, the same principles apply when exploring customer behaviour, financial trends, or service outcomes.
 
 ```{r}
 #| label: fig-EDA-fig-1
@@ -189,9 +97,84 @@ if(knitr::is_latex_output()){
 }
 ```
 
-As you conduct EDA, it is worth asking not only *what* the data shows, but also *why* those patterns matter. What story is emerging? How can that story inform a decision, challenge an assumption, or inspire further analysis? Framing EDA as storytelling ensures that exploratory work is not merely descriptive but purposeful, anchored in the real-world questions that motivated the analysis in the first place.
+As you conduct EDA, it is useful to ask not only *what* the data shows, but also *why* those patterns matter. What story is emerging? How might that story inform a decision, challenge an assumption, or motivate further analysis? Thinking in narrative terms ensures that exploratory work is not merely descriptive but purposeful, rooted in the real-world questions that prompted the analysis.
 
-To illustrate these principles in practice, the next section walks through a detailed EDA of customer churn, demonstrating how statistical summaries, visual tools, and domain reasoning can uncover meaningful patterns that guide predictive modeling.
+The next section builds on these ideas by outlining the key objectives and guiding questions that shape effective exploratory analysis. Together, they provide a structured yet flexible foundation for the detailed EDA of customer churn that follows.
+
+## Objectives and Guiding Questions for EDA {#sec-EDA-objectives-questions}
+
+EDA marks the first substantive interaction between analyst and dataset, the moment when raw information begins to reveal its structure, surprises, and potential narratives. Rather than moving directly into modelling, experienced analysts pause to ask what the data contains, which patterns stand out, and which issues require attention.
+
+A useful starting point is to clarify what exploratory analysis is designed to accomplish. At its core, EDA seeks to understand the structure of the data, including variable types, value ranges, missing entries, and possible anomalies. It examines how individual variables are distributed, identifying central tendencies, variation, and skewness. It investigates how variables relate to one another, revealing associations, dependencies, or interactions that may later contribute to predictive models. It also detects patterns and outliers that might indicate errors, unusual subgroups, or emerging signals worth investigating further.
+
+These objectives form the foundation for effective modelling. They help analysts refine which features deserve emphasis, anticipate potential challenges, and identify early insights that can guide the direction of later stages in the workflow.
+
+Exploration becomes more productive when guided by focused questions. These questions can be grouped broadly into those concerning individual variables and those concerning relationships among variables. When examining variables one at a time, the guiding questions ask what each variable reveals on its own, how it is distributed, whether missing values follow a particular pattern, and whether any irregularities stand out. Histograms, box plots, and summary statistics are familiar tools for answering such questions.
+
+When shifting to relationships among variables, the focus moves to how predictors relate to the target, whether any variables are strongly correlated, whether redundancies or interactions might influence modelling, and how categorical and numerical variables combine to reveal structure. Scatter plots, grouped visualisations, and correlation matrices help reveal these patterns and support thoughtful feature selection.
+
+A recurring challenge, especially for students, is choosing which plots or techniques best suit different types of data. Table [-@tbl-EDA-table-tools] summarises commonly used exploratory objectives alongside appropriate analytical tools. It serves as a practical reference when deciding how to approach unfamiliar datasets or new analytical questions.
+
+```{r}
+#| label: tbl-EDA-table-tools
+#| echo: false
+#| tbl-cap: "Overview of Recommended Tools for Common EDA Objectives."
+#| out.width: NULL
+
+format = if(knitr::is_latex_output()) "latex" else "pipe"
+
+datasets = data.frame(
+  "Exploratory Objective" = c(
+    "Examine a variable’s distribution",
+    "Summarize a categorical variable",
+    "Identify outliers",
+    "Detect missing data patterns",
+    "Explore the relationship between two numerical variables",
+    "Compare a numerical variable across groups",
+    "Analyze interactions between two categorical variables",
+    "Assess correlation among multiple numerical variables"
+  ),
+  "Applicable Data Type" = c(
+    "Numerical",
+    "Categorical",
+    "Numerical",
+    "Any",
+    "Numerical & Numerical",
+    "Numerical & Categorical",
+    "Categorical & Categorical",
+    "Multiple Numerical"
+  ),
+  "Recommended Techniques" = c(
+    "Histogram, box plot, density plot, summary statistics",
+    "Bar chart, frequency table",
+    "Box plot, histogram",
+    "Summary statistics, missingness maps",
+    "Scatter plot, correlation coefficient",
+    "Box plot, grouped bar chart, violin plot",
+    "Stacked bar chart, mosaic plot, contingency table",
+    "Correlation matrix, scatterplot matrix"
+  )
+)
+
+kbl(datasets, booktabs = T, format = format) %>%
+kable_styling(full_width = F) %>%
+column_spec(1, width = "12em")  %>%
+column_spec(2, width = "11em") %>%
+column_spec(3, width = "13em")
+```
+
+By aligning objectives with guiding questions and appropriate methods, EDA becomes more than a routine diagnostic stage. It becomes a strategic component of the workflow that enhances data quality, informs feature construction, and lays the groundwork for effective modelling.
+
+The next section applies these principles through a detailed EDA of customer churn, showing how statistical summaries, visual tools, and domain understanding can uncover patterns that support predictive analysis.
+
+
+
+
+
+
+
+
+
 
 ## EDA in Practice: The *churnCredit* Dataset {#sec-ch4-EDA-churn}
 
@@ -303,7 +286,7 @@ gg_miss_var(churnCredit, show_pct = TRUE)
 
 The resulting plot shows that three categorical variables (`education`, `income`, and `marital`) contain missing values, with `education` having the highest proportion (approximately `r round(mean(is.na(churnCredit$education)) * 100, 1)`%). Although the level of missingness is modest, addressing it is important to maintain data integrity and comparability across groups.
 
-There are several strategies for handling missing categorical data, including mode imputation, random assignment, or introducing a separate “missing” category. For this dataset, we apply *random imputation* using the **Hmisc** function `impute()`, which replaces each missing value with a randomly sampled observed value from the same variable. This method preserves the original distribution of categories and avoids overrepresentation of the most frequent class.
+There are several strategies for handling missing categorical data, including mode imputation, random assignment, or introducing a separate “missing” category. Mode imputation would overrepresent the most common category and distort group comparisons. Random imputation preserves the original distribution. Thus, for this dataset, we apply random imputation using the **Hmisc** function `impute()`, which replaces each missing value with a randomly sampled observed value from the same variable. This method preserves the original distribution of categories and avoids overrepresentation of the most frequent class. 
 
 ```{r}
 library(Hmisc)
@@ -319,38 +302,57 @@ After imputing missing values, it is good practice to verify that all variables 
 str(churnCredit)
 ```
 
-Once the data are clean and variables properly defined, the dataset is ready for exploratory analysis. The next section applies summary statistics and visualization techniques to uncover key patterns and relationships underlying customer churn.
+Once the data are clean and variables properly defined, the dataset is ready for exploratory analysis. Throughout this section, we use the cleaned version of the dataset. The next section applies summary statistics and visualization techniques to uncover key patterns and relationships underlying customer churn.
 
 ## Exploring Categorical Features {#sec-chapter-EDA-categorical}
 
 Categorical variables divide observations into discrete groups that capture demographic or behavioral characteristics of customers. In the *churnCredit* dataset, key categorical features include `gender`, `education`, `marital`, `card.category`, and `churn`. Exploring how these variables are distributed—and how they relate to the outcome variable `churn`—can reveal early patterns of customer loyalty or disengagement.
 
-We begin by examining the distribution of the target variable `churn`, which indicates whether a customer has closed their credit card account. Understanding this distribution is important for assessing *class balance*, a factor that directly influences model training and interpretation.
+We begin by examining the distribution of the target variable `churn`, which indicates whether a customer has closed their credit card account. Understanding this distribution is important for assessing class balance, a factor that directly influences model training and interpretation.
 
 ```{r out.width = "50%"}
 ggplot(data = churnCredit, aes(x = churn, label = scales::percent(prop.table(after_stat(count))))) +
   geom_bar(fill = c("#F4A582", "#A8D5BA")) + 
-  geom_text(stat = 'count', vjust = 0.4, size = 8)
+  geom_text(stat = "count", vjust = 0.4, size = 8)
 ```
 
-The bar plot shows that most customers remain active (`churn = "no"`), while a smaller proportion—about `r round(prop.table(table(churnCredit$churn))["yes"] * 100, 1)`%—have closed their accounts. This imbalance suggests that customer attrition is relatively infrequent, a pattern typical in many financial and subscription-based contexts.
+The bar plot shows that most customers remain active (`churn = "no"`), while a smaller proportion (about `r round(prop.table(table(churnCredit$churn))["yes"] * 100, 1)`%) have closed their accounts. This imbalance suggests that customer attrition is relatively infrequent, a pattern typical in many financial and subscription-based contexts.
 
-This visualization builds on basic plotting techniques introduced in Section [-@sec-ch1-visualization]. A simpler version, without color or percentage labels, can be produced with:
+As an alternative, a pie chart provides a compact visualisation of the same information. The following code produces a clear and reader-friendly version:
+
+```{r out.width = "50%"}
+pie_data <- churnCredit |>
+  dplyr::count(churn) |>
+  dplyr::mutate(prop = n / sum(n))
+
+ggplot(pie_data, aes(x = "", y = prop, fill = churn)) +
+  geom_col(width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = scales::percent(prop, accuracy = 0.1)),
+            position = position_stack(vjust = 0.5),
+            size = 6) +
+  labs(fill = "Churn") +
+  theme_void()
+```
+
+Pie charts are less informative for comparing multiple groups, but they can be effective when visualising the proportions of a single binary variable.
+
+The earlier bar chart builds on basic plotting techniques introduced in Section [-@sec-ch1-visualization]. A simpler version, without colour or percentage labels, can be produced with:
 
 ```r
 ggplot(data = churnCredit) + 
   geom_bar(aes(x = churn))
 ```
 
-The simpler plot offers a quick overview, whereas the enhanced version provides clearer communication by emphasizing proportions. Such refinements are valuable when presenting results to non-technical stakeholders, as they make relative differences immediately visible.
+The simpler plot offers a quick overview, whereas the enhanced version provides clearer communication by emphasising proportions. Such refinements are valuable when presenting results to non-technical stakeholders, as they make relative differences immediately visible.
 
-Class imbalance is not just a descriptive feature—it has practical implications for modeling. Predictive algorithms trained on imbalanced data tend to favor the majority class, leading to biased predictions and lower sensitivity to minority outcomes. This issue will be revisited in Chapter [-@sec-ch6-setup-data], Section [-@sec-ch6-balancing], where methods for addressing imbalance are introduced.
+Class imbalance is not just a descriptive feature; it has practical implications for modelling. Predictive algorithms trained on imbalanced data tend to favour the majority class, leading to biased predictions and lower sensitivity to minority outcomes. This issue will be revisited in Chapter [-@sec-ch6-setup-data], Section [-@sec-ch6-balancing], where methods for addressing imbalance are introduced.
 
-Having established the overall distribution of the target variable, the next step is to explore how other categorical features relate to churn. These variables may reveal distinct customer segments or behavioral patterns associated with higher attrition risk.
+Having established the overall distribution of the target variable, the next step is to explore how other categorical features relate to churn. These variables may reveal distinct customer segments or behavioural patterns associated with higher attrition risk.
 
 ### Relationship Between Gender and Churn {.unnumbered}
 
-Among the demographic variables, `gender` can help examine whether customer retention behavior differs between male and female account holders. Although gender is not typically a strong predictor of churn in financial services, even small differences may offer useful insights into customer engagement patterns.
+Among the demographic variables, `gender` can help examine whether customer retention behaviour differs between male and female account holders. Although gender is not typically a strong predictor of churn in financial services, even small differences may offer useful insights into customer engagement patterns.
 
 ```{r}
 #| layout-ncol: 2
@@ -364,18 +366,20 @@ ggplot(data = churnCredit) +
   geom_bar(aes(x = gender, fill = churn), position = "fill") 
 ```
 
-The left plot displays the absolute number of churners and non-churners by gender. The right plot, which expresses the counts as proportions within each gender group, highlights relative differences in churn rates. Both plots show that the churn rate is slightly higher among female customers, but the difference is modest—indicating that gender alone is not a major factor influencing account closure.
+The left plot presents the absolute numbers of churners and non-churners by gender. The right plot, which shows proportions within each gender group, highlights relative differences in churn rates. Both displays suggest that the churn rate is slightly higher among female customers. However, the difference is modest, indicating that gender alone is not a major factor influencing account closure.
 
-To verify this observation numerically, we can examine the contingency table:
+To examine the pattern more closely, we can inspect the contingency table:
 
 ```{r}
-addmargins(table(churnCredit$churn, churnCredit$gender, 
+addmargins(table(churnCredit$churn, churnCredit$gender,
                  dnn = c("Churn", "Gender")))
 ```
 
-The table supports the visual impression: the proportion of female customers who churn is marginally higher than that of male customers. This small difference may reflect minor behavioral or engagement variations rather than any structural or policy-related factor.
+The table confirms the visual impression: the proportion of female customers who churn is marginally higher than that of male customers. This small difference may reflect minor behavioural or engagement variations rather than any structural or policy-related factor.
 
-From an analytical perspective, this finding suggests that gender is not a key differentiator in churn behavior. More meaningful variation is likely to arise from behavioral and financial indicators such as transaction activity, credit utilization, and customer engagement metrics, which tend to offer stronger predictive value in modeling churn risk.
+From an analytical perspective, this suggests that gender is not a key differentiating variable for churn behaviour. More substantial variation is likely to emerge from behavioural and financial indicators such as transaction activity, credit utilisation, and customer service interactions, which generally offer stronger predictive value.
+
+> *Try it yourself:* Compute the churn rate separately for male and female customers using the *churnCredit* dataset. Create your own bar plot and compare it with the figure shown above. Based on the observed proportions, would you expect the difference in churn rates to be statistically significant? We revisit this question formally in the next Chapter (Section [-@sec-ch5-two-sample-z-test]) when introducing the test for two proportions.
 
 ### Relationship Between Card Category and Churn {.unnumbered}
 
@@ -395,47 +399,18 @@ ggplot(data = churnCredit) +
   labs(x = "Card Category", y = "Proportion", fill = "Churn")
 ```
 
-The left plot shows the absolute number of churners and non-churners within each tier, while the right plot presents proportions within card categories. The distribution is strongly imbalanced: over 93 % of customers hold a blue card, which is typically the entry-level or no-fee version. Because of this dominance, differences across categories should be interpreted cautiously, as small groups (gold and platinum) contribute little to the overall churn pattern.
+The left plot shows the absolute number of churners and non-churners within each tier, while the right plot presents proportions within card categories. The distribution is highly imbalanced: more than 93 percent of customers hold a blue card, which is typically the entry-level or no-fee version. This reflects real-world product portfolios, where most clients hold standard cards. Because the remaining groups are small, differences across tiers must be interpreted cautiously.
 
 ```{r}
 addmargins(table(churnCredit$churn, churnCredit$card.category, 
                  dnn = c("Churn", "Card Category")))
 ```
 
-The contingency table confirms that churn rates are slightly higher among holders of lower-tier cards (blue and silver) and somewhat lower among premium cardholders. Given the strong skew in category frequencies, one might consider recoding the variable into two broader groups—such as “blue” versus “silver+” (combining silver, gold, and platinum)—to ensure sufficient representation for statistical analysis and modeling.
+The contingency table confirms that churn rates are somewhat higher among holders of blue and silver cards and lower among customers with gold or platinum cards. These differences are modest, but they suggest that premium cardholders tend to be more engaged and therefore less likely to churn.
 
-From an analytical standpoint, this feature provides an example of how category imbalance can affect interpretation and model reliability. For business interpretation, the pattern suggests that customer engagement and perceived value among lower-tier cardholders may play a role in churn risk.
+Because the silver, gold, and platinum categories are relatively small, analysts often collapse similar groups to ensure sufficient sample sizes for reliable modelling. A natural reclassification is to separate “blue” from “silver+” (a combined group of silver, gold, and platinum cardholders). Such reclassification reduces sparsity, stabilises estimates, and simplifies interpretation, especially in downstream modelling.
 
-### Relationship Between Education and Churn {.unnumbered}
-
-Education level can influence financial habits and engagement with banking services. The variable `education` classifies customers into categories such as *high-school*, *college*, *graduate*, *post-graduate*, and *doctorate*. Exploring its relationship with churn helps assess whether financial literacy or career stage is associated with customer retention.
-
-```{r}
-#| layout-ncol: 2
-#| fig-width: 4
-#| fig-height: 4
-
-ggplot(data = churnCredit) + 
-  geom_bar(aes(x = education, fill = churn)) + 
-  labs(x = "Education Level", y = "Count", fill = "Churn") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-ggplot(data = churnCredit) + 
-  geom_bar(aes(x = education, fill = churn), position = "fill") + 
-  labs(x = "Education Level", y = "Proportion", fill = "Churn") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
-
-The bar plots show that churn rates vary only slightly across education levels. Customers with lower educational attainment exhibit marginally higher churn, while those with postgraduate or doctoral degrees show somewhat lower churn rates. However, these differences are small and unlikely to be practically significant.
-
-```{r}
-addmargins(table(churnCredit$churn, churnCredit$education, 
-                 dnn = c("Churn", "Education")))
-```
-
-The contingency table confirms that education exerts only a modest influence on churn. Since missing values were imputed earlier, comparisons across categories are now based on complete data. While education may reflect broader differences in financial literacy, it does not appear to be a major determinant of account closure in this dataset.
-
-From an analytical perspective, this suggests that education is not a key differentiating factor for churn behavior. Subsequent analyses should focus on behavioral and transactional features—such as credit utilization, spending activity, and customer engagement—which typically provide stronger indicators of churn risk.
+> *Try it yourself:* Collapse the card categories into two groups, “blue” and “silver+”, using the `fct_collapse()` function from the **forcats** package (as in Section [-@sec-ch3-data-pre-adult]). Then recreate the bar plots to compare churn patterns between the two groups. Does the collapsed version make churn differences easier to interpret? Would this version be more suitable for modelling?
 
 ### Relationship Between Income and Churn {.unnumbered}
 
@@ -470,7 +445,7 @@ From an analytical perspective, this variable provides a mild yet interpretable 
 
 ### Relationship Between Marital Status and Churn {.unnumbered}
 
-Marital status may influence financial behavior and account management, making it a useful demographic variable to examine in the context of churn. The `marital` variable in the *churnCredit* dataset includes three main categories: *married*, *single*, and *divorced*.
+Marital status may influence financial behaviour and account management, making it a useful demographic variable to examine in the context of churn. The `marital` variable in the *churnCredit* dataset includes three main categories: *married*, *single*, and *divorced*. Differences across these groups may reflect household financial habits, shared responsibilities, or lifestyle-related spending patterns.
 
 ```{r}
 #| layout-ncol: 2
@@ -493,27 +468,29 @@ addmargins(table(churnCredit$churn, churnCredit$marital,
                  dnn = c("Churn", "Marital Status")))
 ```
 
-The contingency table confirms this observation: marital status appears to have only a minor association with churn. This pattern may reflect differences in household financial behavior or shared account responsibilities, but overall, the relationship is weak.
+The contingency table confirms this observation: marital status appears to have only a minor association with churn. Although these differences may reflect small lifestyle- or household-related behavioural patterns, the overall relationship remains weak.
 
-From an analytical perspective, marital status provides limited explanatory value for predicting churn. Subsequent analysis should therefore prioritize behavioral and transactional variables, such as spending activity, utilization ratio, and frequency of customer contact, which capture engagement and account usage more directly.
+From an analytical perspective, marital status provides limited explanatory value for predicting churn. Subsequent analysis should therefore prioritise behavioural and transactional variables—such as spending activity, utilisation ratio, and frequency of customer contact—which typically provide stronger indicators of churn risk. Because both `marital` and `churn` are categorical variables with multiple levels, we will revisit this question formally using the Chi-square test in the next chapter (Section [-@sec-ch5-chi-square-test]).
+
+> *Try it yourself:* Explore whether education level is associated with churn in the *churnCredit* dataset. Follow a similar approach as in the marital-status example: create bar plots (counts and proportions) for `education` against `churn`, and examine the contingency table. Since `education` includes multiple levels, consider whether any differences appear meaningful in practice.
 
 ### Summary of Categorical Findings {.unnumbered}
 
-The exploratory analysis of categorical variables in the *churnCredit* dataset reveals several subtle yet meaningful patterns that help contextualize customer churn behavior.
+The exploratory analysis of categorical variables in the *churnCredit* dataset reveals several subtle patterns that help contextualise customer churn behaviour.
 
-* *Gender:* Female customers exhibit a slightly higher churn rate than males, but the difference is small and unlikely to hold strong predictive value.
+* Gender: Female customers exhibit a slightly higher churn rate than males, but the difference is small and unlikely to hold strong predictive value.
 
-* *Card Category:* Customers with higher-tier cards (gold and platinum) are less likely to churn, suggesting that premium benefits and deeper engagement foster stronger retention.
+* Card category: Customers with higher-tier cards (gold and platinum) are less likely to churn, suggesting that premium benefits and deeper engagement contribute to stronger retention.
 
-* *Education:* Lower education levels are associated with marginally higher churn, though the overall differences remain minor, indicating limited explanatory strength.
+* Income: Churn rates decrease gradually as income rises, indicating that greater financial capacity may support long-term account stability.
 
-* *Income:* Churn rates decline gradually with increasing income, implying that greater financial capacity may support long-term account stability.
+* Marital status: Single customers churn somewhat more often than married or divorced customers, possibly reflecting differing financial priorities or household financial behaviours.
 
-* *Marital Status:* Single customers churn somewhat more often than married or divorced customers, possibly reflecting differing financial priorities or relationship-driven spending patterns.
+* Education: Lower education levels correspond to marginally higher churn, though the overall differences remain small and of limited explanatory value.
 
-In summary, demographic characteristics such as gender, education, and marital status show only weak associations with churn, while service-related and financial features—particularly card type and income—offer more actionable insights. These results suggest that behavioral and financial indicators are likely to play a more decisive role in understanding and predicting churn.
+Overall, demographic characteristics such as gender, education, and marital status exhibit only weak associations with churn. In contrast, service-related and financial features (particularly card type and income) offer more interpretable and potentially useful signals. These findings suggest that behavioural and transactional indicators are likely to play a more decisive role in understanding and predicting customer attrition.
 
-The next section continues the exploratory analysis by turning to numerical variables that capture spending activity, credit utilization, and overall customer engagement.
+The next section continues the exploratory analysis by turning to numerical variables that capture spending activity, credit utilisation, and overall customer engagement.
 
 ## Exploring Numerical Features {#sec-EDA-sec-numeric}
 
@@ -526,7 +503,6 @@ To keep the analysis focused and interpretable, we examine five representative n
 3. `credit.limit`: total credit line assigned to each customer, indicating financial capacity  
 4. `months.on.book`: number of months the customer has held the account, representing relationship duration  
 5. `ratio.amount.Q4.Q1`: ratio of total transaction amount in the fourth quarter to that in the first quarter, capturing changes in spending behavior over time  
-
 Together, these variables provide a comprehensive view of customer interaction, engagement, credit strength, tenure, and behavioral change. After examining these features individually, the subsection *Assessing Correlation and Redundancy* explores how numerical variables relate to one another and identifies potential overlaps. This step ensures that later models are based on distinct, non-redundant predictors that contribute meaningfully to churn analysis.
 
 ### Customer Contacts and Churn {.unnumbered}
@@ -647,9 +623,7 @@ This decline in spending may serve as an early signal of disengagement: customer
 
 From a business perspective, monitoring quarterly spending patterns can help identify at-risk customers. Proactive measures, such as targeted rewards or seasonal incentives for reduced spenders, could mitigate churn risk and sustain long-term engagement.
 
-*Try it yourself:*
-Repeat the same visual analysis using other numerical features such as `age` and `months.inactive`. Do you observe similar or different patterns of behavior between churners and non-churners? Reflect on how these variables might contribute to predicting customer retention.
-
+> *Try it yourself:* Repeat the same visual analysis using other numerical features such as `age` and `months.inactive`. Do you observe similar or different patterns of behavior between churners and non-churners? Reflect on how these variables might contribute to predicting customer retention.
 
 ### Assessing Correlation and Redundancy {#sec-ch4-EDA-correlation}
 
@@ -665,7 +639,7 @@ knitr::include_graphics("images/ch4_correlation.png")
 
 To illustrate this point, Figure [-@fig-correlation-chocolate] shows a well-known example from @messerli2012chocolate, depicting a strong correlation between per-capita chocolate consumption and Nobel Prize wins across countries. Although amusing, it underscores the importance of caution: correlations may arise by coincidence or through the influence of unobserved factors. For readers interested in causality, *The Book of Why* by Judea Pearl and Dana Mackenzie [@pearl2018book] offers an accessible introduction to this topic.
 
-```{r fig-correlation-chocolate, echo = FALSE, out.width = "70%", fig.cap = "Scatterplot illustrating the correlation between Nobel Prize wins and chocolate consumption (per 10 million population) across countries. Adapted from @messerli2012chocolate."}
+```{r fig-correlation-chocolate, echo = FALSE, out.width = "60%", fig.cap = "Scatterplot illustrating the correlation between Nobel Prize wins and chocolate consumption (per 10 million population) across countries. Adapted from @messerli2012chocolate."}
 knitr::include_graphics("images/ch4_correlation_chocolate.png")
 ```
 
@@ -688,7 +662,7 @@ ggcorrplot(cor_matrix, type = "lower", lab = TRUE, lab_size = 2, tl.cex = 6,
 
 The heatmap shows that most numerical variables in the *churnCredit* dataset are only moderately or weakly correlated, suggesting that they capture distinct behavioral dimensions. The exception is the perfect correlation ($r = 1$) between `credit.limit` and `available.credit`, meaning one is mathematically derived from the other. Including both in a model would therefore add redundancy without additional information. To illustrate this visually:
 
-```{r}
+```{r out.width = "100%"}
 #| layout-ncol: 2
 #| fig-width: 4
 #| fig-height: 4
@@ -706,7 +680,7 @@ The first plot shows a perfect linear relationship between `credit.limit` and `a
 
 A similar relationship is observed between `utilization.ratio`, `revolving.balance`, and `credit.limit`. The utilization ratio is mathematically defined as `revolving.balance / credit.limit`, meaning it does not introduce new information but provides a normalized view of credit usage. Depending on the modeling goal, it may be preferable to retain either the ratio for interpretability or its components for more detailed financial analysis. To illustrate this visually:
 
-```{r}
+```{r out.width = "100%"}
 #| layout-ncol: 2
 #| fig-width: 4
 #| fig-height: 4
@@ -750,13 +724,13 @@ By analysing combinations of variables, such as joint spending and usage, or spe
 
 Transaction activity has two important dimensions: how much customers spend and how often they use their card. The variables `transaction.amount.12` and `transaction.count.12` represent these behaviours. Examining them together provides insight into usage patterns that are not visible in univariate plots. A scatter plot is particularly suitable here because it displays both dimensions simultaneously.
 
-```{r}
+```{r out.width = "75%"}
 ggplot(data = churnCredit) +
   geom_point(aes(x = transaction.amount.12, 
                  y = transaction.count.12, 
                  color = churn),
              size = 0.2, alpha = 0.7) +
-  labs(x = "Total Transaction Amount (12 months)",
+  labs(x = "Transaction Amount",
        y = "Total Transaction Count (12 months)",
        color = "Churn")
 ```
@@ -811,7 +785,7 @@ From a business perspective, this relationship suggests that card tier is closel
 
 Age is an important demographic factor that often shapes financial behaviour, spending patterns, and loyalty to service providers. In the *churnCredit* dataset, understanding how transaction activity varies across age groups can shed light on whether younger and older customers differ in their likelihood of closing their accounts. Because individual observations form a dense cloud, we use smoothed trend lines to highlight overall patterns in spending and transaction frequency.
 
-```{r}
+```{r out.width = "100%"}
 #| layout-ncol: 2
 #| fig-width: 5
 #| fig-height: 4
@@ -821,16 +795,14 @@ ggplot(data = churnCredit, aes(x = age, y = transaction.amount.12, color = churn
   geom_smooth(se = FALSE, linewidth = 1.1, alpha = 0.9) +
   labs(x = "Customer Age", 
        y = "Total Transaction Amount (12 months)",
-       color = "Churn") +
-  theme_minimal()
+       color = "Churn") 
 
 # Total Transaction Count by Age
 ggplot(data = churnCredit, aes(x = age, y = transaction.count.12, color = churn)) +
   geom_smooth(se = FALSE, linewidth = 1.1, alpha = 0.9) +
   labs(x = "Customer Age", 
        y = "Total Transaction Count (12 months)",
-       color = "Churn") +
-  theme_minimal()
+       color = "Churn") 
 ```
 
 The smooth curves indicate that transaction activity gradually declines with age. Younger customers tend to make more transactions and spend larger amounts, whereas older customers show lower and more stable activity levels. There is also a small indication that churn is slightly more common among younger, highly active customers, although this difference is not large.
@@ -865,7 +837,7 @@ The analysis also highlights the influence of card type and customer segmentatio
 
 The exploratory work also revealed two instances of redundancy. The variable `available.credit` is determined directly by subtracting the revolving balance from the credit limit. Likewise, the utilization ratio is calculated from the revolving balance and the credit limit. Because these features do not introduce new information beyond their component variables, they will be excluded when preparing the data for modelling in Chapter [-@sec-ch7-classification-knn]. This illustrates how EDA supports feature selection by identifying variables that may complicate a model without improving predictive performance.
 
-Overall, this exploratory analysis shows how systematic EDA can reveal both structural characteristics of the data and meaningful behavioural patterns. By integrating financial indicators, engagement measures, and demographic profiles, the analysis provides a sound empirical basis for the statistical inference and predictive modelling developed in the following chapter.
+Overall, this exploratory analysis shows how systematic EDA can reveal both structural characteristics of the data and meaningful behavioural patterns. By integrating financial indicators, engagement measures, and demographic profiles, the analysis provides a sound empirical basis for the statistical inference and predictive modelling developed in the following chapter. In Chapter [-@sec-ch5-statistics], we will revisit several of these patterns using formal statistical tests to evaluate whether the differences observed in EDA reflect genuine population-level effects.
 
 ## Chapter Summary and Takeaways {#sec-ch4-summary}
 

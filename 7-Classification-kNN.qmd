@@ -361,7 +361,7 @@ str(churnCredit)
 
 The dataset is an R data frame containing `r nrow(churnCredit)` observations and `r ncol(churnCredit) - 1` predictor variables, along with a binary outcome variable, `churn`. Consistent with the earlier analysis in Chapter [-@sec-ch4-EDA], we exclude `customer.ID` (identifier) and `available.credit` (a deterministic transformation of other credit variables) from the predictor set. The candidate predictors for kNN are:
 
-`age`, `gender`, `education`, `marital`, `income`, `card.category`, `dependent.count`, `months.on.book`, `relationship.count`, `months.inactive`, `contacts.count.12`, `credit.limit`, `revolving.balance`, `transaction.amount.12`, `transaction.count.12`, `ratio.amount.Q4.Q1`, `ratio.count.Q4.Q1`, `utilization.ratio`.
+`age`, `gender`, `education`, `marital`, `income`, `card.category`, `dependent.count`, `months.on.book`, `relationship.count`, `months.inactive`, `contacts.count.12`, `credit.limit`, `revolving.balance`, `transaction.amount.12`, `transaction.count.12`, `ratio.amount.Q4.Q1`, and `ratio.count.Q4.Q1`.
 
 Before proceeding to *Data Setup to Model* (Chapter [-@sec-ch6-setup-data]), we harmonize missing and unknown values, following the approach in Section [-@sec-ch4-EDA-churn]. Because random imputation is involved, we set a seed for reproducibility. We also ensure the outcome is a factor with levels `no` and `yes`.
 
@@ -416,9 +416,6 @@ str(test_onehot)
 
 For each categorical variable with $k$ categories, the function creates $k$ binary columns (dummy variables). In practice, it is often preferable to use $k - 1$ dummy variables to avoid redundancy and multicollinearity, while maintaining interpretability and compatibility with distance-based algorithms.
 
-
-
-
 #### Feature Scaling for kNN {.unnumbered}
 
 To ensure that all numerical variables contribute equally to distance calculations, we apply *min–max scaling*. This technique rescales each variable to the $[0, 1]$ range based on the minimum and maximum values computed from the training set. The same scaling parameters are then applied to the test set to prevent data leakage:
@@ -427,7 +424,7 @@ To ensure that all numerical variables contribute equally to distance calculatio
 numeric_vars = c("age", "dependent.count", "months.on.book", "relationship.count", 
                "months.inactive", "contacts.count.12", "credit.limit", 
                "revolving.balance", "transaction.amount.12", "transaction.count.12", 
-               "ratio.amount.Q4.Q1", "ratio.count.Q4.Q1", "utilization.ratio")
+               "ratio.amount.Q4.Q1", "ratio.count.Q4.Q1")
 
 min_train = sapply(train_set[, numeric_vars], min)   # Column-wise minimums
 max_train = sapply(train_set[, numeric_vars], max)   # Column-wise maximums
@@ -458,7 +455,7 @@ formula = churn ~ gender_female + age +
     card.category_blue + card.category_silver + card.category_gold +
     dependent.count + months.on.book + relationship.count + months.inactive + contacts.count.12 +
     credit.limit + revolving.balance + transaction.amount.12 + transaction.count.12 + 
-    ratio.amount.Q4.Q1 + ratio.count.Q4.Q1 + utilization.ratio
+    ratio.amount.Q4.Q1 + ratio.count.Q4.Q1
 ```
 
 We now apply the `kNN.plot()` function:
@@ -486,7 +483,7 @@ In R, we use the `kNN()` function from the liver package to implement the k-Near
 kNN_predict = kNN(formula = formula, train = train_scaled, test = test_scaled, k = 5)
 ```
 
-In this command, `formula` defines the relationship between the response variable (`churn`) and the predictors. The `train` and `test` arguments specify the scaled datasets prepared in earlier steps. The parameter `k = 5` sets the number of nearest neighbors, as determined in the tuning step. The `kNN()` function classifies each test observation by computing its distance to all training records and assigning the majority class among the **five** nearest neighbors.
+In this command, `formula` defines the relationship between the response variable (`churn`) and the predictors. The `train` and `test` arguments specify the scaled datasets prepared in earlier steps. The parameter `k = 5` sets the number of nearest neighbors, as determined in the tuning step. The `kNN()` function classifies each test observation by computing its distance to all training records and assigning the majority class among the *five* nearest neighbors.
 
 ### Evaluating Model Performance of the kNN Model
 
