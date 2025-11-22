@@ -24,7 +24,7 @@ How do we know whether a machine learning model is actually good? Is 95% accurac
 
 Consider this: if you give the same dataset and research question to ten different data science teams, you are likely to receive ten different results, often with dramatically different conclusions. Why does this happen? These differences often arise not from the data or models themselves, but from how each team *evaluates* their results. One team’s “successful” model might be another team’s failure, depending on the metrics they prioritize, how they set thresholds, and what trade-offs they are willing to make. As [George Box](https://en.wikipedia.org/wiki/George_E._P._Box) famously said, *"All models are wrong, but some are useful."* Evaluation helps us determine which models are useful enough to inform decisions and guide action. This chapter gives you the tools to understand those differences, and to evaluate models with clarity and confidence.
 
-In the previous chapter, we introduced our first machine learning algorithm: kNN. We learned how to build a classifier using the *churn* dataset, carefully scaling features and tuning the number of neighbors to improve predictions. This raises a critical question: *How can we determine whether the model truly performs well?*
+In the previous chapter, we introduced our first machine learning algorithm: kNN. We learned how to build a classifier using the *churnCredit* dataset, carefully scaling features and tuning the number of neighbors to improve predictions. This raises a critical question: *How can we determine whether the model truly performs well?*
 
 This brings us to the *Model Evaluation* phase, a pivotal step in the Data Science Workflow first introduced in Chapter [-@sec-ch2-intro-data-science] and illustrated in @fig-ch2_DSW. By this point, we have already completed the first five phases:
 
@@ -72,67 +72,109 @@ To build your intuition, this chapter includes visualizations and practical exam
 
 We begin with one of the most foundational tools in model evaluation: the *confusion matrix*, which provides a structured summary of prediction outcomes.
 
+
+
+
+
 ## Confusion Matrix {#sec-ch8-confusion-matrix}
 
-How can we tell exactly where a model performs well, and where it fails? The *confusion matrix* provides a structured answer. It is one of the most fundamental tools for evaluating classification models, breaking down predictions into four outcomes based on the comparison of predicted and actual class labels.
+How can we determine where a model performs well and where it falls short? The confusion matrix provides a clear and systematic way to answer this question. It is one of the most widely used tools for evaluating classification models because it records how often the model assigns each class label correctly or incorrectly.
 
-In binary classification, one class is typically designated as the *positive class*, the class of primary interest, while the other is considered the *negative class*. For instance, in fraud detection, fraudulent transactions are usually labeled as positive, and legitimate ones as negative.
+In binary classification, one class is designated as the *positive class*, usually representing the event of primary interest, while the other is the *negative class*. In fraud detection, for example, fraudulent transactions are treated as positive, and legitimate transactions as negative.
 
-@fig-ch8-confusion-matrix illustrates the structure of the confusion matrix. The rows represent the *actual* class labels, while the columns represent the *predicted* class labels. Each cell in the matrix represents one of four possible outcomes. *True Positives (TP)* occur when the model correctly predicts the positive class (e.g., fraud detected as fraud). *False Positives (FP)* arise when the model incorrectly flags the positive class (e.g., legitimate transactions incorrectly flagged as fraud). *True Negatives (TN)* are correct predictions of the negative class, while *False Negatives (FN)* represent missed detections of the positive class (e.g., fraudulent transactions classified as legitimate).
+Figure [-@fig-ch8-confusion-matrix] shows the structure of a confusion matrix. The rows correspond to the *actual* class labels, and the columns represent the *predicted* labels. Each cell of the matrix captures one of four possible outcomes. *True positives (TP)* occur when the model correctly predicts the positive class (for example, a fraudulent transaction correctly detected). *False positives (FP)* arise when the model incorrectly predicts the positive class (a legitimate transaction flagged as fraud). *True negatives (TN)* are correct predictions of the negative class, while *false negatives (FN)* occur when the model misses a positive case (a fraudulent transaction classified as legitimate).
 
 ```{r fig-ch8-confusion-matrix, echo = FALSE, out.width = "60%", fig.cap = "Confusion matrix for binary classification, summarizing correct and incorrect predictions based on whether the actual class is positive or negative."}
 knitr::include_graphics("images/ch8_confusion-matrix.png")
 ```
 
-This structure may feel familiar, it mirrors the concept of *Type I and Type II errors* introduced in Chapter [-@sec-ch5-statistics] on hypothesis testing. The diagonal elements (TP and TN) represent correct predictions, while the off-diagonal elements (FP and FN) represent errors.
+This structure parallels the ideas of *Type I and Type II errors* discussed in Chapter [-@sec-ch5-statistics]. The diagonal entries (TP and TN) indicate correct predictions, while the off-diagonal entries (FP and FN) represent misclassifications.
 
-With the confusion matrix in hand, we can compute basic performance metrics. Two of the most general are *accuracy* and *error rate*.
+From the confusion matrix we can compute several basic metrics. Two of the most general are *accuracy* and *error rate*.
 
-*Accuracy* (also called success rate) measures the proportion of correct predictions: $$
-\text{Accuracy} = \frac{\text{TP} + \text{TN}}{\text{Total Predictions}} = \frac{\text{TP} + \text{TN}}{\text{TP} + \text{FP} + \text{FN} + \text{TN}}.
+Accuracy, sometimes called the success rate, measures the proportion of correct predictions:
+$$
+\text{Accuracy} = \frac{\text{TP} + \text{TN}}{\text{TP} + \text{FP} + \text{FN} + \text{TN}}.
 $$
 
-*Error rate* is the proportion of incorrect predictions: $$
-\text{Error Rate} = 1 - \text{Accuracy} = \frac{\text{FP} + \text{FN}}{\text{Total Predictions}}.
+The error rate is the proportion of incorrect predictions:
+$$
+\text{Error Rate} = 1 - \text{Accuracy} = \frac{\text{FP} + \text{FN}}{\text{TP} + \text{FP} + \text{FN} + \text{TN}}.
 $$
 
-These metrics offer a broad summary of model performance. However, they can be misleading. Imagine a dataset in which only 5% of transactions are fraudulent. A model that labels all transactions as legitimate would still achieve 95% accuracy, yet completely fail to detect fraud. This illustrates a classic case where accuracy hides deeper weaknesses, especially in imbalanced datasets.
+Although accuracy provides a convenient summary, it can be misleading. Consider a dataset in which only 5 percent of transactions are fraudulent. A model that labels every transaction as legitimate would still achieve 95 percent accuracy, yet it would fail entirely at identifying fraud. Situations like this highlight the limitations of accuracy, especially when classes are imbalanced or when the positive class carries greater importance.
 
-To better understand a model’s strengths and weaknesses, such as how well it identifies positive cases or avoids false alarms, we need more detailed metrics. The next section introduces sensitivity, specificity, precision, and recall.
+To understand a model’s strengths and weaknesses more fully, especially how well it identifies positive cases or avoids false alarms, we need additional metrics. The next section introduces sensitivity, specificity, precision, and recall.
 
-Let us revisit the kNN model from Chapter [-@sec-ch7-classification-knn], which was used to predict customer churn using the `churn` dataset. We now evaluate its performance using a confusion matrix. We begin by applying the kNN model to the test set:
+In R, a confusion matrix can be computed using the `conf.mat()` function from the liver package, which provides a consistent interface for classification evaluation. The package also includes `conf.mat.plot()` for visualizing confusion matrices.
 
-```{r}
+To see this in practice, we revisit the kNN model used in the churn case study in Chapter 7 (Section [-@sec-ch7-knn-churn]). The following code computes the confusion matrix for the test set:
+
+```{r echo=FALSE}
 library(liver)
 
-data(churn)
+data(churnCredit)
+
+library(Hmisc)
 set.seed(42)
 
-data_sets = partition(data = churn, ratio = c(0.8, 0.2))
+# Treat "unknown" as missing and drop unused levels
+churnCredit[churnCredit == "unknown"] <- NA
+churnCredit <- droplevels(churnCredit)
+
+# Random imputation as used in Chapter 4
+churnCredit$education <- impute(churnCredit$education, "random")
+churnCredit$income    <- impute(churnCredit$income, "random")
+churnCredit$marital   <- impute(churnCredit$marital, "random")
+
+# Train/test split
+set.seed(42)
+data_sets = partition(data = churnCredit, ratio = c(0.8, 0.2))
+
 train_set = data_sets$part1
 test_set  = data_sets$part2
+
 test_labels = test_set$churn
 
-formula = churn ~ account.length + voice.plan + voice.messages + 
-                  intl.plan + intl.mins + intl.calls + 
-                  day.mins + day.calls + eve.mins + eve.calls + 
-                  night.mins + night.calls + customer.calls
+# Prepare categorical variables
+categorical_vars = c("gender", "education", "marital", "income", "card.category")
 
-kNN_predict = kNN(formula = formula, train = train_set, 
-                  test = test_set, k = 9, scaler = "minmax")
+train_onehot = one.hot(train_set, cols = categorical_vars)
+test_onehot  = one.hot(test_set,  cols = categorical_vars)
+
+# Scale numeric variables
+numeric_vars = c("age", "dependent.count", "months.on.book", "relationship.count", 
+               "months.inactive", "contacts.count.12", "credit.limit", 
+               "revolving.balance", "transaction.amount.12", "transaction.count.12", 
+               "ratio.amount.Q4.Q1", "ratio.count.Q4.Q1")
+
+min_train = sapply(train_set[, numeric_vars], min)
+max_train = sapply(train_set[, numeric_vars], max)
+
+train_scaled = minmax(train_onehot, col = numeric_vars, min = min_train, max = max_train)
+test_scaled  = minmax(test_onehot,  col = numeric_vars, min = min_train, max = max_train)
+
+# Apply kNN model
+formula = churn ~ gender_female + age + 
+    education_uneducated + education_highschool + education_college + education_graduate +
+    `education_post-graduate` + marital_married + marital_single +
+    `income_<40K` + `income_40K-60K` + `income_60K-80K` + `income_80K-120K` + 
+    card.category_blue + card.category_silver + card.category_gold +
+    dependent.count + months.on.book + relationship.count + months.inactive +
+    contacts.count.12 + credit.limit + revolving.balance + transaction.amount.12 +
+    transaction.count.12 + ratio.amount.Q4.Q1 + ratio.count.Q4.Q1
+
+kNN_predict = kNN(formula = formula, 
+                  train = train_scaled, 
+                  test = test_scaled, 
+                  k = 5)
 ```
-
-For details on how this model was built, see Section [-@sec-ch7-knn-churn]. Here we use `scaler = "minmax"` to scale numeric features to the $[0, 1]$ range and one-hot encode binary variables.
-
-In R, one way to compute a confusion matrix is by using the `conf.mat()` function from the **liver** package, which provides a consistent interface for classification evaluation. The same package also includes `conf.mat.plot()` for visualizing confusion matrices, making interpretation more intuitive.
-
-We compute the confusion matrix as follows:
 
 ```{r}
 conf.mat(pred = kNN_predict, actual = test_labels, reference = "yes")
 ```
 
-The `conf.mat()` function accepts several key arguments. The `pred` argument specifies the predicted class labels or probabilities, while `actual` contains the true labels from the test set. The `reference` argument designates which class is treated as the *positive class*. The optional `cutoff` argument is used when probabilities are predicted (defaulting to 0.5), but it is not needed here because `kNN_predict` returns class labels. In this example, `"yes"` denotes the positive class, indicating customers who churned.
+The `pred` argument specifies the predicted class labels, and `actual` contains the true labels. The `reference` argument identifies the positive class. The `cutoff` argument is used when predictions are probabilities, but it is not needed here.
 
 ```{r echo=FALSE}
 conf_max_knn_churn = conf.mat(pred = kNN_predict, actual = test_labels, reference = "yes")
@@ -264,9 +306,11 @@ For instance, in fraud detection, missing a fraud case (a false negative) may be
 Let us return to the *kNN* model in [Section -@sec-ch8-confusion-matrix], which predicts customer churn (`churn = yes`). This time, we extract predicted probabilities by setting `type = "prob"` in the `kNN()` function:
 
 ```{r}
-kNN_prob = kNN(formula = formula, train = train_set, 
-               test = test_set, k = 9, scaler = "minmax",
-               type = "prob")
+kNN_prob = kNN(formula = formula, 
+                  train = train_scaled, 
+                  test = test_scaled, 
+                  k = 5,
+                  type = "prob")
 
 round(kNN_prob[1:6, ], 2)  # show first 6 rows
 ```

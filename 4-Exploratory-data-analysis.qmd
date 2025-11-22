@@ -56,37 +56,24 @@ This shift from description to interpretation is at the heart of data storytelli
 
 Visualisation is central to this process. While summary statistics offer a structural overview, visual displays make patterns tangible. Scatter plots and correlation matrices highlight relationships among numerical features; histograms and box plots clarify distributions and skewness; bar charts and mosaic visualisations reveal differences across categories. Choosing appropriate visual tools not only strengthens analysis but also improves communication.
 
-Storytelling through data is widely used across domains, from business and journalism to public policy and scientific research. A well-known example is Hans Rosling’s TED Talk [*New insights on poverty*](https://www.ted.com/talks/hans_rosling_new_insights_on_poverty), where decades of demographic and economic data are presented in an engaging, intuitive format. Figure @fig-EDA-fig-1, adapted from his presentation, shows how GDP per capita and life expectancy have changed across world regions from 1962 to 2011. Although drawn from global development, the same principles apply when exploring customer behaviour, financial trends, or service outcomes.
+Storytelling through data is widely used across domains, from business and journalism to public policy and scientific research. A well-known example is Hans Rosling’s TED Talk [*New insights on poverty*](https://www.ted.com/talks/hans_rosling_new_insights_on_poverty), where decades of demographic and economic data are presented in an engaging, intuitive format. Figure @fig-EDA-fig-1, adapted from his presentation, shows how GDP per capita and life expectancy have changed across world regions from 1950 to 2019. Although drawn from global development, the same principles apply when exploring customer behaviour, financial trends, or service outcomes.
 
 ```{r}
 #| label: fig-EDA-fig-1
 #| echo: false
 #| out-width: 100%
-#| fig-cap: "Changes in GDP per capita and life expectancy by region from 1962 to 2011. Dot size is proportional to population."
+#| fig-cap: "Changes in GDP per capita and life expectancy by region from 1950 to 2019. Dot size is proportional to population."
 
-The_West = c("Western Europe", "Northern Europe", "Southern Europe", "Northern America", "Australia and New Zealand")
-Asia = c("Eastern Asia", "South-Eastern Asia", "Central Asia", "Southern Asia", "Western Asia")
-Latin_America = c("Caribbean", "Central America", "South America")
-Africa = c("Eastern Africa", "Middle Africa", "Northern Africa", "Southern Africa", "Western Africa")
-Others = c("Eastern Europe", "Melanesia", "Micronesia", "Polynesia")
+data(gapminder, package = "liver")
 
-gapminder$Group = gapminder$region
-
-gapminder$Group = fct_collapse(gapminder$Group, 
-                               "The West"      = The_West, 
-                               "Asia"          = Asia, 
-                               "Latin America" = Latin_America, 
-                               "Africa"        = Africa, 
-                               "Others"        = Others)
-
-ggplot_1 = filter(gapminder, year %in% c(1962, 2011) & !is.na(Group) & Group != "Others" &
-                    !is.na(gdp) & !is.na(life_expectancy) & !is.na(population)) |>
-  ggplot(aes(x = gdp/population, y = life_expectancy, col = Group, size = population / 10^6)) +
+#ggplot_1 = ggplot(gapminder, aes(x = gdp, y = life_expectancy, col = continent, size = population / 10^6)) 
+ggplot_1 <- dplyr::filter(gapminder, !is.na(world_group) & world_group != "Others") |> 
+  ggplot(aes(x = gdp, y = life_expectancy, col = world_group, size = population / 10^6)) +
   geom_point(alpha = 0.8) +
   guides(size = "none") +
-  coord_cartesian(ylim = c(30, 85)) + 
-  labs(x = 'GDP per Capita (USD)', 
-       y = 'Life Expectancy') 
+  coord_cartesian(ylim = c(20, 90)) +
+  labs(x = "GDP per Capita (USD)",
+       y = "Life Expectancy")
 
 if(knitr::is_latex_output()){
   ggplot_1 + 
@@ -322,55 +309,51 @@ Once the data are clean and variables properly defined, the dataset is ready for
 
 ## Exploring Categorical Features {#sec-chapter-EDA-categorical}
 
-Categorical variables divide observations into discrete groups that capture demographic or behavioral characteristics of customers. In the *churnCredit* dataset, key categorical features include `gender`, `education`, `marital`, `card.category`, and `churn`. Exploring how these variables are distributed—and how they relate to the outcome variable `churn`—can reveal early patterns of customer loyalty or disengagement.
+Categorical variables group observations into distinct classes that often reflect demographic or behavioural characteristics. In the *churnCredit* dataset, the key categorical features include `gender`, `education`, `marital`, `card.category`, and `churn`. Examining how these variables are distributed, and how they relate to the outcome `churn`, provides early clues about customer loyalty and disengagement.
 
-We begin by examining the distribution of the target variable `churn`, which indicates whether a customer has closed their credit card account. Understanding this distribution is important for assessing class balance, a factor that directly influences model training and interpretation.
+We begin with the distribution of the target variable `churn`, which indicates whether a customer has closed a credit card account. Understanding this distribution is essential for assessing class balance, a factor that directly influences model training and interpretation. The bar plot and pie chart below summarise the proportion of customers who churned:
 
-```{r out.width = "50%"}
+```{r out.width = "100%"}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+library(ggplot2)
+
+# Bar plot
 ggplot(data = churnCredit, aes(x = churn, label = scales::percent(prop.table(after_stat(count))))) +
-  geom_bar(fill = c("#F4A582", "#A8D5BA")) + 
-  geom_text(stat = "count", vjust = 0.4, size = 8)
-```
+  geom_bar(fill = c("#F4A582", "#A8D5BA")) +
+  geom_text(stat = "count", vjust = 0.4, size = 6)
 
-The bar plot shows that most customers remain active (`churn = "no"`), while a smaller proportion (about `r round(prop.table(table(churnCredit$churn))["yes"] * 100, 1)`%) have closed their accounts. This imbalance suggests that customer attrition is relatively infrequent, a pattern typical in many financial and subscription-based contexts.
-
-As an alternative, a pie chart provides a compact visualisation of the same information. The following code produces a clear and reader-friendly version:
-
-```{r out.width = "50%"}
-pie_data <- churnCredit |>
-  dplyr::count(churn) |>
-  dplyr::mutate(prop = n / sum(n))
-
-ggplot(pie_data, aes(x = "", y = prop, fill = churn)) +
-  geom_col(width = 1) +
+# Pie chart
+ggplot(churnCredit, aes(x = "", fill = churn)) +
+  geom_bar(width = 1) +
   coord_polar(theta = "y") +
-  geom_text(aes(label = scales::percent(prop, accuracy = 0.1)),
-            position = position_stack(vjust = 0.5),
-            size = 6) +
-  labs(fill = "Churn") +
   theme_void()
 ```
 
-Pie charts are less informative for comparing multiple groups, but they can be effective when visualising the proportions of a single binary variable.
+The pie-chart code is slightly more involved because it uses polar coordinates. Do not worry if it feels unfamiliar: most visualisations in this book rely on simpler bar-plot structures that are easier to read and adapt. The left panel presents the bar plot, while the right panel offers a compact view of the same proportions using a pie chart. Both highlight that most customers remain active (`churn = "no"`), with only a small proportion (about `r round(prop.table(table(churnCredit$churn))["yes"] * 100, 1)` percent) closing their accounts. This imbalance reflects patterns commonly seen in financial and subscription-based datasets.
 
-The earlier bar chart builds on basic plotting techniques introduced in Section [-@sec-ch1-visualization]. A simpler version, without colour or percentage labels, can be produced with:
+Although pie charts are less useful when comparing multiple groups, they can be effective for displaying a single binary variable. A basic version of the bar plot, without colours or percentage labels, can be created with:
 
 ```r
-ggplot(data = churnCredit) + 
+ggplot(data = churnCredit) +
   geom_bar(aes(x = churn))
 ```
 
-The simpler plot offers a quick overview, whereas the enhanced version provides clearer communication by emphasising proportions. Such refinements are valuable when presenting results to non-technical stakeholders, as they make relative differences immediately visible.
+The simpler display offers a quick overview, whereas the enhanced version communicates proportions more clearly. Such refinements improve interpretability, especially when results are presented to non-technical stakeholders.
 
-Class imbalance is not just a descriptive feature; it has practical implications for modelling. Predictive algorithms trained on imbalanced data tend to favour the majority class, leading to biased predictions and lower sensitivity to minority outcomes. This issue will be revisited in Chapter [-@sec-ch6-setup-data], Section [-@sec-ch6-balancing], where methods for addressing imbalance are introduced.
+> *Try if yourself:* Create a simple bar plot of the `gender` feature using **ggplot2**. You may also experiment with adding colour fills or percentage labels. This short activity reinforces the basic structure of bar plots before we examine categorical relationships in more detail.
 
-Having established the overall distribution of the target variable, the next step is to explore how other categorical features relate to churn. These variables may reveal distinct customer segments or behavioural patterns associated with higher attrition risk.
+Class imbalance is more than a descriptive observation: it can substantially influence modelling performance. Algorithms trained on imbalanced data often favour the majority class, which leads to biased predictions and reduced sensitivity to minority outcomes. Strategies for addressing this issue are introduced in Chapter [-@sec-ch6-setup-data], Section [-@sec-ch6-balancing].
+
+Having established the distribution of the target variable, we next examine how other categorical features relate to churn. These relationships may reveal customer segments or behavioural patterns associated with increased attrition risk.
 
 ### Relationship Between Gender and Churn {.unnumbered}
 
 Among the demographic variables, `gender` can help examine whether customer retention behaviour differs between male and female account holders. Although gender is not typically a strong predictor of churn in financial services, even small differences may offer useful insights into customer engagement patterns.
 
-```{r}
+```{r out.width = "100%"}
 #| layout-ncol: 2
 #| fig-width: 4
 #| fig-height: 4
@@ -401,7 +384,7 @@ From an analytical perspective, this suggests that gender is not a key different
 
 Credit card type is one of the most informative service features in the *churnCredit* dataset. The variable `card.category` distinguishes four tiers—blue, silver, gold, and platinum—representing different benefit levels and customer segments.
 
-```{r}
+```{r out.width = "100%"}
 #| layout-ncol: 2
 #| fig-width: 4
 #| fig-height: 4
@@ -432,7 +415,7 @@ Because the silver, gold, and platinum categories are relatively small, analysts
 
 Income level reflects purchasing power and financial stability, both of which may influence a customer’s likelihood of closing a credit account. The variable `income` in the *churnCredit* dataset includes five ordered categories, ranging from *less than $40K* to *over $120K*. Since missing values were imputed earlier, the variable now provides a complete and consistent basis for comparison.
 
-```{r}
+```{r out.width = "100%"}
 #| layout-ncol: 2
 #| fig-width: 4
 #| fig-height: 4
@@ -463,7 +446,7 @@ From an analytical perspective, this variable provides a mild yet interpretable 
 
 Marital status may influence financial behaviour and account management, making it a useful demographic variable to examine in the context of churn. The `marital` variable in the *churnCredit* dataset includes three main categories: *married*, *single*, and *divorced*. Differences across these groups may reflect household financial habits, shared responsibilities, or lifestyle-related spending patterns.
 
-```{r}
+```{r out.width = "100%"}
 #| layout-ncol: 2
 #| fig-width: 4
 #| fig-height: 4
@@ -525,7 +508,7 @@ Together, these variables provide a comprehensive view of customer interaction, 
 
 The number of customer service contacts within the past year (`contacts.count.12`) provides insight into customer engagement and potential dissatisfaction. This variable is discrete, taking small integer values that represent the number of times a customer contacted support. For such count-based variables, bar plots are preferred to boxplots or density plots, as they better convey frequency distributions and group proportions.
 
-```{r}
+```{r out.width = "100%"}
 #| layout-ncol: 2
 #| fig-width: 4
 #| fig-height: 4
@@ -549,7 +532,7 @@ The total transaction amount in the past twelve months (`transaction.amount.12`)
 
 Unlike count-based variables such as `contacts.count.12`, `transaction.amount.12` is continuous, making boxplots and density plots more suitable visualization tools. These plots summarize the central tendency, spread, and distributional differences between churned and active customers.
 
-```{r}
+```{r out.width = "100%"}
 #| layout-ncol: 2
 #| fig-width: 4
 #| fig-height: 4
@@ -573,7 +556,7 @@ The total credit line assigned to each customer (`credit.limit`) reflects both f
 
 Because `credit.limit` is a continuous variable that can vary widely across customers, violin and histogram plots are effective tools for visualizing its distribution by churn status. These plots reveal differences in both median values and distribution shapes between the two groups.
 
-```{r}
+```{r out.width = "100%"}
 #| layout-ncol: 2
 #| fig-width: 4
 #| fig-height: 4
@@ -595,7 +578,7 @@ From a business perspective, this pattern implies that customers with smaller cr
 
 The variable `months.on.book` measures the length of time a customer has maintained their credit card account with the bank. Tenure often reflects relationship stability and long-term engagement. Customers with longer histories tend to be more loyal and may have developed stronger trust or accumulated benefits, while newer customers might be more likely to close their accounts if their expectations are not met.
 
-```{r}
+```{r out.width = "100%"}
 #| layout-ncol: 2
 #| fig-width: 4
 #| fig-height: 4
@@ -619,7 +602,7 @@ From a business perspective, such findings can inform retention programs targeti
 
 The variable `ratio.amount.Q4.Q1` measures the ratio between the total transaction amount in the fourth quarter and that in the first quarter. It captures how customer spending changes over time, offering a behavioral perspective on financial activity. A declining ratio may suggest reduced engagement or satisfaction, while an increasing ratio could indicate growing usage and confidence in the service.
 
-```{r}
+```{r out.width = "100%"}
 #| layout-ncol: 2
 #| fig-width: 4
 #| fig-height: 4
