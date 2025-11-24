@@ -405,9 +405,7 @@ To evaluate how well the kNN model generalizes to new observations, we begin by 
 Since the *churnCredit* dataset has already been cleaned and imputed (see Chapter [-@sec-ch3-data-preparation]), we proceed directly to data partitioning using the `partition()` function from the liver package. This function divides the data into an 80% training set and a 20% test set:
 
 ```{r}
-set.seed(42)
-
-data_sets = partition(data = churnCredit, ratio = c(0.8, 0.2))
+data_sets = partition(data = churnCredit, ratio = c(0.8, 0.2), set.seed = 42)
 
 train_set = data_sets$part1
 test_set  = data_sets$part2
@@ -422,10 +420,10 @@ The `partition()` function preserves the class distribution of the target variab
 Because the kNN algorithm relies on distance calculations between observations, all input features must be numeric. Therefore, categorical variables need to be transformed into numerical representations. In the *churnCredit* dataset, the variables `gender`, `education`, `marital`, `income`, and `card.category` are categorical and require encoding. The `one.hot()` function from the liver package automates this step by generating binary indicator variables:
 
 ```{r}
-categorical_vars = c("gender", "education", "marital", "income", "card.category")
+categorical_features = c("gender", "education", "marital", "income", "card.category")
 
-train_onehot = one.hot(train_set, cols = categorical_vars)
-test_onehot  = one.hot(test_set,  cols = categorical_vars)
+train_onehot = one.hot(train_set, cols = categorical_features)
+test_onehot  = one.hot(test_set,  cols = categorical_features)
 
 str(test_onehot)
 ```
@@ -437,16 +435,16 @@ For each categorical variable with $m$ categories, the function creates $m$ bina
 To ensure that all numerical variables contribute equally to distance calculations, we apply *min–max scaling*. This technique rescales each variable to the $[0, 1]$ range based on the minimum and maximum values computed from the training set. The same scaling parameters are then applied to the test set to prevent data leakage:
 
 ```{r}
-numeric_vars = c("age", "dependent.count", "months.on.book", "relationship.count", 
+numeric_features = c("age", "dependent.count", "months.on.book", "relationship.count", 
                "months.inactive", "contacts.count.12", "credit.limit", 
                "revolving.balance", "transaction.amount.12", "transaction.count.12", 
                "ratio.amount.Q4.Q1", "ratio.count.Q4.Q1")
 
-min_train = sapply(train_set[, numeric_vars], min)   # Column-wise minimums
-max_train = sapply(train_set[, numeric_vars], max)   # Column-wise maximums
+min_train = sapply(train_set[, numeric_features], min)   # Column-wise minimums
+max_train = sapply(train_set[, numeric_features], max)   # Column-wise maximums
 
-train_scaled = minmax(train_onehot, col = numeric_vars, min = min_train, max = max_train)
-test_scaled  = minmax(test_onehot,  col = numeric_vars, min = min_train, max = max_train)
+train_scaled = minmax(train_onehot, col = numeric_features, min = min_train, max = max_train)
+test_scaled  = minmax(test_onehot,  col = numeric_features, min = min_train, max = max_train)
 ```
 
 Here, `sapply()` computes the column-wise minimum and maximum values across the selected numeric variables in the training set. These values define the scaling range. The `minmax()` function from the liver package then applies min–max scaling to both the training and test sets, using the training-set values as reference.

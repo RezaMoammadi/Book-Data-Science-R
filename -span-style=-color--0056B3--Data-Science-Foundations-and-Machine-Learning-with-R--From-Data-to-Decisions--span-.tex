@@ -312,7 +312,7 @@
 \title{{Data Science Foundations and Machine Learning with R: From Data
 to Decisions}}
 \author{\href{https://www.uva.nl/profile/a.mohammadi}{{Reza Mohammadi}}}
-\date{19 November 2025}
+\date{24 November 2025}
 
 \begin{document}
 \maketitle
@@ -661,7 +661,7 @@ ggplot2 package.}
 \toprule
 Name & Description & Chapter\\
 \midrule
-\textcolor{black}{churnCredit} & Customer churn in the credit card industry. & Chapter 4, 5, 6, 7, 8\\
+\textcolor{black}{churnCredit} & Customer churn in the credit card industry. & Chapters 4, 5, 6, 7, 8\\
 \textcolor{black}{churn} & Customer churn dataset. & Chapters 4, 10\\
 \textcolor{black}{bank} & Direct marketing data from a Portuguese bank. & Chapters 6, 7, 12\\
 \textcolor{black}{adult} & US Census data for income prediction. & Chapters 3, 11\\
@@ -680,6 +680,7 @@ Name & Description & Chapter\\
 \textcolor{black}{redWines} & Red wine quality dataset. & Chapters 11, 13\\
 \addlinespace
 \textcolor{black}{whiteWines} & White wine quality dataset. & Chapter 13\\
+\textcolor{black}{gapminder} & Global development indicators from 1950 to 2019. & Chapter 4\\
 \bottomrule
 \end{tabular}
 
@@ -6860,9 +6861,11 @@ example is Hans Rosling's TED Talk
 \href{https://www.ted.com/talks/hans_rosling_new_insights_on_poverty}{\emph{New
 insights on poverty}}, where decades of demographic and economic data
 are presented in an engaging, intuitive format. Figure
-Figure~\ref{fig-EDA-fig-1}, adapted from his presentation, shows how GDP
-per capita and life expectancy have changed across world regions from
-1962 to 2011. Although drawn from global development, the same
+Figure~\ref{fig-EDA-fig-1}, adapted from his presentation, illustrates
+how GDP per capita and life expectancy have changed across world regions
+from 1950 to 2019. The figure is generated from the \emph{gapminder}
+dataset available in the \textbf{liver} package and visualised using
+\textbf{ggplot2}. Although drawn from global development, the same
 principles apply when exploring customer behaviour, financial trends, or
 service outcomes.
 
@@ -6875,7 +6878,7 @@ service outcomes.
 }
 
 \caption{\label{fig-EDA-fig-1}Changes in GDP per capita and life
-expectancy by region from 1962 to 2011. Dot size is proportional to
+expectancy by region from 1950 to 2019. Dot size is proportional to
 population.}
 
 \end{figure}%
@@ -7405,95 +7408,101 @@ relationships underlying customer churn.
 \section{Exploring Categorical
 Features}\label{sec-chapter-EDA-categorical}
 
-Categorical variables divide observations into discrete groups that
-capture demographic or behavioral characteristics of customers. In the
-\emph{churnCredit} dataset, key categorical features include
+Categorical variables group observations into distinct classes that
+often reflect demographic or behavioural characteristics. In the
+\emph{churnCredit} dataset, the key categorical features include
 \texttt{gender}, \texttt{education}, \texttt{marital},
-\texttt{card.category}, and \texttt{churn}. Exploring how these
-variables are distributed---and how they relate to the outcome variable
-\texttt{churn}---can reveal early patterns of customer loyalty or
+\texttt{card.category}, and \texttt{churn}. Examining how these
+variables are distributed, and how they relate to the outcome
+\texttt{churn}, provides early clues about customer loyalty and
 disengagement.
 
-We begin by examining the distribution of the target variable
-\texttt{churn}, which indicates whether a customer has closed their
-credit card account. Understanding this distribution is important for
-assessing class balance, a factor that directly influences model
-training and interpretation.
+We begin with the distribution of the target variable \texttt{churn},
+which indicates whether a customer has closed a credit card account.
+Understanding this distribution is essential for assessing class
+balance, a factor that directly influences model training and
+interpretation. The bar plot and pie chart below summarise the
+proportion of customers who churned:
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(ggplot2)}
+
+\CommentTok{\# Bar plot}
 \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ churnCredit, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ churn, }\AttributeTok{label =}\NormalTok{ scales}\SpecialCharTok{::}\FunctionTok{percent}\NormalTok{(}\FunctionTok{prop.table}\NormalTok{(}\FunctionTok{after\_stat}\NormalTok{(count))))) }\SpecialCharTok{+}
-  \FunctionTok{geom\_bar}\NormalTok{(}\AttributeTok{fill =} \FunctionTok{c}\NormalTok{(}\StringTok{"\#F4A582"}\NormalTok{, }\StringTok{"\#A8D5BA"}\NormalTok{)) }\SpecialCharTok{+} 
-  \FunctionTok{geom\_text}\NormalTok{(}\AttributeTok{stat =} \StringTok{"count"}\NormalTok{, }\AttributeTok{vjust =} \FloatTok{0.4}\NormalTok{, }\AttributeTok{size =} \DecValTok{8}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
+  \FunctionTok{geom\_bar}\NormalTok{(}\AttributeTok{fill =} \FunctionTok{c}\NormalTok{(}\StringTok{"\#F4A582"}\NormalTok{, }\StringTok{"\#A8D5BA"}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_text}\NormalTok{(}\AttributeTok{stat =} \StringTok{"count"}\NormalTok{, }\AttributeTok{vjust =} \FloatTok{0.4}\NormalTok{, }\AttributeTok{size =} \DecValTok{6}\NormalTok{)}
 
-\begin{center}
-\includegraphics[width=0.5\linewidth,height=\textheight,keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-10-1.pdf}
-\end{center}
-
-The bar plot shows that most customers remain active
-(\texttt{churn\ =\ "no"}), while a smaller proportion (about 16.1\%)
-have closed their accounts. This imbalance suggests that customer
-attrition is relatively infrequent, a pattern typical in many financial
-and subscription-based contexts.
-
-As an alternative, a pie chart provides a compact visualisation of the
-same information. The following code produces a clear and
-reader-friendly version:
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{pie\_data }\OtherTok{\textless{}{-}}\NormalTok{ churnCredit }\SpecialCharTok{|\textgreater{}}
-\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{count}\NormalTok{(churn) }\SpecialCharTok{|\textgreater{}}
-\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{mutate}\NormalTok{(}\AttributeTok{prop =}\NormalTok{ n }\SpecialCharTok{/} \FunctionTok{sum}\NormalTok{(n))}
-
-\FunctionTok{ggplot}\NormalTok{(pie\_data, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =} \StringTok{""}\NormalTok{, }\AttributeTok{y =}\NormalTok{ prop, }\AttributeTok{fill =}\NormalTok{ churn)) }\SpecialCharTok{+}
-  \FunctionTok{geom\_col}\NormalTok{(}\AttributeTok{width =} \DecValTok{1}\NormalTok{) }\SpecialCharTok{+}
+\CommentTok{\# Pie chart}
+\FunctionTok{ggplot}\NormalTok{(churnCredit, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =} \StringTok{""}\NormalTok{, }\AttributeTok{fill =}\NormalTok{ churn)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_bar}\NormalTok{(}\AttributeTok{width =} \DecValTok{1}\NormalTok{) }\SpecialCharTok{+}
   \FunctionTok{coord\_polar}\NormalTok{(}\AttributeTok{theta =} \StringTok{"y"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{geom\_text}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{label =}\NormalTok{ scales}\SpecialCharTok{::}\FunctionTok{percent}\NormalTok{(prop, }\AttributeTok{accuracy =} \FloatTok{0.1}\NormalTok{)),}
-            \AttributeTok{position =} \FunctionTok{position\_stack}\NormalTok{(}\AttributeTok{vjust =} \FloatTok{0.5}\NormalTok{),}
-            \AttributeTok{size =} \DecValTok{6}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{labs}\NormalTok{(}\AttributeTok{fill =} \StringTok{"Churn"}\NormalTok{) }\SpecialCharTok{+}
   \FunctionTok{theme\_void}\NormalTok{()}
 \end{Highlighting}
 \end{Shaded}
 
+\begin{figure}
+
+\begin{minipage}{0.50\linewidth}
 \begin{center}
-\includegraphics[width=0.5\linewidth,height=\textheight,keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-11-1.pdf}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-10-1.pdf}}
 \end{center}
+\end{minipage}%
+%
+\begin{minipage}{0.50\linewidth}
+\begin{center}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-10-2.pdf}}
+\end{center}
+\end{minipage}%
 
-Pie charts are less informative for comparing multiple groups, but they
-can be effective when visualising the proportions of a single binary
-variable.
+\end{figure}%
 
-The earlier bar chart builds on basic plotting techniques introduced in
-Section \ref{sec-ch1-visualization}. A simpler version, without colour
-or percentage labels, can be produced with:
+The pie-chart code is slightly more involved because it uses polar
+coordinates. Do not worry if it feels unfamiliar: most visualisations in
+this book rely on simpler bar-plot structures that are easier to read
+and adapt. The left panel presents the bar plot, while the right panel
+offers a compact view of the same proportions using a pie chart. Both
+highlight that most customers remain active (\texttt{churn\ =\ "no"}),
+with only a small proportion (about 16.1 percent) closing their
+accounts. This imbalance reflects patterns commonly seen in financial
+and subscription-based datasets.
+
+Although pie charts are less useful when comparing multiple groups, they
+can be effective for displaying a single binary variable. A basic
+version of the bar plot, without colours or percentage labels, can be
+created with:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ churnCredit) }\SpecialCharTok{+} 
+\FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ churnCredit) }\SpecialCharTok{+}
   \FunctionTok{geom\_bar}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ churn))}
 \end{Highlighting}
 \end{Shaded}
 
-The simpler plot offers a quick overview, whereas the enhanced version
-provides clearer communication by emphasising proportions. Such
-refinements are valuable when presenting results to non-technical
-stakeholders, as they make relative differences immediately visible.
+The simpler display offers a quick overview, whereas the enhanced
+version communicates proportions more clearly. Such refinements improve
+interpretability, especially when results are presented to non-technical
+stakeholders.
 
-Class imbalance is not just a descriptive feature; it has practical
-implications for modelling. Predictive algorithms trained on imbalanced
-data tend to favour the majority class, leading to biased predictions
-and lower sensitivity to minority outcomes. This issue will be revisited
-in Chapter \ref{sec-ch6-setup-data}, Section \ref{sec-ch6-balancing},
-where methods for addressing imbalance are introduced.
+\begin{quote}
+\emph{Try if yourself:} Create a simple bar plot of the \texttt{gender}
+feature using \textbf{ggplot2}. You may also experiment with adding
+colour fills or percentage labels. This short activity reinforces the
+basic structure of bar plots before we examine categorical relationships
+in more detail.
+\end{quote}
 
-Having established the overall distribution of the target variable, the
-next step is to explore how other categorical features relate to churn.
-These variables may reveal distinct customer segments or behavioural
-patterns associated with higher attrition risk.
+Class imbalance is more than a descriptive observation: it can
+substantially influence modelling performance. Algorithms trained on
+imbalanced data often favour the majority class, which leads to biased
+predictions and reduced sensitivity to minority outcomes. Strategies for
+addressing this issue are introduced in Chapter
+\ref{sec-ch6-setup-data}, Section \ref{sec-ch6-balancing}.
+
+Having established the distribution of the target variable, we next
+examine how other categorical features relate to churn. These
+relationships may reveal customer segments or behavioural patterns
+associated with increased attrition risk.
 
 \subsection*{Relationship Between Gender and
 Churn}\label{relationship-between-gender-and-churn}
@@ -7519,13 +7528,13 @@ insights into customer engagement patterns.
 
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-12-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-11-1.pdf}}
 \end{center}
 \end{minipage}%
 %
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-12-2.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-11-2.pdf}}
 \end{center}
 \end{minipage}%
 
@@ -7600,13 +7609,13 @@ platinum---representing different benefit levels and customer segments.
 
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-14-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-13-1.pdf}}
 \end{center}
 \end{minipage}%
 %
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-14-2.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-13-2.pdf}}
 \end{center}
 \end{minipage}%
 
@@ -7685,13 +7694,13 @@ variable now provides a complete and consistent basis for comparison.
 
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-16-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-15-1.pdf}}
 \end{center}
 \end{minipage}%
 %
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-16-2.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-15-2.pdf}}
 \end{center}
 \end{minipage}%
 
@@ -7757,13 +7766,13 @@ patterns.
 
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-18-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-17-1.pdf}}
 \end{center}
 \end{minipage}%
 %
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-18-2.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-17-2.pdf}}
 \end{center}
 \end{minipage}%
 
@@ -7922,13 +7931,13 @@ and group proportions.
 
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-20-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-19-1.pdf}}
 \end{center}
 \end{minipage}%
 %
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-20-2.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-19-2.pdf}}
 \end{center}
 \end{minipage}%
 
@@ -7977,13 +7986,13 @@ churned and active customers.
 
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-21-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-20-1.pdf}}
 \end{center}
 \end{minipage}%
 %
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-21-2.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-20-2.pdf}}
 \end{center}
 \end{minipage}%
 
@@ -8032,13 +8041,13 @@ two groups.
 
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-22-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-21-1.pdf}}
 \end{center}
 \end{minipage}%
 %
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-22-2.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-21-2.pdf}}
 \end{center}
 \end{minipage}%
 
@@ -8085,13 +8094,13 @@ not met.
 
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-23-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-22-1.pdf}}
 \end{center}
 \end{minipage}%
 %
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-23-2.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-22-2.pdf}}
 \end{center}
 \end{minipage}%
 
@@ -8137,13 +8146,13 @@ could indicate growing usage and confidence in the service.
 
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-24-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-23-1.pdf}}
 \end{center}
 \end{minipage}%
 %
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-24-2.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-23-2.pdf}}
 \end{center}
 \end{minipage}%
 
@@ -8256,7 +8265,7 @@ modeling.
 \end{Shaded}
 
 \begin{center}
-\includegraphics[width=1\linewidth,height=\textheight,keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-25-1.pdf}
+\includegraphics[width=1\linewidth,height=\textheight,keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-24-1.pdf}
 \end{center}
 
 The heatmap shows that most numerical variables in the
@@ -8284,13 +8293,13 @@ this visually:
 
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-26-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-25-1.pdf}}
 \end{center}
 \end{minipage}%
 %
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-26-2.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-25-2.pdf}}
 \end{center}
 \end{minipage}%
 
@@ -8327,13 +8336,13 @@ detailed financial analysis. To illustrate this visually:
 
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-27-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-26-1.pdf}}
 \end{center}
 \end{minipage}%
 %
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-27-2.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-26-2.pdf}}
 \end{center}
 \end{minipage}%
 
@@ -8431,7 +8440,7 @@ simultaneously.
 \end{Shaded}
 
 \begin{center}
-\includegraphics[width=0.85\linewidth,height=\textheight,keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-28-1.pdf}
+\includegraphics[width=0.85\linewidth,height=\textheight,keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-27-1.pdf}
 \end{center}
 
 The scatter plot shows a clear positive association: customers who spend
@@ -8465,7 +8474,7 @@ few transactions. These regions are extracted using the
 \end{Shaded}
 
 \begin{center}
-\includegraphics[width=0.5\linewidth,height=\textheight,keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-29-1.pdf}
+\includegraphics[width=0.5\linewidth,height=\textheight,keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-28-1.pdf}
 \end{center}
 
 Within this subset, the proportion of churners is noticeably higher than
@@ -8507,7 +8516,7 @@ spending distributions across card tiers.
 \end{Shaded}
 
 \begin{center}
-\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-30-1.pdf}
+\includegraphics[width=0.65\linewidth,height=\textheight,keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-29-1.pdf}
 \end{center}
 
 The density curves show that customers with higher-tier cards,
@@ -8564,13 +8573,13 @@ to highlight overall patterns in spending and transaction frequency.
 
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-31-1.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-30-1.pdf}}
 \end{center}
 \end{minipage}%
 %
 \begin{minipage}{0.50\linewidth}
 \begin{center}
-\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-31-2.pdf}}
+\pandocbounded{\includegraphics[keepaspectratio]{4-Exploratory-data-analysis_files/figure-pdf/unnamed-chunk-30-2.pdf}}
 \end{center}
 \end{minipage}%
 
@@ -11547,12 +11556,11 @@ encoding} is a widely used solution. It transforms each unique category
 into a separate binary column, allowing algorithms to process
 categorical data without introducing an artificial order.
 
-This method is particularly useful for \emph{nominal
-variables}---categorical features with no inherent ranking. For example,
-the variable \texttt{marital} in the \emph{churnCredit} dataset includes
-categories such as \texttt{married}, \texttt{single}, and
-\texttt{divorced}. One-hot encoding creates binary indicators for each
-category:
+This method is particularly useful for \emph{nominal variables},
+categorical features with no inherent ranking. For example, the variable
+\texttt{marital} in the \emph{churnCredit} dataset includes categories
+such as \texttt{married}, \texttt{single}, and \texttt{divorced}.
+One-hot encoding creates binary indicators for each category:
 
 \begin{itemize}
 \tightlist
@@ -11565,7 +11573,7 @@ category:
 \end{itemize}
 
 Each column indicates the presence (1) or absence (0) of a specific
-category. If there are \(k\) levels, only \(k - 1\) binary columns are
+category. If there are \(m\) levels, only \(m - 1\) binary columns are
 required to avoid multicollinearity; the omitted category is implicitly
 represented when all others are zero.
 
@@ -12910,9 +12918,7 @@ training set and a 20\% test set:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{set.seed}\NormalTok{(}\DecValTok{42}\NormalTok{)}
-
-\NormalTok{data\_sets }\OtherTok{=} \FunctionTok{partition}\NormalTok{(}\AttributeTok{data =}\NormalTok{ churnCredit, }\AttributeTok{ratio =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.8}\NormalTok{, }\FloatTok{0.2}\NormalTok{))}
+\NormalTok{data\_sets }\OtherTok{=} \FunctionTok{partition}\NormalTok{(}\AttributeTok{data =}\NormalTok{ churnCredit, }\AttributeTok{ratio =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.8}\NormalTok{, }\FloatTok{0.2}\NormalTok{), }\AttributeTok{set.seed =} \DecValTok{42}\NormalTok{)}
 
 \NormalTok{train\_set }\OtherTok{=}\NormalTok{ data\_sets}\SpecialCharTok{$}\NormalTok{part1}
 \NormalTok{test\_set  }\OtherTok{=}\NormalTok{ data\_sets}\SpecialCharTok{$}\NormalTok{part2}
@@ -12944,10 +12950,10 @@ by generating binary indicator variables:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{categorical\_vars }\OtherTok{=} \FunctionTok{c}\NormalTok{(}\StringTok{"gender"}\NormalTok{, }\StringTok{"education"}\NormalTok{, }\StringTok{"marital"}\NormalTok{, }\StringTok{"income"}\NormalTok{, }\StringTok{"card.category"}\NormalTok{)}
+\NormalTok{categorical\_features }\OtherTok{=} \FunctionTok{c}\NormalTok{(}\StringTok{"gender"}\NormalTok{, }\StringTok{"education"}\NormalTok{, }\StringTok{"marital"}\NormalTok{, }\StringTok{"income"}\NormalTok{, }\StringTok{"card.category"}\NormalTok{)}
 
-\NormalTok{train\_onehot }\OtherTok{=} \FunctionTok{one.hot}\NormalTok{(train\_set, }\AttributeTok{cols =}\NormalTok{ categorical\_vars)}
-\NormalTok{test\_onehot  }\OtherTok{=} \FunctionTok{one.hot}\NormalTok{(test\_set,  }\AttributeTok{cols =}\NormalTok{ categorical\_vars)}
+\NormalTok{train\_onehot }\OtherTok{=} \FunctionTok{one.hot}\NormalTok{(train\_set, }\AttributeTok{cols =}\NormalTok{ categorical\_features)}
+\NormalTok{test\_onehot  }\OtherTok{=} \FunctionTok{one.hot}\NormalTok{(test\_set,  }\AttributeTok{cols =}\NormalTok{ categorical\_features)}
 
 \FunctionTok{str}\NormalTok{(test\_onehot)}
    \StringTok{\textquotesingle{}data.frame\textquotesingle{}}\SpecialCharTok{:}    \DecValTok{2025}\NormalTok{ obs. of  }\DecValTok{41}\NormalTok{ variables}\SpecialCharTok{:}
@@ -12998,9 +13004,9 @@ by generating binary indicator variables:
 \end{Highlighting}
 \end{Shaded}
 
-For each categorical variable with \(k\) categories, the function
-creates \(k\) binary columns (dummy variables). In practice, it is often
-preferable to use \(k - 1\) dummy variables to avoid redundancy and
+For each categorical variable with \(m\) categories, the function
+creates \(m\) binary columns (dummy variables). In practice, it is often
+preferable to use \(m - 1\) dummy variables to avoid redundancy and
 multicollinearity, while maintaining interpretability and compatibility
 with distance-based algorithms.
 
@@ -13015,16 +13021,16 @@ then applied to the test set to prevent data leakage:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{numeric\_vars }\OtherTok{=} \FunctionTok{c}\NormalTok{(}\StringTok{"age"}\NormalTok{, }\StringTok{"dependent.count"}\NormalTok{, }\StringTok{"months.on.book"}\NormalTok{, }\StringTok{"relationship.count"}\NormalTok{, }
+\NormalTok{numeric\_features }\OtherTok{=} \FunctionTok{c}\NormalTok{(}\StringTok{"age"}\NormalTok{, }\StringTok{"dependent.count"}\NormalTok{, }\StringTok{"months.on.book"}\NormalTok{, }\StringTok{"relationship.count"}\NormalTok{, }
                \StringTok{"months.inactive"}\NormalTok{, }\StringTok{"contacts.count.12"}\NormalTok{, }\StringTok{"credit.limit"}\NormalTok{, }
                \StringTok{"revolving.balance"}\NormalTok{, }\StringTok{"transaction.amount.12"}\NormalTok{, }\StringTok{"transaction.count.12"}\NormalTok{, }
                \StringTok{"ratio.amount.Q4.Q1"}\NormalTok{, }\StringTok{"ratio.count.Q4.Q1"}\NormalTok{)}
 
-\NormalTok{min\_train }\OtherTok{=} \FunctionTok{sapply}\NormalTok{(train\_set[, numeric\_vars], min)   }\CommentTok{\# Column{-}wise minimums}
-\NormalTok{max\_train }\OtherTok{=} \FunctionTok{sapply}\NormalTok{(train\_set[, numeric\_vars], max)   }\CommentTok{\# Column{-}wise maximums}
+\NormalTok{min\_train }\OtherTok{=} \FunctionTok{sapply}\NormalTok{(train\_set[, numeric\_features], min)   }\CommentTok{\# Column{-}wise minimums}
+\NormalTok{max\_train }\OtherTok{=} \FunctionTok{sapply}\NormalTok{(train\_set[, numeric\_features], max)   }\CommentTok{\# Column{-}wise maximums}
 
-\NormalTok{train\_scaled }\OtherTok{=} \FunctionTok{minmax}\NormalTok{(train\_onehot, }\AttributeTok{col =}\NormalTok{ numeric\_vars, }\AttributeTok{min =}\NormalTok{ min\_train, }\AttributeTok{max =}\NormalTok{ max\_train)}
-\NormalTok{test\_scaled  }\OtherTok{=} \FunctionTok{minmax}\NormalTok{(test\_onehot,  }\AttributeTok{col =}\NormalTok{ numeric\_vars, }\AttributeTok{min =}\NormalTok{ min\_train, }\AttributeTok{max =}\NormalTok{ max\_train)}
+\NormalTok{train\_scaled }\OtherTok{=} \FunctionTok{minmax}\NormalTok{(train\_onehot, }\AttributeTok{col =}\NormalTok{ numeric\_features, }\AttributeTok{min =}\NormalTok{ min\_train, }\AttributeTok{max =}\NormalTok{ max\_train)}
+\NormalTok{test\_scaled  }\OtherTok{=} \FunctionTok{minmax}\NormalTok{(test\_onehot,  }\AttributeTok{col =}\NormalTok{ numeric\_features, }\AttributeTok{min =}\NormalTok{ min\_train, }\AttributeTok{max =}\NormalTok{ max\_train)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -13145,7 +13151,10 @@ in this book:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{kNN\_predict }\OtherTok{=} \FunctionTok{kNN}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ formula, }\AttributeTok{train =}\NormalTok{ train\_scaled, }\AttributeTok{test =}\NormalTok{ test\_scaled, }\AttributeTok{k =} \DecValTok{5}\NormalTok{)}
+\NormalTok{kNN\_predict }\OtherTok{=} \FunctionTok{kNN}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ formula, }
+                  \AttributeTok{train =}\NormalTok{ train\_scaled, }
+                  \AttributeTok{test =}\NormalTok{ test\_scaled, }
+                  \AttributeTok{k =} \DecValTok{5}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -13528,7 +13537,8 @@ Applications}
 
 \bookmarksetup{startatroot}
 
-\chapter{Evaluating Machine Learning Models}\label{sec-ch8-evaluation}
+\chapter{Model Evaluation and Performance
+Assessment}\label{sec-ch8-evaluation}
 
 \begin{chapterquote}
 All models are wrong, but some are useful.
@@ -13536,44 +13546,48 @@ All models are wrong, but some are useful.
 \hfill — George Box
 \end{chapterquote}
 
-How do we know whether a machine learning model is actually good? Is
-95\% accuracy always impressive, or can it be misleading? How do we
-balance catching true cases while minimizing false alarms? These are the
-kinds of questions we begin to answer in this chapter.
+How can we determine whether a machine learning model is genuinely
+effective? Is 95 percent accuracy always impressive, or can it mask
+serious weaknesses? How do we balance detecting true cases while
+avoiding unnecessary false alarms? These questions lie at the core of
+model evaluation.
 
-Consider this: if you give the same dataset and research question to ten
-different data science teams, you are likely to receive ten different
-results, often with dramatically different conclusions. Why does this
-happen? These differences often arise not from the data or models
-themselves, but from how each team \emph{evaluates} their results. One
-team's ``successful'' model might be another team's failure, depending
-on the metrics they prioritize, how they set thresholds, and what
-trade-offs they are willing to make. As
-\href{https://en.wikipedia.org/wiki/George_E._P._Box}{George Box}
-famously said, \emph{``All models are wrong, but some are useful.''}
-Evaluation helps us determine which models are useful enough to inform
-decisions and guide action. This chapter gives you the tools to
-understand those differences, and to evaluate models with clarity and
-confidence.
+The quote that opens this chapter --- \emph{``All models are wrong, but
+some are useful''} --- captures an essential idea in predictive
+modelling. No model can represent reality perfectly. Every model is a
+simplification. The goal is therefore not to find a flawless model, but
+to determine whether a model is \emph{useful} for the task at hand.
+Evaluation is the process that helps us judge that usefulness.
+
+Imagine providing the same dataset and research question to ten data
+science teams. It is entirely possible to receive ten different
+conclusions. These discrepancies rarely arise from the data alone; they
+stem from how each team evaluates its models. A model that one group
+considers successful may be unacceptable to another, depending on the
+metrics they emphasise, the thresholds they select, and the trade-offs
+they regard as appropriate. Evaluation reveals these differences and
+clarifies what useful means in a specific context.
 
 In the previous chapter, we introduced our first machine learning
-algorithm: kNN. We learned how to build a classifier using the
-\emph{churn} dataset, carefully scaling features and tuning the number
-of neighbors to improve predictions. This raises a critical question:
-\emph{How can we determine whether the model truly performs well?}
+method, kNN, and applied it to the \emph{churnCredit} dataset. We
+explored how feature scaling and the choice of \(k\) influence the
+model's predictions. This raises a central question for this chapter:
+\emph{How well does the classifier actually perform?} Without a
+structured evaluation, any set of predictions remains incomplete and
+potentially misleading.
 
-This brings us to the \emph{Model Evaluation} phase, a pivotal step in
-the Data Science Workflow first introduced in Chapter
+To answer this question, we now turn to the \emph{Model Evaluation}
+phase of the Data Science Workflow introduced in Chapter
 \ref{sec-ch2-intro-data-science} and illustrated in
-Figure~\ref{fig-ch2_DSW}. By this point, we have already completed the
-first five phases:
+Figure~\ref{fig-ch2_DSW}. Up to this point we have completed the first
+five phases:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \item
-  \emph{Problem Understanding}: defining the question we aim to solve;
+  \emph{Problem Understanding}: defining the analytical objective;
 \item
-  \emph{Data Preparation}: cleaning, transforming, and organizing the
+  \emph{Data Preparation}: cleaning, transforming, and organising the
   data;
 \item
   \emph{Exploratory Data Analysis (EDA)}: identifying patterns and
@@ -13582,124 +13596,138 @@ first five phases:
   \emph{Data Setup to Model}: scaling, encoding, and partitioning the
   data;
 \item
-  \emph{Modeling}: training algorithms to make predictions or uncover
-  structure.
+  \emph{Modeling}: training algorithms to generate predictions or
+  uncover structure.
 \end{enumerate}
 
-Now, we arrive at \emph{Model Evaluation}, where we assess the
-performance and reliability of our models using quantitative metrics.
-This phase answers the essential question: \emph{How well does our model
-generalize to new, unseen data?}
+The sixth phase, \emph{Model Evaluation}, focuses on assessing how well
+a model generalises to new, unseen data. It determines whether the model
+captures meaningful patterns or merely memorises noise.
 
-A model may perform well during development but fail in deployment,
-where data distributions can shift and the cost of errors is often
-higher. Model evaluation ensures that our predictions are trustworthy
-and that the model captures genuine patterns rather than memorizing
-noise.
+A model may appear to perform well during development but falter in
+deployment, where data distributions can shift and the consequences of
+errors can be substantial. Careful evaluation provides a foundation for
+reliable, trustworthy predictions and ensures that the chosen model is
+genuinely suitable for its intended use.
 
 \subsection*{Why Is Model Evaluation
 Important?}\label{why-is-model-evaluation-important}
 \addcontentsline{toc}{subsection}{Why Is Model Evaluation Important?}
 
-Developing a model is only the beginning. Its real value lies in its
-ability to generalize to \emph{new, unseen data}. A model may perform
-well during development but fail in real-world deployment, where data
-distributions often shift and the cost of errors can be much higher.
+Building a model is only the first step. Its real value lies in its
+ability to generalise to \emph{new, unseen data}. A model may appear to
+perform well during development but fail in real-world deployment, where
+data distributions can shift and the consequences of errors may be
+substantial.
 
 Consider a model built to detect fraudulent credit card transactions.
-Suppose it achieves 95\% accuracy. While this might sound impressive, it
-could be misleading if only 1\% of the transactions are actually
-fraudulent. In such an imbalanced dataset, a model might simply label
-all transactions as legitimate to attain high accuracy, yet fail
-entirely to detect fraud. This example illustrates a crucial point:
-\emph{accuracy alone does not always tell the full story}, especially in
+Suppose it achieves 95 percent accuracy. Although this seems impressive,
+it can be highly misleading if only 1 percent of the transactions are
+fraudulent. In such an imbalanced dataset, a model could label all
+transactions as legitimate, achieve high accuracy, and still fail
+entirely at detecting fraud. This example illustrates an important
+principle: accuracy alone is often insufficient, particularly in
 class-imbalanced settings.
 
-Effective model evaluation offers a more nuanced view of performance by
-revealing both strengths and limitations. It helps clarify what the
-model does well, such as correctly identifying fraud, and where it falls
-short, such as missing fraudulent cases or producing too many false
-alarms. It also surfaces trade-offs between competing priorities, such
-as sensitivity versus specificity, or precision versus recall.
+Effective evaluation provides a more nuanced view of performance by
+revealing both strengths and limitations. It clarifies what the model
+does well, such as correctly identifying fraud, and where it falls
+short, such as missing fraudulent cases or generating too many false
+alarms. It also highlights the trade-offs between competing priorities,
+including sensitivity versus specificity and precision versus recall.
 
-In this sense, evaluation is not just about metrics, it is about trust.
-A well-evaluated model informs responsible decision-making by aligning
-performance with the needs and risks of the application. Key questions
-include:
+Evaluation is not only about computing metrics. It is also about
+establishing trust. A well-evaluated model supports responsible
+decision-making by aligning performance with the needs and risks of the
+application. Key questions include:
 
 \begin{itemize}
 \item
-  How well does the model handle class imbalance?
+  How does the model respond to class imbalance?
 \item
-  Can it reliably detect true positives, such as diagnosing cancer in
-  medical data?
+  Can it reliably detect true positives in high-stakes settings?
 \item
-  Does it minimize false positives, such as incorrectly classifying a
-  legitimate email as spam?
+  Does it minimise false positives, especially when unnecessary alerts
+  carry a cost?
 \end{itemize}
 
-These considerations show why model evaluation is a critical step in the
-data science workflow. Choosing appropriate metrics, and interpreting
-them in context, enables us to move beyond surface-level performance and
-toward robust, reliable solutions.
+These considerations show why model evaluation is an essential stage in
+the data science workflow. Selecting appropriate metrics and
+interpreting them in context allows us to move beyond surface-level
+performance toward robust, reliable solutions.
 
 \subsection*{What This Chapter Covers}\label{what-this-chapter-covers-7}
 \addcontentsline{toc}{subsection}{What This Chapter Covers}
 
-This chapter introduces essential tools for evaluating machine learning
-models. We begin with binary classification, focusing on how to
-interpret confusion matrices and compute key performance metrics such as
-accuracy, precision, recall, and the F1-score. We also examine how
-adjusting classification thresholds can influence predictions and
-introduce ROC curves and the Area Under the Curve (AUC) as effective
-tools for visualizing and comparing classifier performance.
+This chapter introduces essential methods for evaluating supervised
+machine learning models. As discussed in Chapter
+\ref{sec-ch2-machine-learning}, supervised learning includes
+classification and regression, where true labels are available for
+assessing model performance. In these settings, models generate either
+categorical outcomes (classification) or numerical outcomes
+(regression), and the way we evaluate their performance differs because
+the nature of their predictions is fundamentally different.
 
-We then introduce evaluation metrics for regression models, including
-Mean Absolute Error (MAE) and the coefficient of determination
-(\(R^2\)), with guidance on interpreting these values in applied
-contexts.
+In classification settings, evaluation focuses on how often the
+predicted class labels agree with the true labels, which makes tools
+such as the confusion matrix central to the analysis. When the target
+variable is numerical, this approach no longer applies. Instead,
+evaluation focuses on how far the predicted values deviate from the
+actual values, shifting attention from counting errors to quantifying
+the magnitude of prediction errors.
 
-These evaluation metrics are among the most widely used in machine
-learning. They will appear frequently in the chapters that follow as we
-explore a variety of classification and regression algorithms. Mastering
-them now will equip you with the tools to assess and compare models
-throughout the rest of the book.
+We begin with binary classification, examining how to interpret
+confusion matrices and compute key performance measures such as
+accuracy, precision, recall, and the F1-score. The chapter then explores
+how adjusting classification thresholds affects prediction behaviour and
+introduces ROC curves and the Area Under the Curve (AUC) as tools for
+visualising and comparing classifier performance.
 
-To build your intuition, this chapter includes visualizations and
-practical examples for each evaluation method. By the end, you will be
-able to choose appropriate metrics for different tasks, interpret model
-performance critically, and evaluate models effectively in both
-classification and regression settings.
+Next, we turn to regression models and discuss commonly used measures
+such as Mean Square Error (MSE), Mean Absolute Error (MAE), and the
+coefficient of determination (\(R^2\)), with guidance on how these
+values should be interpreted in applied contexts.
 
-We begin with one of the most foundational tools in model evaluation:
-the \emph{confusion matrix}, which provides a structured summary of
-prediction outcomes.
+These measures are widely used across machine learning and will appear
+throughout the chapters that follow. Understanding them now provides a
+foundation for assessing and comparing models across a range of
+applications.
+
+The chapter combines visualisations and practical examples to support
+interpretation and build conceptual understanding. By the end, you will
+be able to select appropriate metrics for different modelling tasks,
+interpret performance critically, and evaluate models effectively in
+both classification and regression scenarios.
+
+We now begin with one of the most foundational tools in model
+evaluation: the \emph{confusion matrix}, which offers a structured
+summary of prediction outcomes.
 
 \section{Confusion Matrix}\label{sec-ch8-confusion-matrix}
 
-How can we tell exactly where a model performs well, and where it fails?
-The \emph{confusion matrix} provides a structured answer. It is one of
-the most fundamental tools for evaluating classification models,
-breaking down predictions into four outcomes based on the comparison of
-predicted and actual class labels.
+How can we determine where a model performs well and where it falls
+short? The confusion matrix provides a clear and systematic way to
+answer this question. It is one of the most widely used tools for
+evaluating classification models because it records how often the model
+assigns each class label correctly or incorrectly.
 
-In binary classification, one class is typically designated as the
-\emph{positive class}, the class of primary interest, while the other is
-considered the \emph{negative class}. For instance, in fraud detection,
-fraudulent transactions are usually labeled as positive, and legitimate
-ones as negative.
+In binary classification, one class is designated as the \emph{positive
+class}, usually representing the event of primary interest, while the
+other is the \emph{negative class}. In fraud detection, for example,
+fraudulent transactions are treated as positive, and legitimate
+transactions as negative.
 
-Figure~\ref{fig-ch8-confusion-matrix} illustrates the structure of the
-confusion matrix. The rows represent the \emph{actual} class labels,
-while the columns represent the \emph{predicted} class labels. Each cell
-in the matrix represents one of four possible outcomes. \emph{True
-Positives (TP)} occur when the model correctly predicts the positive
-class (e.g., fraud detected as fraud). \emph{False Positives (FP)} arise
-when the model incorrectly flags the positive class (e.g., legitimate
-transactions incorrectly flagged as fraud). \emph{True Negatives (TN)}
-are correct predictions of the negative class, while \emph{False
-Negatives (FN)} represent missed detections of the positive class (e.g.,
-fraudulent transactions classified as legitimate).
+Figure \ref{fig-ch8-confusion-matrix} shows the structure of a confusion
+matrix. The rows correspond to the \emph{actual} class labels, and the
+columns represent the \emph{predicted} labels. Each cell of the matrix
+captures one of four possible outcomes. \emph{True positives (TP)} occur
+when the model correctly predicts the positive class (for example, a
+fraudulent transaction correctly detected). \emph{False positives (FP)}
+arise when the model incorrectly predicts the positive class (a
+legitimate transaction flagged as fraud). \emph{True negatives (TN)} are
+correct predictions of the negative class, while \emph{false negatives
+(FN)} occur when the model misses a positive case (a fraudulent
+transaction classified as legitimate).
 
 \begin{figure}[H]
 
@@ -13715,102 +13743,64 @@ whether the actual class is positive or negative.}
 
 \end{figure}%
 
-This structure may feel familiar, it mirrors the concept of \emph{Type I
-and Type II errors} introduced in Chapter \ref{sec-ch5-statistics} on
-hypothesis testing. The diagonal elements (TP and TN) represent correct
-predictions, while the off-diagonal elements (FP and FN) represent
-errors.
+This structure parallels the ideas of \emph{Type I and Type II errors}
+discussed in Chapter \ref{sec-ch5-statistics}. The diagonal entries (TP
+and TN) indicate correct predictions, while the off-diagonal entries (FP
+and FN) represent misclassifications.
 
-With the confusion matrix in hand, we can compute basic performance
-metrics. Two of the most general are \emph{accuracy} and \emph{error
-rate}.
+From the confusion matrix we can compute several basic metrics. Two of
+the most general are \emph{accuracy} and \emph{error rate}.
 
-\emph{Accuracy} (also called success rate) measures the proportion of
+Accuracy, sometimes called the success rate, measures the proportion of
 correct predictions: \[
-\text{Accuracy} = \frac{\text{TP} + \text{TN}}{\text{Total Predictions}} = \frac{\text{TP} + \text{TN}}{\text{TP} + \text{FP} + \text{FN} + \text{TN}}.
+\text{Accuracy} = \frac{\text{TP} + \text{TN}}{\text{TP} + \text{FP} + \text{FN} + \text{TN}}.
 \]
 
-\emph{Error rate} is the proportion of incorrect predictions: \[
-\text{Error Rate} = 1 - \text{Accuracy} = \frac{\text{FP} + \text{FN}}{\text{Total Predictions}}.
+The error rate is the proportion of incorrect predictions: \[
+\text{Error Rate} = 1 - \text{Accuracy} = \frac{\text{FP} + \text{FN}}{\text{TP} + \text{FP} + \text{FN} + \text{TN}}.
 \]
 
-These metrics offer a broad summary of model performance. However, they
-can be misleading. Imagine a dataset in which only 5\% of transactions
-are fraudulent. A model that labels all transactions as legitimate would
-still achieve 95\% accuracy, yet completely fail to detect fraud. This
-illustrates a classic case where accuracy hides deeper weaknesses,
-especially in imbalanced datasets.
+Although accuracy provides a convenient summary, it can be misleading.
+Consider a dataset in which only 5 percent of transactions are
+fraudulent. A model that labels every transaction as legitimate would
+still achieve 95 percent accuracy, yet it would fail entirely at
+identifying fraud. Situations like this highlight the limitations of
+accuracy, especially when classes are imbalanced or when the positive
+class carries greater importance.
 
-To better understand a model's strengths and weaknesses, such as how
-well it identifies positive cases or avoids false alarms, we need more
-detailed metrics. The next section introduces sensitivity, specificity,
-precision, and recall.
+To understand a model's strengths and weaknesses more fully, especially
+how well it identifies positive cases or avoids false alarms, we need
+additional metrics. The next section introduces sensitivity,
+specificity, precision, and recall.
 
-Let us revisit the kNN model from Chapter
-\ref{sec-ch7-classification-knn}, which was used to predict customer
-churn using the \texttt{churn} dataset. We now evaluate its performance
-using a confusion matrix. We begin by applying the kNN model to the test
-set:
+In R, a confusion matrix can be computed using the \texttt{conf.mat()}
+function from the liver package, which provides a consistent interface
+for classification evaluation. The package also includes
+\texttt{conf.mat.plot()} for visualizing confusion matrices.
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\FunctionTok{library}\NormalTok{(liver)}
-
-\FunctionTok{data}\NormalTok{(churn)}
-\FunctionTok{set.seed}\NormalTok{(}\DecValTok{42}\NormalTok{)}
-
-\NormalTok{data\_sets }\OtherTok{=} \FunctionTok{partition}\NormalTok{(}\AttributeTok{data =}\NormalTok{ churn, }\AttributeTok{ratio =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.8}\NormalTok{, }\FloatTok{0.2}\NormalTok{))}
-\NormalTok{train\_set }\OtherTok{=}\NormalTok{ data\_sets}\SpecialCharTok{$}\NormalTok{part1}
-\NormalTok{test\_set  }\OtherTok{=}\NormalTok{ data\_sets}\SpecialCharTok{$}\NormalTok{part2}
-\NormalTok{test\_labels }\OtherTok{=}\NormalTok{ test\_set}\SpecialCharTok{$}\NormalTok{churn}
-
-\NormalTok{formula }\OtherTok{=}\NormalTok{ churn }\SpecialCharTok{\textasciitilde{}}\NormalTok{ account.length }\SpecialCharTok{+}\NormalTok{ voice.plan }\SpecialCharTok{+}\NormalTok{ voice.messages }\SpecialCharTok{+} 
-\NormalTok{                  intl.plan }\SpecialCharTok{+}\NormalTok{ intl.mins }\SpecialCharTok{+}\NormalTok{ intl.calls }\SpecialCharTok{+} 
-\NormalTok{                  day.mins }\SpecialCharTok{+}\NormalTok{ day.calls }\SpecialCharTok{+}\NormalTok{ eve.mins }\SpecialCharTok{+}\NormalTok{ eve.calls }\SpecialCharTok{+} 
-\NormalTok{                  night.mins }\SpecialCharTok{+}\NormalTok{ night.calls }\SpecialCharTok{+}\NormalTok{ customer.calls}
-
-\NormalTok{kNN\_predict }\OtherTok{=} \FunctionTok{kNN}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ formula, }\AttributeTok{train =}\NormalTok{ train\_set, }
-                  \AttributeTok{test =}\NormalTok{ test\_set, }\AttributeTok{k =} \DecValTok{9}\NormalTok{, }\AttributeTok{scaler =} \StringTok{"minmax"}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-For details on how this model was built, see Section
-\ref{sec-ch7-knn-churn}. Here we use \texttt{scaler\ =\ "minmax"} to
-scale numeric features to the \([0, 1]\) range and one-hot encode binary
-variables.
-
-In R, one way to compute a confusion matrix is by using the
-\texttt{conf.mat()} function from the \textbf{liver} package, which
-provides a consistent interface for classification evaluation. The same
-package also includes \texttt{conf.mat.plot()} for visualizing confusion
-matrices, making interpretation more intuitive.
-
-We compute the confusion matrix as follows:
+To see this in practice, we revisit the kNN model used in the churn case
+study in Chapter 7 (Section \ref{sec-ch7-knn-churn}). The following code
+computes the confusion matrix for the test set:
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{conf.mat}\NormalTok{(}\AttributeTok{pred =}\NormalTok{ kNN\_predict, }\AttributeTok{actual =}\NormalTok{ test\_labels, }\AttributeTok{reference =} \StringTok{"yes"}\NormalTok{)}
 \NormalTok{         Predict}
-\NormalTok{   Actual yes  no}
-\NormalTok{      yes  }\DecValTok{49}  \DecValTok{96}
-\NormalTok{      no    }\DecValTok{6} \DecValTok{849}
+\NormalTok{   Actual  yes   no}
+\NormalTok{      yes  }\DecValTok{108}  \DecValTok{221}
+\NormalTok{      no    }\DecValTok{38} \DecValTok{1658}
 \end{Highlighting}
 \end{Shaded}
 
-The \texttt{conf.mat()} function accepts several key arguments. The
-\texttt{pred} argument specifies the predicted class labels or
-probabilities, while \texttt{actual} contains the true labels from the
-test set. The \texttt{reference} argument designates which class is
-treated as the \emph{positive class}. The optional \texttt{cutoff}
-argument is used when probabilities are predicted (defaulting to 0.5),
-but it is not needed here because \texttt{kNN\_predict} returns class
-labels. In this example, \texttt{"yes"} denotes the positive class,
-indicating customers who churned.
+The \texttt{pred} argument specifies the predicted class labels, and
+\texttt{actual} contains the true labels. The \texttt{reference}
+argument identifies the positive class. The \texttt{cutoff} argument is
+used when predictions are probabilities, but it is not needed here.
 
-The confusion matrix shows that the model correctly identified 49
-churners (\emph{true positives}) and 849 non-churners (\emph{true
-negatives}). However, it also incorrectly predicted that 6 non-churners
-would churn (\emph{false positives}), and failed to identify 96 actual
+The confusion matrix shows that the model correctly identified 108
+churners (\emph{true positives}) and 1658 non-churners (\emph{true
+negatives}). However, it also incorrectly predicted that 38 non-churners
+would churn (\emph{false positives}), and failed to identify 221 actual
 churners (\emph{false negatives}).
 
 We can also visualize the confusion matrix:
@@ -13828,167 +13818,174 @@ We can also visualize the confusion matrix:
 
 This plot provides a clear visual summary of prediction outcomes. Next,
 we compute the accuracy and error rate: \[
-\text{Accuracy} = \frac{49 + 849}{1000} = 0.898,
+\text{Accuracy} = \frac{108 + 1658}{2025} = 0.872,
 \]
 
 \[
-\text{Error Rate} = \frac{6 + 96}{1000} = 0.102.
-\] Thus, the model correctly classified 89.8\% of cases, while 10.2\%
+\text{Error Rate} = \frac{38 + 221}{2025} = 0.128.
+\] Thus, the model correctly classified 87.2\% of cases, while 12.8\%
 were misclassified.
 
-Having reviewed accuracy and error rate, we next turn to additional
-evaluation metrics that provide more insight into a model's strengths
+\begin{quote}
+\emph{Try it yourself:} Follow the steps from Section
+\ref{sec-ch7-knn-churn} and repeat the kNN classification using
+\(k = 2\) instead of \(k = 5\). Compare the resulting confusion matrix
+with the one reported above. Which error type increases? Does the model
+identify more churners, or fewer? How does this affect the accuracy and
+the error rate?
+\end{quote}
+
+Having reviewed accuracy and error rate, we now turn to additional
+evaluation metrics that provide deeper insight into a model's strengths
 and limitations, particularly in imbalanced or high-stakes
 classification settings. The next section introduces \emph{sensitivity},
 \emph{specificity}, \emph{precision}, and \emph{recall}.
 
 \section{Sensitivity and Specificity}\label{sensitivity-and-specificity}
 
-Suppose your model achieves 98\% accuracy in detecting credit card
-fraud. Sounds impressive, but what if only 2\% of transactions are
-actually fraudulent? Could a model that simply labels every transaction
-as not fraud still reach that 98\% accuracy? This is where accuracy
-falls short, and where \emph{sensitivity} and \emph{specificity} become
-essential.
+Suppose a model achieves 98 percent accuracy in detecting credit card
+fraud. At first glance, this appears impressive. But if only 2 percent
+of transactions are actually fraudulent, a model that labels every
+transaction as legitimate would achieve the same accuracy while failing
+to detect any fraud at all. This illustrates the limitations of accuracy
+and the need for more informative measures. Two of the most important
+are \emph{sensitivity} and \emph{specificity}.
 
-In classification, it is not enough to know how many predictions are
-correct overall. We also need to understand \emph{how well the model
-identifies each class}. Sensitivity and specificity are two
-complementary metrics that help answer this question, especially in
-situations with \emph{imbalanced data}, when one class appears much more
-frequently than the other.
+Accuracy provides an overall summary of performance, but it does not
+reveal how well the model identifies each class. Sensitivity and
+specificity address this limitation by separating performance on the
+positive and negative classes, making them particularly valuable in
+settings with \emph{imbalanced data}, where one class is much rarer than
+the other.
 
-These metrics allow us to examine the model's strengths and weaknesses
-more critically by asking whether it can detect rare but important
-cases, such as fraud or disease, and whether it avoids misclassifying
-too many negative cases. By separating performance across the positive
-and negative classes, sensitivity and specificity help us go beyond
-accuracy and build more trustworthy models.
+These metrics help us examine a model's strengths and weaknesses more
+critically: whether it can detect rare but important cases, such as
+fraud or disease, and whether it avoids incorrectly labelling too many
+negative cases. By distinguishing between the positive and negative
+classes, sensitivity and specificity allow us to assess performance in a
+more nuanced and trustworthy way.
 
 \subsection{Sensitivity}\label{sensitivity}
 
-How good is your model at \emph{catching the cases that matter most}?
-That is the question sensitivity helps answer. \emph{Sensitivity}, also
-known as \emph{recall} in fields like information retrieval, measures a
-model's ability to correctly identify \emph{positive cases}. In other
-words, it answers: \emph{Out of all the actual positives, how many did
-the model correctly predict?}
-
-This matters most in situations where missing a positive case has
-serious consequences, such as failing to detect fraud or disease. The
-formula for sensitivity is: \[
-\text{Sensitivity} = \frac{\text{True Positives (TP)}}{\text{True Positives (TP)} + \text{False Negatives (FN)}}.
+Sensitivity measures a model's ability to correctly identify
+\emph{positive} cases. Also known as \emph{recall}, it answers the
+question: \emph{Out of all actual positives, how many did the model
+correctly predict?} Sensitivity is especially important in situations
+where missing a positive case has serious consequences, such as failing
+to detect fraud or a medical condition. The formula for sensitivity is:
+\[
+\text{Sensitivity} = \frac{\text{TP}}{\text{TP} + \text{FN}}.
 \]
 
-Let us apply this to the kNN model from Chapter
-\ref{sec-ch7-classification-knn}, where we predicted customer churn
-(\texttt{churn\ =\ yes}). Sensitivity tells us the percentage of
-customers who actually left, and were correctly flagged by the model.
-Using the confusion matrix from the previous section, we have: \[
-\text{Sensitivity} = \frac{\text{TP}}{\text{TP} + \text{FN}} = \frac{49}{49 + 96} = 0.338.
+Returning to the kNN model from Section \ref{sec-ch7-knn-churn}, where
+the task was to predict customer churn (\texttt{churn\ =\ yes}),
+sensitivity indicates the proportion of actual churners that the model
+correctly identified. Using the confusion matrix from the previous
+section: \[
+\text{Sensitivity} =
+\frac{108}
+     {108 + 221}
+= 0.328.
 \]
 
-This means the model correctly identified 33.8\% of actual churners.
+Thus, the model correctly identified\\
+32.8 percent\\
+of customers who churned.
 
-Note that a model with \emph{100\% sensitivity} flags \emph{every
-single} positive case. But here's the catch: even a model that labels
-\emph{everyone} as positive would score perfectly on sensitivity. That
-is why this metric must always be interpreted in context, with help from
-other measures like \emph{specificity} and \emph{precision}.
+\begin{quote}
+\emph{Try it yourself:} Repeat the kNN classification from Section
+\ref{sec-ch7-knn-churn} using \(k = 2\) and compute the corresponding
+confusion matrix. Using that confusion matrix, calculate the sensitivity
+and compare it with the value obtained earlier for \(k = 5\). How does
+changing \(k\) affect the model's ability to identify churners, and what
+might explain the difference?
+\end{quote}
+
+A model with \emph{100 percent sensitivity} flags every observation as
+positive. Although this yields perfect sensitivity, it is not useful in
+practice. Sensitivity must therefore be interpreted alongside measures
+that describe performance on the negative class, such as specificity and
+precision.
 
 \subsection{Specificity}\label{specificity}
 
-If sensitivity tells us how well a model \emph{catches the positive
-cases}, specificity tells us how well it \emph{avoids false alarms}.
-\emph{Specificity} measures the model's ability to correctly identify
-\emph{negative cases}. It answers the question: \emph{Out of all the
-actual negatives, how many did the model correctly predict?}
-
-This becomes crucial when false positives are costly. Think of spam
-filters: marking a legitimate email as spam (a false positive) might
-cause users to miss important messages. In such cases, high specificity
-is essential. The formula for specificity is: \[
-\text{Specificity} = \frac{\text{True Negatives (TN)}}{\text{True Negatives (TN)} + \text{False Positives (FP)}}.
+While sensitivity measures how well a model identifies positive cases,
+specificity assesses how well it identifies \emph{negative} cases.
+Specificity answers the question: \emph{Out of all actual negatives, how
+many did the model correctly predict?} This metric is especially
+important when false positives carry substantial costs. For example, in
+email filtering, incorrectly marking a legitimate message as spam (a
+false positive) may lead to important information being missed. The
+formula for specificity is: \[
+\text{Specificity} = \frac{\text{TN}}{\text{TN} + \text{FP}}.
 \]
 
-Let us return to the kNN model from Chapter
-\ref{sec-ch7-classification-knn}, where we predicted customer churn.
-Specificity in this case tells us how well the model identified
-customers who \emph{did not churn}.
+Returning to the kNN model from Section \ref{sec-ch7-knn-churn},
+specificity indicates how well the model identified customers who
+\emph{did not churn}. Using the confusion matrix from the previous
+section: \[
+\text{Specificity} =
+\frac{1658}
+     {1658 + 38}
+= 0.978.
+\]
 
-Using the confusion matrix from the previous section, we can compute
-specificity as follows: \[
-\text{Specificity} = \frac{\text{TN}}{\text{TN} + \text{FP}} = \frac{849}{849 + 6} = 0.993.
-\] This means the model correctly identified 99.3\% of the customers who
-stayed.
+Thus, the model correctly identified\\
+97.8 percent\\
+of the customers who remained with the company.
 
-While each metric is valuable on its own, in practice, we often want
-\emph{high sensitivity and high specificity}. But boosting one can
-sometimes lower the other. The right balance depends on your
-application. For the kNN model in the previous section, sensitivity is
-0.338, while specificity is 0.993. This trade-off may be acceptable in
-this context, as identifying churners (sensitivity) is often more
-important than minimizing false positives (specificity).
+\begin{quote}
+\emph{Try it yourself:} Repeat the kNN classification from Section
+\ref{sec-ch7-knn-churn} using \(k = 2\) and compute the corresponding
+confusion matrix. Using that confusion matrix, calculate the specificity
+and compare it with the value obtained earlier for \(k = 5\). How does
+changing \(k\) affect the model's ability to correctly identify
+non-churners? What does this reveal about the relationship between \(k\)
+and false positive predictions?
+\end{quote}
 
-\subsection*{Sensitivity vs.~Specificity: A Balancing
-Act}\label{sensitivity-vs.-specificity-a-balancing-act}
-\addcontentsline{toc}{subsection}{Sensitivity vs.~Specificity: A
-Balancing Act}
+Sensitivity and specificity must be interpreted together. Improving
+sensitivity often increases the number of false positives and therefore
+reduces specificity, whereas improving specificity can lead to more
+false negatives and therefore lower sensitivity. The appropriate balance
+depends on the relative costs of these errors. In medical diagnostics,
+missing a disease case (a false negative) may be far more serious than
+issuing a false alarm, favouring higher sensitivity. In contrast,
+applications such as spam filtering often prioritise higher specificity
+to avoid incorrectly flagging legitimate messages.
 
-The trade-off between sensitivity and specificity is a central
-consideration in the evaluation of classification models. In many
-practical applications, improving one of these metrics tends to reduce
-the other: increasing sensitivity typically results in more false
-positives, thereby decreasing specificity, while increasing specificity
-may lower the number of false positives but can lead to more false
-negatives, thus reducing sensitivity.
+Because sensitivity and specificity summarise performance on the
+positive and negative classes, they also form the basis of the ROC curve
+introduced later in this chapter, which visualises how a classifier
+balances these two measures.
 
-The appropriate balance depends on the context and the relative costs of
-different types of errors. For instance, in medical diagnostics, failing
-to identify a disease case (a false negative) may have severe
-consequences. In such situations, models with high sensitivity are
-preferred, even at the expense of a higher false positive rate.
-Conversely, in applications such as email spam detection, misclassifying
-a legitimate message as spam (a false positive) can be more problematic
-than missing a few spam messages. In these cases, higher specificity is
-more desirable.
-
-Understanding the interplay between these two metrics allows
-practitioners to tailor model evaluation to the priorities and risks
-associated with a specific application. In the next section, we
-introduce two additional metrics, precision and recall, that provide
-further insight into the model's effectiveness in detecting and
-correctly classifying the positive class.
+Understanding this trade-off is essential for evaluating classification
+models in a way that reflects the priorities and risks of a specific
+application. In the next section, we introduce two additional
+metrics---precision and recall---that provide further insight into a
+model's effectiveness in identifying positive cases.
 
 \section{Precision, Recall, and
 F1-Score}\label{precision-recall-and-f1-score}
 
-Imagine you are designing a system to detect fraudulent credit card
-transactions. If your model predicts fraud and it is wrong, an annoyed
-customer gets a call and may lose trust in your service. But if it fails
-to detect actual fraud, money is lost. Which mistake is worse?
+Accuracy provides a convenient summary of how often a model is correct,
+but it does not reveal the type of errors a classifier makes. A model
+detecting fraudulent transactions, for example, may achieve high
+accuracy while still missing many fraudulent cases or producing too many
+false alarms. Sensitivity tells us how many positive cases we correctly
+identify, but it does not tell us how reliable the model's positive
+predictions are. Precision and recall address these gaps by offering a
+clearer view of performance on the positive class.
 
-This kind of dilemma reveals why metrics beyond accuracy are essential.
-Accuracy tells us how often the model is right, but not \emph{how} it
-goes wrong. Sensitivity tells us how many positives we catch, but not
-how many false alarms we raise. Precision and recall close this gap.
-
-When your model flags a customer as likely to churn, how confident can
-you be that it is right? And how often does it miss actual churners?
-These are the kinds of questions precision and recall help us answer.
-
-In addition to sensitivity and specificity, the metrics of
-\emph{Precision}, \emph{recall}, and the \emph{F1-score} provide a more
-detailed view of a classification model's performance. These metrics are
-especially useful in imbalanced datasets, where accuracy can be
-misleading.
+These metrics are particularly useful in settings with imbalanced data,
+where the positive class is rare. In such cases, accuracy can be
+misleading, and a more nuanced evaluation is needed.
 
 \emph{Precision}, also referred to as the \emph{positive predictive
 value}, measures how many of the predicted positives are actually
 positive. It answers the question: \emph{When the model predicts a
-positive case, how often is it correct?}
-
-This is formally defined as: \[
+positive case, how often is it correct?} Precision is formally defined
+as: \[
 \text{Precision} = \frac{\text{TP}}{\text{TP} + \text{FP}}.
 \] Precision becomes particularly important in applications where false
 positives are costly. In fraud detection, for example, incorrectly
@@ -13998,9 +13995,7 @@ unnecessary investigation.
 \emph{Recall}, which is equivalent to sensitivity, measures the model's
 ability to identify all actual positive cases. It addresses the
 question: \emph{Out of all the actual positives, how many did the model
-correctly identify?}
-
-The formula for recall is: \[
+correctly identify?} The formula for recall is: \[
 \text{Recall} = \frac{\text{TP}}{\text{TP} + \text{FN}}.
 \] Recall is crucial in settings where missing a positive case has
 serious consequences, such as medical diagnosis or fraud detection.
@@ -14033,17 +14028,17 @@ customer will churn (\texttt{churn\ =\ yes}).
 
 \emph{Precision} measures how often the model's churn predictions are
 correct: \[
-\text{Precision} = \frac{\text{TP}}{\text{TP} + \text{FP}} = \frac{49}{49 + 6} = 0.891.
+\text{Precision} = \frac{\text{TP}}{\text{TP} + \text{FP}} = \frac{108}{108 + 38} = 0.74.
 \] This indicates that the model's predictions of churn are correct in
-89.1\% of cases.
+74\% of cases.
 
-\emph{recall} (or sensitivity) reflects how many actual churners were
+\emph{Recall} (or sensitivity) reflects how many actual churners were
 correctly identified: \[
-\text{Recall} = \frac{\text{TP}}{\text{TP} + \text{FN}} = \frac{49}{49 + 96} = 0.338.
-\] The model thus successfully identifies 33.8\% of churners.
+\text{Recall} = \frac{\text{TP}}{\text{TP} + \text{FN}} = \frac{108}{108 + 221} = 0.328.
+\] The model thus successfully identifies 32.8\% of churners.
 
 \emph{F1-score} combines these into a single measure: \[
-F1 = \frac{2 \times 49}{2 \times 49 + 6 + 96} = 0.49.
+F1 = \frac{2 \times 108}{2 \times 108 + 38 + 221} = 0.455.
 \] This score summarizes the model's ability to correctly identify
 churners while balancing the cost of false predictions.
 
@@ -14053,81 +14048,82 @@ the context. In healthcare, recall might be prioritized to avoid missing
 true cases. In contrast, in filtering systems like spam detection,
 precision may be more important to avoid misclassifying valid items.
 
+\begin{quote}
+\emph{Try it yourself:} Repeat the kNN classification from Section
+\ref{sec-ch7-knn-churn} using \(k = 2\). Compute the resulting confusion
+matrix and calculate the precision, recall, and F1-score. How do these
+values compare with those for \(k = 5\)? Which metrics increase, which
+decrease, and what does this reveal about the effect of \(k\) on model
+behaviour?
+\end{quote}
+
 In the next section, we shift our focus to metrics that evaluate
 classification models across a range of thresholds, rather than at a
 fixed cutoff. This leads us to the ROC curve and AUC, which offer a
 broader view of classification performance.
 
-\section{Taking Uncertainty into
+\section{Taking Prediction Uncertainty into
 Account}\label{sec-ch8-taking-uncertainty}
 
-Imagine a doctor evaluating whether a patient has a rare disease. The
-model outputs a 0.72 probability. Should the doctor act on this
-prediction? This scenario illustrates a critical point in
-classification: many models can return probability estimates, not just
-hard labels. These probabilities express the model's confidence in its
-predictions, offering a richer basis for decision-making than binary
-outputs alone.
+Many classification models can produce \emph{probabilities} rather than
+only hard class labels. A model might estimate, for example, a 0.72
+probability that a patient has a rare disease. Should a doctor act on
+this prediction? This illustrates a central idea: probability outputs
+express the model's \emph{confidence} and provide richer information
+than binary predictions alone.
 
-Most of the evaluation metrics we have discussed, such as precision,
-recall, and the F1-score, are based on fixed, binary predictions. But
-this perspective omits an important aspect of many classification
-models: \emph{uncertainty}.
+Most of the evaluation metrics introduced so far (such as precision,
+recall, and the F1-score) are based on fixed class labels. These labels
+are obtained by applying a \emph{classification threshold} to the
+predicted probabilities. A threshold of 0.5 is common: if the predicted
+probability exceeds 50 percent, the observation is labelled as positive.
+Yet this threshold is not inherent to the model. Adjusting it can
+significantly change a classifier's behaviour and allows its decisions
+to reflect the priorities of a specific application.
 
-Many models, including \emph{k}-Nearest Neighbors (kNN), can return
-predicted probabilities. These scores reflect the likelihood that an
-instance belongs to the positive class. To convert probabilities into
-class labels, a \emph{classification threshold} must be chosen. A value
-of 0.5 is commonly used by default: if the predicted probability exceeds
-50\%, the instance is labeled as positive. However, this threshold is
-not fixed in stone. Adjusting it can significantly change a model's
-behavior and allows it to better reflect the priorities of a specific
-application.
+Threshold choice is particularly important when the costs of
+misclassification are unequal. In fraud detection, missing a fraudulent
+transaction (a false negative) may be more costly than incorrectly
+flagging a legitimate one. Lowering the threshold increases sensitivity
+by identifying more positive cases, but it also increases the number of
+false positives. Conversely, in settings where false positives are more
+problematic---such as marking legitimate emails as spam---a higher
+threshold may be preferable because it increases specificity.
 
-For instance, in fraud detection, missing a fraud case (a false
-negative) may be more costly than flagging a legitimate transaction (a
-false positive). In such cases, lowering the threshold can increase
-sensitivity, capturing more fraud cases even at the expense of
-additional false alarms. Conversely, in spam filtering, false positives
-may be more problematic, and a higher threshold may be preferable to
-protect legitimate emails.
-
-\phantomsection\label{ex-confusion-matrix-kNN-prob}
-Let us return to the \emph{kNN} model in
-Section~\ref{sec-ch8-confusion-matrix}, which predicts customer churn
-(\texttt{churn\ =\ yes}). This time, we extract predicted probabilities
-by setting \texttt{type\ =\ "prob"} in the \texttt{kNN()} function:
+To illustrate how thresholds influence predictions, we return to the kNN
+model from Section \ref{sec-ch8-confusion-matrix}, which predicts
+customer churn (\texttt{churn\ =\ yes}). By specifying
+\texttt{type\ =\ "prob"} in the \texttt{kNN()} function, we can extract
+probability estimates instead of class labels:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{kNN\_prob }\OtherTok{=} \FunctionTok{kNN}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ formula, }\AttributeTok{train =}\NormalTok{ train\_set, }
-               \AttributeTok{test =}\NormalTok{ test\_set, }\AttributeTok{k =} \DecValTok{9}\NormalTok{, }\AttributeTok{scaler =} \StringTok{"minmax"}\NormalTok{,}
+\NormalTok{kNN\_prob }\OtherTok{=} \FunctionTok{kNN}\NormalTok{(}\AttributeTok{formula =}\NormalTok{ formula, }
+               \AttributeTok{train =}\NormalTok{ train\_scaled, }
+               \AttributeTok{test =}\NormalTok{ test\_scaled, }
+               \AttributeTok{k =} \DecValTok{5}\NormalTok{,}
                \AttributeTok{type =} \StringTok{"prob"}\NormalTok{)}
 
-\FunctionTok{round}\NormalTok{(kNN\_prob[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{6}\NormalTok{, ], }\DecValTok{2}\NormalTok{)  }\CommentTok{\# show first 6 rows}
-\NormalTok{       yes   no}
-   \DecValTok{5}  \FloatTok{0.44} \FloatTok{0.56}
-   \DecValTok{11} \FloatTok{0.22} \FloatTok{0.78}
-   \DecValTok{21} \FloatTok{0.11} \FloatTok{0.89}
-   \DecValTok{22} \FloatTok{0.56} \FloatTok{0.44}
-   \DecValTok{24} \FloatTok{0.00} \FloatTok{1.00}
-   \DecValTok{28} \FloatTok{0.11} \FloatTok{0.89}
+\FunctionTok{round}\NormalTok{(kNN\_prob[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{6}\NormalTok{, ], }\DecValTok{2}\NormalTok{)}
+\NormalTok{     yes  no}
+   \DecValTok{1} \FloatTok{0.4} \FloatTok{0.6}
+   \DecValTok{2} \FloatTok{0.0} \FloatTok{1.0}
+   \DecValTok{3} \FloatTok{0.0} \FloatTok{1.0}
+   \DecValTok{4} \FloatTok{0.0} \FloatTok{1.0}
+   \DecValTok{5} \FloatTok{0.0} \FloatTok{1.0}
+   \DecValTok{6} \FloatTok{0.0} \FloatTok{1.0}
 \end{Highlighting}
 \end{Shaded}
 
-The matrix \texttt{kNN\_prob} has one column per class, so column 1
-represents the model's estimated probability that each observation
-belongs to the positive class (\texttt{churn\ =\ yes}) and the second
-column represents the probability for the negative class
+The object \texttt{kNN\_prob} is a two-column matrix of class
+probabilities: the first column gives the estimated probability that an
+observation belongs to the positive class (\texttt{churn\ =\ yes}), and
+the second column gives the probability for the negative class
 (\texttt{churn\ =\ no}). For example, the first entry of the first
-column is 0.44, which means the model is 44\% confident the customer
-will churn (\texttt{churn\ =\ yes}).
-
-\begin{quote}
-The \texttt{type\ =\ "prob"} option is available for all classification
-models introduced in this book, making probability-based evaluation
-consistent across methods.
-\end{quote}
+column is 0.4, indicating that the model assigns a 40 percent chance
+that this customer will churn. The argument \texttt{type\ =\ "prob"} is
+available for all classification models introduced in this book, making
+probability-based evaluation consistent across methods.
 
 To convert these probabilities to class predictions, we use the
 \texttt{cutoff} argument in the \texttt{conf.mat()} function. Here, we
@@ -14137,95 +14133,76 @@ compare two different thresholds:
 \begin{Highlighting}[]
 \FunctionTok{conf.mat}\NormalTok{(kNN\_prob[, }\StringTok{"yes"}\NormalTok{], test\_labels, }\AttributeTok{reference =} \StringTok{"yes"}\NormalTok{, }\AttributeTok{cutoff =} \FloatTok{0.5}\NormalTok{)}
 \NormalTok{         Predict}
-\NormalTok{   Actual yes  no}
-\NormalTok{      yes  }\DecValTok{49}  \DecValTok{96}
-\NormalTok{      no    }\DecValTok{6} \DecValTok{849}
+\NormalTok{   Actual  yes   no}
+\NormalTok{      yes  }\DecValTok{108}  \DecValTok{221}
+\NormalTok{      no    }\DecValTok{38} \DecValTok{1658}
 \FunctionTok{conf.mat}\NormalTok{(kNN\_prob[, }\StringTok{"yes"}\NormalTok{], test\_labels, }\AttributeTok{reference =} \StringTok{"yes"}\NormalTok{, }\AttributeTok{cutoff =} \FloatTok{0.7}\NormalTok{)}
 \NormalTok{         Predict}
-\NormalTok{   Actual yes  no}
-\NormalTok{      yes  }\DecValTok{11} \DecValTok{134}
-\NormalTok{      no    }\DecValTok{1} \DecValTok{854}
+\NormalTok{   Actual  yes   no}
+\NormalTok{      yes   }\DecValTok{61}  \DecValTok{268}
+\NormalTok{      no     }\DecValTok{7} \DecValTok{1689}
 \end{Highlighting}
 \end{Shaded}
 
-Note that \texttt{kNN\_prob{[},\ "yes"{]}} extracts the predicted
-probabilities for \texttt{churn\ =\ yes} from the first column of the
-\texttt{kNN\_prob} matrix. A threshold of 0.5 casts a wider net,
-predicting churn for anyone with at least 50\% probability. This
-increases sensitivity but may allow more false positives. A threshold of
-0.7 is stricter, requiring stronger evidence (70\% certainty) before
-labeling a customer as likely to churn. This generally reduces false
-positives but risks missing actual churners.
+A threshold of 0.5 tends to increase sensitivity, identifying more
+customers as potential churners, but may generate more false positives.
+A stricter threshold such as 0.7 typically increases specificity by
+requiring a higher probability estimate before predicting churn, but it
+risks missing actual churners. Adjusting the decision threshold
+therefore allows practitioners to tailor model behaviour to the
+requirements and risks of the application.
 
-Adjusting the decision threshold helps adapt model behavior to
-real-world needs where the \emph{costs of errors are not equal}. In
-practice, lower thresholds increase sensitivity but reduce specificity.
-Higher thresholds increase specificity but reduce sensitivity.
+\begin{quote}
+\emph{Try it yourself:} Using the predicted probabilities from the kNN
+model, compute confusion matrices for thresholds such as 0.3 and 0.8.
+Calculate the sensitivity and specificity at each threshold. How do
+these values change as the threshold increases? Which thresholds
+prioritise detecting churners, and which prioritise avoiding false
+positives? How does this pattern relate to the ROC curve introduced in
+the next section?
+\end{quote}
 
-This flexibility is essential in domains such as fraud detection or
-medical screening.
-
-\subsection*{Tuning the Classification
-Threshold}\label{tuning-the-classification-threshold}
-\addcontentsline{toc}{subsection}{Tuning the Classification Threshold}
-
-Fine-tuning the classification threshold helps tailor a model to
-practical constraints. Suppose we want a sensitivity of at least 90\% to
-ensure most churners are flagged. By adjusting the threshold and
-recalculating evaluation metrics, we can determine the \emph{operating
-point}, the threshold that satisfies this requirement.
-
-Of course, this involves trade-offs. Lowering the threshold generally
-boosts recall but may harm precision. Raising it does the opposite. For
-instance, a threshold of 0.9 might lead to excellent specificity but
-fail to detect most actual churners.
-
-In short, threshold tuning transforms classification from a
-one-size-fits-all decision rule into a flexible tool that aligns model
-output with domain-specific priorities.
-
-Manual tuning is helpful, but a more comprehensive view is needed to
-fully assess a model's discriminatory power. To build on this idea, the
-next section introduces two powerful tools, the ROC curve and the AUC,
-which allow us to evaluate model performance across all possible
-thresholds.
+Fine-tuning thresholds can help satisfy specific performance
+requirements. For instance, if a high sensitivity is required to ensure
+that most churners are detected, the threshold can be lowered until the
+desired level is reached. This flexibility transforms classification
+from a fixed rule into a more adaptable decision process. However,
+threshold tuning alone provides only a partial view of model behaviour.
+To examine performance across \emph{all} possible thresholds, we need
+tools that summarise this broader perspective. The next section
+introduces the ROC curve and the Area Under the Curve (AUC), which
+provide this comprehensive assessment.
 
 \section{Receiver Operating Characteristic (ROC)
-curve}\label{receiver-operating-characteristic-roc-curve}
+Curve}\label{receiver-operating-characteristic-roc-curve}
 
-How can we fairly compare models when performance depends on the
-threshold we choose? Imagine building a medical diagnostic tool:
-adjusting the classification threshold might improve sensitivity but
-worsen specificity. To understand how models behave across all
-thresholds, and to compare them systematically, we turn to the \emph{ROC
-curve} and its associated metric, the \emph{Area Under the Curve (AUC)}.
+When a classifier produces probability estimates, its performance
+depends on the classification threshold. A threshold that increases
+sensitivity may reduce specificity, and vice versa. To evaluate a model
+across \emph{all} possible thresholds and compare classifiers fairly, we
+use the \emph{Receiver Operating Characteristic (ROC) curve} and its
+associated summary measure, the \emph{Area Under the Curve (AUC)}.
 
-The ROC curve visually represents the trade-off between sensitivity
-(true positive rate) and the false positive rate (1 -- specificity)
-across various classification thresholds. It plots sensitivity (true
-positive rate) on the vertical axis against the false positive rate on
-the horizontal axis. Originally developed for radar signal detection
-during World War II, the ROC curve is now widely used in machine
-learning to evaluate classifier performance. In practice, ROC curves are
-especially useful for comparing different classification models, such as
-logistic regression, decision trees, and random forests. We will return
-to this idea in upcoming case studies, where ROC curves and AUC scores
-help us select the best-performing model.
+The ROC curve provides a graphical view of how sensitivity (the true
+positive rate) varies with the false positive rate (1 -- specificity) as
+the classification threshold changes. It plots the true positive rate on
+the vertical axis against the false positive rate on the horizontal
+axis. Originally developed for radar signal detection during World War
+II, ROC analysis is now widely used in machine learning and statistical
+classification.
 
-Figure~\ref{fig-roc-curve} illustrates three common performance
-scenarios:
+Figure~\ref{fig-roc-curve} illustrates typical shapes of ROC curves:
 
 \begin{itemize}
 \item
-  \emph{Optimal Performance (Green Curve)}: A model with near-perfect
-  performance reaches the top-left corner, indicating high sensitivity
-  and specificity.
+  \emph{Optimal performance (green curve):} a curve that approaches the
+  top-left corner, indicating high sensitivity and high specificity.
 \item
-  \emph{Good Performance (Blue Curve)}: A well-performing model stays
-  closer to the top-left corner, though not perfectly.
+  \emph{Good performance (blue curve):} a curve that lies above the
+  diagonal but does not reach the top-left corner.
 \item
-  \emph{Random Classifier (Red Diagonal Line)}: The dashed diagonal
-  represents random guessing, with no predictive power.
+  \emph{Random classifier (red diagonal line):} the reference line
+  corresponding to random guessing.
 \end{itemize}
 
 \begin{figure}[H]
@@ -14236,50 +14213,42 @@ scenarios:
 
 }
 
-\caption{\label{fig-roc-curve}The ROC curve illustrates the trade-off
-between sensitivity and specificity at different thresholds. The
-diagonal line represents a classifier with no predictive value (red
-dashed line), while the curves represent varying levels of performance:
-green for optimal and blue for good.}
+\caption{\label{fig-roc-curve}The ROC curve shows the trade-off between
+sensitivity and the false positive rate across classification
+thresholds. The diagonal line represents random performance, while
+curves closer to the top-left corner indicate stronger predictive
+ability.}
 
 \end{figure}%
 
-Each point on the ROC curve corresponds to a specific threshold. As the
-threshold changes, the sensitivity and false positive rate vary, tracing
-out the curve. A curve that hugs the top-left corner reflects stronger
-performance, whereas curves closer to the diagonal suggest weak or
-random classification.
+Each point along the ROC curve corresponds to a different classification
+threshold. A curve closer to the top-left corner reflects stronger
+discrimination between the positive and negative classes, whereas curves
+nearer the diagonal indicate limited or no predictive power. In
+practice, ROC curves are particularly helpful for comparing models such
+as logistic regression, decision trees, random forests, and neural
+networks. We will return to this idea in later chapters, where ROC
+curves help identify the best-performing model in case studies.
 
-This visualization helps illustrate key trade-offs. For example, in
-\emph{medical diagnostics}, maximizing sensitivity is important to avoid
-missing cases, even at the cost of some false positives. In \emph{fraud
-detection}, high specificity reduces unnecessary investigations by
-avoiding false positives.
-
-To construct an ROC curve, predicted probabilities for the positive
-class and the actual class labels are needed. Correctly predicted
-positives move the curve upward (increased sensitivity), while false
-positives move it to the right (increased false positive rate). Let us
-now see how this works in practice by applying it to the kNN model.
+To construct an ROC curve, we need predicted probabilities for the
+positive class and the actual class labels. Correctly predicted
+positives move the curve upward (increasing sensitivity), while false
+positives push it to the right (increasing the false positive rate). Let
+us now apply this to the kNN model from the previous section.
 
 \phantomsection\label{ex-roc-curve-kNN}
-We return to the \emph{kNN} model in
-Section~\ref{sec-ch8-taking-uncertainty}, where we obtained probability
-scores for the positive class (\texttt{churn\ =\ yes}). We now use these
-probabilities to generate the ROC curve. The \textbf{pROC} package in R
-provides tools to compute and visualize ROC curves. If it is not already
-installed, you can do so using \texttt{install.packages("pROC")}.
+We continue with the \emph{kNN} model from Section
+\ref{sec-ch8-taking-uncertainty}, using the predicted probabilities for
+the positive class (\texttt{churn\ =\ yes}). The \textbf{pROC} package
+in R provides functions for computing and visualizing ROC curves. If it
+is not installed, it can be added with
+\texttt{install.packages("pROC")}.
 
-To construct the ROC curve, we use the \texttt{roc()} function from the
-\textbf{pROC} package. It requires two main arguments:
-\texttt{response}, which contains the actual class labels from the test
-set, and \texttt{predictor}, a numeric vector of predicted probabilities
-for the \emph{positive} class. In our case, \texttt{test\_labels}
-contains the true labels, and \texttt{kNN\_prob{[},\ "yes"{]}} extracts
-the predicted probabilities for \texttt{churn\ =\ yes} from the first
-column of the \texttt{kNN\_prob} matrix. The first column contains
-probabilities for the positive class, which is essential for computing
-the ROC curve.
+The \texttt{roc()} function requires two inputs: \texttt{response},
+which contains the true class labels, and \texttt{predictor}, a numeric
+vector of predicted probabilities for the positive class. In our case,
+\texttt{test\_labels} stores the true labels, and
+\texttt{kNN\_prob{[},\ "yes"{]}} retrieves the required probabilities.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -14289,14 +14258,13 @@ the ROC curve.
 \end{Highlighting}
 \end{Shaded}
 
-We then use the \texttt{ggroc()} function to visualize the ROC curve. It
-takes an ROC object and generates a \texttt{ggplot2} visualization for
-easier customization and clearer display:
+We can visualize the ROC curve using \texttt{ggroc()}, which returns a
+\textbf{ggplot2} object:
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{ggroc}\NormalTok{(roc\_knn, }\AttributeTok{colour =} \StringTok{"\#377EB8"}\NormalTok{) }\SpecialCharTok{+}
-    \FunctionTok{ggtitle}\NormalTok{(}\StringTok{"ROC Curve for kNN with k = 9"}\NormalTok{)}
+    \FunctionTok{ggtitle}\NormalTok{(}\StringTok{"ROC Curve for kNN Model on churnCredit Data"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -14306,20 +14274,29 @@ easier customization and clearer display:
 
 }
 
-\caption{ROC curve for kNN with k = 9, based on churn data.}
+\caption{ROC curve for the kNN model, based on the churnCredit dataset.}
 
 \end{figure}%
 
-This ROC curve shows how the model's true positive rate and false
-positive rate vary as we adjust the classification threshold. A curve
-closer to the top-left corner indicates better classification
-performance. In this case, the ROC curve suggests that the kNN model is
-effective at distinguishing churners from non-churners.
+This curve shows how the model's true positive rate and false positive
+rate change as the threshold varies. The proximity of the curve to the
+top-left corner indicates how effectively the model distinguishes
+churners from non-churners.
 
-While the ROC curve provides a visual summary of a model's
-classification performance across all thresholds, we often need a single
-numeric value to compare models more directly. This is where the AUC
-becomes valuable.
+\begin{quote}
+\emph{Try it yourself:} Repeat the kNN classification from Section
+\ref{sec-ch7-knn-churn} using \(k = 2\) and obtain the predicted
+probabilities for \texttt{churn\ =\ yes}. Using these probabilities,
+construct the ROC curve with the \texttt{roc()} and \texttt{ggroc()}
+functions. How does the ROC curve for \(k = 2\) compare with the curve
+obtained earlier for \(k = 5\)? Which model shows stronger
+discriminatory ability?
+\end{quote}
+
+While the ROC curve provides a visual summary of performance across
+thresholds, it is often useful to have a single numeric measure for
+comparison. The next section introduces the AUC, which captures the
+overall discriminatory ability of a classifier in one value.
 
 \section{Area Under the Curve (AUC)}\label{area-under-the-curve-auc}
 
@@ -14327,12 +14304,12 @@ While the ROC curve provides a visual summary of a model's performance
 across all thresholds, it is often useful to quantify this performance
 with a single number. The \emph{AUC} serves this purpose. It measures
 how well the model ranks positive cases higher than negative ones,
-independent of any particular threshold. Mathematically, AUC is defined
-as: \[
-\text{AUC} = \int_{0}^{1} \text{TPR}(t) \, d\text{FPR}(t),
+independent of any particular threshold. Mathematically, the AUC is
+defined as \[
+\text{AUC} = \int_{0}^{1} \text{TPR}(t) , d\text{FPR}(t),
 \] where \(t\) denotes the classification threshold. A larger AUC value
-indicates better discrimination between the positive and negative
-classes across all possible thresholds.
+indicates better overall discrimination between the positive and
+negative classes.
 
 \begin{figure}[H]
 
@@ -14350,14 +14327,13 @@ than random guessing.}
 \end{figure}%
 
 As shown in Figure~\ref{fig-ch8-auc}, the AUC ranges from 0 to 1. A
-value of 1 indicates a perfect model, 0.5 corresponds to random
-guessing, and values between 0.5 and 1 reflect varying degrees of
-predictive power. Although uncommon, an AUC lower than 0.5 can occur
-when the model systematically predicts the opposite of the true class---
-for example, when the positive and negative labels are reversed, or when
-the predicted probabilities are inverted. In such cases, the model's
-ranking ability is effectively reversed, and simply swapping the class
-labels (or using \(1 - p\)) would yield an AUC above 0.5.
+value of 1 indicates a perfect model, while 0.5 corresponds to random
+guessing. Values between 0.5 and 1 reflect varying degrees of predictive
+power. Although uncommon, an AUC below 0.5 can occur when the model
+systematically predicts the opposite of the true class---for example, if
+the class labels are inadvertently reversed or if the probabilities are
+inverted. In such cases, simply swapping the labels (or using \(1 - p\))
+would yield an AUC above 0.5.
 
 To compute the AUC in R, we use the \texttt{auc()} function from the
 \textbf{pROC} package. This function takes an ROC object, such as the
@@ -14366,46 +14342,54 @@ one created earlier using \texttt{roc()}, and returns a numeric value:
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{auc}\NormalTok{(roc\_knn)}
-\NormalTok{   Area under the curve}\SpecialCharTok{:} \FloatTok{0.897}
+\NormalTok{   Area under the curve}\SpecialCharTok{:} \FloatTok{0.7884}
 \end{Highlighting}
 \end{Shaded}
 
 Here, \texttt{roc\_knn} is the ROC object based on predicted
 probabilities for \texttt{churn\ =\ yes}. The resulting value represents
 the model's ability to rank churners above non-churners. For example,
-the AUC for the kNN model is 0.897, meaning that it ranks churners
-higher than non-churners with a probability of 0.897.
+the AUC for the kNN model is 0.788, meaning that it ranks churners
+higher than non-churners with a probability of 0.788.
+
+\begin{quote}
+\emph{Try it yourself:} Using the ROC object you constructed earlier for
+the kNN model with \(k = 2\), compute its AUC value with the
+\texttt{auc()} function. Compare this AUC with the value for \(k = 5\).
+Which model achieves the higher AUC? Does this comparison align with
+what you observed in the ROC curves?
+\end{quote}
 
 AUC is especially useful when comparing multiple models or when the
 costs of false positives and false negatives differ. Unlike accuracy,
 AUC is \emph{threshold-independent}, providing a more holistic measure
-of model quality.
-
-In summary, the ROC curve and AUC offer a robust framework for
-evaluating classifiers, particularly on imbalanced datasets or in
-applications where the balance between sensitivity and specificity
-matters. In the next section, we explore how these ideas extend to
+of model quality. Together, the ROC curve and the AUC offer a robust
+framework for evaluating classifiers, particularly on imbalanced
+datasets or in applications where the balance between sensitivity and
+specificity is important. In the next section, we extend these ideas to
 \emph{multi-class classification}, where evaluation requires new
-strategies to handle more than two outcome categories.
+strategies to accommodate more than two outcome categories.
 
 \section{Metrics for Multi-Class
 Classification}\label{metrics-for-multi-class-classification}
 
-So far, we have evaluated binary classifiers using metrics like
-precision, recall, and AUC. But what if your model needs to go beyond
-``spam or not'' and predict whether an image contains a dog, a cat, or a
-bird? Many real-world problems involve \emph{multi-class
-classification}, where the target variable has three or more categories.
-Examples include classifying types of tumors, predicting modes of
-transportation, or identifying product categories in retail.
+Up to this point, we have evaluated binary classifiers using metrics
+such as precision, recall, and AUC. Many real-world problems, however,
+require predicting among \emph{three or more} categories. Examples
+include classifying tumor subtypes, identifying modes of transportation,
+or assigning products to retail categories. These are \emph{multi-class
+classification} tasks, where evaluation requires extending the ideas
+developed for binary settings.
 
-In multi-class settings, the confusion matrix expands into a square grid
-where rows represent actual classes and columns represent predicted
-classes, as shown in Figure~\ref{fig-ch8-confusion-matrices}. The left
-matrix in the figure shows a binary (2×2) case, while the right matrix
-displays a three-class (3×3) case. Correct predictions lie along the
-diagonal; off-diagonal cells highlight common misclassifications between
-classes and reveal performance bottlenecks.
+In multi-class problems, the confusion matrix becomes a square grid
+whose size matches the number of classes. Rows correspond to actual
+classes and columns to predicted classes, as shown in
+Figure~\ref{fig-ch8-confusion-matrices}. The left matrix illustrates the
+binary case (2×2), while the right matrix shows a general three-class
+(3×3) example. Correct predictions appear along the diagonal, whereas
+off-diagonal entries reveal which classes the model tends to
+confuse---information that is often critical for diagnosing systematic
+errors.
 
 \begin{figure}[H]
 
@@ -14422,180 +14406,198 @@ size grows with the number of classes.}
 
 \end{figure}%
 
-To compute metrics such as precision, recall, or F1-score in multi-class
-settings, we use a \emph{one-vs-all} strategy. This approach treats each
-class in turn as the positive class and groups all other classes as
-negative. This strategy allows us to isolate performance for each class,
-which is useful for diagnosing strengths and weaknesses in specific
-categories using the familiar binary classification framework.
+To compute precision, recall, or F1-scores in multi-class settings, we
+use a \emph{one-vs-all} (or \emph{one-vs-rest}) strategy. Each class is
+treated in turn as the positive class, with all remaining classes
+combined as the negative class. This produces a separate set of binary
+metrics for each class and makes it possible to identify classes that
+are particularly easy or difficult for the model to distinguish.
 
-Since multi-class problems involve multiple binary evaluations, we need
-ways to summarize these into a single score to compare models
-effectively. To do this, we use different averaging strategies:
+Because multi-class problems generate multiple per-class scores, we
+often require a way to summarise them. Three common averaging strategies
+are used:
 
 \begin{itemize}
 \item
-  \emph{Macro-average}: Computes the unweighted mean of the per-class
-  metrics, treating all classes equally. This is useful when
-  misclassifying any class is equally costly, such as in disease subtype
-  classification.
+  \emph{Macro-average}: Computes the simple mean of the per-class
+  metrics. Each class contributes equally, making this approach suitable
+  when all classes are of equal importance---for example, in disease
+  subtype classification where each subtype carries similar
+  consequences.
 \item
-  \emph{Micro-average}: Aggregates the individual true positives, false
-  positives, and false negatives across all classes, then calculates
-  metrics from these totals. This method favors majority classes and
-  reflects the model's overall predictive effectiveness across all
-  examples, as might be desirable in quality control applications.
+  \emph{Micro-average}: Aggregates true positives, false positives, and
+  false negatives over all classes before computing the metric. This
+  approach weights classes by their frequency and reflects overall
+  predictive ability across all observations, which may be appropriate
+  in applications such as industrial quality control.
 \item
-  \emph{Weighted-average}: Computes a weighted mean of the per-class
-  metrics, where the weight corresponds to the number of true instances
-  (support) for each class. This balances attention between common and
-  rare classes and is especially useful in class-imbalanced problems
-  such as fraud detection.
+  \emph{Weighted-average}: Computes the mean of the per-class metrics
+  weighted by the number of true instances (support) in each class. This
+  method accounts for class imbalance and is useful when rare classes
+  should influence the result proportionally, as in fraud detection or
+  risk assessment.
 \end{itemize}
 
-These averaging techniques ensure that performance evaluation remains
-meaningful even when class distribution is skewed or certain categories
-are more important. When interpreting averaged metrics, it is essential
-to consider how class imbalance or business priorities might influence
-the final interpretation.
+These averaging methods help ensure that model evaluation remains
+meaningful even when class distributions are uneven or when certain
+categories are more important than others. When interpreting averaged
+metrics, it is essential to consider how the weighting scheme aligns
+with the goals and potential costs of the application.
 
-While ROC curves and AUC are inherently binary, they can be extended to
-multi-class problems using a one-vs-all approach. This generates
-separate ROC curves and AUC scores for each class. However, interpreting
-multiple ROC plots can be cumbersome. In many applications, macro- or
-weighted-averaged F1-scores provide a more concise and interpretable
-summary.
+Although ROC curves and AUC are inherently binary metrics, they can be
+extended to multi-class settings using a one-vs-all strategy, producing
+one ROC curve and one AUC value per class. Interpreting multiple curves
+can become cumbersome, however, and in practice macro- or
+weighted-averaged F1-scores often provide a clearer summary. Many R
+packages (including \textbf{caret}, \textbf{yardstick}, and
+\textbf{MLmetrics}) offer built-in functions to compute and visualise
+multi-class evaluation metrics.
 
-Many R packages such as \textbf{caret}, \textbf{yardstick}, and
-\textbf{MLmetrics} support multi-class metrics and facilitate the
-computation and visualization of evaluation results.
-
-By leveraging one-vs-all metrics and appropriate averaging strategies,
-we can gain a nuanced view of model performance in multi-class tasks.
-These tools help identify weaknesses, compare models, and align
-evaluation with the goals of the application.
-
-In the next section, we turn to cases such as regression models, where
-the target variable is continuous rather than categorical, and different
-evaluation tools are required.
+By combining one-vs-all metrics with appropriate averaging strategies,
+we obtain a detailed and interpretable assessment of model performance
+in multi-class tasks. These tools help identify weaknesses, compare
+competing models, and align evaluation with practical priorities. In the
+next section, we shift our attention to regression models, where the
+target variable is continuous and requires entirely different evaluation
+principles.
 
 \section{Evaluation Metrics for Continuous
 Targets}\label{evaluation-metrics-for-continuous-targets}
 
 Suppose you want to predict a house's selling price, a patient's
 recovery time, or tomorrow's temperature. These are examples of
-\emph{regression problems}, where the target variable is numerical
-rather than categorical (see Chapter \ref{sec-ch10-regression}). In such
-cases, classification metrics do not apply. Instead, evaluation metrics
-tailored to numerical outcomes are used to assess predictive accuracy.
+\emph{regression problems}, where the target variable is numerical (see
+Chapter \ref{sec-ch10-regression}). In such settings, the evaluation
+measures used for classification no longer apply. Instead of counting
+how often predictions match the true labels, we must quantify \emph{how
+far} the predicted values deviate from the actual outcomes.
 
-One commonly used metric is the \emph{Mean Squared Error (MSE)}: \[
-\text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2.
-\] Here, \(y_i\) is the actual value, \(\hat{y}_i\) is the predicted
-value, and \(n\) is the number of observations. MSE computes the average
-of the squared differences between predicted and observed values. Since
-squaring exaggerates larger errors, MSE is especially sensitive to
-outliers. Smaller values indicate better predictive accuracy, with zero
-representing a perfect model.
+When working with numerical targets, the central question becomes:
+\emph{How large are the errors between predicted values and true values,
+and how are those errors distributed?} Regression metrics therefore
+evaluate the differences between each prediction \(\hat{y}\) and its
+actual value \(y\). These differences, called \emph{residuals}, form the
+basis of most evaluation tools. A good regression model produces
+predictions that are accurate on average and consistently close to the
+true values.
 
-Another important metric is the \emph{Mean Absolute Error (MAE)}: \[
+One widely used metric is the \emph{Mean Squared Error (MSE)}: \[
+\text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2,
+\] where \(y_i\) and \(\hat{y}_i\) denote the actual and predicted
+values for the \(i\)th observation. MSE averages the squared errors,
+giving disproportionately greater weight to larger deviations. This
+makes MSE particularly informative when large mistakes carry high costs.
+In classical linear regression (see Chapter \ref{sec-ch10-regression}),
+residual variance is sometimes computed using \(n - p - 1\) (where \(p\)
+is the number of model parameters) in the denominator to adjust for
+degrees of freedom. Here, however, we treat MSE solely as a prediction
+error metric, which always averages over the \(n\) observations being
+evaluated. In R, MSE can be computed using the \texttt{mse()} function
+from the \textbf{liver} package.
+
+A second commonly used metric is the \emph{Mean Absolute Error (MAE)}:
+\[
 \text{MAE} = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i|.
-\] MAE calculates the average absolute difference between predictions
-and actual outcomes. Unlike MSE, all errors contribute equally, making
-MAE more robust to extreme values and easier to interpret. This is
-especially useful when the data contain outliers or when
-interpretability is a priority.
+\] MAE measures the average magnitude of prediction errors without
+squaring them. Each error contributes proportionally, which makes MAE
+easier to interpret and more robust to extreme values than MSE. When a
+dataset contains unusual observations or when a straightforward summary
+of average error is desired, MAE may be preferable. It can be computed
+in R using the \texttt{mae()} function from the \textbf{liver} package.
 
-A third key metric is the \emph{coefficient of determination}, or
+A third important metric is the \emph{coefficient of determination}, or
 \(R^2\): \[
 R^2 = 1 - \frac{\sum (y_i - \hat{y}_i)^2}{\sum (y_i - \bar{y})^2},
-\] where \(\bar{y}\) is the mean of the actual values. The \(R^2\) score
-measures the proportion of variance in the outcome that is explained by
-the model. A value of \(R^2 = 1\) indicates a perfect fit, while
-\(R^2 = 0\) means the model performs no better than predicting the mean
-for every observation.
+\] where \(\bar{y}\) is the mean of the actual values. The \(R^2\) value
+represents the proportion of variability in the outcome that is
+explained by the model. A value of \(R^2 = 1\) indicates a perfect fit,
+whereas \(R^2 = 0\) means the model performs no better than predicting
+the overall mean for all observations. Although widely reported, \(R^2\)
+should be interpreted with care: a high \(R^2\) does not guarantee
+strong predictive performance, particularly when used to predict new
+observations or values outside the observed range.
 
-Each of these metrics captures a different aspect of model performance:
+Each metric offers a different perspective on model performance:
 
 \begin{itemize}
 \item
-  \emph{MSE} penalizes large errors more heavily, making it sensitive to
-  outliers.
+  MSE emphasizes large errors and is sensitive to outliers.
 \item
-  \emph{MAE} offers a more intuitive measure and is less affected by
-  extreme values.
+  MAE provides a more direct, robust measure of average prediction
+  error.
 \item
-  \(R^2\) provides a scale-free measure of how well the model captures
-  variation in the data.
+  \(R^2\) summarises explained variation and is scale-free, enabling
+  comparisons across models fitted to the same dataset.
 \end{itemize}
 
 The choice of metric depends on the goals of the analysis and the
-characteristics of the dataset. For example, in contexts where large
-prediction errors are costly, MSE may be more appropriate. When
-interpretability or robustness to outliers is important, MAE might be
-preferable. These tools form the foundation for assessing regression
-models, which we will explore in depth in Chapter
-\ref{sec-ch10-regression}.
+characteristics of the data. In applications where large prediction
+errors are especially costly, MSE may be the most appropriate measure.
+When robustness or interpretability is important, MAE may be preferred.
+If the aim is to assess how well a model captures variability in the
+response, \(R^2\) can be informative. These evaluation tools form the
+foundation for assessing regression models and will be explored further
+in Chapter \ref{sec-ch10-regression}, where we examine how they guide
+model comparison, selection, and diagnostic analysis.
 
 \section{Chapter Summary and
 Takeaways}\label{chapter-summary-and-takeaways-6}
 
 No model is complete until it has been evaluated. A machine learning
 model is only as useful as its ability to perform reliably on unseen
-data. In this chapter, we examined the essential task of model
-evaluation, the process of determining whether a model meets practical
-requirements and can be trusted in real-world settings. Beginning with
-foundational concepts, we introduced a range of evaluation metrics for
-binary classification, multi-class classification, and regression
-problems.
+data. In this chapter, we explored the essential task of model
+evaluation: assessing whether a model performs well enough to be trusted
+in practical applications. Beginning with foundational concepts, we
+introduced a range of evaluation metrics for binary classification,
+multi-class classification, and regression problems.
 
 Unlike other chapters in this book, this one does not include a
-standalone case study. This is intentional: model evaluation is not a
-one-time activity but a recurring component of every modeling task. All
-subsequent case studies, spanning Naive Bayes, logistic regression,
-decision trees, and beyond, will include model evaluation as a core
-element. The tools introduced here will be applied repeatedly,
-reinforcing their role in sound data science practice.
+standalone case study. This is intentional. Model evaluation is not an
+isolated phase, but a recurring component of every modelling task. All
+subsequent case studies---spanning Naive Bayes, logistic regression,
+decision trees, random forests, and more---will integrate model
+evaluation as a core element. The tools introduced here will reappear
+throughout the book, reinforcing their central role in sound data
+science practice.
 
-This chapter also marks the completion of \emph{Step 6: Model
-Evaluation} in the Data Science Workflow introduced in Chapter
-\ref{sec-ch2-intro-data-science} and illustrated in
-Figure~\ref{fig-ch2_DSW}. By evaluating model performance with
-appropriate metrics, we close the loop between modeling and
-decision-making, ensuring that models are not only built but validated
-and aligned with practical goals. In future chapters, as we explore more
-advanced methods, we will continue to revisit this step in new modeling
-contexts.
+This chapter also completes \emph{Step 6: Model Evaluation} in the Data
+Science Workflow introduced in Chapter \ref{sec-ch2-intro-data-science}
+and illustrated in Figure~\ref{fig-ch2_DSW}. By selecting and
+interpreting appropriate metrics, we close the loop between model
+building and decision-making, ensuring that models are not only
+constructed but validated and aligned with practical goals. As we
+explore more advanced methods in later chapters, we will continue to
+revisit this step in new modelling contexts.
 
-\textbf{Key Takeaways from this chapter include:}
+\textbf{Key takeaways from this chapter include:}
 
 \begin{itemize}
 \item
-  \emph{Binary classification metrics}: The confusion matrix provides a
-  foundation for computing accuracy, sensitivity, specificity,
-  precision, and the F1-score, each revealing different aspects of model
+  \emph{Binary classification metrics:} The confusion matrix provides
+  the foundation for accuracy, sensitivity, specificity, precision, and
+  the F1-score, each highlighting different aspects of model
   performance.
 \item
-  \emph{Threshold tuning strategies}: Adjusting classification
-  thresholds shifts the balance between sensitivity and specificity,
-  helping models align with domain-specific priorities.
+  \emph{Threshold tuning:} Adjusting classification thresholds shifts
+  the balance between sensitivity and specificity, enabling models to
+  align with domain-specific priorities.
 \item
-  \emph{ROC curve and AUC}: These tools offer a threshold-independent
-  view of classifier performance and are especially valuable for model
-  comparison in imbalanced settings.
+  \emph{ROC curves and AUC:} These tools offer threshold-independent
+  assessments of classifier performance and are especially valuable in
+  imbalanced settings and model comparison.
 \item
-  \emph{Evaluation for multi-class classification}: One-vs-all
-  strategies and macro, micro, and weighted averages extend binary
-  metrics to tasks with more than two outcome categories.
+  \emph{Multi-class evaluation:} One-vs-all strategies, along with
+  macro, micro, and weighted averaging, extend binary metrics to
+  problems with more than two categories.
 \item
-  \emph{Regression metrics}: MSE, MAE, and the \(R^2\) score provide
-  complementary insights into prediction accuracy for continuous
+  \emph{Regression metrics:} MSE, MAE, and the \(R^2\) score provide
+  complementary perspectives on prediction accuracy for continuous
   outcomes.
 \end{itemize}
 
 Table~\ref{tbl-eval-metrics} provides a compact reference for the
-evaluation metrics discussed in this chapter. You may find this table
-helpful as a recurring guide throughout the rest of the book.
+evaluation metrics introduced in this chapter. It may serve as a
+recurring guide as you assess models in later chapters.
 
 \begin{table}
 
@@ -14630,18 +14632,14 @@ $R^2$ score & Regression & Proportion of variance explained by the model & To as
 \end{table}%
 
 There is no single metric that universally defines model quality.
-Evaluation must reflect the goals of the application, balancing
-trade-offs such as interpretability, fairness, and the costs of
-different types of errors. By mastering these strategies, you are now
-prepared to assess models critically, choose thresholds thoughtfully,
-and compare competing approaches with confidence. In the chapters ahead,
-we will apply these techniques repeatedly as we build, refine, and
-evaluate more advanced models.
-
-Now that you have a solid foundation in model evaluation, it is time to
-put it into practice. In the exercises that follow, you will use the
-\emph{bank} dataset to explore how these metrics behave in real-world
-scenarios.
+Effective evaluation reflects the goals of the application, balancing
+considerations such as interpretability, fairness, and the relative
+costs of different types of errors. By mastering these evaluation
+strategies, you are now prepared to assess models critically, choose
+thresholds thoughtfully, and compare competing approaches with
+confidence. In the exercises that follow, you will put these tools into
+practice using the \emph{bank} dataset, exploring how evaluation metrics
+behave in realistic modelling scenarios.
 
 \section{Exercises}\label{sec-ch8-exercises}
 
