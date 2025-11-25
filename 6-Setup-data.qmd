@@ -12,13 +12,15 @@ Prediction is very difficult, especially if it’s about the future.
 \end{chapterquote}
 :::
 
-::: {.content-visible when-format="html"}
-::: {.chapterquote}
+::::: {.content-visible when-format="html"}
+:::: chapterquote
 Prediction is very difficult, especially if it’s about the future.
 
-<div class="author">— Niels Bohr</div>
+::: author
+— Niels Bohr
 :::
-:::
+::::
+:::::
 
 Suppose a churn prediction model reports 95% accuracy, yet consistently fails to identify customers who actually churn. What went wrong? In many cases, the issue lies not in the algorithm itself but in how the data was prepared for modeling. Before reliable machine learning models can be built, the dataset must be not only clean but also properly structured to support learning, validation, and generalization.
 
@@ -78,11 +80,9 @@ Another critical reason for partitioning is to prevent *data leakage*, the inadv
 
 Figure [-@fig-modeling] summarizes the typical modeling process in supervised learning:
 
-1.  *Partition* the dataset and validate the split.
-
-2.  *Train* models on the training data.
-
-3.  *Evaluate* model performance on the test data.
+1. *Partition* the dataset and validate the split.
+2. *Train* models on the training data.
+3. *Evaluate* model performance on the test data.
 
 ```{r fig-modeling, echo = FALSE, out.width = "80%", fig.cap = "A general supervised learning process for building and evaluating predictive models. The 80–20 split ratio is a common default but may be adjusted based on the problem and dataset size."}
 knitr::include_graphics("images/ch6_partitioning.png")
@@ -96,9 +96,9 @@ Having established why partitioning is essential, we now turn to how it is imple
 
 Typical split ratios include 70–30, 80–20, or 90–10, depending on the dataset’s size and the modeling objectives. Both subsets include the same predictor variables and the outcome of interest, but only the training set's outcome values are used during model fitting. The test set remains untouched during training to avoid data leakage and provides a realistic benchmark for evaluating the model’s predictive performance.
 
-### Example: Train–Test Split in R {.unnumbered}
+### Implementing the Train–Test Split in R {.unnumbered}
 
-We illustrate the train–test split using R and the **liver** package. We return to the *churnCredit* dataset introduced in Chapter [-@sec-ch4-EDA-churn], where the goal is to predict customer churn using machine learning models (discussed in the next chapter). First, following data preparation step in Section [-@sec-ch4-EDA-churn] we load and prepare the dataset as follows:
+We illustrate the train–test split using R and the **liver** package. We return to the *churnCredit* dataset introduced in Chapter [-@sec-ch4-EDA-churn], where the goal is to predict customer churn using machine learning models (discussed in the next chapter). First, following the data preparation steps in Section [-@sec-ch4-EDA-churn], we load and prepare the dataset as follows:
 
 ```{r}
 library(liver)
@@ -108,14 +108,16 @@ data(churnCredit)
 churnCredit[churnCredit == "unknown"] <- NA
 churnCredit <- droplevels(churnCredit)
 
-library(Hmisc) 
+library(Hmisc)
 
 churnCredit$education <- impute(churnCredit$education, "random")
 churnCredit$income    <- impute(churnCredit$income, "random")
 churnCredit$marital   <- impute(churnCredit$marital, "random")
 ```
 
-The `partition()` function in the **liver** package provides a straightforward method to split a dataset based on a specified ratio. Below, we divide the dataset into 80% training and 20% test data:
+There are several ways to perform a train–test split in R, including functions from popular packages such as **rsample** or **caret**, or by writing custom sampling code in base R. In this book, we use the `partition()` function from the **liver** package because it provides a simple and consistent interface that supports the examples presented throughout the modeling chapters.
+
+The `partition()` function divides a dataset into subsets based on a specified ratio. Below, we split the dataset into 80 percent training and 20 percent test data:
 
 ```{r}
 set.seed(42)
@@ -128,13 +130,15 @@ test_set  = data_sets$part2
 test_labels = test_set$churn
 ```
 
-The use of `set.seed(42)` ensures *reproducibility*, meaning the same split will occur each time the code is run, a vital practice for ensuring reproducibility in model development and evaluation. The `test_labels` vector stores the actual target values from the test set and is used for evaluating model predictions. These labels must remain hidden during model training to avoid data leakage.
+The use of `set.seed(42)` ensures reproducibility, meaning the same split will occur each time the code is run. This is a vital practice for ensuring consistent model development and evaluation. The `test_labels` vector stores the actual target values from the test set and is used for evaluating model predictions. These labels must remain hidden during model training to avoid data leakage.
 
-Splitting data into training and test sets allows us to assess a model’s generalization performance, that is, how well it predicts new, unseen data. While the train–test split is widely used, it can yield variable results depending on how the data is divided. A more robust and reliable alternative is *cross-validation*, introduced in the next section.
+> *Try it yourself:* Using the `partition()` function, repeat the train–test split with a 70–30 ratio. Compare the sizes of the training and test sets using `nrow(train_set)` and `nrow(test_set)`. Reflect on how the choice of split ratio may influence model performance and stability.
 
-## Cross-Validation for Robust Performance Estimation {#sec-cross-validation}
+Splitting data into training and test sets allows us to assess a model’s generalization performance, that is, how well it predicts new, unseen data. While the train–test split is widely used, it can yield variable results depending on how the data is divided. A more robust and reliable alternative is cross-validation, introduced in the next section.
 
-While the train–test split is widely used for its simplicity, the resulting performance estimates can vary substantially depending on how the data is divided. Especially when working with smaller datasets. To obtain more stable and reliable estimates of a model’s generalization performance, *cross-validation* provides a valuable alternative.
+## Cross-Validation for Reliable Model Evaluation {#sec-cross-validation}
+
+While the train–test split is widely used for its simplicity, the resulting performance estimates can vary substantially depending on how the data is divided, especially when working with smaller datasets. To obtain more stable and reliable estimates of a model’s generalization performance, *cross-validation* provides an effective alternative.
 
 Cross-validation is a resampling method that offers a more comprehensive evaluation than a single train–test split. In *k*-fold cross-validation, the dataset is randomly partitioned into *k* non-overlapping subsets (folds) of approximately equal size. The model is trained on *k*–1 folds and evaluated on the remaining fold. This process is repeated *k* times, with each fold serving once as the validation set. The overall performance is then estimated by averaging the metrics across all *k* iterations. Common choices for *k* include 5 or 10, as illustrated in @fig-cross-validation.
 
@@ -142,38 +146,40 @@ Cross-validation is a resampling method that offers a more comprehensive evaluat
 knitr::include_graphics("images/ch6_cross_validation.png")
 ```
 
-Cross-validation is especially useful for comparing models or tuning hyperparameters. However, repeated use of the test set during model development can lead to *information leakage*, resulting in overly optimistic performance estimates. To avoid this, it is best practice to hold out a separate *test set* for final evaluation, using cross-validation exclusively within the *training set*. In this setup, model selection and tuning rely on the cross-validated results from the training data, while the final model is evaluated once on the untouched test set.
+Cross-validation is particularly useful for comparing models or tuning hyperparameters. However, using the test set repeatedly during model development can lead to information leakage, resulting in overly optimistic performance estimates. To avoid this, it is best practice to reserve a separate *test set* for final evaluation and apply cross-validation exclusively within the *training set*. In this setup, model selection and tuning rely on cross-validated results from the training data, while the final model is evaluated only once on the untouched test set.
 
-This approach is depicted in @fig-cross-validation-2. It eliminates the need for a fixed validation subset and makes more efficient use of the training data, while preserving an unbiased test set for final performance reporting.
+This approach is depicted in @fig-cross-validation-2. It eliminates the need for a fixed validation subset and makes more efficient use of the training data, while still preserving an unbiased test set for final performance reporting.
 
 ```{r fig-cross-validation-2, echo = FALSE, out.width = "80%", fig.cap = "Cross-validation applied within the training set. The test set is held out for final evaluation only. This strategy eliminates the need for a separate validation set and maximizes the use of available data for both training and validation."}
 knitr::include_graphics("images/ch6_cross_validation_2.png")
 ```
 
-Although more computationally intensive, k-fold cross-validation helps reduce the variance of performance estimates and is particularly advantageous when data is limited. It ensures that evaluation reflects a model’s ability to generalize, rather than its performance on a specific data split. For further details and implementation examples, see Chapter 5 of *An Introduction to Statistical Learning* [@james2013introduction].
+> *Try it yourself:* Using the `partition()` function, create a three-way split of the data, for example with a 70–15–15 ratio for the training, validation, and test sets. Compare the sizes of the resulting subsets using the `nrow()` function. Reflect on how introducing a separate validation set changes the data available for model training and how different allocation choices may influence model stability and performance.
 
-Partitioning data is a foundational step in predictive modeling. Yet even with a carefully designed split, it is important to verify whether the resulting subsets are representative of the original data. The next section addresses how to validate the quality of the partition before training begins.
+Although more computationally intensive, k-fold cross-validation reduces the variance of performance estimates and is particularly advantageous when data is limited. It provides a clearer picture of a model’s ability to generalize, rather than its performance on a single data split. For further details and implementation examples, see Chapter 5 of *An Introduction to Statistical Learning* [@james2013introduction].
 
-## How to Validate a Train-Test Split {#sec-ch6-validate-partition}
+Partitioning data is a foundational step in predictive modeling. Yet even with a carefully designed split, it is important to verify whether the resulting subsets are representative of the original dataset. The next section addresses how to evaluate the quality of the partition before training begins.
 
-How can we be sure that our train-test split truly represents the original dataset? After splitting the data, we must validate that the partition is statistically sound. A reliable split ensures that the training set reflects the broader population and that the test set mimics real-world deployment. Without this step, we risk building models that learn from biased data or fail to generalize.
+## Validating the Train–Test Split {#sec-ch6-validate-partition}
 
-Validation involves comparing the distributions of key variables, especially the target and influential predictors, across the training and testing sets. Since most datasets include many features, we usually focus on a subset that plays a central role in modeling. The statistical test we choose depends on the type of variable, as summarized in @tbl-partition-test.
+After partitioning the data, it is important to verify that the training and test sets are representative of the original dataset. A well-balanced split ensures that the training set reflects the broader population and that the test set provides a realistic assessment of model performance. Without this validation step, the resulting model may learn from biased data or fail to generalize in practice.
+
+Validating a split involves comparing the distributions of key variables—especially the target and important predictors—across the training and testing sets. Because many datasets contain numerous features, it is common to focus on a subset of variables that play a central role in modeling. The choice of statistical test depends on the variable type, as summarized in @tbl-partition-test.
 
 ::: {#tbl-partition-test .table}
-| Type of Features                    | Suggested Test    |
-|-------------------------------------|-------------------|
+
+| Type of Feature                     | Suggested Test    |
+| ----------------------------------- | ----------------- |
 | Binary                              | Two-sample Z-test |
 | Numerical                           | Two-sample t-test |
 | Categorical (with $> 2$ categories) | Chi-square test   |
 
-Suggested hypothesis tests (from @sec-ch5-statistics) for validating partitions, based on the type of target feature.
+Suggested hypothesis tests (from @sec-ch5-statistics) for validating partitions, based on the type of feature.
 :::
 
-Each test has specific assumptions. Parametric tests like the t-test and Z-test are most appropriate when sample sizes are large and distributions are approximately normal. For categorical features with more than two levels, the Chi-square test is the standard choice.
+Each test has specific assumptions. Parametric methods such as the t-test and Z-test are most appropriate when sample sizes are large and distributions are approximately normal. For categorical variables with more than two levels, the Chi-square test is the standard approach.
 
-Let us illustrate this with the *churn* dataset by checking whether the proportion of churners is consistent across the training and testing sets. The target variable, *churn* (indicating whether a customer has churned), is binary. To determine whether the training and testing sets have similar churn rates, we conduct a two-sample Z-test. Thus, the hypotheses are defined as follows:
-
+To illustrate the process, consider again the *churnCredit* dataset. We begin by evaluating whether the proportion of churners is consistent across the training and testing sets. Since the target variable *churnCredit* is binary, a two-sample Z-test is appropriate. The hypotheses are:
 $$
 \begin{cases}
 H_0:  \pi_{\text{churn, train}} = \pi_{\text{churn, test}} \\
@@ -194,11 +200,15 @@ test_churn <- prop.test(x = c(x1, x2), n = c(n1, n2))
 test_churn
 ```
 
-Here, $x_1$ and $x_2$ denote the number of churners in the training and testing sets, respectively; $n_1$ and $n_2$ are the corresponding sample sizes. The function `prop.test()` performs the two-sample Z-test and returns a *p*-value indicating whether the difference in proportions is statistically significant.
+Here, $x_1$ and $x_2$ represent the number of churners in the training and testing sets, respectively, and $n_1$ and $n_2$ denote the corresponding sample sizes. The `prop.test()` function carries out the two-sample Z-test and provides a *p*-value for assessing whether the observed difference in proportions is statistically meaningful.
 
-The *p*-value is `r round(test_churn$p.value, 3)`. Since this value is greater than the conventional significance level ($\alpha = 0.05$), we do not reject $H_0$. This indicates that the observed difference in churn rates is not statistically significant, suggesting that the data split is valid with respect to the target variable.
+The resulting *p*-value is `r round(test_churn$p.value, 3)`. Since this value exceeds the conventional significance level ($\alpha = 0.05$), we do not reject $H_0$. This indicates that the difference in churn rates is not statistically significant, suggesting that the split is balanced with respect to the target variable.
 
-Beyond the target variable, checking the distribution of key predictors helps detect imbalances that could bias the model. Unequal distributions in important features can lead the model to learn misleading or unrepresentative patterns. For instance, apply a *two-sample t-test* to compare means for numerical predictors such as `age` or `available.credit`, and use a *Chi-square test* for categorical variables like `education`. If `available.credit` is notably higher in the test set, a model trained on lower values may underpredict in deployment. Although it is rarely feasible to check every variable in high-dimensional datasets, focusing on known or selected predictors helps ensure a balanced and representative partition.
+Beyond the target, it is helpful to compare distributions of influential predictors. Imbalances among key numerical variables (e.g., `age` or `available.credit`) can be examined using two-sample t-tests, while differences in categorical variables (e.g., `education`) can be assessed using Chi-square tests. Detecting substantial discrepancies is important because unequal distributions can cause the model to learn misleading patterns. Although it is rarely feasible to test every variable in high-dimensional settings, examining a targeted subset provides a practical and informative check on the validity of the partition.
+
+> *Try it yourself:* Use a Chi-square test to evaluate whether the distribution of `income` differs between the training and testing sets. Create a contingency table with `table()` and apply `chisq.test()`. Reflect on how differences in income levels across the two sets might influence model training.
+
+> *Try it yourself:* Examine whether the mean of the numerical feature `transaction.amount.12` is consistent across the training and testing sets. Use the `t.test()` function with the two samples. Consider how imbalanced averages in key financial variables might affect predictions for new customers.
 
 ### What If the Partition Is Invalid? {.unnumbered}
 
@@ -226,7 +236,7 @@ Several strategies are commonly used to balance the training dataset and ensure 
 
 These techniques must be applied *only to the training set* to avoid data leakage. The best choice depends on factors such as dataset size, the degree of imbalance, and the algorithm being used.
 
-Let us walk through a concrete example using the *churn* dataset. The goal is to predict whether a customer has churned. First, we examine the distribution of the target variable in the training dataset:
+Let us walk through a concrete example using the *churnCredit* dataset. The goal is to predict whether a customer has churned. First, we examine the distribution of the target variable in the training dataset:
 
 ```{r}
 # Check the class distribution
@@ -446,19 +456,17 @@ With both categorical and numerical features now properly encoded and scaled, an
 
 ## Chapter Summary and Takeaways
 
-This chapter completed *Step 4 – Data Setup to Model* in the Data Science Workflow, preparing the dataset for valid, generalizable, and trustworthy model development.
+This chapter completed *Step 4: Data Setup to Model* in the Data Science Workflow and established the foundation for valid, generalizable, and trustworthy predictive modeling. We began by highlighting the importance of dividing data into training and testing sets. This separation is essential for reducing overfitting and for assessing how well a model is likely to perform on new data.
 
--   Partitioning data into training and testing sets was presented as a safeguard against overfitting and a means to simulate real-world prediction tasks.
+After creating the initial split, we examined how to validate its quality. Statistical tests applied to the target variable and key predictors helped verify that the two subsets were representative of the original dataset. Ensuring such balance supports reliable model evaluation and reduces the risk of biased conclusions.
 
--   Validating the train–test split ensured that both subsets were statistically representative, supporting reliable model evaluation.
+We then discussed several practical considerations that arise during data preparation. Addressing class imbalance is critical when working with skewed outcomes, because models trained on imbalanced data often underestimate the minority class. Techniques such as oversampling, undersampling, and class weighting help mitigate this issue. Encoding categorical features and scaling numerical variables further standardize the data, ensuring that all predictors contribute appropriately during model fitting.
 
--   Addressing class imbalance through techniques such as oversampling, undersampling, and class weighting improved model sensitivity to underrepresented outcomes.
+In larger projects, it is often useful to bundle preprocessing steps and model training into a unified workflow. In R, the **mlr3pipelines** package supports such pipelines by allowing users to chain together tasks such as scaling, encoding, feature selection, and model fitting. Although this book demonstrates each step explicitly, pipeline frameworks help prevent data leakage, improve reproducibility, and provide a structured way to manage complex modeling workflows. Readers seeking further guidance may consult *Applied Machine Learning Using mlr3 in R* by Bischl et al. [@bischl2024applied], which offers a comprehensive introduction to the mlr3 ecosystem.
 
--   Encoding categorical variables and scaling numerical features helped standardize data inputs, ensuring that all predictors contribute appropriately during model training.
+Unlike other chapters, this chapter does not include a standalone case study. Instead, the techniques introduced here (partitioning, validation, balancing, encoding, and scaling) are applied directly in the modeling chapters that follow. For example, the churn classification case study in Section [-@sec-ch7-knn-churn] demonstrates how these preparatory steps support the development of a robust classifier.
 
-Unlike other chapters in this book, this chapter does not include a dedicated case study. The techniques introduced here—partitioning, validation, balancing, and feature preparation—are integrated throughout the modeling chapters that follow. For instance, the churn classification case study in Section [-@sec-ch7-knn-churn] demonstrates how these steps are applied in practice.
-
-Together, these preparatory steps mitigate common risks such as biased evaluation, data leakage, and unfair comparisons between models. They provide a solid foundation for predictive modeling and ensure that model performance reflects genuine learning rather than artifacts of data structure. The next chapter builds on this foundation by introducing and evaluating classification models, beginning with *k*-Nearest Neighbors.
+Together, these components form a crucial foundation for predictive modeling. They reduce common risks such as biased evaluation, data leakage, and misleading comparisons between models. With these safeguards in place, the next chapter introduces classification models, beginning with *k*-Nearest Neighbors.
 
 ## Exercises {#sec-ch6-exercises}
 
@@ -478,7 +486,7 @@ This section combines *conceptual questions* and *applied programming exercises*
 
 6.  Why is it necessary to validate the partition after splitting the dataset? What could go wrong if the training and test sets are significantly different?
 
-7.  How would you test whether numerical features, such as `customer.calls` in the *churn* dataset, have similar distributions in both the training and testing sets?
+7.  How would you test whether numerical features, such as `age` in the *churnCredit* dataset, have similar distributions in both the training and testing sets?
 
 8.  If a dataset is highly imbalanced, why might a model trained on it fail to generalize well? Provide an example from a real-world domain where class imbalance is a serious issue.
 
