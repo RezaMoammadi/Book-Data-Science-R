@@ -25,7 +25,8 @@ inst_pkgs = load_pkgs = c(
   "Hmisc",   # for handling missing values
   "naniar",  # for visualizing missing values
   "ROSE",
-  "gganimate", # for animation in ch4
+  "gganimate",  # for animation in ch4
+  "ggExtra",   # for marginal plots in ch4
   "ggcorrplot", # for correlation plot in ch4
   "patchwork",  # for combining ggplots in ch10
   

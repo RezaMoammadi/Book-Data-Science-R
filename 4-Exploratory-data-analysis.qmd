@@ -719,19 +719,30 @@ By analysing combinations of variables, such as joint spending and usage, or spe
 
 ### Joint Patterns in Transaction Amount and Count {.unnumbered}
 
-Transaction activity has two important dimensions: how much customers spend and how often they use their card. The variables `transaction.amount.12` and `transaction.count.12` represent these behaviours. Examining them together provides insight into usage patterns that are not visible in univariate plots. A scatter plot is particularly suitable here because it displays both dimensions simultaneously.
+Transaction activity has two important dimensions: how much customers spend and how often they use their card. The variables `transaction.amount.12` and `transaction.count.12` represent these behaviours over a twelve-month period. Examining them together provides insight into usage patterns that are not visible in univariate plots. A scatter plot, enhanced with marginal histograms, is particularly useful here because it displays both the joint pattern and the separate distributions of each variable.
 
-```{r out.width = "85%"}
-ggplot(data = churnCredit) +
+The code below first constructs a base scatter plot using **ggplot2** and then applies the function `ggMarginal()` from the **ggExtra** package to add histograms along the horizontal and vertical axes:
+
+```{r out.width = "90%"}
+library(ggExtra)
+
+# Base scatter plot
+scatter_plot <- ggplot(data = churnCredit) +
   geom_point(aes(x = transaction.amount.12, y = transaction.count.12, 
-                 color = churn),
-             size = 0.2, alpha = 0.7) +
-  labs(x = "Transaction Amount", y = "Total Transaction Count (12 months)")
+                 color = churn), size = 0.2, alpha = 0.7) +
+  labs(x = "Transaction Amount", y = "Total Transaction Count (12 months)") +
+  theme(legend.position = "bottom")
+
+# Add marginal histograms
+ggMarginal(scatter_plot, type = "histogram", groupColour = TRUE, 
+           groupFill = TRUE, alpha = 0.6, size = 4)
 ```
 
-The scatter plot shows a clear positive association: customers who spend more also tend to make more transactions. Most observations fall along a broad diagonal region of moderate spending and transaction counts. Within this region, churners and non-churners overlap, although some areas appear to contain a higher proportion of churned accounts.
+The central scatter plot shows a clear positive association: customers who spend more also tend to make more transactions. Most observations fall within a broad diagonal region of moderate spending and transaction counts, where churners and non-churners largely overlap. The marginal histograms at the top and right of the figure summarise the distributions of `transaction.amount.12` and `transaction.count.12` separately, and they provide a quick visual comparison of usage levels between churned and active accounts.
 
-To make this clearer, we focus on two illustrative regions: customers with very low spending and those with moderate spending but relatively few transactions. These regions are extracted using the `subset()` function as follows:
+> *Try it yourself:* Replace `type = "histogram"` with `type = "density"` in the `ggMarginal()` function to add marginal density curves instead of histograms. Compare the two versions and consider which one better highlights the distribution of each variable.
+
+To examine specific patterns more closely, we focus on two illustrative regions: customers with very low spending and those with moderate spending but relatively few transactions. These regions are extracted using the `subset()` function as follows:
 
 ```{r out.width = "45%"}
 sub_churnCredit = subset(
@@ -749,9 +760,9 @@ ggplot(data = sub_churnCredit,
   geom_text(stat = "count", vjust = 0.4, size = 8) 
 ```
 
-Within this subset, the proportion of churners is noticeably higher than in the full dataset. These patterns suggest that low or inconsistent card usage (particularly when combined with infrequent transactions) is associated with an increased likelihood of churn.
+Within this subset, the proportion of churners is noticeably higher than in the full dataset. These patterns suggest that low or inconsistent card usage, particularly when combined with infrequent transactions, is associated with an increased likelihood of churn.
 
-From a modelling perspective, this example illustrates how interaction effects can be important. Neither transaction amount nor transaction count alone identifies these segments, but their combination highlights customers with elevated churn risk. From a business perspective, customers with low activity represent an opportunity for targeted re-engagement, such as usage incentives or personalised communication.
+From a modelling perspective, this example illustrates how interactions between predictors can be important. Neither transaction amount nor transaction count alone identifies these segments, but their combination highlights customers with elevated churn risk. From a business perspective, customers with low activity represent an opportunity for targeted re-engagement, for example through usage incentives or personalised communication.
 
 ### Card Category and Spending Patterns {.unnumbered}
 

@@ -244,7 +244,7 @@ window.Quarto = {
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./2-Intro-data-science.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Foundations of Data Science and Machine Learning</span></span></a>
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Foundations of Data Science and the Role of Machine Learning</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -1197,22 +1197,33 @@ Figure&nbsp;4.3: Scatterplot illustrating the correlation between Nobel Prize wi
 <p>Univariate and pairwise analyses provide important context, but real-world customer behaviour often emerges from the interaction of multiple variables. This section examines how financial activity and demographic factors combine to explain churn, helping identify customer groups with distinct risk profiles.</p>
 <p>By analysing combinations of variables, such as joint spending and usage, or spending differences across card categories, we obtain a more complete view of how customers engage with their accounts and how this relates to account closure.</p>
 <section id="joint-patterns-in-transaction-amount-and-count" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="joint-patterns-in-transaction-amount-and-count">Joint Patterns in Transaction Amount and Count</h3>
-<p>Transaction activity has two important dimensions: how much customers spend and how often they use their card. The variables <code>transaction.amount.12</code> and <code>transaction.count.12</code> represent these behaviours. Examining them together provides insight into usage patterns that are not visible in univariate plots. A scatter plot is particularly suitable here because it displays both dimensions simultaneously.</p>
+<p>Transaction activity has two important dimensions: how much customers spend and how often they use their card. The variables <code>transaction.amount.12</code> and <code>transaction.count.12</code> represent these behaviours over a twelve-month period. Examining them together provides insight into usage patterns that are not visible in univariate plots. A scatter plot, enhanced with marginal histograms, is particularly useful here because it displays both the joint pattern and the separate distributions of each variable.</p>
+<p>The code below first constructs a base scatter plot using <strong>ggplot2</strong> and then applies the function <code><a href="https://rdrr.io/pkg/ggExtra/man/ggMarginal.html">ggMarginal()</a></code> from the <strong>ggExtra</strong> package to add histograms along the horizontal and vertical axes:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">churnCredit</span><span class="op">)</span> <span class="op">+</span></span>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/daattali/ggExtra">ggExtra</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Base scatter plot</span></span>
+<span><span class="va">scatter_plot</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">churnCredit</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">transaction.amount.12</span>, y <span class="op">=</span> <span class="va">transaction.count.12</span>, </span>
-<span>                 color <span class="op">=</span> <span class="va">churn</span><span class="op">)</span>,</span>
-<span>             size <span class="op">=</span> <span class="fl">0.2</span>, alpha <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Transaction Amount"</span>, y <span class="op">=</span> <span class="st">"Total Transaction Count (12 months)"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span>                 color <span class="op">=</span> <span class="va">churn</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">0.2</span>, alpha <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Transaction Amount"</span>, y <span class="op">=</span> <span class="st">"Total Transaction Count (12 months)"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"bottom"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Add marginal histograms</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/ggExtra/man/ggMarginal.html">ggMarginal</a></span><span class="op">(</span><span class="va">scatter_plot</span>, type <span class="op">=</span> <span class="st">"histogram"</span>, groupColour <span class="op">=</span> <span class="cn">TRUE</span>, </span>
+<span>           groupFill <span class="op">=</span> <span class="cn">TRUE</span>, alpha <span class="op">=</span> <span class="fl">0.6</span>, size <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="4-Exploratory-data-analysis_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:85.0%" data-fig-pos="H"></p>
+<figure class="figure"><p><img src="4-Exploratory-data-analysis_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%" data-fig-pos="H"></p>
 </figure>
 </div>
 </div>
 </div>
-<p>The scatter plot shows a clear positive association: customers who spend more also tend to make more transactions. Most observations fall along a broad diagonal region of moderate spending and transaction counts. Within this region, churners and non-churners overlap, although some areas appear to contain a higher proportion of churned accounts.</p>
-<p>To make this clearer, we focus on two illustrative regions: customers with very low spending and those with moderate spending but relatively few transactions. These regions are extracted using the <code><a href="https://rdrr.io/r/base/subset.html">subset()</a></code> function as follows:</p>
+<p>The central scatter plot shows a clear positive association: customers who spend more also tend to make more transactions. Most observations fall within a broad diagonal region of moderate spending and transaction counts, where churners and non-churners largely overlap. The marginal histograms at the top and right of the figure summarise the distributions of <code>transaction.amount.12</code> and <code>transaction.count.12</code> separately, and they provide a quick visual comparison of usage levels between churned and active accounts.</p>
+<blockquote class="blockquote">
+<p><em>Try it yourself:</em> Replace <code>type = "histogram"</code> with <code>type = "density"</code> in the <code><a href="https://rdrr.io/pkg/ggExtra/man/ggMarginal.html">ggMarginal()</a></code> function to add marginal density curves instead of histograms. Compare the two versions and consider which one better highlights the distribution of each variable.</p>
+</blockquote>
+<p>To examine specific patterns more closely, we focus on two illustrative regions: customers with very low spending and those with moderate spending but relatively few transactions. These regions are extracted using the <code><a href="https://rdrr.io/r/base/subset.html">subset()</a></code> function as follows:</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">sub_churnCredit</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html">subset</a></span><span class="op">(</span></span>
 <span>  <span class="va">churnCredit</span>,</span>
@@ -1234,8 +1245,8 @@ Figure&nbsp;4.3: Scatterplot illustrating the correlation between Nobel Prize wi
 </div>
 </div>
 </div>
-<p>Within this subset, the proportion of churners is noticeably higher than in the full dataset. These patterns suggest that low or inconsistent card usage (particularly when combined with infrequent transactions) is associated with an increased likelihood of churn.</p>
-<p>From a modelling perspective, this example illustrates how interaction effects can be important. Neither transaction amount nor transaction count alone identifies these segments, but their combination highlights customers with elevated churn risk. From a business perspective, customers with low activity represent an opportunity for targeted re-engagement, such as usage incentives or personalised communication.</p>
+<p>Within this subset, the proportion of churners is noticeably higher than in the full dataset. These patterns suggest that low or inconsistent card usage, particularly when combined with infrequent transactions, is associated with an increased likelihood of churn.</p>
+<p>From a modelling perspective, this example illustrates how interactions between predictors can be important. Neither transaction amount nor transaction count alone identifies these segments, but their combination highlights customers with elevated churn risk. From a business perspective, customers with low activity represent an opportunity for targeted re-engagement, for example through usage incentives or personalised communication.</p>
 </section><section id="card-category-and-spending-patterns" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="card-category-and-spending-patterns">Card Category and Spending Patterns</h3>
 <p>The variable <code>card.category</code> divides customers into four product tiers (blue, silver, gold, and platinum). The variable <code>transaction.amount.12</code> measures the total amount spent over the past twelve months. Examining these variables together provides insight into how card tier relates to spending behaviour.</p>
 <p>Because <code>transaction.amount.12</code> is continuous and <code>card.category</code> is categorical, density plots are a natural choice. They highlight differences in the shape, centre, and spread of spending distributions across card tiers.</p>
