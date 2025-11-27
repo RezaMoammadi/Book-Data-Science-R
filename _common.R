@@ -27,6 +27,7 @@ inst_pkgs = load_pkgs = c(
   "ROSE",
   "gganimate",  # for animation in ch4
   "ggExtra",   # for marginal plots in ch4
+  "plotly",    # for interactive plots in ch4
   "ggcorrplot", # for correlation plot in ch4
   "patchwork",  # for combining ggplots in ch10
   
