@@ -830,17 +830,17 @@ my_list[[2]]
 
 ## How to Merge Data in R
 
-In data analysis, information is often distributed across multiple tables rather than stored in a single file. For example, customer attributes may be stored separately from transaction records, or survey responses may be split across different sources. Merging datasets allows related information to be combined into a single data frame for analysis. As soon as real-world datasets are involved, merging becomes a practical and essential skill, since the information needed for analysis rarely arrives in a single, fully integrated table.
+In real-world data analysis, information is often distributed across multiple tables rather than stored in a single file. For example, customer attributes may be stored separately from transaction records, or survey responses may be split across different data sources. Merging datasets allows related information to be combined into a single data frame, making it possible to perform coherent analysis. As soon as realistic datasets are involved, merging becomes an essential skill, since the data required for analysis rarely arrive in a fully integrated form.
 
-In R, merging is based on the idea of *keys*: columns that identify which rows in one table correspond to rows in another. A join combines rows by matching values in these key columns, and the type of join determines which rows are retained when matches are incomplete.
+In R, merging relies on the concept of *keys*: columns that identify which rows in one table correspond to rows in another. A join combines rows by matching values in these key columns, and the type of join determines which observations are retained when matches are incomplete.
 
-In base R, the function `merge()` provides a flexible way to join two data frames using one or more shared columns:
+In base R, the `merge()` function provides a flexible way to join two data frames using one or more shared columns:
 
-``` r
+```r
 merge(x = data_frame1, y = data_frame2, by = "column_name")
 ```
 
-Here, `x` and `y` are the data frames to be merged, and `by` specifies the column or columns used as keys. If multiple columns are used for matching, `by` can be a character vector. For a successful merge, the key columns must exist in both data frames and should have compatible data types.
+Here, `x` and `y` are the data frames to be merged, and `by` specifies the column or columns used as keys. If multiple columns are used, `by` can be a character vector. For a successful merge, the key columns must exist in both data frames and should have compatible data types.
 
 Consider the following example data frames:
 
@@ -855,29 +855,37 @@ df2 <- data.frame(id  = c(3, 4, 5, 6),
                   job = c("analyst", "manager", "developer", "designer"))
 ```
 
-Both data frames contain an `id` column, which will be used as the key for merging. They also share a column named `age`. When columns other than the key appear in both data frames, R automatically renames them in the merged result (for example, `age.x` and `age.y`) to avoid ambiguity.
+Both data frames contain an `id` column, which will be used as the merge key. They also share a column named `age`. When non-key columns appear in both data frames, R automatically renames them in the merged result (for example, `age.x` and `age.y`) to avoid ambiguity.
 
-An *inner join* keeps only rows with matching key values in both data frames:
+An *inner join* retains only rows with matching key values in both data frames:
 
 ```{r}
 merged_df <- merge(x = df1, y = df2, by = "id")
 merged_df
 ```
 
-In this case, only observations with `id` values present in both `df1` and `df2` are retained.
+In this case, only observations with `id` values present in both `df1` and `df2` are included in the result.
 
-A *left join* keeps all rows from the first data frame (`df1`) and adds matching information from the second data frame (`df2`). This is achieved by setting `all.x = TRUE`:
+A *left join* retains all rows from the first data frame (`df1`) and adds matching information from the second data frame (`df2`). This is achieved by setting `all.x = TRUE`:
 
 ```{r}
 merged_df_left <- merge(x = df1, y = df2, by = "id", all.x = TRUE)
 merged_df_left
 ```
 
-Other common options include `all.y = TRUE`, which performs a *right join* by keeping all rows from `df2`, and `all = TRUE`, which performs a *full join* by keeping all rows from both data frames. When a row in one data frame has no matching row in the other, R inserts `NA` values in the unmatched columns.
+Additional options include `all.y = TRUE`, which performs a *right join* by retaining all rows from `df2`, and `all = TRUE`, which performs a *full join* by retaining all rows from both data frames. When no match is found for a given row, R inserts `NA` values in the corresponding columns.
 
-As a general best practice, it is advisable to check the number of rows before and after a merge. Unexpected changes in row counts or the appearance of many `NA` values may indicate mismatched keys, missing values, or differences in column types.
+Figure [-@fig-ch1-merging] provides a visual overview of these join types. It illustrates how observations unique to each data frame and those shared between them are combined under inner, left, right, and full joins, helping clarify why missing values may appear in the merged result.
 
-In addition to base R, the **dplyr** package provides join functions such as `left_join()`, `right_join()`, and `full_join()`. These functions use explicit names for join types and integrate naturally with pipe-based workflows. They are introduced in later chapters when working within the tidyverse style.
+```{r fig-ch1-merging, echo = FALSE, out.width = "70%"}
+#| fig-cap: "Illustration of inner, left, right, and full joins, showing how rows are retained or discarded based on shared key values."
+
+knitr::include_graphics("images/ch1_merging.png")
+```
+
+As a general best practice, it is advisable to check the number of rows before and after a merge. Unexpected changes in row counts or a large number of missing values may indicate mismatched keys, duplicate identifiers, or differences in column types.
+
+In addition to base R, the **dplyr** package provides join functions such as `left_join()`, `right_join()`, and `full_join()`. These functions use explicit names for join types and integrate naturally with pipe-based workflows. They are introduced in later chapters, where data manipulation is explored in greater depth within the tidyverse framework.
 
 ## Data Visualization in R {#sec-ch1-visualization}
 
