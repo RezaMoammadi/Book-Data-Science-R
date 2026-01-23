@@ -22,44 +22,33 @@ Everything should be made as simple as possible, but not simpler.
 ::::
 :::::
 
-How can a company estimate the impact of digital ad spending on daily sales? How do age, income, and smoking habits relate to healthcare costs? Can we predict housing prices from a home’s age, size, and location? These questions are central to regression analysis as one of the most powerful and widely used tools in data science. Regression models help us understand relationships between variables, uncover patterns, and make predictions grounded in evidence.
+How can a company estimate the impact of digital advertising on daily sales? How do age, income, and smoking habits relate to healthcare costs? Can housing prices be predicted from a home’s age, size, and location? Questions such as these lie at the heart of regression analysis, one of the most widely used tools in data science. Regression models allow us to quantify relationships between variables, assess their strength and direction, and generate predictions grounded in observed data.
 
-The roots of regression analysis can be traced back to the early 1700s, when [Isaac Newton](https://en.wikipedia.org/wiki/Isaac_Newton)’s method of fluxions laid the mathematical groundwork for continuous change, concepts that underpin modern optimization and calculus. The term *regression* was introduced by Sir Francis Galton in 1886 to describe how the heights of offspring tend to regress toward the mean height of their parents. Its mathematical foundations were later formalized by Legendre and Gauss through the method of least squares. What began as an observation in heredity has since evolved into a powerful tool for modeling relationships and making predictions from data. Thanks to advances in computing and tools like R, regression techniques are now scalable and accessible for solving complex, real-world problems.
+The origins of regression analysis date back to the late nineteenth century, when Sir Francis Galton introduced the term *regression* to describe how offspring heights tend to move toward the population mean. Its mathematical foundations were later formalized by Legendre and Gauss through the method of least squares, establishing a systematic approach for estimating relationships from data. What began as a study of heredity has since evolved into a central framework for modeling, inference, and prediction across a wide range of scientific and applied domains. Advances in computing and tools such as R have further expanded the practical reach of regression methods, making them accessible for large-scale and complex data analysis.
 
-Across domains such as economics, medicine, and engineering, regression models support data-driven decisions, whether estimating the impact of advertising on sales, predicting housing prices, or identifying risk factors for disease. As Charles Wheelan writes in *Naked Statistics* [@wheelan2013naked], *"Regression modeling is the hydrogen bomb of the statistics arsenal."* Used wisely, it can guide powerful decisions; misapplied, it can produce misleading conclusions. A thoughtful approach is essential to ensure that findings are valid, actionable, and aligned with the goals of a data science project.
+Today, regression models play a critical role in fields such as economics, medicine, engineering, and business analytics. They are used to estimate causal effects, predict future outcomes, and identify risk factors that inform decision-making. As Charles Wheelan notes in *Naked Statistics* [@wheelan2013naked], *“Regression modeling is the hydrogen bomb of the statistics arsenal.”* Used carefully, regression can provide powerful insights; used uncritically, it can lead to misleading conclusions. Sound regression analysis therefore requires both statistical rigor and thoughtful interpretation.
 
-In this chapter, we continue building upon the *Data Science Workflow* introduced in Chapter [-@sec-ch2-intro-data-science] and illustrated in @fig-ch2_DSW. So far, our journey has included data preparation, exploratory analysis, and the application of two classification algorithms, *k-Nearest Neighbors* (Chapter [-@sec-ch7-classification-knn]) and *Naive Bayes* (Chapter [-@sec-ch9-bayes]), followed by tools for evaluating predictive performance (Chapter [-@sec-ch8-evaluation]). As introduced in Section [-@sec-ch2-machine-learning], supervised learning includes both classification and regression tasks. Regression models expand our ability to predict numeric outcomes and understand relationships among variables.
+In this chapter, we build on the *Data Science Workflow* introduced in Chapter [-@sec-ch2-intro-data-science] and illustrated in @fig-ch2_DSW. Earlier chapters focused on data preparation, exploratory analysis, and classification methods such as k-Nearest Neighbors (Chapter [-@sec-ch7-classification-knn]) and Naive Bayes (Chapter [-@sec-ch9-bayes]), along with tools for evaluating predictive performance (Chapter [-@sec-ch8-evaluation]). Regression extends this workflow to supervised learning problems where the response variable is numeric, enabling both prediction and explanation.
 
-This chapter also connects to the statistical foundation developed in Chapter [-@sec-ch5-statistics], especially Section [-@sec-ch5-correlation-test], which introduced correlation analysis and inference. Regression extends those ideas by quantifying relationships while accounting for multiple variables and allowing for formal hypothesis testing about the effects of specific predictors.
+This chapter also connects directly to the statistical foundations developed in Chapter [-@sec-ch5-statistics], particularly the discussion of correlation and inference in Section [-@sec-ch5-correlation-test]. Regression generalizes these ideas by quantifying relationships while accounting for multiple predictors and by supporting formal hypothesis testing about individual effects within a multivariable framework.
 
 ### What This Chapter Covers {.unnumbered}
 
-This chapter builds on your knowledge of the data science workflow and previous chapters on classification, model evaluation, and statistical inference. While earlier chapters focused on classification tasks, such as predicting churn or spam, regression models help us answer questions where the outcome is numeric and continuous.
+This chapter develops regression analysis as a core modeling framework within the data science workflow. While earlier chapters emphasized classification tasks, regression models address problems where the outcome is numeric and continuous, such as revenue, cost, or price.
 
-You will begin by learning the fundamentals of simple linear regression, then extend to multiple regression and generalized linear models (GLMs), which include logistic and Poisson regression. You will also explore polynomial regression as a bridge to non-linear modeling. Along the way, we will use real-world datasets, including *marketing*, *house*, and *insurance*, to ground the techniques in practical applications.
+We begin with simple linear regression to establish fundamental concepts and intuition. The discussion then extends to multiple regression and generalized linear models, including logistic and Poisson regression, which allow regression ideas to be applied to binary and count outcomes. Polynomial regression is introduced as a practical extension for modeling non-linear relationships while preserving interpretability.
 
-You will also learn how to check model assumptions, evaluate regression performance, and select the most appropriate predictors using tools such as residual analysis and stepwise selection. These methods are introduced not just as statistical techniques, but as essential components of sound data-driven decision-making.
+Throughout the chapter, we work with real-world datasets, including *marketing*, *house*, and *insurance*, to illustrate how regression models are built, interpreted, and evaluated in practice. We also examine how to assess model assumptions, evaluate performance, and select predictors using tools such as residual analysis and stepwise regression.
 
-By the end of this chapter, you will be equipped to build, interpret, and evaluate regression models in R, and to understand when to use linear, generalized, or non-linear approaches depending on the nature of the data and modeling goals. We begin with the most fundamental regression technique: simple linear regression, which lays the groundwork for more advanced models introduced later in the chapter. These models will deepen your understanding of both prediction and explanation in data science.
+By the end of this chapter, you will be able to build, interpret, and critically evaluate regression models in R, and to distinguish between linear, generalized, and non-linear approaches based on modeling goals and data characteristics. We begin with simple linear regression, which provides the foundation for the more advanced models developed later in the chapter.
 
 ## Simple Linear Regression {#sec-simple-regression}
 
-Simple linear regression is the most fundamental form of regression modeling. It allows us to quantify the relationship between a *single predictor* and a *response variable*. By focusing on one predictor at a time, we develop an intuitive understanding of how regression models operate, how they estimate effects, assess fit, and make predictions, before progressing to more complex models with multiple predictors.
+Simple linear regression is the most fundamental form of regression modeling. It provides a formal framework for quantifying the relationship between a *single predictor* and a *response variable*. By examining one predictor at a time, we build intuition about how regression models estimate effects, evaluate fit, and generate predictions, before extending these ideas to models with multiple predictors.
 
-To illustrate simple linear regression in practice, we use the *marketing* dataset from the **liver** package. This dataset contains *daily digital marketing metrics* and their associated *revenue outcomes*, making it a realistic and relevant example. The data include key performance indicators (KPIs) such as advertising expenditure, user engagement, and transactional outcomes.
+To illustrate these concepts, we use the `marketing` dataset from the **liver** package. This dataset records daily digital marketing activity alongside corresponding revenue outcomes, making it well suited for studying the relationship between advertising effort and financial performance. The variables capture key aspects of an online marketing campaign, including spending, user engagement, and conversion behavior.
 
-The dataset consists of 40 observations and 8 variables:
-
--   `revenue`: Total daily revenue (response variable).
--   `spend`: Daily expenditure on pay-per-click (PPC) advertising.
--   `clicks`: Number of clicks on advertisements.
--   `impressions`: Number of times ads were displayed to users.
--   `transactions`: Number of completed transactions per day.
--   `click.rate`: Click-through rate (CTR), calculated as the proportion of impressions resulting in clicks.
--   `conversion.rate`: Conversion rate, representing the proportion of clicks leading to transactions.
--   `display`: Whether a display campaign was active (`yes` or `no`).
-
-We begin by loading the dataset and examining its structure:
+We begin by loading the dataset and inspecting its structure:
 
 ```{r}
 library(liver)
@@ -69,50 +58,47 @@ data(marketing, package = "liver")
 str(marketing)
 ```
 
-The dataset contains `r ncol(marketing)` variables and `r nrow(marketing)` observations. The response variable, `revenue`, is continuous, while the remaining `r ncol(marketing) - 1` variables serve as potential predictors.
+The dataset contains `r ncol(marketing)` variables and `r nrow(marketing)` observations. The response variable, `revenue`, is continuous, while the other variables serve as potential predictors. The variables are summarized as follows:
 
-In the following section, we explore the relationship between advertising spend and revenue to determine whether a linear model is appropriate.
+-   `revenue`: Total daily revenue (response variable).
+-   `spend`: Daily expenditure on pay-per-click (PPC) advertising.
+-   `clicks`: Number of clicks on advertisements.
+-   `impressions`: Number of times ads were displayed to users.
+-   `transactions`: Number of completed transactions per day.
+-   `click_rate`: Click-through rate (CTR), calculated as the proportion of impressions resulting in clicks.
+-   `conversion_rate`: Conversion rate, representing the proportion of clicks leading to transactions.
+-   `display`: Whether a display campaign was active (`yes` or `no`).
 
-### Exploring Relationships in the Data {.unnumbered}
+To motivate and justify a regression model, it is essential to explore the relationships between variables. This exploratory step, introduced earlier in the data science workflow, helps assess key modeling assumptions such as linearity and highlights predictors that may be strongly associated with the response. It also provides an initial view of how variables relate to one another, revealing patterns, group differences, or potential anomalies.
 
-Before constructing a regression model, it is important to explore the relationships between variables. This step helps verify modeling assumptions, such as linearity, and identify strong predictors. It also provides a first look at how the variables interact, revealing potential patterns or anomalies.
-
-A concise and effective way to examine pairwise relationships is with the `pairs.panels()` function from the **psych** package, which displays correlations, scatterplots, and histograms in a single matrix:
+A concise way to examine pairwise relationships is the `pairs.panels()` function from the **psych** package, which combines correlation coefficients, scatter plots, and marginal distributions in a single display:
 
 ```{r, out.width = "100%"}
 library(psych)
 
 pairs.panels(
   marketing[, -4],
-  bg = c("#F4A582", "#92C5DE")[marketing$display + 1],  # color by display group
-  pch = 21,                  # solid points without border
-  col = NA, 
-  smooth = FALSE,            # no regression line
-  ellipses = FALSE,          # no correlation ellipse
-  hist.col = "#CCEBC5",      # muted green histogram fill
+  bg = c("#F4A582", "#92C5DE")[marketing$display + 1],  # color by display
+  pch = 21,
+  col = NA,
+  smooth = FALSE,
+  ellipses = FALSE,
+  hist.col = "#CCEBC5",
   main = "Pairwise Relationships in the 'marketing' Data"
 )
 ```
 
-Here, we exclude the binary variable `display` (column 4) from the matrix and use it only to color the points, distinguishing the two groups (orange for 0 and blue for 1). The resulting visualization presents:
+In this visualization, the binary variable `display` (column 4) is excluded from the matrix itself and used only to color the observations, allowing differences between display and non-display days to be visually distinguished. The matrix presents correlation coefficients in the upper triangle, scatter plots in the lower triangle, and histograms along the diagonal.
 
--   *Correlation coefficients* (upper triangle), summarizing the strength of linear associations between variables.
-
--   *Scatter plots* (lower triangle), showing pairwise relationships and group patterns.
-
--   *Histograms* (diagonal), illustrating the distribution of each variable.
-
-From the correlation coefficients, we observe that `spend` and `revenue` exhibit a strong positive correlation of `r round(cor(marketing$spend, marketing$revenue), 2)`. This indicates that higher advertising expenditure is generally associated with higher revenue, suggesting that `spend` is a promising predictor for modeling `revenue`. This finding is consistent with the type of linear association discussed in Section [-@sec-ch5-correlation-test], where we explored how to quantify and test correlations between numeric variables.
-
-In the next section, we formalize this relationship using a *simple linear regression model*.
+From the correlation coefficients, we observe a strong positive association between `spend` and `revenue`, with a correlation of `r round(cor(marketing$spend, marketing$revenue), 2)`. This suggests that higher advertising expenditure tends to be associated with higher revenue, making `spend` a natural candidate for further modeling. This observation aligns with the discussion of correlation and linear association in Section [-@sec-ch5-correlation-test], where we introduced correlation as a descriptive measure of association. In the next section, we move beyond exploratory analysis and formalize this relationship using a simple linear regression model.
 
 ### Fitting a Simple Linear Regression Model {.unnumbered}
 
-A logical starting point in regression analysis is to examine the relationship between a single predictor and the response variable. This helps build an intuitive understanding of how one variable influences another before moving on to more complex models. In this case, we explore how advertising expenditure (`spend`) affects daily revenue (`revenue`) using a simple linear regression model.
+A natural starting point in regression analysis is to model the relationship between a single predictor and a response variable. This setting allows us to focus on how one variable relates to another and to develop intuition for how regression models quantify effects, before extending these ideas to more complex models. Here, we examine how advertising expenditure (`spend`) is associated with daily revenue (`revenue`) using a simple linear regression model.
 
-Before fitting the model, it is helpful to visualize the relationship between the two variables to assess whether a linear assumption is appropriate. A scatter plot with a fitted least-squares regression line provides insight into the strength and direction of the association:
+Before fitting the model, it is useful to visualize the relationship between the two variables to assess whether a linear assumption is reasonable. A scatter plot with a fitted least-squares regression line provides a first indication of the strength and direction of the association:
 
-```{r fig-scoter-plot-simple-reg, echo = FALSE, out.width = "80%", fig.cap = "Scatter plot of daily revenue (euros) versus daily spend (euros) for 40 observations, with the fitted least-squares regression line (orange) showing the linear relationship."}
+```{r fig-scatter-plot-simple-reg, echo = FALSE, out.width = "80%", fig.cap = "Scatter plot of daily revenue (euros) versus daily spend (euros) for 40 observations, with the fitted least-squares regression line (orange) showing the linear relationship."}
 
 ggplot(marketing, aes(x = spend, y = revenue)) +
   geom_point(color = "#377EB8", alpha = 0.7) +
@@ -124,23 +110,16 @@ ggplot(marketing, aes(x = spend, y = revenue)) +
   ) 
 ```
 
-@fig-scoter-plot-simple-reg shows the empirical relationship between `spend` and `revenue` in the *marketing* dataset. The scatter plot suggests a positive association, indicating that increased advertising expenditure is generally linked to higher revenue, a pattern consistent with a linear relationship.
+@fig-scatter-plot-simple-reg shows a clear positive association between `spend` and `revenue` in the `marketing` dataset, suggesting that higher advertising expenditure is generally associated with higher revenue. This pattern is consistent with a linear relationship and motivates formal modeling.
 
-We model this association mathematically using a *simple linear regression model*, defined as: $$
+We represent this relationship using a *simple linear regression model*: $$
 \hat{y} = b_0 + b_1 x,
-$$ where:
+$$ where $\hat{y}$ denotes the predicted value of the response variable (`revenue`), $x$ is the predictor (`spend`), $b_0$ is the intercept, and $b_1$ is the slope. The slope $b_1$ quantifies the expected change in revenue associated with a one-unit increase in advertising spend.
 
--   $\hat{y}$ is the predicted value of the response variable (`revenue`),
-
--   $x$ is the predictor variable (`spend`),
-
--   $b_0$ is the intercept, representing the estimated revenue when no money is spent, and
-
--   $b_1$ is the slope, indicating the expected change in revenue for a one-unit increase in `spend`.
-
-To deepen your intuition, @fig-simple-regression provides a *conceptual visualization* of this model. The red line shows the fitted regression line, the blue points represent observed data, and the vertical line illustrates a residual (error), calculated as the difference between the observed value $y_i$ and its predicted value $\hat{y}_i = b_0 + b_1 \times x_i$. Residuals quantify how much the model’s predictions deviate from actual outcomes.
+To build further intuition, @fig-simple-regression presents a conceptual illustration of the model. The fitted regression line summarizes the systematic relationship between the variables, while the vertical distance between an observed value $y_i$ and its prediction $\hat{y}_i = b_0 + b_1 x_i$ represents a *residual*. Residuals capture the portion of the response not explained by the model.
 
 ```{r fig-simple-regression, echo = FALSE, out.width = "90%", fig.cap = "Conceptual view of a simple regression model: the red line shows the fitted regression line, blue points represent observed data, and the vertical line illustrates a residual (error), calculated as the difference between the observed value and its predicted value."}
+
 knitr::include_graphics("images/ch10_simple-regression.png")
 ```
 
@@ -148,53 +127,45 @@ In the next subsection, we estimate the regression coefficients in R and interpr
 
 ### Fitting the Simple Regression Model in R {.unnumbered}
 
-Now that we understand the logic behind simple linear regression, let us put theory into practice. To estimate the regression coefficients, we use the `lm()` function in R, which fits a linear model using the least squares method. This function is part of base R, so there is no need to install any additional packages. Importantly, `lm()` works for both *simple* and *multiple* regression models, making it a flexible tool we will continue using in the upcoming sections.
+Having established the conceptual form of a simple linear regression model, we now estimate its parameters using R. To do so, we use the `lm()` function, which fits linear models by ordinary least squares. This function is part of base R and will be used throughout the chapter for both simple and multiple regression models.
 
-The general syntax for fitting a regression model is:
+The general syntax for fitting a linear regression model is:
 
 ```{r eval = FALSE}
 lm(response_variable ~ predictor_variable, data = dataset)
 ```
 
-In our case, we model `revenue` as a function of `spend`:
+In our case, we model daily revenue as a function of advertising spend:
 
 ```{r}
 simple_reg = lm(revenue ~ spend, data = marketing)
 ```
 
-Once the model is fitted, we can summarize the results using the `summary()` function:
+Once the model is fitted, the `summary()` function provides a compact overview of the estimated model:
 
 ```{r}
 summary(simple_reg)
 ```
 
-This output provides rich information about the model. At its core is the regression equation: $$
-\widehat{\text{revenue}} = `r round(simple_reg$coefficients[1], 2)` + `r round(simple_reg$coefficients[2], 2)` \times \text{spend},
-$$ where:
+At the core of this output is the estimated regression equation: $$
+\widehat{\text{revenue}} = `r round(simple_reg$coefficients[1], 2)` + `r round(simple_reg$coefficients[2], 2)` \times \text{spend}.
+$$
 
--   The *intercept* ($b_0$) is `r round(simple_reg$coefficients[1], 2)`, representing the estimated revenue when no money is spent on advertising.
+The intercept ($b_0$) represents the estimated daily revenue when no advertising spend is incurred, while the slope ($b_1$) quantifies the expected change in revenue associated with a one-euro increase in advertising expenditure. In this model, the estimated slope indicates that each additional euro spent on advertising is associated with an average increase of approximately `r round(simple_reg$coefficients[2], 2)` euros in revenue.
 
--   The *slope* ($b_1$) is `r round(simple_reg$coefficients[2], 2)`, indicating that for each additional euro spent, revenue is expected to increase by about `r round(simple_reg$coefficients[2], 2)` euros.
+Beyond the point estimates, the summary output provides information that supports statistical inference and model interpretation. The standard errors reflect the uncertainty associated with each coefficient estimate, while the reported *t*-statistics and *p*-values assess whether the estimated effects differ meaningfully from zero. In this case, the small *p*-value for the slope provides strong evidence of a statistically significant association between advertising spend and revenue.
 
-But there is more to unpack. The `summary()` output also reports several diagnostics that help us assess the model’s reliability:
+The summary also reports measures of overall model fit. The coefficient of determination, $R^2 =$ `r round(summary(simple_reg)$r.squared, 3)`, indicates that approximately `r round(summary(simple_reg)$r.squared * 100, 1)`% of the variability in daily revenue is accounted for by the linear model using advertising spend as a predictor. The *residual standard error (RSE)* provides an estimate of the typical size of prediction errors, measured in the same units as the response variable. Here, $RSE =$ `r round(summary(simple_reg)$sigma, 2)`.
 
--   *Estimate*: These are the regression coefficients, how much the response changes with a unit change in the predictor.
+Taken together, these results suggest that advertising expenditure is both a statistically significant and practically relevant predictor of revenue in this dataset. Model estimation, however, is only the first step. In the following sections, we examine how to use the fitted model for prediction, analyze residuals, and assess whether the assumptions underlying linear regression are adequately satisfied.
 
--   *Standard error*: Reflects the precision of the coefficient estimates. Smaller values indicate more certainty.
-
--   *t-value* and *p-value*: Help assess whether the coefficients are statistically different from zero. A small *p*-value (typically less than 0.05) implies a meaningful relationship.
-
--   *Multiple R-squared* ($R^2$): Indicates how well the model explains the variation in `revenue`. In our case, $R^2 =$ `r round(summary(simple_reg)$r.squared, 3)`, meaning that *`r round(summary(simple_reg)$r.squared, 3) * 100`% of the variance in revenue is explained by advertising spend*.
-
--   *Residual standard error (RSE)*: Measures the average deviation of predictions from actual values. Here, $RSE =$ `r round(sqrt(sum(simple_reg$residuals^2)/summary(simple_reg)$df[2]), 2)`, which provides a sense of the model’s typical prediction error.
-
-These results suggest a statistically significant and practically useful relationship between advertising expenditure and revenue. However, model fitting is only the first step. In the following sections, we explore how to apply this model for prediction, interpret residuals, and check whether key assumptions are met, an essential step for building trustworthy regression models.
+> *Practice.* Repeat the modeling steps, in this section, using `click_rate` as the predictor instead of `spend`. Fit a simple linear regression model with `revenue` as the response variable and `click_rate` as the predictor, and examine the estimated intercept and slope. Use the `summary()` output to assess whether the relationship is statistically significant and to interpret the estimated effect in context.
 
 ### Making Predictions with the Regression Line {.unnumbered}
 
-One of the key advantages of a fitted regression model is its ability to generate predictions for new data. The regression line provides a mathematical approximation of the relationship between advertising spend and revenue, enabling us to estimate revenue based on different levels of expenditure.
+One of the primary uses of a fitted regression model is prediction. Once the relationship between advertising spend and revenue has been estimated, the regression line can be used to estimate expected revenue for new expenditure levels. This predictive perspective complements the inferential interpretation of coefficients discussed earlier.
 
-Suppose a company wants to estimate the expected daily revenue when 25 euros are spent on pay-per-click (PPC) advertising. Using the fitted regression equation:
+Suppose a company wishes to estimate the expected daily revenue when 25 euros are spent on pay-per-click (PPC) advertising. Using the fitted regression equation, we obtain:
 
 \begin{equation} 
 \begin{split}
@@ -204,35 +175,31 @@ Suppose a company wants to estimate the expected daily revenue when 25 euros are
 \end{split}
 \end{equation}
 
-Thus, if the company spends 25 euros on advertising, the model estimates a daily revenue of approximately *`r round(simple_reg$coefficients[1] + simple_reg$coefficients[2] * 25, 2)` euros*.
+The model therefore predicts a daily revenue of approximately *`r round(simple_reg$coefficients[1] + simple_reg$coefficients[2] * 25, 2)` euros* when advertising spend is set to 25 euros. Such predictions can support operational decisions, such as evaluating alternative advertising budgets or assessing expected returns under different spending scenarios.
 
-This kind of predictive insight is particularly useful for marketing teams seeking to plan and evaluate advertising budgets. For example, if the objective is to maximize returns while staying within a cost constraint, the regression model offers a data-driven estimate of how revenue is likely to respond to changes in spending.
+Predictions from a regression model are most reliable when the predictor values lie within the range observed in the original data and when the underlying model assumptions, including linearity and constant variance, are reasonably satisfied. Predictions far outside the observed range rely on extrapolation and should be interpreted with caution.
 
-Note that predictions from a regression model are most reliable when the input values are within the range of the observed data and when key model assumptions (e.g., linearity, homoscedasticity) hold.
+To reinforce this idea, consider how the predicted revenue changes when advertising spend is increased to 40 euros or 100 euros. Comparing these predictions to the 25-euro case highlights both the linear nature of the model and the risks associated with extending it beyond the data-supported region.
 
-As a short practice, try predicting the daily revenue if the company increases its advertising spend to 40 euros and 100 euros. Use the regression equation with the estimated coefficients and interpret the results. How does this compare to the 25 euros case? *Hint:* Keep in mind that linear models assume the relationship holds across the observed range, so avoid extrapolating too far beyond the original data.
+In applied work, predictions are typically generated using the `predict()` function in R rather than by manually evaluating the regression equation. As with earlier classification models, `predict()` provides a unified interface for obtaining model-based predictions once a model has been fitted. For example, the predicted revenue corresponding to a daily spend of 25 euros can be obtained as follows:
 
-In practice, rather than manually plugging numbers into the regression formula, we can use the `predict()` function in R to estimate revenue more efficiently. You may recall using this same function in Chapter [-@sec-ch9-bayes] to generate class predictions from a Naive Bayes model. The underlying idea is the same: once a model is fitted, `predict()` provides a simple interface to generate predictions for new data.
-
-For example, to predict revenue for a day with 25 euros in advertising spend:
-
-```{r eval = FALSE}
-predict(simple_reg, newdata = data.frame(spend = 25))
+```{r}
+round(predict(simple_reg, newdata = data.frame(spend = 25)), 2)
 ```
 
-To predict daily revenue for several advertising spend values, such as 25, 40, and 100 euros, create a data frame with these amounts and use it as input to the regression model:
+This matches the value obtained earlier through direct evaluation of the regression equation. Predictions for multiple spending levels can be computed simultaneously by supplying a data frame of new values:
 
-```{r eval = FALSE}
-predict(simple_reg, newdata = data.frame(spend = c(25, 40, 100)))
+```{r}
+round(predict(simple_reg, newdata = data.frame(spend = c(25, 40, 100))), 2)
 ```
 
-This approach is especially helpful when working with larger datasets or integrating regression predictions into automated workflows.
+This approach scales naturally to larger datasets and integrates easily into automated analytical workflows.
 
 ### Residuals and Model Fit {.unnumbered}
 
-Residuals measure the difference between observed and predicted values, providing insight into how well the regression model fits the data. For a given observation $i$, the residual is calculated as: $$
+Residuals quantify the discrepancy between observed and predicted values and serve as a primary diagnostic tool for assessing how well a regression model fits the data. For a given observation $i$, the residual is defined as: $$
 e_i = y_i - \hat{y}_i,
-$$ where $y_i$ is the actual observed value and $\hat{y}_i$ is the predicted value from the regression model. @fig-residual-simple-reg visually depicts these residuals as dashed lines connecting observed outcomes to the fitted regression line.
+$$ where $y_i$ is the observed response and $\hat{y}_i$ is the corresponding predicted value from the regression model. In @fig-residual-simple-reg, residuals are visualized as dashed vertical lines connecting observed outcomes to the fitted regression line.
 
 ```{r fig-residual-simple-reg, echo = FALSE, out.width = "80%", fig.cap = "Scatter plot of daily revenue (euros) versus daily spend (euros) for 40 observations. The orange line shows the fitted regression line, and the gray dashed lines indicate residuals, representing the vertical distances between the observed values and the predictions from the line."}
 
@@ -250,92 +217,68 @@ ggplot(marketing, aes(x = spend, y = revenue)) +
   ) 
 ```
 
-For example, suppose the 21st day in the dataset has a marketing spend of 25 euros and an actual revenue of `r marketing$revenue[21]`. The residual for this observation is:
+To make this concrete, consider an observation with a marketing spend of 25 euros and an observed revenue of `r marketing$revenue[21]`. The residual is computed as the difference between the observed revenue and the value predicted by the regression line. A positive residual indicates underprediction by the model, while a negative residual indicates overprediction.
 
-\begin{equation} 
-\begin{split}
-\text{Residual} & = y - \hat{y} \\
-                & = `r marketing$revenue[21]` - `r round(simple_reg$coefficients[1] + simple_reg$coefficients[2] * 25, 2)` \\
-                & = `r marketing$revenue[21] - round(simple_reg$coefficients[1] + simple_reg$coefficients[2] * 25, 2)`
-\end{split}
-\end{equation}
+Residuals provide essential insight into model adequacy. When a linear model is appropriate, residuals should be randomly scattered around zero with no systematic structure. Patterns such as curvature, clustering, or increasing spread suggest violations of modeling assumptions and may indicate the need for additional predictors, variable transformations, or non-linear extensions.
 
-Residuals play a crucial role in assessing model adequacy. Ideally, they should be randomly distributed around zero, suggesting that the model appropriately captures the relationship between variables. However, if residuals show systematic patterns, such as curves, clusters, or increasing spread, this may indicate the need to include additional predictors, transform variables, or use a non-linear model.
+The regression line itself is estimated using the *least squares* method, which selects coefficient values that minimize the *sum of squared residuals*, also known as the *sum of squared errors (SSE)*: $$
+\text{SSE} = \sum_{i=1}^{n} (y_i - \hat{y}_i)^2,
+$$ {#eq-sse} where $n$ denotes the number of observations. This criterion corresponds to minimizing the total squared length of the dashed residual lines shown in @fig-residual-simple-reg and provides a precise definition of what it means for the model to “fit” the data.
 
-The regression line is estimated using the *least squares* method, which finds the line that minimizes the *sum of squared residuals*, also known as the *sum of squared errors (SSE)*: $$
-\text{SSE} = \sum_{i=1}^{n} (y_i - \hat{y}_i)^2
-$$ {#eq-sse} where $n$ is the number of observations. This quantity corresponds to the total squared length of the orange dashed lines in @fig-residual-simple-reg. Minimizing SSE ensures that the estimated regression line best fits the observed data.
-
-In summary, residuals provide critical feedback on model performance. By analyzing the *marketing* dataset, we have demonstrated how to calculate and interpret residuals and how they guide model refinement. This foundational understanding of simple linear regression prepares us to evaluate model quality and to extend the framework to models with multiple predictors in the following sections.
-
-Now that we have fitted and interpreted a simple linear model, let us ask whether the observed relationships are statistically reliable.
+In summary, residuals offer a window into both model fit and potential shortcomings of the regression specification. Understanding their behavior is essential before drawing inferential conclusions or extending the model. Having examined residual behavior and overall fit, we now turn to the question of whether the observed relationship between advertising spend and revenue is statistically reliable.
 
 ## Hypothesis Testing in Simple Linear Regression
 
-Once we estimate a regression model, the next question is: *Is the relationship we found real, or could it have occurred by chance?* This is where *hypothesis testing* comes in, a core concept introduced in Chapter [-@sec-ch5-statistics] and applied here to assess the statistical significance of regression coefficients.
+Once a regression model has been estimated, a natural next question is whether the observed relationship reflects a genuine association or could plausibly have arisen by chance. This question is addressed through hypothesis testing, a core inferential concept introduced in Chapter [-@sec-ch5-statistics] and applied here to regression models.
 
-In regression analysis, we are particularly interested in whether a predictor variable has a statistically significant relationship with the response variable. In simple linear regression, this involves testing whether the estimated slope $b_1$ from the sample provides evidence of a real linear association in the population, where the unknown population slope is denoted by $\beta_1$.
+In simple linear regression, inference focuses on the slope coefficient. Specifically, we assess whether the estimated slope $b_1$ provides evidence of a linear association in the population, where the corresponding population parameter is denoted by $\beta_1$. The population regression model is given by $$
+y = \beta_0 + \beta_1 x + \epsilon,
+$$ where $\beta_0$ is the population intercept, $\beta_1$ is the population slope, and $\epsilon$ represents random variability not explained by the model.
 
-The population regression model is $$
-y = \beta_0 + \beta_1x + \epsilon,
-$$ where:
-
--   $\beta_0$ is the *population intercept*: the expected value of $y$ when $x = 0$,
-
--   $\beta_1$ is the *population slope*: the expected change in $y$ for a one-unit increase in $x$, and
-
--   $\epsilon$ is the *error term*, accounting for variability not captured by the linear model.
-
-The key question is: *Is* $\beta_1$ significantly different from zero? If $\beta_1 = 0$, then $x$ has *no linear effect* on $y$, and the model reduces to: $$
+The central inferential question is whether $\beta_1$ differs from zero. If $\beta_1 = 0$, then the predictor $x$ has no linear effect on the response, and the model simplifies to $$
 y = \beta_0 + \epsilon.
 $$
 
-We formalize this question using the following hypotheses: $$
+We formalize this question using the hypotheses $$
 \begin{cases}
-  H_0: \beta_1 = 0 \quad \text{(No linear relationship between $x$ and $y$.)} \\
-  H_a: \beta_1 \neq 0 \quad \text{(A linear relationship exists between $x$ and $y$.)}
+H_0: \beta_1 = 0 & \text{(no linear relationship between $x$ and $y$)}, \\
+H_a: \beta_1 \neq 0 & \text{(a linear relationship exists)}.
 \end{cases}
-$$ To test these hypotheses, we compute the *t-statistic* for the slope: $$
-t = \frac{b_1}{SE(b_1)},
-$$ $SE(b_1)$ is the standard error of the slope estimate ($b_1$). This statistic follows a *t-distribution* with $n - 2$ degrees of freedom (in simple regression, 2 parameters are estimated), where $n$ is the number of observations. We then examine the *p-value*, which tells us how likely it would be to observe such a slope (or more extreme) if $H_0$ were true. A small *p*-value (typically below 0.05) leads us to reject the null hypothesis.
+$$
 
-Let us return to our regression model predicting `revenue` from `spend` in the *marketing* dataset:
+To test these hypotheses, we compute a t-statistic for the slope, $$
+t = \frac{b_1}{SE(b_1)},
+$$ where $SE(b_1)$ is the standard error of the slope estimate. Under the null hypothesis, this statistic follows a t-distribution with $n - 2$ degrees of freedom, reflecting the estimation of two parameters in simple linear regression. The associated *p*-value quantifies how likely it would be to observe a slope as extreme as $b_1$ if $H_0$ were true.
+
+Returning to the regression model predicting `revenue` from `spend` in the `marketing` dataset, we examine the model summary:
 
 ```{r}
 summary(simple_reg)
 ```
 
-From the output:
+From this output, the estimated slope is $b_1 =$ `r round(simple_reg$coefficients[2], 2)`, with a corresponding t-statistic of `r round(summary(simple_reg)$coefficients[2, "t value"], 2)` and a *p*-value of `r format.pval(summary(simple_reg)$coefficients[2, "Pr(>|t|)"], digits = 3)`. Since this *p*-value is well below the conventional significance level $\alpha = 0.05$, we reject the null hypothesis.
 
--   The *estimated slope* $b_1 =$ `r round(simple_reg$coefficients[2], 2)` euros.
+This result provides strong statistical evidence of a linear association between advertising spend and revenue. Interpreted in context, the estimated slope indicates that each additional euro spent on advertising is associated with an average increase of approximately `r round(simple_reg$coefficients[2], 2)` euros in daily revenue.
 
--   The *t-statistic* is `r round(summary(simple_reg)$coefficients[2, "t value"], 2)`.
+It is important to emphasize that statistical significance does not imply causation. The observed association may be influenced by unmeasured variables, confounding effects, or modeling assumptions. Hypothesis testing addresses whether an effect is unlikely to be zero, not whether it represents a causal mechanism or yields accurate predictions.
 
--   The *p-value* is `r format.pval(summary(simple_reg)$coefficients[2, "Pr(>|t|)"], digits = 3)` (rounded to three digits), which is lower than 0.05.
-
-Since the *p*-value is well below our significance level ($\alpha = 0.05$), we reject the null hypothesis $H_0$. This provides strong evidence of a *statistically significant association* between advertising spend and revenue. This confirms that `spend` is a meaningful predictor in our regression model. In practical terms: For each additional one euro spent on advertising, the model predicts an average increase in daily revenue of approximately one euro times `r round(simple_reg$coefficients[2], 2)`.
-
-> *Caution*: Statistical significance does not imply *causation*. The observed relationship may be influenced by other factors not included in the model. Interpreting regression results responsibly requires considering possible confounders, omitted variables, and whether assumptions hold.
-
-Statistical significance tells us the relationship is unlikely due to chance, but how well does the model actually perform? That is the focus of the next section. In the next sections, we explore how to *diagnose model quality* using residuals and *evaluate assumptions* that ensure the validity of regression results. We will then build on this foundation by introducing *multiple regression*, where more than one predictor is used to explain variation in the response variable.
+Inference tells us *whether* a relationship is statistically reliable; it does not tell us *how well* the model performs. In the next section, we therefore shift focus from statistical significance to *model quality*, introducing measures that assess explanatory power and predictive accuracy. We then build on this foundation by extending the framework to multiple regression models.
 
 ## Measuring the Quality of a Regression Model
 
-Suppose your regression model shows that advertising spend has a statistically significant effect on daily revenue. That is useful, but is it enough? Can the model make accurate predictions, or is it just detecting a weak trend in noisy data?
+Suppose a regression model indicates that advertising spend has a statistically significant effect on daily revenue. While this establishes the presence of an association, it does not tell us whether the model provides useful or accurate predictions. Hypothesis tests address *whether* a relationship exists, but they do not assess *how well* the model captures variability in the data or supports practical decision-making.
 
-Hypothesis tests tell us *if* a variable is related to the outcome, but they do not tell us *how well* the model performs as a whole. To evaluate a model’s practical usefulness, whether for forecasting, decision-making, or understanding patterns, we need additional tools.
-
-This section introduces two key metrics: the *RSE*, which measures average prediction error, and the $R^2$ (R-squared) statistic, which quantifies how much of the variation in the response variable is explained by the model. Together, they offer a more complete picture of model performance beyond statistical significance.
+To evaluate a model’s overall performance, we therefore need additional criteria. This section introduces two fundamental measures of regression quality: the residual standard error (RSE), which summarizes the typical size of prediction errors, and the coefficient of determination, $R^2$, which quantifies the proportion of variability in the response explained by the model. Together, these metrics provide a broader assessment of model adequacy that complements statistical inference.
 
 ### Residual Standard Error {.unnumbered}
 
-How far off are our predictions (on average) from the actual values? That is what the Residual Standard Error (RSE) tells us. It measures the typical size of the residuals: the differences between observed and predicted values, as presented in @fig-residual-simple-reg (orange dashed lines). In other words, RSE estimates the average prediction error of the regression model.
+The residual standard error (RSE) quantifies how closely a regression model’s predictions align with the observed data. It summarizes the typical size of the residuals: the differences between observed and predicted values, illustrated by the dashed lines in @fig-residual-simple-reg. In effect, RSE provides a measure of the model’s average deviation from the data.
 
-The formula for RSE is: $$
-RSE = \sqrt{\frac{SSE}{n-m-1}},
-$$ where $SSE$ is defined in @eq-sse, $n$ is the number of observations, and $m$ is the number of predictors. The denominator ($n-m-1$) accounts for the degrees of freedom in the model, adjusting for the number of predictors being estimated.
+The RSE is defined as $$
+RSE = \sqrt{\frac{SSE}{n - m - 1}},
+$$ where $SSE$ is the sum of squared errors defined in @eq-sse, $n$ is the number of observations, and $m$ is the number of predictors. The denominator $n - m - 1$ reflects the model’s degrees of freedom and accounts for the number of estimated parameters.
 
-A smaller RSE indicates more accurate predictions. For our simple linear regression model using the *marketing* dataset, the RSE is:
+A smaller RSE indicates that, on average, the model’s predictions lie closer to the observed values. For the simple linear regression model fitted to the `marketing` dataset, the RSE is computed as follows:
 
 ```{r}
 rse_value = sqrt(sum(simple_reg$residuals^2) / summary(simple_reg)$df[2])
@@ -343,93 +286,87 @@ rse_value = sqrt(sum(simple_reg$residuals^2) / summary(simple_reg)$df[2])
 round(rse_value, 2)
 ```
 
-This value tells us the typical size of prediction errors, in euros. While lower values are preferred, RSE should always be interpreted in the context of the response variable’s scale. For example, an RSE of 20 may be small or large depending on whether daily revenues typically range in the hundreds or thousands of euros.
+This value represents the typical magnitude of prediction errors, expressed in the same units as the response variable (euros). Interpretation should therefore always be contextual. An RSE of 20 euros may be negligible when daily revenue is measured in thousands, but substantial if revenues are typically much smaller.
 
 ### R-squared {.unnumbered}
 
-If you could explain all the variation in revenue using just one line, how good would that line be? That is the idea behind R-squared ($R^2$), a statistic that measures the proportion of variability in the response variable explained by the model.
+The coefficient of determination, $R^2$, measures how much of the variability in the response variable is explained by the regression model. It summarizes how well the fitted regression line captures the overall variation in the data.
 
-The formula is: $$
+Formally, $R^2$ is defined as $$
 R^2 = 1 - \frac{SSE}{SST},
-$$ where $SSE$ is the sum of squared residuals (@eq-sse) and $SST$ is the total sum of squares, representing the total variation in the response. $R^2$ ranges from 0 to 1. A value of 1 means the model perfectly explains the variation in the outcome; a value of 0 means it explains none of it.
+$$ where $SSE$ is the sum of squared residuals defined in @eq-sse and $SST$ is the total sum of squares, representing the total variation in the response. The value of $R^2$ ranges between 0 and 1. A value of 1 indicates that the model explains all observed variation, while a value of 0 indicates that it explains none.
 
-You can visualize this concept in @fig-scoter-plot-simple-reg, where the red regression line summarizes how `revenue` changes with `spend`. The $R^2$ value quantifies how well this line captures the overall pattern in the *marketing* data:
+In the simple linear regression of `revenue` on `spend`, the value of $R^2$ is
 
 ```{r}
 round(summary(simple_reg)$r.squared, 3)
 ```
 
-This means that approximately `r round(summary(simple_reg)$r.squared, 3) * 100`% of the variation in daily revenue is explained by advertising spend.
+This means that approximately `r round(summary(simple_reg)$r.squared * 100, 1)`% of the variation in daily revenue is explained by advertising spend. Visually, this corresponds to how closely the regression line in @fig-scatter-plot-simple-reg follows the overall pattern of the data.
 
-In simple linear regression, there is a direct connection between $R^2$ and the correlation coefficient introduced in @sec-ch5-correlation-test of Chapter [-@sec-ch5-statistics]. Specifically, $R^2$ is the square of the Pearson correlation coefficient $r$ between the predictor and the response: $$
-R^2 = r^2.
-$$ Let us verify this in the *marketing* data:
+In simple linear regression, $R^2$ has a direct relationship with the Pearson correlation coefficient introduced in Section [-@sec-ch5-correlation-test] of Chapter [-@sec-ch5-statistics]. Specifically, $$
+R^2 = r^2,
+$$ where $r$ is the correlation between the predictor and the response. In the `marketing` dataset, this relationship can be verified directly:
 
 ```{r}
 round(cor(marketing$spend, marketing$revenue), 2)
 ```
 
-Squaring this value:
+Squaring this value yields the same $R^2$ statistic, reinforcing that in simple regression, $R^2$ reflects the strength of the linear association between two variables.
 
-```{r}
-round(cor(marketing$spend, marketing$revenue)^2, 2)
-```
-
-gives the same $R^2$ value, reinforcing that $R^2$ in simple regression reflects the strength of the linear association between two variables.
-
-While a higher $R^2$ suggests a better fit, it does not guarantee that the model generalizes well or satisfies the assumptions of linear regression. Always examine residual plots, check for outliers, and interpret $R^2$ in context, not in isolation.
+While larger values of $R^2$ indicate that a greater proportion of variability is explained by the model, they do not guarantee good predictive performance or valid inference. A model may achieve a high $R^2$ while violating regression assumptions or overfitting the data. Consequently, $R^2$ should always be interpreted alongside residual diagnostics and other measures of model quality.
 
 ### Adjusted R-squared {.unnumbered}
 
-Adding more predictors to a regression model will always increase $R^2$, even if those predictors are not truly useful. This is where *Adjusted* $R^2$ comes in. It compensates for the number of predictors in the model, providing a more honest measure of model quality. Its formula is: $$
-\text{Adjusted } R^2 = 1 - \left(1 - R^2\right) \times \frac{n - 1}{n-m-1},
-$$ where $n$ is the number of observations and $m$ is the number of predictors.
+In regression modeling, adding predictors will always increase $R^2$, even when the additional variables contribute little meaningful information. For this reason, $R^2$ alone can be misleading when comparing models of differing complexity. *Adjusted* $R^2$ addresses this limitation by explicitly accounting for the number of predictors included in the model.
 
-In simple linear regression (where $m=1$), Adjusted $R^2$ is nearly the same as $R^2$. However, as we add more variables in multiple regression models, Adjusted $R^2$ becomes essential. It penalizes complexity and helps identify whether additional predictors genuinely improve model performance.
+Adjusted $R^2$ is defined as $$
+\text{Adjusted } R^2 = 1 - \left(1 - R^2\right) \times \frac{n - 1}{n - m - 1},
+$$ where $n$ denotes the number of observations and $m$ the number of predictors. Unlike $R^2$, Adjusted $R^2$ may increase or decrease when a new predictor is added, depending on whether that predictor improves the model sufficiently to justify its inclusion.
 
-You will see Adjusted $R^2$ used more frequently in the next sections, especially when comparing alternative models with different sets of predictors.
+In simple linear regression, where $m = 1$, Adjusted $R^2$ is typically very close to $R^2$. However, as models become more complex, Adjusted $R^2$ becomes a more informative measure. It penalizes unnecessary complexity and helps determine whether additional predictors genuinely improve explanatory power rather than merely inflating apparent fit.
+
+Adjusted $R^2$ is therefore especially useful when comparing alternative regression models with different sets of predictors, a situation that arises frequently in multiple regression and model selection.
 
 ### Interpreting Model Quality {.unnumbered}
 
-A strong regression model typically demonstrates the following qualities:
+Assessing the quality of a regression model requires balancing several complementary measures rather than relying on a single statistic. In general, a well-performing model exhibits a *low residual standard error (RSE)*, indicating that predictions are close to observed values, alongside relatively *high values of* $R^2$ and *Adjusted* $R^2$, suggesting that the model explains a substantial proportion of the variability in the response without unnecessary complexity.
 
--   *Low RSE*, indicating that predictions are consistently close to actual values;
+However, these metrics should never be interpreted in isolation. A high $R^2$ may arise from overfitting or be unduly influenced by outliers, while a low RSE does not guarantee that key modeling assumptions have been satisfied. In applied analysis, measures of fit must therefore be considered alongside residual diagnostics, graphical checks, and, where appropriate, validation techniques such as cross-validation.
 
--   *High* $R^2$, suggesting that the model accounts for a substantial portion of the variability in the response;
+@tbl-reg-quality-metrics summarizes the primary regression quality metrics discussed in this section and highlights their interpretation and intended use. Together, these tools provide a more nuanced view of model adequacy and help guard against overly simplistic conclusions.
 
--   *High Adjusted* $R^2$, which reflects the model’s explanatory power while penalizing unnecessary predictors.
-
-However, these metrics do not tell the full story. For example, a high $R^2$ can result from overfitting or be distorted by outliers, while a low RSE may mask violations of regression assumptions. In applied settings, these statistics should be interpreted in conjunction with residual diagnostics, visual checks, and, when feasible, cross-validation.
-
-@tbl-reg-quality-matrics presents a summary of model quality metrics. Understanding these measures enables us to evaluate regression models more critically and prepares us to move beyond models with a single predictor.
-
-::: {#tbl-reg-quality-matrics .table}
+::: {#tbl-reg-quality-metrics .table}
 | Metric | What It Tells You | What to Look For |
 |------------------------|------------------------|------------------------|
-| RSE (Residual Std. Error) | Average prediction error | Lower is better |
+| RSE (Residual Std. Error) | Typical prediction error | Lower is better |
 | $R^2$ | Proportion of variance explained | Higher is better |
-| Adjusted $R^2$ | $R^2$ adjusted for number of predictors | Higher (but realistic) is better |
+| Adjusted $R^2$ | $R^2$ adjusted for model complexity | Higher, but not inflated |
 
 Overview of commonly used regression model quality metrics.
 :::
 
-In the next section, we extend the simple linear regression framework to include *multiple predictors*, allowing us to capture more complex relationships and improve predictive accuracy.
+Having established how to evaluate model quality in simple linear regression, we now extend the framework to *multiple regression*, where several predictors are used simultaneously to explain variation in the response.
+
+> *Practice.* Repeat the modeling and evaluation steps in this section using `click_rate` as the predictor instead of `spend`. Fit a simple linear regression model for `revenue`, compute the RSE, $R^2$, and Adjusted $R^2$, and compare these values to those obtained for the original model. Based on these metrics and residual behavior, which predictor appears to provide a better explanation of revenue in this dataset?
 
 ## Multiple Linear Regression {#sec-ch10-multiple-regression}
 
-We now move beyond simple linear regression and explore models with more than one predictor. This brings us into the realm of *multiple regression*, a framework that captures the simultaneous effects of multiple variables on an outcome. In most real-world scenarios, responses are rarely driven by a single factor, multiple regression helps us model this complexity.
+We now move beyond simple linear regression and consider models with more than one predictor. This leads to *multiple linear regression*, a framework that allows us to model the simultaneous effects of several variables on an outcome. In real-world applications, responses are rarely driven by a single factor, and multiple regression provides a principled way to capture this complexity.
 
-To illustrate, we expand the previous model, which included only `spend` as a predictor, by adding `display`, an indicator of whether a *display (banner) advertising campaign* was active. This additional predictor allows us to assess its impact on revenue. The general equation for a multiple regression model with $m$ predictors is: $$
+To illustrate, we extend the previous model by adding a second predictor. In addition to advertising spend (`spend`), we include `display`, an indicator of whether a display advertising campaign was active. Incorporating multiple predictors allows us to assess the effect of each variable *while holding the others constant*, a key advantage of multiple regression.
+
+The general form of a multiple regression model with $m$ predictors is $$
 \hat{y} = b_0 + b_1 x_1 + b_2 x_2 + \dots + b_m x_m,
-$$ where $b_0$ is the intercept, and $b_1, b_2, \dots, b_m$ represent the estimated effects of each predictor on the response variable.
+$$ where $b_0$ is the intercept and $b_1, b_2, \dots, b_m$ represent the estimated effects of the predictors on the response.
 
-For our case, the equation with two predictors, `spend` and `display`, is: $$
-\widehat{\text{revenue}} = b_0 + b_1 \times \text{spend} + b_2 \times \text{display},
-$$ where `spend` represents daily advertising expenditure and `display` is a categorical variable (`yes` or `no`), which R automatically converts into a binary indicator. In this case, `display = 1` corresponds to an active display campaign, while `display = 0` means no campaign was running. As with other factor variables in R, the first level (`no`) serves as the reference category when converting to dummy (0/1) indicators (alphabetically, unless explicitly changed).
+In our case, the model with two predictors is $$
+\widehat{\text{revenue}} = b_0 + b_1 \times \text{spend} + b_2 \times \text{display}.
+$$ Here, `spend` denotes daily advertising expenditure, and `display` is a categorical variable indicating whether a display campaign was active. When fitting the model in R, this variable is automatically converted into a binary indicator, with the first factor level (`no`) used as the reference category by default. The coefficient for `display` therefore represents the expected difference in revenue between days with and without a display campaign, holding advertising spend constant.
 
-### Fitting the Multiple Regression Model in R {.unnumbered}
+### Fitting and Using a Multiple Regression Model in R {.unnumbered}
 
-To fit a multiple regression model in R, we continue using the `lm()` function, the same tool we used for simple regression. The only difference is that we now include more than one predictor on the right-hand side of the formula:
+To fit a multiple regression model in R, we again use the `lm()` function introduced earlier. The key difference from simple regression is that multiple predictors are included on the right-hand side of the model formula:
 
 ```{r}
 multiple_reg = lm(revenue ~ spend + display, data = marketing)
@@ -437,69 +374,67 @@ multiple_reg = lm(revenue ~ spend + display, data = marketing)
 summary(multiple_reg)
 ```
 
-This fits a model with both `spend` and `display` as predictors of `revenue`. The estimated regression equation is: $$
-\widehat{\text{revenue}} = `r round(multiple_reg$coefficients[1], 2)` + `r round(multiple_reg$coefficients[2], 2)` \times \text{spend} + `r round(multiple_reg$coefficients[3], 2)` \times \text{display}.
+This specification fits a model in which both advertising spend (`spend`) and the presence of a display campaign (`display`) are used to explain variation in daily revenue. The estimated regression equation is $$
+\widehat{\text{revenue}} =
+`r round(multiple_reg$coefficients[1], 2)` +
+`r round(multiple_reg$coefficients[2], 2)` \times \text{spend} +
+`r round(multiple_reg$coefficients[3], 2)` \times \text{display}.
 $$
 
-Let us interpret each term:
+The intercept ($b_0$), equal to `r round(multiple_reg$coefficients[1], 2)`, represents the expected daily revenue when advertising spend is zero and no display campaign is active. The coefficient for `spend` ($b_1$), equal to `r round(multiple_reg$coefficients[2], 2)`, indicates the expected change in revenue associated with a one-euro increase in advertising expenditure, assuming the display campaign status does not change. Similarly, the coefficient for `display` ($b_2$), equal to `r round(multiple_reg$coefficients[3], 2)`, measures the expected difference in revenue between days with and without a display campaign for a fixed level of advertising spend. Together, these interpretations highlight a defining feature of multiple regression: each coefficient represents the effect of a predictor after accounting for the influence of the others.
 
--   The *intercept* ($b_0$) is `r round(multiple_reg$coefficients[1], 2)`. This represents the estimated revenue when `spend = 0` and `display = "no"`, that is, when no advertising budget is spent and no display campaign is active.
-
--   The *coefficient for `spend`* ($b_1$) is `r round(multiple_reg$coefficients[2], 2)`. It indicates that for every additional one euro spent on advertising, daily revenue increases by approximately `r round(multiple_reg$coefficients[2], 2)`, assuming the display campaign status remains unchanged.
-
--   The *coefficient for `display`* ($b_2$) is `r round(multiple_reg$coefficients[3], 2)`. Since `display` is a binary variable (`yes` vs. `no`), this coefficient estimates the difference in average revenue between days with and without a display campaign, holding advertising spend constant.
-
-These interpretations build on our earlier regression concepts, showing how multiple predictors can be incorporated and interpreted in a straightforward way.
-
-### Making Predictions {.unnumbered}
-
-Consider a scenario where the company spends 25 euros on advertising while running a display campaign (`display = 1`). Using the regression equation, the predicted revenue is: $$
-\widehat{\text{revenue}} = `r round(multiple_reg$coefficients[1], 2)` + `r round(multiple_reg$coefficients[2], 2)` \times 25 + `r round(multiple_reg$coefficients[3], 2)` \times 1 = `r round(multiple_reg$coefficients[1] + multiple_reg$coefficients[2] * 25 + multiple_reg$coefficients[3] * 1, 2)`.
+Once the model has been fitted and interpreted, it can be used to generate predictions for specific scenarios. Consider a scenario in which the company spends 25 euros on advertising while running a display campaign (`display = 1`). Using the fitted multiple regression model, the predicted revenue is $$
+\widehat{\text{revenue}} =
+`r round(multiple_reg$coefficients[1], 2)` +
+`r round(multiple_reg$coefficients[2], 2)` \times 25 +
+`r round(multiple_reg$coefficients[3], 2)` \times 1
+= `r round(multiple_reg$coefficients[1] + multiple_reg$coefficients[2] * 25 + multiple_reg$coefficients[3], 2)`.
 $$
 
-Thus, the predicted revenue for that day is approximately `r round(multiple_reg$coefficients[1] + multiple_reg$coefficients[2] * 25 + multiple_reg$coefficients[3] * 1, 2)` euros.
+The model therefore predicts a daily revenue of approximately `r round(multiple_reg$coefficients[1] + multiple_reg$coefficients[2] * 25 + multiple_reg$coefficients[3], 2)` euros under these conditions.
 
-The residual (prediction error) for a specific observation is calculated as the difference between the actual and predicted revenue: $$
-\text{Residual} = y - \hat{y} = `r marketing[21, "revenue"]` - `r round(multiple_reg$coefficients[1] + multiple_reg$coefficients[2] * 25 + multiple_reg$coefficients[3] * 1, 2)` = `r round(multiple_reg$residuals[21], 2)`.
-$$
+For a specific observation, the residual (or prediction error) is defined as the difference between the observed and predicted revenue, $$
+\text{Residual} = y - \hat{y}.
+$$ For example, for observation 21 in the dataset, the residual is $$
+\text{Residual} = y - \hat{y} = `r marketing[21, "revenue"]` - `r round(multiple_reg$coefficients[1] + multiple_reg$coefficients[2] * 25 + multiple_reg$coefficients[3] * 1, 2)` = `r round(multiple_reg$residuals[21], 2)`,
+$$ illustrating how the model’s prediction deviates from the observed outcome for an individual day.
 
-The prediction error is less than that of the simple regression model, confirming that including `display` improves predictive accuracy.
+While residuals help assess prediction accuracy at the observation level, conclusions about overall predictive performance should be based on aggregate measures such as the residual standard error or validation-based metrics, rather than on individual cases.
 
-In practice, rather than plugging numbers into the equation manually, we can use the `predict()` function in R to compute fitted values. This function works seamlessly with multiple regression models as it did with simple regression. For example, to predict revenue for a day with 25 euros in advertising spend and an active display campaign:
+In practice, predictions are typically generated using the `predict()` function in R rather than by manually evaluating the regression equation. For example, the predicted revenue for a day with 25 euros in advertising spend and an active display campaign can be obtained as follows:
 
-```{r eval = FALSE}
-predict(multiple_reg, newdata = data.frame(spend = 25, display = "yes"))
+```{r}
+round(predict(multiple_reg, newdata = data.frame(spend = 25, display = 1)), 2)
 ```
 
-This approach is especially useful when generating predictions for multiple new scenarios or automating analyses.
+This approach is especially useful when generating predictions for multiple scenarios or integrating regression models into automated workflows.
 
-> *Practice:* Try estimating the daily revenue under two new scenarios: (i) Spending 40 euros with a display campaign (`display = "yes"`) and (ii) Spending 100 euros with no display campaign (`display = "no"`). Use the regression equation or the `predict()` function to compute these values. What do your predictions suggest? Are they consistent with the 25 euros case? *Hint:* Be cautious about extrapolation, stay within the range of the original data.
+> *Practice.* Estimate the predicted daily revenue under two additional scenarios: (i) spending 40 euros with a display campaign (`display = 1`), and (ii) spending 100 euros with no display campaign (`display = 0`). Use either the regression equation or the `predict()` function. Interpret the results and consider whether these predictions fall within a reasonable range given the observed data.
 
 ### Evaluating Model Performance {.unnumbered}
 
-How can we tell whether adding a new predictor, like `display`, actually improves a regression model? In the previous section, @tbl-reg-quality-matrics outlined three key model evaluation metrics: *RSE*, $R^2$, and *Adjusted* $R^2$. Here, we apply those tools to compare the performance of our simple and multiple regression models. By doing so, we can assess whether the added complexity leads to genuine improvement.
+How can we assess whether adding a new predictor, such as `display`, genuinely improves a regression model? In the previous section, @tbl-reg-quality-metrics introduced three complementary measures of model quality: the residual standard error (RSE), $R^2$, and Adjusted $R^2$. Here, we apply these metrics to compare the simple and multiple regression models and evaluate whether the added complexity is justified.
 
--   *RSE:* In the simple regression model, $RSE =$ `r round(sqrt(sum(simple_reg$residuals^2)/summary(simple_reg)$df[2]), 2)`, whereas in the multiple regression model, $RSE =$ `r round(sqrt(sum(multiple_reg$residuals^2)/summary(multiple_reg)$df[2]), 2)`. A lower RSE in the multiple model suggests that its predictions are, on average, closer to the actual values.
+For the simple regression model, the residual standard error is $RSE =$ `r round(summary(simple_reg)$sigma, 2)`, whereas for the multiple regression model it is $RSE =$ `r round(summary(multiple_reg)$sigma, 2)`. The lower RSE in the multiple regression model indicates that, on average, its predictions are closer to the observed revenue values.
 
--   $R^2$ (R-squared): The simple regression model had $R^2 =$ `r round(summary(simple_reg)$r.squared * 100, 1)`%, while the multiple regression model increased to $R^2 =$ `r round(summary(multiple_reg)$r.squared * 100, 1)`%, indicating that more of the variance in revenue is explained when `display` is included.
+The coefficient of determination also increases when `display` is added. In the simple regression model, $R^2 =$ `r round(summary(simple_reg)$r.squared * 100, 1)`%, while in the multiple regression model it rises to $R^2 =$ `r round(summary(multiple_reg)$r.squared * 100, 1)`%. This suggests that including `display` allows the model to explain a larger proportion of the variability in daily revenue.
 
--   *Adjusted* $R^2$: This metric penalizes unnecessary predictors. In the simple regression model, Adjusted $R^2 =$ `r round(summary(simple_reg)$adj.r.squared * 100, 1)`%, while in the multiple regression model it rises to `r round(summary(multiple_reg)$adj.r.squared * 100, 1)`%. The increase confirms that adding `display` contributes meaningfully to model performance, beyond what might be expected by chance.
+Adjusted $R^2$, which penalizes unnecessary predictors, provides a more cautious assessment. Its value increases from `r round(summary(simple_reg)$adj.r.squared * 100, 1)`% in the simple regression model to `r round(summary(multiple_reg)$adj.r.squared * 100, 1)`% in the multiple regression model. This increase indicates that the additional predictor improves model performance beyond what would be expected from increased complexity alone.
 
-Taken together, these results show that model evaluation metrics do more than quantify fit; they also help guard against overfitting and inform sound modeling choices.
+Taken together, these results illustrate how model evaluation metrics support principled comparison between competing models. Rather than maximizing fit indiscriminately, they help balance explanatory power against model simplicity and guard against overfitting.
 
-> *Practice:* Try adding another variable, such as `clicks`, to the model. Does the Adjusted $R^2$ improve? What does that tell you about the added value of this new predictor?
+> *Practice:* Add another predictor, such as `clicks`, to the model. How do the RSE, $R^2$, and Adjusted $R^2$ change? What do these changes suggest about the added value of this predictor?
 
-You might now be wondering: *Should we include all available predictors in our regression model? Or is there an optimal subset that balances simplicity and performance?* These important questions will be addressed in Section [-@sec-ch10-stepwise], where we explore *stepwise regression* and other model selection strategies.
+These comparisons naturally raise a broader modeling question: should all available predictors be included, or is there an optimal subset that balances simplicity and performance? We address this issue in Section [-@sec-ch10-stepwise], where we introduce stepwise regression and related model selection strategies.
 
 ### Simpson’s Paradox {.unnumbered}
 
-As we incorporate more variables into regression models, we must also be alert to how these variables interact. One cautionary tale is Simpson’s Paradox. Suppose a university finds that within every department, female applicants are admitted at higher rates than males. Yet, when all departments are combined, it appears that male applicants are admitted more often. How can this be?
+As we incorporate more variables into regression models, we must remain attentive to how relationships can change when data are aggregated or stratified. A classic cautionary example is *Simpson’s Paradox*. Suppose a university observes that within every department, female applicants are admitted at higher rates than male applicants. Yet, when admissions data are aggregated across departments, it appears that male applicants are admitted more often. How can such a reversal occur?
 
-This is Simpson’s Paradox, a phenomenon where trends within groups reverse when the groups are aggregated. It reminds us that context matters. The paradox often arises when a grouping variable influences both predictor and response but is omitted from the model.
+This phenomenon is known as Simpson’s Paradox: a situation in which trends observed within groups reverse or disappear when the groups are combined. The paradox typically arises when an important grouping variable influences both the predictor and the response but is omitted from the analysis.
 
 ```{r}
 #| echo: false
-
 
 # --- Simulate data ---
 set.seed(42)
@@ -518,7 +453,7 @@ sim_data <- data.frame(
 )
 ```
 
-In the plots below (@fig-ch10-Simpson-Paradox), the left panel displays a regression line fitted to all the data, yielding an overall correlation of `r round(cor(sim_data$x, sim_data$y), 2)`, which ignores the underlying group structure. In contrast, the right panel reveals the true story: each group exhibits a positive correlation, Group 1: `r round(cor(x1, y1), 2)`, Group 2: `r round(cor(x2, y2), 2)`, Group 3: `r round(cor(x3, y3), 2)`, Group 4: `r round(cor(x4, y4), 2)`, Group 5: `r round(cor(x5, y5), 2)`. This demonstrates how the apparent overall downward trend is misleading due to Simpson’s Paradox.
+In @fig-ch10-Simpson-Paradox, the left panel shows a regression line fitted to the aggregated data, yielding an overall correlation of `r round(cor(sim_data$x, sim_data$y), 2)` that ignores the underlying group structure. The right panel reveals a very different picture: within each group, the association between the predictor and response is positive (Group 1: `r round(cor(x1, y1), 2)`, Group 2: `r round(cor(x2, y2), 2)`, Group 3: `r round(cor(x3, y3), 2)`, Group 4: `r round(cor(x4, y4), 2)`, Group 5: `r round(cor(x5, y5), 2)`). This contrast illustrates how aggregation can obscure meaningful within-group relationships.
 
 ```{r out.width = "100%"}
 #| label: fig-ch10-Simpson-Paradox
@@ -566,226 +501,180 @@ final_plot <- (p1 + p2_clean) / patchwork::wrap_elements(legend)
 final_plot + plot_layout(heights = c(1, 0.06))
 ```
 
-This example underscores the importance of including relevant variables. Omitting key groupings can lead to flawed conclusions, even when regression coefficients appear statistically sound. This phenomenon connects directly to our earlier analysis of the *marketing* dataset. In the simple regression model, we considered only `spend` as a predictor of revenue. However, once we added `display` in the multiple regression model, the interpretation of `spend` changed. This shift illustrates how omitted variables, such as group membership or campaign status, can confound observed associations. Simpson’s Paradox reminds us that *a variable’s effect can reverse or diminish once other important predictors are included*. Careful modeling and exploratory analysis are essential for uncovering such subtleties.
+Simpson’s Paradox highlights the importance of including relevant variables in regression models. By conditioning on multiple predictors simultaneously, multiple regression helps disentangle relationships that may otherwise be confounded. This insight connects directly to our analysis of the `marketing` dataset. In the simple regression model, we examined revenue as a function of advertising spend alone. After introducing `display` as an additional predictor, the interpretation of the `spend` coefficient changed, reflecting the influence of campaign context. More generally, Simpson’s Paradox reminds us that a variable’s apparent effect may weaken, disappear, or even reverse once other important predictors are taken into account. Careful exploratory analysis and thoughtful model specification are therefore essential for drawing reliable conclusions.
 
-> *Practice*: Can you think of a situation in your domain (such as public health, marketing, or education) where combining groups might obscure meaningful differences? How would you detect and guard against this risk in your analysis?
+> *Practice:* Can you think of a situation in your domain (such as public health, marketing, or education) where combining groups might obscure meaningful differences? How would you detect and guard against this risk in your analysis?
 
 ## Generalized Linear Models
 
-What if your outcome is not continuous but binary (such as predicting whether a customer will churn) or count-based (like the number of daily transactions)? Traditional linear regression is not suited for such cases. It assumes normally distributed errors, constant variance, and a linear relationship between predictors and response. However, these assumptions break down with binary or count data.
+Many practical modeling problems involve outcomes that are not continuous. For example, we may wish to predict whether a customer will churn (a binary outcome) or model the number of daily transactions (a count outcome). In such settings, traditional linear regression is no longer appropriate. Its assumptions of normally distributed errors, constant variance, and an unbounded linear relationship between predictors and the response are violated when working with binary or count data.
 
-*Generalized Linear Models (GLMs)* extend the familiar regression framework by introducing two powerful concepts:
+Generalized Linear Models (GLMs) extend the familiar regression framework to accommodate these situations. They retain the idea of modeling a response variable using a linear predictor but introduce additional structure that allows for a broader class of outcome types. In particular, GLMs incorporate:
 
--   a *link function*, which transforms the mean of the response variable to be modeled as a linear function of the predictors,
+-   a *random component*, which specifies a probability distribution for the response variable drawn from the exponential family (such as the normal, binomial, or Poisson distributions);
 
--   and a *variance function*, which allows the response to follow a distribution other than the normal.
+-   a *systematic component*, which represents the linear combination of predictor variables;
 
-These extensions make GLMs a flexible tool for modeling diverse types of response variables and are widely used in fields such as finance, healthcare, social sciences, and marketing.
+-   and a *link function*, which connects the expected value of the response variable to the linear predictor.
 
-GLMs preserve the core structure of linear regression but introduce three key components:
+Through the choice of an appropriate distribution and link function, GLMs allow the variance of the response to depend on its mean and ensure that model predictions respect the natural constraints of the data (such as probabilities lying between 0 and 1 or counts being non-negative).
 
-1.  *Random component*: Specifies the probability distribution of the response variable, chosen from the exponential family (e.g., normal, binomial, Poisson).
+These extensions make GLMs a flexible and interpretable modeling framework that is widely used in fields such as finance, healthcare, social sciences, and marketing. In the following sections, we focus on two commonly used generalized linear models: logistic regression, designed for binary outcomes (such as churn versus no churn), and Poisson regression, which is well suited for modeling count data (such as the number of customer service calls).
 
-2.  *Systematic component*: Represents the linear combination of predictor variables.
-
-3.  *Link function*: Connects the expected value of the response variable to the linear predictor, enabling a broader range of outcome types to be modeled.
-
-In the following sections, we introduce two commonly used generalized linear models: *logistic regression*, which is used for modeling binary outcomes (such as churn versus no churn), and *Poisson regression*, which is suited for modeling count data (such as the number of customer service calls).
-
-By extending regression beyond continuous responses, these models offer both interpretability and flexibility. These are key advantages for real-world data analysis. The next sections walk through their theoretical foundations and practical implementation in R.
+By extending regression beyond continuous responses, generalized linear models broaden the scope of problems that can be addressed using regression-based methods. The next sections introduce their theoretical foundations and demonstrate their practical implementation in R.
 
 ## Logistic Regression for Binary Classification {#sec-ch10-logistic-regression}
 
-Can we predict whether a customer will leave a service based on their usage behavior? This is a classic binary classification problem, first introduced in Chapter [-@sec-ch7-classification-knn] with k-Nearest Neighbors (kNN) and revisited in Chapter [-@sec-ch9-bayes] with the Naive Bayes classifier. Those models provided flexible, data-driven solutions to classification. Now, we shift to a *model-based* approach grounded in statistical theory: *logistic regression*.
+Predicting whether an event occurs or not is a central task in data science. For example, we may wish to predict whether a customer will leave a service based on usage behavior. Such problems involve *binary outcomes* and were first introduced in Chapter [-@sec-ch7-classification-knn] using k-Nearest Neighbors (kNN), and later revisited in Chapter [-@sec-ch9-bayes] with the Naive Bayes classifier. These approaches emphasized flexible, data-driven classification. We now turn to a complementary perspective: a model-based approach grounded in statistical inference, known as *logistic regression*.
 
-Logistic regression is a generalized linear model specifically designed for binary outcomes. It estimates the *probability* that an observation belongs to a particular class (e.g., churn = "yes") by applying the *logit function*, which transforms a linear combination of predictors into the log-odds of the outcome: $$
-\text{logit}(p) = \ln\left(\frac{p}{1 - p}\right) = b_0 + b_1 x_1 + b_2 x_2 + \dots + b_m x_m,
-$$ where $p$ is the probability that the outcome is 1. The logit transformation ensures that predictions remain between 0 and 1, making logistic regression well-suited for modeling binary events.
+Logistic regression is a generalized linear model designed specifically for binary response variables. Rather than modeling the outcome directly, it models the *log-odds* of the event as a linear function of the predictors: $$
+\text{logit}(p) = \ln\left(\frac{p}{1 - p}\right)
+= b_0 + b_1 x_1 + b_2 x_2 + \dots + b_m x_m,
+$$ where $p$ denotes the probability that the outcome equals 1. By linking the linear predictor to the response through the logit function, logistic regression ensures that predicted probabilities lie in the interval $[0, 1]$, while allowing the predictors themselves to vary freely on the real line.
 
-Unlike kNN and Naive Bayes, logistic regression provides interpretable model coefficients and naturally handles numeric and binary predictors. It also offers a foundation for many advanced models used in applied machine learning and data science.
+Compared to kNN and Naive Bayes, logistic regression offers a different set of advantages. Its coefficients have a clear interpretation in terms of changes in log-odds, it integrates naturally with the regression framework developed earlier in this chapter, and it provides a foundation for many extensions used in modern statistical learning.
 
-In the next subsection, we bring logistic regression to life in R using the *churn* dataset, where you will learn how to fit the model, interpret its coefficients, and assess its usefulness for real-world decision-making.
+In the next subsection, we apply logistic regression in R using the `churn_mlc` dataset. We show how to fit the model, interpret its coefficients, and evaluate its usefulness for practical decision-making.
 
 ### Fitting a Logistic Regression Model in R {.unnumbered}
 
-Let us now implement logistic regression in R and interpret its results in a real-world context. The *churn* dataset from the **liver** package captures key aspects of customer behavior, including account length, plan types, usage metrics, and customer service interactions. The goal remains the same: to predict whether a customer has churned (`yes`) or not (`no`) based on these features. We first inspect the structure of the data:
+We now implement logistic regression in R and interpret its output in a practical setting. We use the `churn_mlc` dataset from the **liver** package, which contains information on customer behavior, including account characteristics, usage patterns, and customer service interactions. The objective is to model whether a customer has churned (`yes`) or not (`no`) based on these predictors. We begin by inspecting the structure of the dataset:
 
 ```{r}
-data(churn)
+data(churn_mlc)
 
-str(churn)
+str(churn_mlc)
 ```
 
-The dataset is an R data frame with `r nrow(churn)` observations and `r ncol(churn) - 1` predictor variables. Based on earlier exploration, we select the following features for our logistic regression model:
+The dataset contains `r nrow(churn_mlc)` observations and `r ncol(churn_mlc) - 1` predictor variables. Based on earlier exploration, we select the following features for the logistic regression model:
 
-`account.length`, `voice.plan`, `voice.messages`, `intl.plan`, `intl.mins`, `day.mins`, `eve.mins`, `night.mins`, and `customer.calls`.
+`account_length`, `voice_plan`, `voice_messages`, `intl_plan`, `intl_mins`, `day_mins`, `eve_mins`, `night_mins`, and `customer_calls`.
 
-We define a formula object to specify the relationship between the target variable (`churn`) and the predictors:
+We specify the model using a formula that relates the binary response variable `churn` to these predictors:
 
 ```{r}
-formula = churn ~ account.length + voice.messages + day.mins + eve.mins + night.mins + intl.mins + customer.calls + intl.plan + voice.plan
+formula = churn ~ account_length + voice_messages + day_mins + eve_mins + night_mins + intl_mins + customer_calls + intl_plan + voice_plan
 ```
 
-To fit the logistic regression model, we use the `glm()` function, which stands for *generalized linear model*. This function allows us to specify the family of distributions and link functions, making it suitable for logistic regression. This function is part of base R, so no need to install any additional packages. The general syntax for logistic regression is:
-
-``` r
-glm(response_variable ~ predictor_variables, data = dataset, family = binomial)
-```
-
-Here, `family = binomial` tells R to perform logistic regression.
+To fit the logistic regression model, we use the `glm()` function, which stands for *generalized linear model*. By setting `family = binomial`, we indicate that the response follows a binomial distribution with a logit link function:
 
 ```{r}
-data(churn)
-
-glm_churn = glm(formula = formula, data = churn, family = binomial)
+glm_churn = glm(formula = formula, data = churn_mlc, family = binomial)
 ```
 
-To examine the model output:
+A summary of the fitted model can be obtained using:
 
 ```{r}
 summary(glm_churn)
 ```
 
-This output includes:
+The output includes coefficient estimates that describe the effect of each predictor on the *log-odds of churn*, along with standard errors, *z*-statistics, and corresponding *p*-values. Predictors with small *p*-values (typically below 0.05) provide evidence of a statistically significant association with churn, while predictors with large *p*-values may contribute little to the model and could be candidates for removal.
 
--   *Coefficients*, which indicate the direction and size of each predictor’s effect on the log-odds of churn.
+> *Practice:* Remove one or more predictors with large *p*-values (for example, `account_length`) and refit the model. Compare the coefficient estimates and statistical significance to those of the original model. What changes, and what remains stable?
 
--   *Standard errors*, which quantify the uncertainty around each coefficient.
+At this stage, we fit the logistic regression model using the full dataset. Unlike the classification examples in Chapter [-@sec-ch7-classification-knn], our primary focus here is on understanding model specification and coefficient interpretation rather than evaluating out-of-sample predictive performance. Model validation and comparison will be addressed later in the chapter.
 
--   *z-values* and *p-values*, which test whether each predictor contributes significantly to the model.
+Note that we did not manually create dummy variables for the binary predictors `intl_plan` and `voice_plan`. When fitting a logistic regression model, R automatically converts factor variables into indicator variables, using the first factor level (alphabetically, by default) as the reference category.
 
-A small *p*-value (typically less than 0.05) suggests that the predictor has a statistically significant effect on churn. For example, if `account.length` has a large *p*-value, it may not be a strong predictor and could be removed to simplify the model.
-
-> *Practice:* Try removing one or more non-significant variables (e.g., `account.length`) and refit the model. Compare the new model’s summary to the original. How do the coefficients or model fit statistics change?
-
-You might wonder why, in this example, we fit the logistic regression model to the entire *churn* dataset, while in Section [-@sec-ch7-knn-churn], we first partitioned the data into training and test sets. That is because our current goal is to learn how to fit and interpret logistic regression models (not yet to evaluate out-of-sample predictive performance), which we will explore later.
-
-Also, we did not manually create dummy variables for `intl.plan` and `voice.plan`. Unlike kNN, logistic regression in R automatically handles binary factors by converting them into 0/1 indicator variables, with the first level (e.g., `"no"`) serving as the reference category.
-
-Curious how logistic regression compares to kNN or Naive Bayes in terms of predictive accuracy? You will get to see that soon, in the case study later in this chapter. We will not only compare their accuracy, but also their interpretability and suitability for different types of decisions.
-
-Finally, similar to the `lm()` function, the `glm()` model also supports the `predict()` function. In the case of logistic regression, `predict()` returns the predicted probabilities of the **non-reference class**—that is, the second level of the outcome factor by default. The reference class is determined by the ordering of factor levels in the response variable and can be explicitly set using the `relevel()` function. We will explore how to interpret and apply these predicted probabilities in the following sections.
-
-Note that in logistic regression using `glm()`, the `predict()` function always returns the probability of the **non-reference class** (typically the second factor level). For example, the outcome variable `churn` has levels `"yes"` and `"no"`, and `"yes"` is the first factor level (thus the reference level). In this case, `predict(glm_churn, type = "response")` returns the probability of `"no"`. To change which class is treated as the reference, use `relevel(churn, ref = "no")` before fitting the model.
+As with linear regression models fitted using `lm()`, predictions from a logistic regression model are obtained using the `predict()` function. When `type = "response"` is specified, `predict()` returns predicted probabilities for the *non-reference class* of the response variable. The choice of reference category depends on the ordering of factor levels and can be explicitly controlled using the `relevel()` function. We examine how to interpret and evaluate these predicted probabilities in the following sections.
 
 ## Poisson Regression for Modeling Count Data
 
-Have you ever wondered how often an event will happen: like how many times a customer might call a support center in a given month? When the outcome is a count (how many, not how much), Poisson regression becomes a powerful modeling tool.
+Many data science problems involve outcomes that record *how many times* an event occurs within a fixed interval, rather than measuring a continuous quantity. Examples include the number of customer service calls in a month, the number of website visits per hour, or the number of products purchased by a customer. When the response variable represents such counts, Poisson regression provides a natural and principled modeling framework.
 
-The Poisson distribution was first introduced by *Siméon Denis Poisson* (1781–1840) to describe the frequency of rare events, such as wrongful convictions in a legal system. Later, in one of its most famous applications, *Ladislaus Bortkiewicz* used the distribution to model the number of soldiers in the Prussian army fatally kicked by horses. Despite the unusual subject, this analysis helped demonstrate how a well-chosen statistical model can make sense of seemingly random patterns.
+The Poisson distribution was introduced in the nineteenth century to describe the frequency of rare events. One of its most well-known early applications was by Ladislaus Bortkiewicz, who modeled the number of soldiers in the Prussian army fatally kicked by horses. Although unusual, this example demonstrated how a carefully chosen statistical model can reveal structure in seemingly random event counts.
 
-Poisson regression builds on this foundation. It is a generalized linear model designed for *count data*, where the response variable represents how many times an event occurs in a fixed interval. Examples include the number of daily customer service calls, visits to a website per hour, or products purchased per customer.
+Poisson regression builds on this idea by embedding the Poisson distribution within the generalized linear model framework. It is specifically designed for *count data*, where the response variable takes non-negative integer values and represents the number of events occurring in a fixed period or region. Common applications include modeling call volumes, transaction counts, and incident frequencies.
 
-Unlike linear regression, which assumes normally distributed residuals, Poisson regression assumes that the *conditional distribution* of the response variable (given the predictors) follows a *Poisson distribution*, and that the mean equals the variance. This makes it especially useful for modeling non-negative integers that represent event frequencies.
+Unlike linear regression, which assumes normally distributed errors, Poisson regression assumes that the conditional distribution of the response variable follows a Poisson distribution, with the mean equal to the variance. This assumption makes the model particularly suitable for event counts, although it also highlights the need to check for potential overdispersion in practice.
 
-Like logistic regression, Poisson regression belongs to the family of generalized linear models (GLMs), extending the ideas introduced in the previous section.
-
-The model is defined as: $$
+As a generalized linear model, Poisson regression links the expected event count to a linear predictor using the natural logarithm: $$
 \ln(\lambda) = b_0 + b_1 x_1 + b_2 x_2 + \dots + b_m x_m,
-$$ where $\lambda$ represents the expected count of events. The predictors $x_1, x_2, \dots, x_m$ affect the log of $\lambda$. The $\ln$ symbol refers to the *natural logarithm*, a transformation that compresses large values and stretches small ones. This helps to linearize relationships. Crucially, this transformation ensures that predicted counts are always positive, which aligns with the nature of count data.
+$$ where $\lambda$ denotes the expected number of events. The log link ensures that predicted counts are always positive and allows multiplicative effects on the original scale to be modeled as additive effects on the log scale. In this formulation, each predictor influences the *rate* at which events are expected to occur.
 
-In the next subsection, we will fit a Poisson regression model in R using the *churn* dataset to explore what drives customer service call frequency.
+In the next subsection, we fit a Poisson regression model in R using the `churn_mlc` dataset to investigate factors associated with customer service call frequency.
 
 ### Fitting a Poisson Regression Model in R {.unnumbered}
 
-How often do customers call the support line, and what factors drive that behavior? These are questions suited for modeling *count data*, where the outcome reflects how many times an event occurs (not how much of something is measured). Since the response is a non-negative integer, linear regression is no longer suitable. Instead, we turn to *Poisson regression*, a type of generalized linear model designed specifically for this kind of outcome.
+We now fit a Poisson regression model to analyze customer service call frequency, a typical example of count data. The response variable `customer_calls` records how many times a customer contacted support, making Poisson regression more appropriate than linear regression. Because the response is a non-negative integer, modeling it within the generalized linear model framework allows us to respect both its distributional properties and its natural constraints.
 
-To illustrate, we analyze customer service call frequency using the *churn* dataset. Our goal is to model the number of customer service calls (`customer.calls`) based on customer characteristics and service usage. Because `customer.calls` is a count variable, Poisson regression is more appropriate than linear regression.
-
-In R, we fit a Poisson regression model using the `glm()` function, the same function we used for logistic regression. The syntax is:
+We use the `churn_mlc` dataset and model the expected number of customer service calls as a function of customer characteristics and usage behavior. As with logistic regression, Poisson regression is fitted using the `glm()` function. The general syntax is:
 
 ``` r
 glm(response_variable ~ predictor_variables, data = dataset, family = poisson)
 ```
 
-Here, `family = poisson` tells R to fit a model under the assumption that the mean and variance of the response are equal, as expected under a Poisson distribution.
+Here, `family = poisson` specifies that the response follows a Poisson distribution, implying that the conditional mean and variance are equal.
 
 We fit the model as follows:
 
 ```{r}
-formula_calls = customer.calls ~ churn + voice.messages + day.mins + eve.mins + night.mins + intl.mins + intl.plan + voice.plan
+formula_calls = customer_calls ~ churn + voice_messages + day_mins + eve_mins + night_mins + intl_mins + intl_plan + voice_plan
 
-reg_pois = glm(formula = formula_calls, data = churn, family = poisson)
+reg_pois = glm(formula = formula_calls, data = churn_mlc, family = poisson)
 ```
 
-To examine the model output:
+A summary of the fitted model is obtained using:
 
 ```{r}
 summary(reg_pois)
 ```
 
-The output provides:
+The output reports coefficient estimates, standard errors, *z*-statistics, and *p*-values. Each coefficient represents the effect of a predictor on the *log of the expected number of customer service calls*. Predictors with small *p*-values provide evidence of a statistically significant association with call frequency, while predictors with large *p*-values may contribute little explanatory value.
 
--   *Coefficients*, which quantify the effect of each predictor on the expected number of customer calls.
+Unlike linear regression, Poisson regression coefficients are interpreted on a multiplicative scale. A one-unit increase in a predictor multiplies the expected count by $e^{b}$, where $b$ is the corresponding coefficient. For example, if the coefficient for `intl_plan` is 0.3, then $$
+e^{0.3} - 1 \approx 0.35,
+$$ indicating that customers with an international plan are expected to make approximately 35% more service calls than those without one, holding all other variables constant.
 
--   *Standard errors*, which measure uncertainty around the estimates.
+> *Practice:* Suppose a predictor has a coefficient of $-0.2$. Compute $e^{-0.2} - 1$ and interpret the result as a percentage change in the expected number of service calls.
 
--   *z-values* and *p-values*, which test whether each predictor significantly contributes to the model.
+One important modeling assumption in Poisson regression is that the variance of the response equals its mean. When the variance is substantially larger, a phenomenon known as *overdispersion*, the standard Poisson model may underestimate uncertainty. In such cases, alternatives such as quasi-Poisson or negative binomial regression are often more appropriate. Although we do not explore these extensions in detail here, they are commonly used in applied count data analysis.
 
-A small *p*-value (typically less than 0.05) suggests that the predictor has a statistically significant effect on the call frequency. If a variable such as `voice.messages` has a large *p*-value, it may not add meaningful explanatory power and could be removed to simplify the model.
+As with other generalized linear models, predictions from a Poisson regression model can be obtained using the `predict()` function. These predictions represent expected event counts and are useful for estimating call volumes for new customer profiles.
 
-Interpreting coefficients in Poisson regression is different from linear regression. Coefficients are on the log scale: each unit increase in a predictor multiplies the expected count by $e^{b}$, where $b$ is the coefficient. For instance, if the coefficient for `intl.plan` is 0.3: $$
-e^{0.3} - 1 \approx 0.35.
-$$ This means customers with an international plan are expected to make about 35% more service calls than those without one, holding other predictors constant.
-
-> *Practice:* Suppose a predictor has a coefficient of $-0.2$. What is the expected percentage change in service calls? Compute $e^{-0.2} - 1$ and interpret the result.
-
-*Note:* When the variance of the response variable is much greater than the mean, a condition called *overdispersion*, the standard Poisson model may not be suitable. In such cases, extensions like *quasi-Poisson* or *negative binomial regression* are better suited. Although we will not cover these models in detail here, they are valuable tools for analyzing real-world count data.
-
-*Tip:* As with logistic regression, you can use the `predict()` function to generate predicted values from a Poisson model. These predictions return expected counts, which can be useful for estimating the number of calls for new customer profiles.
-
-Poisson regression extends the linear modeling framework to a broader class of problems involving event frequency. It provides an interpretable and statistically grounded method for modeling count data. Similar to logistic regression, it belongs to the family of generalized linear models.
+Poisson regression thus extends the regression framework to outcomes involving event frequencies, providing an interpretable and statistically principled approach to modeling count data.
 
 ## Stepwise Regression for Predictor Selection {#sec-ch10-stepwise}
 
-*Which predictors should we include in our regression model, and which should we leave out?* This is one of the most important questions in applied data science. Including too few variables risks overlooking meaningful relationships; including too many can lead to overfitting and diminished generalization performance.
+An important practical question in regression modeling is deciding which predictors to include in the model. Including too few variables may omit important relationships, while including too many can lead to overfitting, reduced interpretability, and poor generalization to new data. Effective predictor selection is therefore essential for building regression models that are both informative and reliable.
 
-Selecting appropriate predictors is essential for constructing a regression model that is both accurate and interpretable. This process, known as *model specification*, aims to preserve essential associations while excluding irrelevant variables. A well-specified model not only enhances predictive accuracy but also ensures that the resulting insights are meaningful and actionable.
+This process, often referred to as *model specification* or *feature selection*, aims to balance explanatory power with simplicity. A well-specified model captures the key drivers of the response variable without being unnecessarily complex. Achieving this balance becomes increasingly challenging in real-world datasets, where analysts are often confronted with a large number of potential predictors.
 
-In real-world applications (particularly in business and data science), datasets often contain a large number of potential predictors. Managing this complexity requires systematic approaches for identifying the most relevant variables. One such approach is *stepwise regression*, an iterative algorithm that evaluates predictors based on their contribution to the model. It adds or removes variables one at a time, guided by statistical significance and model evaluation criteria.
+*Stepwise regression* is one commonly used approach for addressing this challenge. It is an iterative, algorithmic procedure that adds or removes predictors one at a time based on their contribution to model quality, as measured by statistical criteria. Rather than relying solely on subjective judgment, stepwise regression provides a systematic way to explore subsets of predictors and assess their relevance.
 
-Stepwise regression builds on earlier stages in the data science workflow. In Chapter [-@sec-ch4-EDA], we used visualizations and descriptive summaries to explore relationships among variables. In Chapter [-@sec-ch5-statistics], we formally tested associations between predictors and the response. These initial steps offered valuable intuition. Stepwise regression builds upon that foundation, formalizing and automating feature selection using evaluation metrics.
+This approach builds naturally on earlier stages of the data science workflow. In Chapter [-@sec-ch4-EDA], exploratory analysis helped identify promising relationships among variables. In Chapter [-@sec-ch5-statistics], formal hypothesis tests quantified these associations. Stepwise regression extends these ideas by automating predictor selection using model-based evaluation metrics.
 
-Due to its structured procedure, stepwise regression is especially useful for small to medium-sized datasets, where it can improve model clarity without imposing excessive computational demands. In the next subsections, we will demonstrate how to perform stepwise regression in R, introduce model selection criteria such as AIC, and discuss both the strengths and limitations of this method.
+Stepwise methods are particularly useful for small to medium-sized datasets, where exhaustive search over all possible predictor combinations is impractical but computational efficiency remains important. In the following subsections, we demonstrate how to perform stepwise regression in R, introduce model selection criteria such as the Akaike Information Criterion (AIC), and discuss both the advantages and limitations of this approach.
 
 ### How AIC Guides Model Selection {.unnumbered}
 
-How do we know if a simpler model is better, or if we have left out something essential? This question lies at the heart of model selection. When faced with multiple competing models, we need a principled way to compare them, balancing model fit with interpretability.
+When comparing competing regression models, we need a principled way to decide whether a simpler model is preferable to a more complex one. Model selection criteria address this challenge by balancing goodness of fit against model complexity, discouraging the inclusion of predictors that offer little explanatory value.
 
-One such tool is the *Akaike Information Criterion (AIC)*. AIC offers a structured trade-off between model complexity and goodness of fit: lower AIC values indicate a more favorable balance between explanatory power and simplicity. It is defined as $$
+One widely used criterion is the *Akaike Information Criterion (AIC)*. AIC evaluates models based on a trade-off between fit and complexity, with lower values indicating a more favorable balance. For linear regression models, AIC can be expressed as $$
 AIC = 2m + n \log\left(\frac{SSE}{n}\right),
-$$ where $m$ denotes the number of estimated parameters in the model, $n$ is the number of observations, and $SSE$ is the sum of squared errors (as introduced in @eq-sse), capturing the total unexplained variability in the response variable.
+$$ where $m$ denotes the number of estimated parameters in the model, $n$ is the number of observations, and $SSE$ is the sum of squared errors (introduced in @eq-sse), which measures the unexplained variability in the response variable.
 
-Unlike $R^2$, which always increases as more predictors are added, AIC explicitly penalizes model complexity. This penalty helps prevent overfitting (where a model describes random noise rather than meaningful structure) by favoring simpler models that still provide a good fit. AIC serves as a model “scorecard”: it rewards goodness of fit while discouraging unnecessary complexity, much like preferring the simplest recipe that still delivers excellent flavor.
+Unlike $R^2$, which increases whenever additional predictors are added, AIC explicitly penalizes model complexity through the term $2m$. This penalty helps guard against overfitting by favoring models that achieve a good fit using as few parameters as possible. Importantly, AIC is a *relative* measure: it is meaningful only when comparing models fitted to the same dataset, and the model with the smallest AIC is preferred among the candidates under consideration.
 
-While AIC is widely used, it is not the only available criterion. An alternative is the *Bayesian Information Criterion (BIC)*, which applies a stronger penalty for model complexity. It is defined as $$
-BIC = \log(n) \times m + n \log\left(\frac{SSE}{n}\right),
-$$ where the terms are as previously defined. The penalty in BIC grows with the sample size $n$, causing it to favor more parsimonious models as datasets become larger. BIC may be more appropriate when the goal is to identify the true underlying model, while AIC is often preferred for optimizing predictive accuracy. The choice depends on context, but both criteria reflect the same core idea: balancing fit with parsimony.
+An alternative criterion is the *Bayesian Information Criterion (BIC)*, defined as $$
+BIC = \log(n)\, m + n \log\left(\frac{SSE}{n}\right),
+$$ where the notation is the same as above. Compared to AIC, BIC imposes a stronger penalty for model complexity, particularly as the sample size $n$ increases. As a result, BIC tends to favor more parsimonious models and is often used when the primary goal is identifying a simpler underlying structure rather than maximizing predictive accuracy.
 
-By default, the `step()` function in R uses AIC as its model selection criterion. We will demonstrate this process in the next subsection.
+Both AIC and BIC embody the same fundamental principle: model selection should balance explanatory power with simplicity. In this chapter, we focus on AIC, which is the default criterion used by the `step()` function in R. In the next subsection, we demonstrate how AIC is applied in practice to guide stepwise regression.
 
 ### Stepwise Regression in Practice: Using `step()` in R {.unnumbered}
 
-After introducing model selection criteria like AIC, we can implement them in practice using stepwise regression. In R, the `step()` function (part of base R) automates the selection of predictors to identify an optimal model. It iteratively evaluates predictors and includes or excludes them based on improvements in AIC.
-
-The `step()` function takes a fitted model object (such as one created using `lm()` or `glm()`) and applies the stepwise selection algorithm. The general syntax is:
+After introducing model selection criteria such as AIC, we now apply them in practice using stepwise regression. In R, the `step()` function (part of base R) automates predictor selection by iteratively adding or removing variables to improve the AIC score. The function operates on an already fitted model object, such as one produced by `lm()` or `glm()`. Its general syntax is:
 
 ```{r eval = FALSE}
 step(object, direction = c("both", "backward", "forward"))
 ```
 
-where `object` is a model of class `"lm"` or `"glm"`. The `direction` argument specifies the selection strategy:
+where `object` is a model of class `"lm"` or `"glm"`. The `direction` argument specifies the selection strategy. Forward selection (`direction = "forward"`) starts from a minimal model and adds predictors, backward elimination (`direction = "backward"`) begins with a full model and removes predictors, and `"both"` allows movement in either direction.
 
--   `"forward"`: starts with no predictors and adds them one at a time;
+To illustrate the procedure, we return to the `marketing` dataset, which contains several potentially correlated predictors of `revenue`. Our goal is to identify a parsimonious and interpretable regression model.
 
--   `"backward"`: begins with all predictors and removes them sequentially;
-
--   `"both"`: combines forward selection and backward elimination.
-
-::: {#ex-stepwise-regression .example}
-To illustrate, we apply stepwise regression to the *marketing* dataset, which includes seven predictors. The goal is to construct a parsimonious model that predicts `revenue` while remaining interpretable.
-
-We begin by fitting a full linear model using all available predictors:
+We begin by fitting a full linear regression model that includes all available predictors:
 
 ```{r}
 data(marketing, package = "liver")
@@ -795,103 +684,101 @@ full_model = lm(revenue ~ ., data = marketing)
 summary(full_model)
 ```
 
-Although the full model includes all available predictors, not all of them appear to meaningfully contribute to explaining variation in `revenue`. The summary output shows that all predictors have high *p*-values, which is unusual and suggests that none of them are statistically significant on their own, at least in the presence of the other predictors. For instance, the *p*-value for `spend` is `r round(summary(full_model)$coefficients[2, 4], 3)`, providing limited evidence that it is a meaningful predictor.
+Although the full model incorporates all predictors, many coefficient estimates exhibit large *p*-values. For example, the *p*-value associated with `spend` is `r round(summary(full_model)$coefficients[2, 4], 3)`. This does not necessarily imply that the predictors are irrelevant, but rather that their *individual* effects are difficult to disentangle when several variables convey overlapping information.
 
-This pattern may be a sign of *multicollinearity*, a situation in which two or more predictors are highly correlated with one another. When multicollinearity is present, the regression algorithm has difficulty estimating the unique effect of each variable because the predictors convey overlapping information. As a result, the standard errors of the coefficient estimates become inflated, and individual predictors may appear statistically insignificant. However, the model as a whole may still fit the data well, as indicated by a relatively high $R^2$ value.
+Such behavior is commonly associated with *multicollinearity*, a situation in which predictors are strongly correlated with one another. Multicollinearity inflates standard errors and complicates coefficient interpretation, even when the model as a whole explains a substantial proportion of the variability in the response. Importantly, while multicollinearity does not bias coefficient estimates, it can obscure which predictors are most informative.
 
-Multicollinearity does not bias the regression coefficients, but it undermines the interpretability of the model and complicates variable selection. For a more detailed treatment of multicollinearity and its diagnostics, see @kutner2005applied.
-
-This ambiguity reinforces the importance of model selection techniques, such as stepwise regression, which help identify a more stable and parsimonious subset of predictors that contribute meaningfully to the response.
-
-We refine the model using the `step()` function with `direction = "both"`:
+This motivates the use of automated model selection techniques. We apply stepwise regression using AIC as the selection criterion and allowing both forward and backward moves:
 
 ```{r}
 stepwise_model = step(full_model, direction = "both")
 ```
 
-The algorithm evaluates each variable’s contribution, removing those that do not improve the AIC score. The process continues until no further improvement is possible, terminating after `r length(stepwise_model$anova$AIC)` iterations.
+The algorithm evaluates alternative models by adding or removing predictors, retaining changes only when they reduce the AIC. This process continues until no further improvement is possible. Across iterations, AIC decreases from an initial value of `r round(max(stepwise_model$anova$AIC), 2)` for the full model to `r round(min(stepwise_model$anova$AIC), 2)` for the final selected model, indicating a more favorable balance between fit and complexity.
 
-AIC values track the progression of model refinement. The initial full model has an AIC of `r round(max(stepwise_model$anova$AIC), 2)`, while the final selected model achieves a lower AIC of `r round(min(stepwise_model$anova$AIC), 2)`, indicating a better balance between model fit and complexity.
-
-To examine the final model, we use:
+We examine the resulting model using:
 
 ```{r}
 summary(stepwise_model)
 ```
 
-Stepwise regression yields a simpler model with just two predictors: `clicks` and `display`. The resulting regression equation is: $$
-\widehat{\text{revenue}} = `r round(stepwise_model$coefficients[1], 2)` + `r round(stepwise_model$coefficients[2], 2)` \times \text{clicks} + `r round(stepwise_model$coefficients[3], 2)` \times \text{display}.
+The stepwise procedure selects a reduced model containing two predictors, `clicks` and `display`, yielding the regression equation $$
+\widehat{\text{revenue}} =
+`r round(stepwise_model$coefficients[1], 2)` +
+`r round(stepwise_model$coefficients[2], 2)` \times \text{clicks} +
+`r round(stepwise_model$coefficients[3], 2)` \times \text{display}.
 $$
 
-Model performance improves on several fronts. The *RSE*, which measures average prediction error, decreases from `r round(sqrt(sum(residuals(full_model)^2)/df.residual(full_model)), 2)` to `r round(sqrt(sum(residuals(stepwise_model)^2)/df.residual(stepwise_model)), 2)`. The *Adjusted R-squared* increases from `r round(summary(full_model)$adj.r.squared, 2)*100`% to `r round(summary(stepwise_model)$adj.r.squared, 2)*100`%, suggesting that the final model explains a greater proportion of variability in `revenue` while using fewer predictors. This reflects an improvement in both parsimony and interpretability.
-:::
+Compared to the full model, this reduced model achieves a lower residual standard error, decreasing from `r round(sqrt(sum(residuals(full_model)^2)/df.residual(full_model)), 2)` to `r round(sqrt(sum(residuals(stepwise_model)^2)/df.residual(stepwise_model)), 2)`, and a higher Adjusted $R^2$, increasing from `r round(summary(full_model)$adj.r.squared * 100, 1)`% to `r round(summary(stepwise_model)$adj.r.squared * 100, 1)`%. These changes indicate an improvement in both predictive efficiency and interpretability.
 
-> *Practice:* Try running stepwise regression on a different dataset, or compare `"forward"` and `"backward"` directions to `"both"`. Do all approaches lead to the same final model?
+Stepwise regression thus provides a practical tool for navigating predictor selection in the presence of correlated variables. However, it remains a heuristic approach and should be complemented with subject-matter knowledge, diagnostic checks, and validation whenever possible.
+
+> *Practice:* Apply stepwise regression using `"forward"` and `"backward"` selection instead of `"both"`. Do all approaches lead to the same final model? How do their AIC values compare?
 
 ### Considerations for Stepwise Regression {.unnumbered}
 
-Stepwise regression offers a systematic approach to model selection, striking a balance between interpretability and computational efficiency. By iteratively refining the set of predictors, it helps identify a streamlined model without manually testing every possible combination. This makes it especially useful for moderate-sized datasets where full subset selection would be computationally intensive.
+Stepwise regression provides a structured and computationally efficient approach to predictor selection. By iteratively adding or removing variables based on a model selection criterion, it offers a practical alternative to exhaustive subset search, particularly for moderate-sized datasets. When used appropriately, it can yield simpler and more interpretable models.
 
-However, stepwise regression also has some limitations. The algorithm proceeds sequentially, evaluating one variable at a time rather than considering all subsets of predictors exhaustively. As a result, it may miss interactions or combinations of variables that jointly improve model performance. It is also susceptible to *overfitting*, particularly when applied to small datasets with many predictors. In such cases, the model may capture random noise rather than meaningful relationships, reducing its ability to generalize to new data. Additionally, *multicollinearity* among predictors can distort coefficient estimates and inflate *p*-values, leading to misleading conclusions.
+At the same time, stepwise regression has important limitations that must be kept in mind. Because the procedure evaluates predictors sequentially rather than jointly, it may overlook combinations of variables or interaction effects that improve model performance only when considered together. The method is also sensitive to sampling variability: small changes in the data can lead to different selected models. Moreover, when many predictors are available relative to the sample size, stepwise regression can contribute to overfitting, capturing random noise rather than stable relationships. Multicollinearity among predictors further complicates interpretation by inflating standard errors and obscuring individual effects.
 
-For high-dimensional datasets or situations requiring more robust predictor selection, alternative methods such as *LASSO* (Least Absolute Shrinkage and Selection Operator) and *Ridge Regression* are often more effective. These regularization techniques introduce penalties for model complexity, which stabilizes coefficient estimates and improves predictive accuracy. For a detailed introduction to these methods, see "An Introduction to Statistical Learning with Applications in R" [@gareth2013introduction].
+In settings with many predictors or complex dependency structures, regularization methods such as *LASSO* (Least Absolute Shrinkage and Selection Operator) and *Ridge Regression* are often preferable. These approaches shrink coefficient estimates toward zero through explicit penalty terms, leading to more stable models and improved predictive performance. A comprehensive introduction to these techniques is provided in *An Introduction to Statistical Learning with Applications in R* [@gareth2013introduction].
 
-Thoughtful model specification remains a crucial part of regression analysis. By selecting predictors using principled criteria and validating model performance on representative data, we can construct models that are both interpretable and predictive. While stepwise regression has limitations, it remains a valuable tool (particularly for moderate-sized problems) when used with care and awareness of its assumptions.
+Ultimately, predictor selection should be guided by a combination of statistical criteria, domain knowledge, and validation on representative data. While stepwise regression should not be viewed as a definitive solution to model selection, it remains a useful exploratory tool when applied with care and a clear understanding of its assumptions and limitations.
 
 ## Modeling Non-Linear Relationships
 
-Imagine trying to predict house prices using the age of a property. A brand-new home might be more expensive than one that is 20 years old, but what about a 100-year-old historic house? In practice, relationships like this are rarely straight lines. Yet standard linear regression assumes exactly that: a constant rate of change between predictors and the response.
+Many real-world relationships are not well described by straight lines. Consider predicting house prices using the age of a property. Prices may decline as a house ages, but very old or historic homes can command a premium. Such patterns exhibit curvature rather than a constant rate of change, yet standard linear regression assumes exactly that: a linear relationship between predictors and the response.
 
-Linear regression models are valued for their simplicity, interpretability, and ease of implementation. They work well when the relationship between variables is approximately linear. However, when data shows curvature or other non-linear patterns, a linear model may underperform, leading to poor predictions and misleading interpretations.
+Linear regression remains a powerful and widely used modeling tool due to its simplicity and interpretability. When relationships are approximately linear, it performs well and yields easily interpretable results. However, when the underlying association is non-linear, a linear model may fail to capture important structure in the data, leading to systematic prediction errors and misleading conclusions.
 
-Earlier in this chapter, we used stepwise regression (Section [-@sec-ch10-stepwise]) to refine model specification and reduce complexity. But while stepwise regression helps us choose which variables to include, it does not address how variables relate to the outcome. It assumes that relationships are linear in form. To address this limitation while preserving interpretability, we turn to *polynomial regression*, an extension of linear regression that captures non-linear trends by transforming predictors.
+Earlier in this chapter, we used stepwise regression (Section [-@sec-ch10-stepwise]) to refine model specification by selecting a subset of relevant predictors. While this approach helps determine *which* variables to include, it does not address *how* those variables relate to the outcome. Stepwise regression assumes linear effects and therefore cannot accommodate curvature or other non-linear patterns.
+
+To model such relationships while retaining the familiar regression framework, we turn to *polynomial regression*. This approach extends linear regression by transforming predictors to allow non-linear trends to be captured, without sacrificing interpretability or requiring fundamentally new modeling machinery.
 
 ### The Need for Non-Linear Regression {.unnumbered}
 
-Linear regression assumes a constant rate of change, represented as a straight line. However, many real-world datasets show more complex dynamics. Consider the scatter plot in @fig-scoter-plot-non-reg, which shows the relationship between `unit.price` (price per unit area) and `house.age` in the *house* dataset. The orange line represents a simple linear regression fit; however, it clearly misses the curvature present in the data.
+Linear regression assumes a constant rate of change between a predictor and the response, represented by a straight line. In practice, however, many real-world relationships exhibit curvature. This is illustrated in @fig-scatter-plot-non-reg, which shows the relationship between `unit_price` (price per unit area) and `house_age` in the *house* dataset. The dashed orange line corresponds to a simple linear regression fit, which clearly fails to capture the curved pattern in the data.
 
-As seen in the plot, the linear model underestimates prices for newer homes and overestimates them for older ones. This mismatch highlights the limitations of a strictly linear model.
+From the plot, we see that the linear model tends to underestimate prices for very new homes and overestimate prices for older ones. These systematic deviations indicate that the assumption of linearity is violated and that a more flexible model is needed.
 
-To better model the observed trend, we can introduce non-linear terms into the regression equation. If the relationship resembles a curve, a quadratic model may be appropriate: $$
-\text{unit.price} = b_0 + b_1 \times \text{house.age} + b_2 \times \text{house.age}^2.
+One way to address this limitation is to introduce non-linear transformations of the predictor while retaining the linear regression framework. If the relationship follows a curved pattern, a quadratic model may be appropriate: $$
+\mathrm{unit\_price} = b_0 + b_1 \times \mathrm{house\_age} + b_2 \times \mathrm{house\_age}^2.
 $$
 
-This formulation includes both the original predictor and its squared term, allowing the model to bend with the data. Although it includes a non-linear transformation, the model remains a *linear regression model* because it is linear in the parameters ($b_0, b_1, b_2$). The coefficients are still estimated using ordinary least squares.
+This model includes both the original predictor and its squared term, allowing the fitted relationship to bend and adapt to the data. Although the relationship between `house_age` and `unit_price` is now non-linear, the model remains a *linear regression model* because it is linear in the parameters ($b_0$, $b_1$, and $b_2$). As a result, the coefficients can still be estimated using ordinary least squares.
 
-The blue curve in @fig-scoter-plot-non-reg shows the improved fit from a quadratic regression. Unlike the straight-line model, it adapts to the curvature in the data, producing a more accurate and visually aligned fit.
+The blue curve in @fig-scatter-plot-non-reg shows the fitted quadratic regression model. Compared to the straight-line fit, it follows the observed curvature more closely, leading to a visually and substantively improved representation of the data.
 
-```{r fig-scoter-plot-non-reg, echo = FALSE, out.width = "80%", fig.cap = "Scatter plot of house price ($) versus house age (years) for the house dataset, with the fitted simple linear regression line in dashed-orange and the quadratic regression curve in blue."}
+```{r fig-scatter-plot-non-reg, echo = FALSE, out.width = "80%", fig.cap = "Scatter plot of house price ($) versus house age (years) for the house dataset, with the fitted simple linear regression line in dashed orange and the quadratic regression curve in blue."}
 
 data(house)
 
-ggplot(data = house, aes(x = house.age, y = unit.price)) +
-    geom_point(color = "gray60", alpha = 0.6) +
-    geom_smooth(method = "lm", se = FALSE, linetype = "dashed", colour = "#E66101", size = .9) +
-    stat_smooth(method = "lm", formula = y ~ x + I(x ^ 2), se = FALSE, colour = "#377EB8", size = .9) +
-    labs(
-      title = "House Age vs Unit Price",
-      x = "House Age (years)",
-      y = "Unit Price ($)"
-    ) +
-    ggtitle("Scatter Plot with Linear and Quadratic Fits")
+ggplot(data = house, aes(x = house_age, y = unit_price)) +
+  geom_point(color = "gray60", alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, linetype = "dashed", colour = "#E66101", size = .9) +
+  stat_smooth(method = "lm", formula = y ~ x + I(x^2), se = FALSE, colour = "#377EB8", size = .9) +
+  labs(
+    title = "House Age vs Unit Price",
+    x = "House Age (years)",
+    y = "Unit Price ($)"
+  )
 ```
 
-This example illustrates the importance of adapting model structure when the linearity assumption does not hold. Polynomial regression extends our modeling vocabulary by allowing us to describe more realistic shapes in the data, while keeping the model framework interpretable and statistically tractable.
+This example illustrates why adapting model structure is essential when the linearity assumption does not hold. Polynomial regression expands the range of relationships we can model while preserving interpretability and analytical tractability.
 
-Note that although polynomial regression models curves, they are still called *linear models* because they are linear in their parameters. This is why tools like least squares and AIC remain valid (even when the relationship between the predictor and outcome is curved).
+It is important to emphasize that, despite modeling curved relationships, polynomial regression models are still linear models in a statistical sense because they are linear in their parameters. Consequently, familiar tools such as least squares estimation and information criteria like AIC remain applicable.
 
-Now that we have seen how polynomial regression can capture non-linear relationships while preserving the linear modeling framework, we turn to its practical implementation in R. In the next section, we will fit polynomial regression models, interpret their output, and compare their performance to simpler linear models.
+Having established the motivation for non-linear regression, we now turn to the practical implementation of polynomial regression in R. In the next section, we fit polynomial models, interpret their coefficients, and compare their performance to simpler linear alternatives.
 
 ## Polynomial Regression in Practice
 
-Polynomial regression extends linear regression by incorporating higher-degree terms of the predictor variable, such as squared ($x^2$) or cubic ($x^3$) terms. This allows the model to capture non-linear relationships while remaining *linear in the coefficients*, meaning the model can still be estimated using ordinary least squares. The general form of a polynomial regression model is: $$
-\hat{y} = b_0 + b_1 \times x + b_2 \times x^2 + \dots + b_d \times x^d,
-$$ where $d$ represents the degree of the polynomial. While polynomial regression increases modeling flexibility, high-degree polynomials ($d > 3$) risk overfitting by capturing random noise, especially near the boundaries of the predictor range.
+Polynomial regression extends linear regression by augmenting predictors with higher-degree terms, such as squared ($x^2$) or cubic ($x^3$) components. This added flexibility allows the model to capture curved relationships while remaining *linear in the coefficients*, so estimation can still be carried out using ordinary least squares. A polynomial regression model of degree $d$ takes the general form $$
+\hat{y} = b_0 + b_1 x + b_2 x^2 + \dots + b_d x^d.
+$$ Although higher-degree polynomials increase flexibility, choosing an excessively large degree can lead to overfitting, particularly near the boundaries of the predictor range. In practice, low-degree polynomials are often sufficient to capture meaningful curvature.
 
-::: {#ex-polynomial-regression .example}
-To illustrate polynomial regression, we use the *house* dataset from the **liver** package. This dataset includes housing prices and features such as age, proximity to public transport, and local amenities. Our goal is to model `unit.price` (price per unit area) as a function of `house.age` and compare the performance of simple linear and polynomial regression.
+To illustrate polynomial regression in practice, we use the *house* dataset from the **liver** package. This dataset contains information on housing prices and related features, including the age of the property. Our objective is to model `unit_price` (price per unit area) as a function of `house_age` and to compare a simple linear model with a polynomial alternative.
 
-First, we load the dataset and examine its structure:
+We begin by loading the dataset and inspecting its structure:
 
 ```{r}
 data(house)
@@ -899,64 +786,60 @@ data(house)
 str(house)
 ```
 
-The dataset consists of `r nrow(house)` observations and `r ncol(house)` variables. The target variable is `unit.price`, while predictors include `house.age` (years), `distance.to.MRT`, `stores.number`, `latitude`, and `longitude`.
+The dataset contains `r nrow(house)` observations and `r ncol(house)` variables. The response variable is `unit_price`, and the available predictors include `house_age`, `distance_to_MRT`, `stores_number`, `latitude`, and `longitude`.
 
-We begin by fitting a simple linear regression model:
+As a baseline, we first fit a simple linear regression model relating `unit_price` to `house_age`:
 
 ```{r}
-simple_reg_house = lm(unit.price ~ house.age, data = house)
+simple_reg_house = lm(unit_price ~ house_age, data = house)
 
 summary(simple_reg_house)
 ```
 
-The *R-squared (*$R^2$) value for this model is `r round(summary(simple_reg_house)$r.squared, 2)`, indicating that only `r round(summary(simple_reg_house)$r.squared * 100, 2)`% of the variability in house prices is explained by `house.age`. This suggests the linear model may not fully capture the relationship.
+The coefficient of determination for this model is $R^2 =$ `r round(summary(simple_reg_house)$r.squared, 2)`, indicating that approximately `r round(summary(simple_reg_house)$r.squared * 100, 2)`% of the variability in housing prices is explained by a linear effect of house age. This relatively modest value suggests that a straight-line relationship may not adequately capture the underlying pattern.
 
-Next, we fit a quadratic polynomial regression model to allow for curvature: $$
-\text{unit.price} = b_0 + b_1 \times \text{house.age} + b_2 \times \text{house.age}^2.
+We next fit a quadratic polynomial regression model to allow for curvature: $$
+\mathrm{unit_price} = b_0 + b_1,\mathrm{house_age} + b_2,\mathrm{house_age}^2.
 $$
 
-In R, this can be implemented using the `poly()` function, which fits orthogonal polynomials by default. These have numerical stability benefits but are less interpretable than raw powers:
+In R, this can be implemented using the `poly()` function, which fits orthogonal polynomials by default. Orthogonal polynomials improve numerical stability but yield coefficients that are less directly interpretable than raw polynomial terms:
 
 ```{r}
-reg_nonlinear_house = lm(unit.price ~ poly(house.age, 2), data = house)
+reg_nonlinear_house = lm(unit_price ~ poly(house_age, 2), data = house)
 
 summary(reg_nonlinear_house)
 ```
 
-The quadratic model yields a higher *Adjusted R-squared (*$R^2$) value of `r round(summary(reg_nonlinear_house)$adj.r.squared, 2)`, compared to the simple model. Additionally, the *RSE* decreases from `r round(summary(simple_reg_house)$sigma, 2)` to `r round(summary(reg_nonlinear_house)$sigma, 2)`, indicating improved predictive accuracy. These improvements confirm that introducing a quadratic term helps capture the underlying curvature in the data.
-:::
+The quadratic model achieves a higher Adjusted $R^2$ of `r round(summary(reg_nonlinear_house)$adj.r.squared, 2)` and a lower residual standard error, decreasing from `r round(summary(simple_reg_house)$sigma, 2)` to `r round(summary(reg_nonlinear_house)$sigma, 2)`. Together, these improvements indicate that allowing for curvature leads to a better balance between model fit and complexity.
 
-Polynomial regression enhances linear models by allowing for flexible, curved fits. However, choosing the appropriate degree is critical: too low may underfit, while too high may overfit. More advanced methods, such as splines and generalized additive models, provide further flexibility with better control over complexity. These techniques are discussed in Chapter 7 of "An Introduction to Statistical Learning with Applications in R" [@gareth2013introduction].
+Polynomial regression thus offers a natural extension of linear regression when non-linear patterns are present. At the same time, careful selection of the polynomial degree remains essential to avoid overfitting. More flexible approaches, such as splines and generalized additive models, provide additional control over model complexity and are discussed in Chapter 7 of *An Introduction to Statistical Learning with Applications in R* [@gareth2013introduction].
 
-In the next sections, we will explore model validation and diagnostic techniques that help assess reliability and guide model improvement.
+In the following sections, we turn to diagnostic and validation techniques that help assess the reliability of regression models and guide further refinement.
 
 ## Diagnosing and Validating Regression Models
 
-Before deploying a regression model, it is essential to validate its assumptions. Ignoring these assumptions is akin to constructing a house on an unstable foundation: predictions based on a flawed model can lead to misleading conclusions and costly mistakes. Model diagnostics ensure that the model is robust, reliable, and appropriate for inference and prediction.
+Before relying on a regression model for inference or prediction, it is essential to assess whether its underlying assumptions are reasonably satisfied. Ignoring these assumptions can undermine the validity of coefficient estimates, confidence intervals, and predictions. Model diagnostics provide a systematic way to evaluate whether a fitted model is appropriate for the data at hand.
 
 Linear regression relies on several key assumptions:
 
-1.  *Linearity*: The relationship between the predictor(s) and the response should be approximately linear. Scatter plots or residuals vs. fitted plots help assess this.
+1.  *Linearity*: The relationship between the predictor(s) and the response is approximately linear. This is typically assessed using residuals versus fitted value plots.
 
-2.  *Independence*: Observations should be independent of one another. That is, the outcome for one case should not influence another.
+2.  *Independence*: Observations are independent of one another, meaning that the outcome for one case does not influence another. This assumption is usually justified by the study design rather than diagnostic plots.
 
-3.  *Normality*: The residuals (errors) should follow a normal distribution. This is typically checked using a Q-Q plot.
+3.  *Normality*: The residuals follow an approximately normal distribution, which is commonly checked using a normal Q–Q plot.
 
-4.  *Constant Variance (Homoscedasticity)*: The residuals should have roughly constant variance across all levels of the predictor(s). A residuals vs. fitted plot is used to examine this.
+4.  *Constant Variance (Homoscedasticity)*: The residuals have roughly constant variance across the range of fitted values. Residuals versus fitted plots and scale–location plots are useful for assessing this condition.
 
-Violations of these assumptions undermine the reliability of coefficient estimates and associated inferential statistics. Even a model with a high $R^2$ may be inappropriate if its assumptions are violated.
+Violations of these assumptions can compromise both inference and prediction. Even models with strong overall fit, such as a high $R^2$, may be unreliable if key assumptions are not met.
 
-::: {#ex-diagnosing-regression .example}
-To demonstrate model diagnostics, we evaluate the multiple regression model constructed in the example of Section [-@sec-ch10-stepwise] using the *marketing* dataset. The fitted model predicts daily revenue (`revenue`) based on `clicks` and `display`.
-
-We generate diagnostic plots using:
+To illustrate regression diagnostics in practice, we examine the multiple regression model introduced in Section [-@sec-ch10-stepwise], fitted to the `marketing` dataset. This model predicts daily revenue (`revenue`) using `clicks` and `display` as predictors. The standard diagnostic plots for this model are generated as follows:
 
 ```{r out.width = "100%"}
 #| label: fig-ch10-model-diagnostics
 #| echo: true
 #| layout-nrow: 2
 #| fig-cap: "Diagnostic plots for assessing regression model assumptions."
-#| fig-subcap: 
+#| fig-subcap:
 #|   - "Residuals vs Fitted"
 #|   - "Normal Q-Q"
 #|   - "Scale-Location"
@@ -964,63 +847,62 @@ We generate diagnostic plots using:
 
 stepwise_model = lm(revenue ~ clicks + display, data = marketing)
 
-plot(stepwise_model)  
+plot(stepwise_model)
 ```
 
-These diagnostic plots provide visual checks of model assumptions:
+These plots provide complementary perspectives on model adequacy. The *Residuals vs. Fitted* plot (upper left) is used to assess linearity and constant variance. A random scatter of points with no systematic pattern supports both assumptions. In this case, the residuals appear evenly distributed without obvious curvature or funnel shapes.
 
--   The *Normal Q-Q plot* (upper-right) evaluates whether residuals follow a normal distribution. Points that fall along the diagonal line support the normality assumption. In this case, the residuals align well with the theoretical quantiles.
+The *Normal Q–Q* plot (upper right) evaluates the normality of residuals. When points lie close to the diagonal reference line, the normality assumption is reasonable. Here, the residuals follow the theoretical quantiles closely, suggesting no major departures from normality.
 
--   The *Residuals vs. Fitted plot* (upper-left) assesses both linearity and homoscedasticity. A random scatter with uniform spread supports both assumptions. Here, no strong patterns or funnel shapes are evident, suggesting that the assumptions are reasonable.
+The *Scale–Location* plot (lower left) provides an additional check for homoscedasticity by displaying the spread of standardized residuals across fitted values. The relatively uniform spread observed here supports the constant variance assumption.
 
--   The *Independence assumption* is not directly tested via plots but should be evaluated based on the study design. In the *marketing* dataset, each day's revenue is assumed to be independent from others, making this assumption plausible.
+Independence is not directly tested using diagnostic plots and must be assessed based on the data-generating process. For the `marketing` dataset, daily revenue observations are assumed to be independent, making this assumption plausible.
 
-When examining these plots, ask yourself: - Do the residuals look randomly scattered, or do you notice any patterns? - Do the points in the Q-Q plot fall along the line, or do they curve away? - Is there a visible funnel shape in the residuals vs. fitted plot that might suggest heteroscedasticity?
+When interpreting diagnostic plots, it is useful to ask targeted questions: Do the residuals appear randomly scattered? Do they show systematic patterns or changing spread? Do extreme observations exert undue influence? Actively engaging with these questions helps develop sound diagnostic judgment.
 
-Actively interpreting these patterns helps reinforce your understanding of model assumptions and deepens your statistical intuition.
+Taken together, the diagnostic plots suggest that the fitted model satisfies the key assumptions required for reliable inference and prediction. In practice, such checks should always accompany regression analysis.
 
-Taken together, these diagnostics suggest that the fitted model satisfies the necessary assumptions for inference and prediction. When applying regression in practice, it is important to visually inspect these plots and ensure the assumptions hold.
-:::
+When assumptions are violated, alternative strategies may be necessary. *Transformations* of variables can help stabilize variance or address skewness. *Polynomial regression* or other non-linear models can address curvature. *Robust regression* techniques offer protection against departures from normality or the presence of influential observations.
 
-When assumptions are violated, alternative modeling strategies may be necessary. *Robust regression* techniques can handle violations of normality or constant variance. *Non-linear models*, such as polynomial regression or splines, help address violations of linearity. *Transformations* (e.g., logarithmic or square root) can be applied to stabilize variance or normalize skewed residuals.
-
-Validating regression models is fundamental to producing reliable, interpretable, and actionable results. By following best practices in model diagnostics and validation, we strengthen the statistical foundation of our analyses and build models that can be trusted for decision-making.
+Careful diagnostic analysis is therefore an integral part of regression modeling. By validating assumptions and responding appropriately when they are violated, we ensure that regression models provide reliable, interpretable, and actionable insights.
 
 ## Case Study: Customer Churn Prediction Models {#sec-ch10-case-study}
 
-Customer churn, which refers to when a customer discontinues service with a company, is a key challenge in subscription-based industries such as telecommunications, banking, and online platforms. Accurately predicting which customers are at risk of churning supports proactive retention strategies and can significantly reduce revenue loss.
+Customer churn, defined as the event in which a customer discontinues a service, represents a major challenge in subscription-based industries such as telecommunications, banking, and online platforms. Accurately identifying customers who are at risk of churning enables proactive retention strategies and can substantially reduce revenue loss. This case study focuses on predicting customer churn using multiple classification models and comparing their performance in a realistic modeling setting.
 
-In this case study, we apply three classification models introduced in earlier chapters of this book to predict churn using the *churn* dataset: Logistic Regression, Naive Bayes Classifier from Chapter [-@sec-ch9-bayes], kNN from Chapter [-@sec-ch7-classification-knn].
+Throughout this chapter, we have introduced several classification approaches from different perspectives. In this case study, we bring these methods together and apply them to the same prediction task using a common dataset. Specifically, we compare three models introduced earlier in the book: logistic regression (Section [-@sec-ch10-logistic-regression]), k-Nearest Neighbors (Chapter [-@sec-ch7-classification-knn]), and the Naive Bayes classifier (Chapter [-@sec-ch9-bayes]). Each model reflects a different modeling philosophy, ranging from parametric and interpretable to instance-based and probabilistic.
 
-Each model represents a distinct approach to classification. Logistic regression provides interpretable coefficients and probabilistic outputs. kNN is a non-parametric, instance-based learner that classifies observations based on similarity to their nearest neighbors. Naive Bayes offers a fast, probabilistic model that assumes conditional independence among predictors.
-
-> *Practice:* How do these models differ in how they handle decision boundaries and uncertainty? Which one do you think will perform best, and why?
-
-Our goal is to compare these models using ROC curves and AUC, which offer threshold-independent measures of classification performance, as discussed in Chapter [-@sec-ch8-evaluation]. To ensure a fair comparison, we use the same set of features and preprocessing steps for all three models. The selected features include: `account.length`, `voice.plan`, `voice.messages`, `intl.plan`, `intl.mins`, `intl.calls`, `day.mins`, `day.calls`, `eve.mins`, `eve.calls`, `night.mins`, `night.calls`, and `customer.calls`. These features capture core aspects of a customer’s usage behavior and plan characteristics, making them informative for modeling churn.
-
-We define the modeling formula used across all three classifiers:
+The analysis is based on the `churn_mlc` dataset from the **liver** package, which contains customer-level information on service usage, plan characteristics, and interactions with customer service. The target variable is `churn`, a binary indicator that records whether a customer has left the service (`yes`) or remained active (`no`). The dataset is provided in an analysis-ready format, allowing us to focus directly on modeling and evaluation within the Data Science Workflow introduced in Chapter [-@sec-ch2-intro-data-science]. We begin by loading the dataset and inspecting its structure:
 
 ```{r}
-formula = churn ~ account.length + voice.plan + voice.messages + 
-                  intl.plan + intl.mins + intl.calls + 
-                  day.mins + day.calls + eve.mins + eve.calls + 
-                  night.mins + night.calls + customer.calls
+library(liver)
+
+data(churn_mlc)
+str(churn_mlc)
 ```
 
-> *Practice:* Load the *churn* dataset using `data(churn, package = "liver")`, then use `str(churn)` to inspect its structure. What stands out about the variables? What is the distribution of `churn`?
+The dataset consists of `r nrow(churn_mlc)` observations and `r ncol(churn_mlc)` variables. The features describe customer usage patterns, subscription plans, and interactions with customer service. Rather than modeling all available variables, we select a subset of predictors that capture core aspects of customer behavior and are commonly used in churn analysis. Since the primary goal of this case study is to compare modeling approaches rather than to perform exploratory analysis, we keep EDA brief and move directly to data partitioning and model fitting.
 
-This case study follows the Data Science Workflow introduced in Chapter [-@sec-ch2-intro-data-science]. For research context, data understanding, and exploratory analysis of the *churn* dataset, see Section [-@sec-ch4-EDA-churn]. In the next subsection, we begin the data preparation process by partitioning the dataset into training and testing sets.
+> *Practice:* Apply exploratory data analysis techniques to the `churn_mlc` dataset following the approach used in Chapter [-@sec-ch4-EDA]. Compare the patterns you observe with those from the `churn` dataset.
+
+To ensure a fair comparison across models, we use the same set of predictors and preprocessing steps for all three classification methods. Model performance is evaluated using ROC curves and the area under the ROC curve (AUC), as introduced in Chapter [-@sec-ch8-evaluation]. These metrics provide a threshold-independent assessment of classification performance and allow us to compare models on equal footing. The modeling formula used throughout this case study is:
+
+```{r}
+formula = churn ~ account_length + voice_plan + voice_messages + intl_plan + intl_mins + intl_calls + day_mins + day_calls + eve_mins + eve_calls + night_mins + night_calls + customer_calls
+```
+
+In the following sections, we fit each classification model using this common setup and compare their predictive performance, interpretability, and practical suitability for churn prediction.
 
 ### Data Setup for Modeling {.unnumbered}
 
-Partitioning the data into training and test sets is a standard step in predictive modeling that allows us to estimate how well a model will generalize to new observations. A carefully structured split helps ensure that model evaluation is both valid and unbiased.
+To evaluate how well our classification models generalize to unseen data, we partition the dataset into separate training and test sets. This separation ensures that model performance is assessed on observations that were not used during model fitting, providing an unbiased estimate of predictive accuracy.
 
-To ensure consistency across chapters and reproducible results, we use the same partitioning strategy as in Chapter [-@sec-ch7-knn-churn]. The `partition()` function from the **liver** package splits the dataset into two non-overlapping subsets according to a specified ratio. Setting a random seed ensures that the partitioning results are reproducible:
+To maintain consistency across chapters and enable meaningful comparison with earlier results, we adopt the same data partitioning strategy used in Chapter [-@sec-ch7-knn-churn]. Specifically, we use the `partition()` function from the **liver** package to randomly split the data into non-overlapping subsets. Setting a random seed guarantees that the results are reproducible.
 
 ```{r}
 set.seed(42)
 
-data_sets = partition(data = churn, ratio = c(0.8, 0.2))
+data_sets = partition(data = churn_mlc, ratio = c(0.8, 0.2))
 
 train_set = data_sets$part1
 test_set  = data_sets$part2
@@ -1028,43 +910,49 @@ test_set  = data_sets$part2
 test_labels = test_set$churn
 ```
 
-This setup assigns 80% of the data to the training set and reserves 20% for evaluation. The response labels from the test set are stored separately in `test_labels` for later comparison.
+This procedure assigns 80% of the observations to the training set and reserves the remaining 20% for model evaluation. The response variable from the test set is stored separately in `test_labels` and will be used to assess predictive performance using ROC curves and AUC.
 
-> *Practice:* Why do we partition the data before training, rather than evaluating the model on the full dataset?
+> *Practice:* Repartition the `churn_mlc` dataset into a 70% training set and a 30% test set using the same approach. Check whether the class distribution of the target variable `churn` is similar in both subsets, and reflect on why preserving this balance is important for fair model evaluation.
 
-In the next subsection, we train each classification model using the same formula and training data. We then generate predictions and evaluate their performance using ROC curves and AUC.
+In the following subsections, we train each classification model using the same formula and training data. We then generate predictions on the test set and compare model performance using ROC curves and the area under the curve (AUC).
 
 ### Training the Logistic Regression Model {.unnumbered}
 
-We begin with logistic regression, a widely used baseline model for binary classification. It estimates the probability of customer churn using a linear combination of the selected predictors.
+We begin with logistic regression, a widely used baseline model for binary classification. Logistic regression models the probability of customer churn as a function of the selected predictors, making it both interpretable and well suited for probabilistic evaluation.
 
-We fit the model using the `glm()` function, specifying the `binomial` family to model the binary outcome:
+We fit the model using the `glm()` function, specifying the `binomial` family to indicate a binary response:
 
 ```{r}
 logistic_model = glm(formula = formula, data = train_set, family = binomial)
 ```
 
-Next, we generate predicted probabilities on the test set:
+Once the model is fitted, we generate predicted probabilities for the observations in the test set:
 
 ```{r}
 logistic_probs = predict(logistic_model, newdata = test_set, type = "response")
 ```
 
-By default, the `predict()` function returns the predicted probability of the **non-reference class** (typically the second factor level of the response variable). In the `churn` dataset, the outcome variable has two levels: `"yes"` and `"no"`. Since `"yes"` is the first factor level (and therefore the reference level), the output of `predict()` corresponds to the probability of `"no"`. To reverse this and obtain probabilities for `"yes"`, you can redefine the reference level of the data before partitioning and fitting the mode:
+In logistic regression, `predict(..., type = "response")` returns estimated probabilities rather than class labels. By default, these probabilities correspond to the *non-reference class* of the response variable. In the `churn_mlc` dataset, the response variable `churn` has two levels, `"yes"` and `"no"`. Since `"yes"` is the first factor level and therefore treated as the reference category, the predicted probabilities returned here represent the probability of `"no"` (i.e., *not churning*).
+
+If the goal is instead to obtain predicted probabilities for `"yes"` (customer churn), the reference level should be redefined *before* data partitioning and model fitting. For example:
 
 ``` r
-churn$churn = relevel(churn$churn, ref = "no")
+churn_mlc$churn = relevel(churn_mlc$churn, ref = "no")
 ```
 
-> *Practice:* How might we convert these predicted probabilities into binary class labels? What threshold would you use? What happens if you change the reference level of the `churn` variable and repeat the process? Does the interpretation of the predicted probabilities change?
+Refitting the model after this change would cause `predict()` to return probabilities of churn directly. Importantly, while the numerical probabilities change interpretation, the underlying fitted model remains equivalent.
+
+At this stage, we retain the probabilistic predictions rather than converting them to class labels. This allows us to evaluate model performance across all possible classification thresholds using ROC curves and AUC, as discussed in Chapter [-@sec-ch8-evaluation].
+
+> *Practice:* How would you convert the predicted probabilities into binary class labels? Try using thresholds of 0.5 and 0.3. How do the resulting classifications differ, and what are the implications for false positives and false negatives?
 
 ### Training the Naive Bayes Model {.unnumbered}
 
-We briefly introduced the Naive Bayes classifier and its probabilistic foundations in Chapter [-@sec-ch9-bayes]. Here, we apply the model to predict customer churn using the same features as the other classifiers.
+We briefly introduced the Naive Bayes classifier and its probabilistic foundations in Chapter [-@sec-ch9-bayes]. Here, we apply the model to the same customer churn prediction task, using the same set of predictors as in the logistic regression and kNN models to ensure a fair comparison.
 
-Naive Bayes is a fast, probabilistic classifier that works well for high-dimensional and mixed-type data. It assumes that predictors are conditionally independent given the response, which simplifies the computation of class probabilities.
+Naive Bayes is a fast, probabilistic classifier that is particularly well suited to high-dimensional and mixed-type data. Its defining assumption is that predictors are conditionally independent given the class label. While this assumption is often violated in practice, Naive Bayes can still perform surprisingly well, especially as a baseline model.
 
-We fit a Naive Bayes model using the `naive_bayes()` function from the **naivebayes** package:
+We fit the Naive Bayes classifier using the `naive_bayes()` function from the **naivebayes** package:
 
 ```{r}
 library(naivebayes)
@@ -1072,44 +960,42 @@ library(naivebayes)
 bayes_model = naive_bayes(formula, data = train_set)
 ```
 
-Next, we use the `predict()` function to generate predicted class probabilities for the test set:
+Once the model is trained, we generate predicted class probabilities for the test set:
 
 ```{r}
 bayes_probs = predict(bayes_model, test_set, type = "prob")
 ```
 
-The output `bayes_probs` is a matrix where each row corresponds to a test observation, and each column provides the predicted probability of belonging to either class (`no` or `yes`).
+The object `bayes_probs` is a matrix in which each row corresponds to a test observation and each column represents the estimated probability of belonging to one of the two classes (`no` or `yes`). As with logistic regression, we retain these probabilistic predictions rather than converting them to class labels, since they are required for threshold-independent evaluation using ROC curves and AUC.
 
-> *Practice:* How might Naive Bayes perform differently from logistic regression on this dataset, given its assumption of predictor independence?
+> *Practice:* How might the conditional independence assumption affect the performance of Naive Bayes on this dataset, where usage variables such as call minutes and call counts are likely correlated? Compare this to the assumptions underlying logistic regression.
 
 ### Training the kNN Model {.unnumbered}
 
-kNN is a non-parametric method that classifies each test observation based on the majority class of its $k$ closest neighbors in the training set. Because it relies on distance calculations, it is particularly sensitive to the scale of the input features.
+The k-Nearest Neighbors (kNN) algorithm is a non-parametric, instance-based classifier that assigns a class label to each test observation based on the majority class among its $k$ closest neighbors in the training set. Because kNN relies entirely on distance calculations, it is particularly sensitive to the scale and encoding of the input features.
 
-We train a kNN model using the `kNN()` function from the **liver** package, setting `k = 5`. This choice is based on the results reported in Section [-@sec-ch7-knn-churn], where $k = 5$ achieved the highest classification accuracy on the *churn* dataset.
-
-We apply min-max scaling and binary encoding using the `scaler = "minmax"` option:
+We train a kNN model using the `kNN()` function from the **liver** package, setting the number of neighbors to $k = 5$. This choice is informed by experimentation with different values of $k$ using the `kNN.plot()` function, as discussed in Chapter [-@sec-ch7-knn-choose-k]. To ensure that all predictors contribute appropriately to distance computations, we apply min–max scaling and binary encoding using the `scaler = "minmax"` option:
 
 ```{r}
-knn_probs = kNN(formula = formula, train = train_set, 
-                test = test_set, k = 5, scaler = "minmax", type = "prob")
+knn_probs = kNN(
+  formula = formula,
+  train   = train_set,
+  test    = test_set,
+  k       = 5,
+  scaler  = "minmax",
+  type    = "prob"
+)
 ```
 
-This ensures that all numeric predictors are scaled to the \[0, 1\] range, and binary categorical variables are appropriately encoded for use in distance computations.
+This preprocessing step scales all numeric predictors to the $[0, 1]$ range and encodes binary categorical variables in a format suitable for distance-based modeling. As with logistic regression and Naive Bayes, we retain predicted class probabilities rather than class labels, since these probabilities are required for threshold-independent evaluation using ROC curves and AUC.
 
-For additional details on preprocessing and parameter selection, refer to Section [-@sec-ch7-knn-churn].
-
-> *Practice:* How might the model's performance change if we chose a much smaller or larger value of $k$?
-
-With predictions generated from all three models (logistic regression, Naive Bayes, and kNN), we are now ready to evaluate their classification performance using ROC curves and AUC.
+With predicted probabilities now available from all three models (logistic regression, Naive Bayes, and kNN), we are ready to compare their classification performance using ROC curves and the area under the curve.
 
 ### Model Evaluation and Comparison {.unnumbered}
 
-To evaluate and compare the performance of our classifiers across all possible classification thresholds, we use ROC curves and the Area Under the Curve (AUC) metric. As discussed in Chapter [-@sec-ch8-evaluation], the ROC curve plots the true positive rate against the false positive rate, and the AUC summarizes the curve into a single number: closer to 1 indicates better class separation.
+To evaluate and compare the performance of the three classification models across all possible classification thresholds, we use ROC curves and the Area Under the Curve (AUC) metric. As introduced in Chapter [-@sec-ch8-evaluation], the ROC curve plots the true positive rate against the false positive rate, while the AUC summarizes the overall discriminatory ability of a classifier: values closer to 1 indicate stronger separation between classes.
 
-ROC analysis is particularly useful when class distributions are imbalanced or when different classification thresholds need to be considered, as is often the case in churn prediction problems.
-
-We compute the ROC curves using the **pROC** package:
+ROC-based evaluation is particularly useful in churn prediction settings, where class imbalance is common and the choice of classification threshold may vary depending on business objectives. We compute ROC curves using the **pROC** package. Since ROC analysis requires class probabilities, we extract the predicted probabilities corresponding to the `"yes"` (churn) class for each model:
 
 ```{r}
 library(pROC)
@@ -1119,7 +1005,7 @@ roc_bayes    = roc(test_labels, bayes_probs[, "yes"])
 roc_knn      = roc(test_labels, knn_probs[, "yes"])
 ```
 
-We visualize all three ROC curves in a single plot:
+To facilitate comparison, we visualize all three ROC curves in a single plot:
 
 ```{r out.width = "90%"}
 ggroc(list(roc_logistic, roc_bayes, roc_knn), size = 0.8) + 
@@ -1133,35 +1019,21 @@ ggroc(list(roc_logistic, roc_bayes, roc_knn), size = 0.8) +
   theme(legend.title = element_blank(), legend.position = c(.7, .3))
 ```
 
-In the ROC plot, each curve represents the performance of one classifier: logistic regression, Naive Bayes, and kNN. Higher curves and larger AUC values indicate stronger predictive performance.
+The ROC curves summarize the trade-off between sensitivity and specificity for each classifier. The corresponding AUC values are `r round(auc(roc_logistic), 3)` for logistic regression, `r round(auc(roc_bayes), 3)` for Naive Bayes, and `r round(auc(roc_knn), 3)` for kNN. Although kNN achieves the highest AUC, the differences among the three models are modest. This suggests that all three approaches provide comparable predictive performance on this dataset.
 
-The AUC values for the three models are `r round(auc(roc_logistic), 3)` for logistic regression, `r round(auc(roc_bayes), 3)` for Naive Bayes, and `r round(auc(roc_knn), 3)` for kNN. Although kNN achieves a slightly higher AUC, the differences are modest, and all three classifiers perform comparably on this task. This indicates that logistic regression and Naive Bayes remain viable alternatives, especially when interpretability, simplicity, or computational efficiency are prioritized over marginal performance gains.
+From a practical perspective, these results highlight an important modeling trade-off. While kNN offers slightly stronger discrimination, logistic regression and Naive Bayes remain attractive alternatives due to their interpretability, simplicity, and lower computational cost. In many real-world applications, such considerations may outweigh small gains in predictive accuracy.
 
-> *Practice:* Would your choice of model change if interpretability or ease of deployment were more important than AUC?
+> *Practice:* Repartition the `churn_mlc` dataset using a 70%–30% train–test split. Following the same workflow as in this section, fit a logistic regression model, a Naive Bayes classifier, and a kNN model, and report the corresponding ROC curves and AUC values. Compare these results with those obtained using the 80%–20% split. What do you observe about the stability of model evaluation across different data partitions?
 
 ## Chapter Summary and Takeaways {#sec-ch10-summary}
 
-This chapter introduced regression analysis as a central tool in data science for modeling relationships and making predictions. We began with simple linear regression, progressed to multiple regression, and then extended the framework through generalized linear models and polynomial regression.
+In this chapter, we examined regression analysis as a foundational tool for modeling relationships and making predictions in data science. Beginning with simple linear regression, we gradually expanded the framework to include multiple regression, generalized linear models, and polynomial regression, illustrating how increasingly flexible models can address more complex data structures.
 
-Along the way, we explored how to:
+Throughout the chapter, we emphasized both *interpretation* and *prediction*. We showed how regression coefficients can be interpreted in context, how assumptions can be assessed through residual diagnostics, and how model quality can be evaluated using metrics such as the residual standard error, $R^2$, and adjusted $R^2$. We also discussed principled approaches to predictor selection, including stepwise regression guided by information criteria such as AIC and BIC.
 
--   Interpret regression coefficients within the context of the problem,
+By extending regression to non-continuous outcomes, we demonstrated how logistic regression and Poisson regression adapt the linear modeling framework to binary and count data. A case study on customer churn brought these ideas together, comparing logistic regression, Naive Bayes, and kNN classifiers using ROC curves and AUC. This comparison highlighted an important practical insight: models with very different assumptions and structures can achieve similar predictive performance, making interpretability, robustness, and computational considerations central to model choice.
 
--   Assess model assumptions using diagnostic plots and residuals,
-
--   Evaluate model performance with RSE, R-squared ($R^2$), and adjusted $R^2$,
-
--   Select meaningful predictors using stepwise regression guided by model selection criteria such as AIC and BIC,
-
--   Adapt regression models to binary and count outcomes using logistic and Poisson regression,
-
--   Compare classifier performance using ROC curves and AUC in a practical case study on customer churn.
-
-These techniques build upon earlier chapters and reinforce the importance of model transparency, reliability, and alignment with domain-specific goals. Regression models are not only statistical tools; they are instruments for reasoning about data and supporting informed decisions.
-
-> *Practice*: Which type of regression model would be most appropriate for your next project? How does your choice depend on the type of outcome, the nature of the predictors, and your goal (interpretation or prediction)?
-
-In the next chapter, we explore decision trees and random forest methods. These models offer a different perspective: one that prioritizes interpretability through tree structures and improves performance through model aggregation.
+Taken together, this chapter reinforces a key message of the Data Science Workflow: effective modeling is not about applying the most complex method available, but about selecting models that are appropriate for the data, the problem, and the decision context. Regression models are not merely statistical tools; they provide a structured way to reason about uncertainty, quantify relationships, and support informed, transparent decisions. In the chapters that follow, we continue to build on these ideas by exploring more flexible modeling techniques and strategies for validating and comparing predictive models.
 
 ## Exercises {#sec-ch10-exercises}
 
@@ -1191,11 +1063,11 @@ These exercises reinforce key ideas from the chapter, combining conceptual quest
 data(house, package = "liver")
 ```
 
-8.  Fit a model predicting `unit.price` using `house.age`. Summarize the results.
+8.  Fit a model predicting `unit_price` using `house_age`. Summarize the results.
 
-9.  Add `distance.to.MRT` and `stores.number` as predictors. Interpret the updated model.
+9.  Add `distance_to_MRT` and `stores_number` as predictors. Interpret the updated model.
 
-10. Predict `unit.price` for homes aged 10, 20, and 30 years.
+10. Predict `unit_price` for homes aged 10, 20, and 30 years.
 
 11. Evaluate whether including `latitude` and `longitude` improves model performance.
 
@@ -1213,7 +1085,7 @@ data(insurance, package = "liver")
 
 15. Model `charges` using `age`, `bmi`, `children`, and `smoker`.
 
-16. Interpret the coefficient for `smoker`.
+16. Interpret the coefficient ffig-cap:or `smoker`.
 
 17. Include an interaction between `age` and `bmi`. Does it improve the model?
 
@@ -1279,7 +1151,7 @@ data(diamonds)
 
 ##### Hands-On Practice: Polynomial Regression with *house* Dataset {.unnumbered}
 
-38. Fit a quadratic model for `unit.price` using `house.age`. Compare it to a linear model.
+38. Fit a quadratic model for `unit_price` using `house_age`. Compare it to a linear model.
 
 39. Fit a cubic model. Is there evidence of improved performance?
 
@@ -1325,7 +1197,7 @@ data(bank, package = "liver")
 
 ##### Hands-On Practice: Stepwise Regression with *house* Dataset {.unnumbered}
 
-55. Use stepwise regression to model `unit.price`.
+55. Use stepwise regression to model `unit_price`.
 
 56. Compare the stepwise model to the full model.
 

@@ -339,10 +339,9 @@ window.Quarto = {
 <a href="#sec-ch13-case-study" id="toc-sec-ch13-case-study" class="nav-link" data-scroll-target="#sec-ch13-case-study"><span class="header-section-number">13.4</span> Case Study: Segmenting Cereal Brands by Nutrition</a>
   <ul class="collapse">
 <li><a href="#overview-of-the-dataset" id="toc-overview-of-the-dataset" class="nav-link" data-scroll-target="#overview-of-the-dataset"><span class="header-section-number">13.4.1</span> Overview of the Dataset</a></li>
-  <li><a href="#data-preprocessing" id="toc-data-preprocessing" class="nav-link" data-scroll-target="#data-preprocessing"><span class="header-section-number">13.4.2</span> Data Preprocessing</a></li>
+  <li><a href="#data-preparation-for-clustering" id="toc-data-preparation-for-clustering" class="nav-link" data-scroll-target="#data-preparation-for-clustering"><span class="header-section-number">13.4.2</span> Data Preparation for Clustering</a></li>
   <li><a href="#selecting-the-number-of-clusters" id="toc-selecting-the-number-of-clusters" class="nav-link" data-scroll-target="#selecting-the-number-of-clusters"><span class="header-section-number">13.4.3</span> Selecting the Number of Clusters</a></li>
   <li><a href="#performing-k-means-clustering" id="toc-performing-k-means-clustering" class="nav-link" data-scroll-target="#performing-k-means-clustering"><span class="header-section-number">13.4.4</span> Performing K-means Clustering</a></li>
-  <li><a href="#reflections-and-takeaways" id="toc-reflections-and-takeaways" class="nav-link" data-scroll-target="#reflections-and-takeaways"><span class="header-section-number">13.4.5</span> Reflections and Takeaways</a></li>
   </ul>
 </li>
   <li><a href="#chapter-summary-and-takeaways" id="toc-chapter-summary-and-takeaways" class="nav-link" data-scroll-target="#chapter-summary-and-takeaways"><span class="header-section-number">13.5</span> Chapter Summary and Takeaways</a></li>
@@ -371,30 +370,30 @@ window.Quarto = {
 <p>— Michael Shermer</p>
 </div>
 </div>
-<p>Imagine walking into a grocery store and seeing shelves lined with cereal boxes. Without reading a single label, you might instinctively group them by shape, size, or color. Clustering algorithms aim to replicate this kind of human intuition—grouping similar items based on shared characteristics, even when no categories are given.</p>
-<p>How do apps know your habits when you never told them? From fitness trackers that sort users into behavioral types to streaming platforms that recommend shows tailored to your taste, machines often uncover structure in data without relying on labels. This process (known as <em>clustering</em>) enables systems to learn from raw, unlabeled information.</p>
-<p>Clustering is a form of <em>unsupervised learning</em> that groups similar data points based on measurable traits, rather than predefined categories. It powers real-world applications such as customer segmentation, gene family discovery, and content recommendation. By organizing complex information into meaningful groups, clustering helps machines detect patterns and uncover structure hidden in the data.</p>
-<p>Unlike classification, which predicts known labels (e.g., spam vs.&nbsp;not spam), clustering is <em>exploratory</em>. It reveals <em>hidden structures</em> (patterns that may not be immediately visible but are statistically meaningful). As such, clustering is a key part of the data scientist’s toolkit when the objective is <em>discovery</em> rather than prediction.</p>
-<p>Clustering is widely used across domains, including customer segmentation for identifying distinct user groups for personalized marketing, market research for understanding consumer behavior to improve product recommendations, document organization for automatically grouping large text collections by topic or theme, and bioinformatics for uncovering functional relationships between genes through expression pattern similarity.</p>
+<p>Imagine walking into a grocery store and seeing shelves lined with cereal boxes. Without reading a single label, you might still group products by visible cues such as shape, size, or color. Clustering methods support a similar goal in data analysis: they organize observations into groups based on measured similarity, even when no categories are provided.</p>
+<p>How do apps seem to recognize user habits when no one has explicitly labeled the data? Fitness trackers may group users into behavioral profiles, and streaming platforms may identify viewing patterns that support recommendation. In such settings, clustering provides a way to uncover structure in unlabeled data and to summarize large collections of observations into a smaller number of representative groups.</p>
+<p>Clustering is a form of unsupervised learning that partitions data into clusters so that observations within the same cluster are more similar to one another than to observations in other clusters. Unlike classification, which predicts known labels (for example, spam versus not spam), clustering is exploratory: it proposes groupings that can guide interpretation, generate hypotheses, and support downstream analysis.</p>
+<p>Because many practical datasets do not come with a clear outcome variable, clustering is widely used as an early step in data science projects. Common applications include customer segmentation, grouping documents by topic, and identifying patterns in biological measurements.</p>
 <section id="what-this-chapter-covers" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="what-this-chapter-covers">What This Chapter Covers</h3>
-<p>In this chapter, we introduce our first unsupervised learning technique (clustering) and continue progressing through the Data Science Workflow introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a>. So far, our focus has been on supervised learning, applying models for classification and regression tasks, including neural networks (Chapter <a href="12-Neural-networks.html" class="quarto-xref"><span>12</span></a>), tree-based methods (Chapter <a href="11-Tree-based-models.html" class="quarto-xref"><span>11</span></a>), and regression analysis (Chapter <a href="10-Regression.html" class="quarto-xref"><span>10</span></a>).</p>
-<p>Clustering now opens the door to data exploration when no labels are available, shifting our mindset from prediction to pattern discovery.</p>
-<p>This chapter introduces the foundations of clustering, including:</p>
+<p>This chapter introduces clustering as a core technique in unsupervised learning and continues the progression of the Data Science Workflow presented in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a>. In previous chapters, we focused on supervised learning methods for classification and regression, including regression models (Chapter <a href="10-Regression.html" class="quarto-xref"><span>10</span></a>), tree-based approaches (Chapter <a href="11-Tree-based-models.html" class="quarto-xref"><span>11</span></a>), and neural networks (Chapter <a href="12-Neural-networks.html" class="quarto-xref"><span>12</span></a>). These methods rely on labeled data and well-defined outcome variables.</p>
+<p>Clustering addresses a different analytical setting: exploration without labels. Rather than predicting known outcomes, the goal is to uncover structure, summarize patterns, and support insight generation when no response variable is available.</p>
+<p>In this chapter, we examine:</p>
 <ul>
-<li><p>The core idea of clustering and how it differs from classification,</p></li>
-<li><p>How similarity is defined and measured in clustering algorithms,</p></li>
-<li><p><em>K-means clustering</em>, one of the most intuitive and widely used methods,</p></li>
-<li><p>A hands-on case study: segmenting cereals based on their nutritional profiles.</p></li>
+<li><p>the fundamental principles of clustering and its distinction from classification,</p></li>
+<li><p>how similarity is defined and measured in clustering algorithms,</p></li>
+<li><p>the K-means algorithm as a widely used clustering method, and</p></li>
+<li><p>a case study that applies clustering to segment cereal products based on nutritional characteristics.</p></li>
 </ul>
-<p>By the end of the chapter, you will be able to apply clustering techniques to real-world datasets, evaluate cluster quality, and uncover meaningful patterns from unlabeled data.</p>
+<p>The chapter concludes with exercises that provide hands-on experience with clustering using real-world datasets, encouraging you to explore how design choices such as feature selection, scaling, and the number of clusters influence the resulting groupings.</p>
+<p>By the end of the chapter, you will be able to apply clustering techniques to unlabeled datasets, make informed choices about similarity measures and the number of clusters, and interpret clustering results in a substantive, domain-aware manner.</p>
 </section><section id="sec-ch13-cluster-what" class="level2" data-number="13.1"><h2 data-number="13.1" class="anchored" data-anchor-id="sec-ch13-cluster-what">
 <span class="header-section-number">13.1</span> What is Cluster Analysis?</h2>
-<p>Clustering is an unsupervised learning technique that organizes data into <em>clusters</em> of similar observations. Unlike supervised learning, which relies on labeled data, clustering is <em>exploratory</em> in nature, aiming to uncover <em>hidden patterns</em> or <em>latent structure</em> in raw data. A good clustering groups data points so that members of the same cluster are highly similar to one another, while those in different clusters are clearly distinct.</p>
-<p>To better understand what makes clustering unique, it helps to compare it with <em>classification</em>, as introduced in Chapters <a href="7-Classification-kNN.html" class="quarto-xref"><span>7</span></a> and <a href="9-Naive-Bayes.html" class="quarto-xref"><span>9</span></a>. <em>Classification</em> assigns new observations to known categories based on past examples (like identifying an email as spam or not spam). <em>Clustering</em>, by contrast, discovers groupings from unlabeled data. It generates labels rather than predicting existing ones, which is why it is sometimes loosely referred to as <em>unsupervised classification</em>, even though no labels are provided during training. These cluster labels can also be used downstream (for example, as input features for neural networks or tree-based models).</p>
-<p>The core objective of clustering is to ensure <em>high intra-cluster similarity</em> (points in the same cluster are alike) and <em>low inter-cluster similarity</em> (clusters are distinct). This idea is illustrated in <a href="#fig-ch13-cluster-1" class="quarto-xref">Figure&nbsp;<span>13.1</span></a>, where tight, well-separated groups represent an effective clustering.</p>
+<p>Clustering is an unsupervised learning technique that organizes data into groups, or <em>clusters</em>, of similar observations. Unlike supervised learning, which relies on labeled examples, clustering is exploratory: it aims to reveal structure in data when no outcome variable is available. A well-constructed clustering groups observations so that those within the same cluster are more similar to one another than to observations assigned to different clusters.</p>
+<p>To clarify this distinction, it is helpful to contrast clustering with <em>classification</em>, introduced in Chapters <a href="7-Classification-kNN.html" class="quarto-xref"><span>7</span></a> and <a href="9-Naive-Bayes.html" class="quarto-xref"><span>9</span></a>. Classification assigns new observations to predefined categories based on labeled training data. Clustering, by contrast, infers groupings directly from the data itself. The resulting cluster labels are not known in advance and should be interpreted as analytical constructs rather than ground truth. In practice, such labels are often used to support interpretation or as derived features in downstream models, including neural networks and tree-based methods.</p>
+<p>The objective of clustering is to achieve <em>high intra-cluster similarity</em> and <em>low inter-cluster similarity</em>. This principle is illustrated in <a href="#fig-ch13-cluster-1" class="quarto-xref">Figure&nbsp;<span>13.1</span></a>, where compact, well-separated groups correspond to an effective clustering solution.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch13-cluster-1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-ch13-cluster-1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-cluster-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch13_cluster_illustration.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H">
 </div>
@@ -404,59 +403,47 @@ Figure&nbsp;13.1: Clustering algorithms aim to minimize intra-cluster variation 
 </div>
 </div>
 </div>
-<p>Beyond helping us explore structure in data, clustering also plays a practical role in broader machine learning workflows. It is often used as a powerful <em>preprocessing tool</em>, summarizing a dataset into a smaller number of representative groups. This can:</p>
-<ul>
-<li><p>Reduce computation time for downstream models,</p></li>
-<li><p>Improve interpretability by simplifying complex data structures, and</p></li>
-<li><p>Enhance predictive performance by transforming raw inputs into structured features.</p></li>
-</ul>
-<p>Before clustering can be applied effectively, the data often need to be preprocessed. Features measured on different scales can distort similarity measures, and categorical variables must be encoded numerically. These steps (such as scaling and one-hot encoding) not only improve algorithm performance but also ensure that the resulting clusters reflect meaningful structure.</p>
-<p>What makes two observations feel similar (and how do machines measure that)? Let us break it down in the next section.</p>
+<p>Beyond exploratory analysis, clustering often plays a practical role within broader machine learning workflows. By summarizing large datasets into a smaller number of representative groups, clustering can reduce computational complexity, improve interpretability, and support subsequent modeling tasks.</p>
+<p>Because many clustering methods rely on distance or similarity calculations, appropriate data preparation is essential. Features measured on different scales can disproportionately influence similarity, and categorical variables must be encoded numerically to be included in distance-based analyses. Without such preprocessing, clustering results may reflect artifacts of measurement rather than meaningful structure in the data.</p>
+<p>These considerations lead naturally to a central question: how do clustering algorithms quantify similarity between observations? We address this next.</p>
 <section id="how-do-clustering-algorithms-measure-similarity" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="how-do-clustering-algorithms-measure-similarity">How Do Clustering Algorithms Measure Similarity?</h3>
-<p>At the heart of clustering lies a fundamental question: <em>How similar are these data points?</em> Clustering algorithms answer this using <em>similarity measures</em> (quantitative tools for assessing how close or far apart two observations are). Choosing the right measure is essential for discovering meaningful clusters.</p>
-<p>For numerical data, one of the most commonly used similarity measures is <em>Euclidean distance</em> (the straight-line distance between two points in space). You may recall this from the <em>k</em>-Nearest Neighbors algorithm (Section <a href="7-Classification-kNN.html#sec-ch7-knn-distance-metrics" class="quarto-xref"><span>7.4</span></a>), where it helped identify the “nearest” neighbors. In clustering, it plays a similar role in grouping nearby observations together.</p>
-<p>The Euclidean distance between two data points <span class="math inline">\(x = (x_1, x_2, \ldots, x_n)\)</span> and <span class="math inline">\(y = (y_1, y_2, \ldots, y_n)\)</span> with <span class="math inline">\(n\)</span> features is calculated as:</p>
-<p><span class="math display">\[
-\text{dist}(x, y) = \sqrt{ \sum_{i=1}^n (x_i - y_i)^2}
+<p>At the core of clustering lies a fundamental question: <em>how similar are two observations?</em> Clustering algorithms address this question through <em>similarity measures</em>, which quantify the degree to which observations resemble one another. The choice of similarity measure is critical, as it directly shapes the structure of the resulting clusters.</p>
+<p>For numerical features, the most commonly used measure is <em>Euclidean distance</em>, which captures the straight-line distance between two points in feature space. This measure was previously introduced in the context of the k-Nearest Neighbors algorithm (Section <a href="7-Classification-kNN.html#sec-ch7-knn-distance-metrics" class="quarto-xref"><span>7.4</span></a>). In clustering, Euclidean distance plays a related role by determining which observations are considered close enough to belong to the same group.</p>
+<p>Formally, the Euclidean distance between two observations<br><span class="math inline">\(x = (x_1, x_2, \ldots, x_n)\)</span> and<br><span class="math inline">\(y = (y_1, y_2, \ldots, y_n)\)</span><br>
+with <span class="math inline">\(n\)</span> features is defined as: <span class="math display">\[
+\text{dist}(x, y) = \sqrt{ \sum_{i=1}^n (x_i - y_i)^2 }.
 \]</span></p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch13-euclidean-distance" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-ch13-euclidean-distance" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-euclidean-distance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="13-Clustering_files/figure-html/fig-ch13-euclidean-distance-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-euclidean-distance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;13.2: Visual representation of Euclidean distance between two points in 2D space.
+Figure&nbsp;13.2: Visual representation of Euclidean distance between two points in two-dimensional space.
 </figcaption></figure>
 </div>
 </div>
 </div>
-<p>In <a href="#fig-ch13-euclidean-distance" class="quarto-xref">Figure&nbsp;<span>13.2</span></a>, the line connecting Point A (2, 3) and Point B (6, 7) represents their Euclidean distance: <span class="math display">\[
+<p>As illustrated in <a href="#fig-ch13-euclidean-distance" class="quarto-xref">Figure&nbsp;<span>13.2</span></a>, Euclidean distance captures the geometric separation between two points. For Point A=(2, 3) and Point B=(6, 7), this distance is <span class="math display">\[
 \text{dist}(A, B) = \sqrt{(6 - 2)^2 + (7 - 3)^2} = \sqrt{32} \approx 5.66.
-\]</span></p>
-<p>While this is easy to visualize in two dimensions, clustering usually takes place in much higher dimensions, across dozens or even hundreds of features.</p>
-<p>Before we can meaningfully apply distance-based clustering, we must prepare the data:</p>
-<ul>
-<li><p><em>Feature scaling</em> (e.g., min-max scaling) ensures that no variable dominates the calculation simply because of its unit or range.</p></li>
-<li><p><em>Categorical variables</em> must be numerically encoded (e.g., with one-hot encoding) to be included in distance computations.</p></li>
-</ul>
-<p>Without these steps, even a good algorithm may find <em>spurious patterns</em> or miss <em>real ones</em>. Getting similarity right is the foundation of meaningful clustering.</p>
-<p>Other similarity measures (such as <em>Manhattan distance</em> or <em>cosine similarity</em>) are also used in specific contexts, but Euclidean distance remains the default for many clustering tasks.</p>
+\]</span> While this interpretation is straightforward in two dimensions, clustering algorithms typically operate in much higher-dimensional spaces, often involving dozens or hundreds of features.</p>
+<p>Because distance calculations are sensitive to feature scales and data representation, appropriate preprocessing is essential. Features measured on different scales can dominate similarity calculations simply due to their units, making <em>feature scaling</em> a necessary step in distance-based clustering. Likewise, categorical variables must be converted into numerical form, for example through one-hot encoding, before they can be included in distance computations. Without these preparations, clustering results may reflect artifacts of measurement rather than meaningful structure in the data.</p>
+<p>Although Euclidean distance is the default choice in many clustering algorithms, alternative measures such as Manhattan distance or cosine similarity are better suited to specific data types and analytical goals. Selecting an appropriate similarity measure is therefore a substantive modeling decision, not merely a technical detail.</p>
 </section></section><section id="sec-ch13-kmeans" class="level2" data-number="13.2"><h2 data-number="13.2" class="anchored" data-anchor-id="sec-ch13-kmeans">
 <span class="header-section-number">13.2</span> K-means Clustering</h2>
-<p>How does an algorithm decide which points belong together? K-means clustering answers this by iteratively grouping observations into <span class="math inline">\(k\)</span> clusters, where each group contains data points that are similar to one another. The algorithm updates the cluster assignments and centers until the structure stabilizes, resulting in a set of well-separated clusters.</p>
-<p>The K-means algorithm requires the user to specify the number of clusters, <span class="math inline">\(k\)</span>, in advance. It proceeds through the following steps:</p>
+<p>How does an algorithm decide which observations belong together? K-means clustering addresses this question by representing each cluster through a <em>centroid</em> and assigning observations to the nearest centroid based on distance. By alternating between assignment and update steps, the algorithm gradually refines both the cluster memberships and their representative centers, leading to a stable partition of the data.</p>
+<p>The K-means algorithm requires the number of clusters, <span class="math inline">\(k\)</span>, to be specified in advance. Given a choice of <span class="math inline">\(k\)</span>, the algorithm proceeds as follows:</p>
 <ol type="1">
-<li><p><em>Initialize:</em> Randomly select <span class="math inline">\(k\)</span> data points as initial cluster centers.</p></li>
-<li><p><em>Assign:</em> Assign each data point to the nearest center based on distance.</p></li>
-<li><p><em>Update:</em> Recalculate each cluster’s centroid (mean of its assigned points).</p></li>
-<li><p><em>Repeat:</em> Iterate steps 2 and 3 until no data points change clusters.</p></li>
+<li><p><em>Initialization:</em> Select <span class="math inline">\(k\)</span> initial cluster centers, typically at random.</p></li>
+<li><p><em>Assignment:</em> Assign each observation to the nearest cluster center.</p></li>
+<li><p><em>Update:</em> Recompute each cluster center as the mean of the observations assigned to it.</p></li>
+<li><p><em>Iteration:</em> Repeat the assignment and update steps until cluster memberships no longer change.</p></li>
 </ol>
-<p>Although K-means is simple and efficient, it has limitations. The final clusters depend heavily on the initial choice of cluster centers, meaning different runs of the algorithm may produce different results. In addition, K-means assumes that clusters are spherical and of similar size, which may not always hold in real-world datasets. It is also sensitive to outliers, which can distort centroids and assignments.</p>
-<p>To illustrate how K-means works, consider a dataset with 50 records and two features, <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span>, as shown in <a href="#fig-ch13-example-1" class="quarto-xref">Figure&nbsp;<span>13.3</span></a>. The task is to partition the data into three clusters.</p>
+<p>To illustrate these steps, consider a dataset consisting of 50 observations with two features, <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span>, shown in <a href="#fig-ch13-example-1" class="quarto-xref">Figure&nbsp;<span>13.3</span></a>. The goal is to partition the data into three clusters.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch13-example-1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-ch13-example-1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-example-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch13_example_fig_1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:60.0%" data-fig-pos="H">
 </div>
@@ -466,106 +453,96 @@ Figure&nbsp;13.3: Scatter plot of 50 data points with two features, <span class=
 </div>
 </div>
 </div>
-<p>In the first step, three data points are randomly selected as initial cluster centers (red stars), shown in the left panel of <a href="#fig-ch13-example-2" class="quarto-xref">Figure&nbsp;<span>13.4</span></a>. Each data point is then assigned to the nearest cluster, forming three groups labeled in blue (Cluster A), green (Cluster B), and orange (Cluster C). The right panel of the figure shows these initial assignments. The dashed lines depict the Voronoi diagram, which partitions the space into regions closest to each center.</p>
+<p>The algorithm begins by selecting three observations as initial cluster centers, illustrated by red stars in the left panel of <a href="#fig-ch13-example-2" class="quarto-xref">Figure&nbsp;<span>13.4</span></a>. Each data point is then assigned to its nearest center, producing an initial clustering shown in the right panel. The dashed lines indicate the corresponding Voronoi regions, which partition the feature space according to proximity to each center.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch13-example-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-ch13-example-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-example-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch13_example_fig_2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-example-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;13.4: First iteration of K-means clustering. Left panel shows randomly initialized cluster centers (red stars); right panel shows the resulting initial assignments and Voronoi regions.
+Figure&nbsp;13.4: First iteration of K-means clustering. Initial cluster centers (red stars) and the resulting assignments with Voronoi regions.
 </figcaption></figure>
 </div>
 </div>
 </div>
-<p>Because K-means is sensitive to initialization, poor placement of the initial cluster centers can lead to suboptimal results. To address this, the <em>K-means++</em> algorithm <span class="citation" data-cites="arthur2006k">(<a href="14-References.html#ref-arthur2006k" role="doc-biblioref">Arthur and Vassilvitskii 2006</a>)</span> was introduced in 2007. It selects starting points in a more informed way, improving convergence and reducing variability across different initializations.</p>
-<p>After the initial assignment, the algorithm enters the update phase. It recalculates the centroid of each cluster (that is, the mean position of all points in the group). The original cluster centers are updated by moving them to these new centroids, as shown in the left panel of <a href="#fig-ch13-example-3" class="quarto-xref">Figure&nbsp;<span>13.5</span></a>. The right panel shows how the Voronoi boundaries shift, causing some points to be reassigned.</p>
+<p>After the initial assignment, the algorithm updates the cluster centers by computing the centroid of each group. These updated centroids are shown in the left panel of <a href="#fig-ch13-example-3" class="quarto-xref">Figure&nbsp;<span>13.5</span></a>. As the centers move, the Voronoi boundaries shift, causing some observations to be reassigned, as shown in the right panel.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch13-example-3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-ch13-example-3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-example-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch13_example_fig_3.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-example-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;13.5: Second iteration of K-means clustering. Left panel shows updated cluster centroids; right panel displays new assignments and the corresponding Voronoi regions.
+Figure&nbsp;13.5: Second iteration of K-means clustering. Updated cluster centroids and revised assignments.
 </figcaption></figure>
 </div>
 </div>
 </div>
-<p>This process of reassigning points and updating centroids continues iteratively. After another update, some points switch clusters again, leading to a refined partition of the space, as seen in <a href="#fig-ch13-example-4" class="quarto-xref">Figure&nbsp;<span>13.6</span></a>.</p>
+<p>This process of reassignment and centroid update continues iteratively. With each iteration, the cluster structure becomes more stable, as illustrated in <a href="#fig-ch13-example-4" class="quarto-xref">Figure&nbsp;<span>13.6</span></a>. Eventually, no observations change clusters, and the algorithm converges, producing the final clustering shown in <a href="#fig-ch13-example-5" class="quarto-xref">Figure&nbsp;<span>13.7</span></a>.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch13-example-4" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-ch13-example-4" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-example-4-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch13_example_fig_4.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-example-4-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;13.6: Third iteration of K-means clustering. Cluster centroids and point assignments are updated again as the algorithm continues refining the groupings.
+Figure&nbsp;13.6: Later iteration of K-means clustering, showing further refinement of cluster assignments.
 </figcaption></figure>
 </div>
 </div>
 </div>
-<p>The algorithm continues until no more data points switch clusters. At this point, it has converged, and the final clusters are established, as shown in <a href="#fig-ch13-example-5" class="quarto-xref">Figure&nbsp;<span>13.7</span></a>.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch13-example-5" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-ch13-example-5" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-example-5-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="images/ch13_example_fig_5.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:45.0%" data-fig-pos="H">
+<img src="images/ch13_example_fig_5.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:55.0%" data-fig-pos="H">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-example-5-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;13.7: Final iteration of K-means clustering. Each data point is assigned to a stable cluster after convergence.
+Figure&nbsp;13.7: Final clustering after convergence, with stable cluster assignments.
 </figcaption></figure>
 </div>
 </div>
 </div>
-<p>Once clustering is complete, the results can be summarized in two ways:</p>
-<ul>
-<li><p><em>Cluster assignments:</em> Each data point is labeled as belonging to Cluster A, B, or C.</p></li>
-<li><p><em>Centroid coordinates:</em> The final positions of the cluster centers can be used as representative points.</p></li>
-</ul>
-<p>These centroids are particularly useful in applications such as customer segmentation, image compression, and document clustering, where the goal is to reduce complexity while preserving meaningful structure.</p>
-<p>This simple example illustrates the core mechanics of K-means. But choosing how many clusters to use (our next topic) is just as critical to achieving meaningful results.</p>
+<p>Once the algorithm has converged, the results can be summarized in two complementary ways: the <em>cluster assignments</em>, which indicate the group membership of each observation, and the <em>cluster centroids</em>, which serve as representative profiles of the clusters. These centroids are particularly useful in applications such as customer segmentation, image compression, and document clustering, where the goal is to reduce complexity while preserving meaningful structure.</p>
+<p>Despite its simplicity and efficiency, K-means has important limitations. The solution depends on the initial placement of cluster centers, meaning that different runs may yield different results. The algorithm also assumes clusters of roughly spherical shape and similar size and is sensitive to outliers, which can distort centroid locations. In practice, techniques such as multiple random starts or the K-means++ initialization strategy <span class="citation" data-cites="arthur2006k">(<a href="14-References.html#ref-arthur2006k" role="doc-biblioref">Arthur and Vassilvitskii 2006</a>)</span> are commonly used to mitigate these issues.</p>
+<p>This example illustrates the mechanics of K-means clustering. An equally important question, however, concerns the choice of the number of clusters, which we address next.</p>
 </section><section id="sec-ch13-kmeans-choose" class="level2" data-number="13.3"><h2 data-number="13.3" class="anchored" data-anchor-id="sec-ch13-kmeans-choose">
 <span class="header-section-number">13.3</span> Selecting the Optimal Number of Clusters</h2>
-<p>A central challenge in applying K-means clustering is determining the appropriate number of clusters, <span class="math inline">\(k\)</span>. This choice directly affects the outcome: too few clusters may obscure important structure, while too many may overfit the data and lead to fragmentation. Unlike supervised learning (where performance metrics such as accuracy or AUC guide model selection), clustering lacks an external ground truth, making the selection of <span class="math inline">\(k\)</span> inherently more subjective.</p>
-<p>In practice, domain knowledge can offer initial guidance. For instance, when clustering films, the number of well-established genres might suggest a reasonable starting point. In marketing, teams may set <span class="math inline">\(k = 3\)</span> if they aim to develop three targeted strategies. Similarly, logistical constraints (such as seating capacity at a conference) may dictate the desired number of groups. However, in many cases, no natural grouping is evident, and data-driven approaches are needed to inform the decision.</p>
-<p>A widely used heuristic is the <em>elbow method</em>, which examines how within-cluster variation evolves as <span class="math inline">\(k\)</span> increases. As additional clusters are introduced, the average similarity within clusters improves, up to a point. Beyond that, the marginal gain becomes negligible. The objective is to identify this point of diminishing returns, known as the <em>elbow</em>.</p>
-<p>This concept is illustrated in <a href="#fig-ch13-elbow" class="quarto-xref">Figure&nbsp;<span>13.8</span></a>, where the total within-cluster sum of squares (WCSS) is plotted against the number of clusters. The “elbow point” (a bend in the curve) suggests a reasonable choice for <span class="math inline">\(k\)</span> that balances simplicity with explanatory power.</p>
+<p>A central challenge in applying K-means clustering is determining an appropriate number of clusters, <span class="math inline">\(k\)</span>. This choice has a direct impact on the resulting partition: too few clusters may obscure meaningful structure, whereas too many may fragment the data and reduce interpretability. Unlike supervised learning, where performance metrics such as accuracy or AUC guide model selection, clustering lacks an external ground truth. As a result, the choice of <span class="math inline">\(k\)</span> is inherently subjective, though not arbitrary.</p>
+<p>In some applications, domain knowledge provides useful initial guidance. For example, a marketing team may choose a small number of customer segments to align with strategic objectives, or an analyst may begin with a number of clusters suggested by known categories in the application domain. In many cases, however, no natural grouping is evident, and data-driven heuristics are needed to inform the decision.</p>
+<p>One widely used heuristic is the <em>elbow method</em>, which examines how within-cluster variation changes as the number of clusters increases. As additional clusters are introduced, within-cluster variation typically decreases, but the marginal improvement diminishes beyond a certain point. The aim is to identify this point of diminishing returns, often referred to as the <em>elbow</em>.</p>
+<p>This idea is illustrated in <a href="#fig-ch13-elbow" class="quarto-xref">Figure&nbsp;<span>13.8</span></a>, which plots the total within-cluster sum of squares (WCSS) against the number of clusters. A pronounced bend in the curve suggests a value of <span class="math inline">\(k\)</span> that balances model simplicity with explanatory power.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch13-elbow" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-ch13-elbow" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch13_elbow.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-elbow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number of clusters and within-cluster variation, helping to identify an appropriate value for <span class="math inline">\(k\)</span>.
+Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number of clusters and within-cluster variation, helping to identify a suitable value for <span class="math inline">\(k\)</span>.
 </figcaption></figure>
 </div>
 </div>
 </div>
-<p>While the elbow method is accessible and visually intuitive, it is not without limitations. Some datasets yield no clear inflection point, and evaluating many values of <span class="math inline">\(k\)</span> can become computationally demanding in large-scale applications.</p>
-<p>Alternative approaches can supplement or refine this decision:</p>
-<ul>
-<li><p><em>Silhouette Score:</em> Quantifies how well each data point fits within its assigned cluster compared to others. Higher values indicate more coherent clusters.</p></li>
-<li><p><em>Gap Statistic:</em> Compares the clustering result to that expected under a null reference distribution, helping assess whether structure exists at all.</p></li>
-<li><p><em>Performance in downstream tasks:</em> When clustering is used as a preprocessing step, such as for customer segmentation, different values of <span class="math inline">\(k\)</span> can be evaluated based on their impact on a subsequent predictive model.</p></li>
-</ul>
-<p>Ultimately, the goal is not necessarily to find a mathematically optimal <span class="math inline">\(k\)</span>, but to identify a clustering solution that is both interpretable and practically useful. Clustering is frequently employed in exploratory analysis, and observing how results change across values of <span class="math inline">\(k\)</span> can itself be informative. Stable groupings that persist suggest meaningful structure; volatile groupings may reflect ambiguity in the data.</p>
-<p>In the next section, we apply these ideas in practice using a real-world dataset. We explore how domain knowledge, visualization, and iterative experimentation can jointly inform the choice of <span class="math inline">\(k\)</span> in applied settings.</p>
+<p>While the elbow method is intuitive and easy to apply, it has limitations. Some datasets exhibit no clear elbow, and evaluating many values of <span class="math inline">\(k\)</span> may be computationally expensive for large datasets. For these reasons, the elbow method is often used in combination with other criteria.</p>
+<p>Alternative approaches include the silhouette score, which assesses how well observations fit within their assigned clusters relative to others, and the gap statistic, which compares the observed clustering structure to that expected under a null reference distribution. When clustering is used as a preprocessing step, the choice of <span class="math inline">\(k\)</span> may also be informed by performance in downstream tasks, such as the stability or usefulness of derived features in subsequent models.</p>
+<p>Ultimately, the goal is not to identify a single “optimal” value of <span class="math inline">\(k\)</span>, but to arrive at a clustering solution that is interpretable, stable, and appropriate for the analytical objective. Examining how clustering results change across different values of <span class="math inline">\(k\)</span> is often informative in itself. Stable groupings suggest meaningful structure, whereas highly variable solutions may indicate ambiguity in the data.</p>
+<p>In the next section, we apply these ideas in a case study, illustrating how domain knowledge, visualization, and iterative experimentation jointly inform the choice of <span class="math inline">\(k\)</span> in practice.</p>
 </section><section id="sec-ch13-case-study" class="level2" data-number="13.4"><h2 data-number="13.4" class="anchored" data-anchor-id="sec-ch13-case-study">
 <span class="header-section-number">13.4</span> Case Study: Segmenting Cereal Brands by Nutrition</h2>
-<p>Why do some cereals end up on the “healthy” shelf while others are marketed to kids? Behind such decisions lies data-driven product segmentation. In this case study, we use <em>K-means clustering</em> to uncover meaningful groupings based on nutritional content. Using the <em>cereal</em> dataset from the <strong>liver</strong> package, we cluster 77 cereal brands using variables such as calories, fat, protein, and sugar. While simplified, this example demonstrates how unsupervised learning techniques can support product design, marketing strategy, and consumer targeting.</p>
-<p>This case study provides a focused, real-world example of how clustering works in practice, giving you hands-on experience applying K-means in R.</p>
+<p>Why do some breakfast cereals appear to target health-conscious consumers, while others are positioned toward children or indulgence-oriented markets? Such distinctions often reflect underlying differences in nutritional composition. In this case study, we use K-means clustering to explore how cereal products group naturally based on measurable nutritional attributes.</p>
+<p>Using the <code>cereal</code> dataset from the <strong>liver</strong> package, we analyze 77 cereal brands described by variables such as calories, fat, protein, and sugar. Rather than imposing predefined categories, clustering allows us to investigate whether distinct nutritional profiles emerge directly from the data. Although simplified, this example illustrates how unsupervised learning can support exploratory analysis and inform decisions in areas such as product positioning, marketing strategy, and consumer segmentation.</p>
+<p>The case study follows the Data Science Workflow (introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a> and illustrated in <a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>), emphasizing data preparation, thoughtful feature selection, and careful interpretation of clustering results. Rather than identifying definitive product categories, it illustrates how clustering can be used to uncover structure and generate insight from unlabeled data.</p>
 <section id="overview-of-the-dataset" class="level3" data-number="13.4.1"><h3 data-number="13.4.1" class="anchored" data-anchor-id="overview-of-the-dataset">
 <span class="header-section-number">13.4.1</span> Overview of the Dataset</h3>
-<p>What do breakfast cereals reveal about nutritional marketing and consumer preferences? The <em>cereal</em> dataset offers a compact but information-rich glimpse into the world of packaged food products. It includes 77 breakfast cereals from major brands, described by 16 variables capturing nutritional content, product characteristics, and shelf placement. The dataset is included in the <strong>liver</strong> package and can be loaded with:</p>
+<p>What do breakfast cereals reveal about nutritional positioning and consumer targeting? The <code>cereal</code> dataset provides a compact yet information-rich snapshot of packaged food products. It contains data on 77 breakfast cereals from major manufacturers, described by 16 variables capturing nutritional composition, product characteristics, and shelf placement. The dataset is included in the <strong>liver</strong> package and can be loaded as follows:</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://book-data-science-r.netlify.app">liver</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">cereal</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>To view the structure of the dataset:</p>
+<p>To inspect the structure of the dataset, we use:</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(cereal)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>   <span class="st">'data.frame'</span><span class="sc">:</span>    <span class="dv">77</span> obs. of  <span class="dv">16</span> variables<span class="sc">:</span></span>
@@ -586,14 +563,14 @@ Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number o
 <span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> cups    <span class="sc">:</span> num  <span class="fl">0.33</span> <span class="dv">1</span> <span class="fl">0.33</span> <span class="fl">0.5</span> <span class="fl">0.75</span> <span class="fl">0.75</span> <span class="dv">1</span> <span class="fl">0.75</span> <span class="fl">0.67</span> <span class="fl">0.67</span> ...</span>
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> rating  <span class="sc">:</span> num  <span class="fl">68.4</span> <span class="dv">34</span> <span class="fl">59.4</span> <span class="fl">93.7</span> <span class="fl">34.4</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Here is an overview of the key variables:</p>
+<p>Here is an overview of the features included in the dataset:</p>
 <ul>
 <li>
-<code>name</code>: Name of the cereal (categorical-nominal).</li>
+<code>name</code>: Name of the cereal (categorical, nominal).</li>
 <li>
-<code>manuf</code>: Manufacturer of cereal (categorical-nominal), coded into seven categories: “A” for American Home Food Products, “G” for General Mills, “K” for Kelloggs, “N” for Nabisco, “P” for Post, “Q” for Quaker Oats, and “R” for Ralston Purina.</li>
+<code>manuf</code>: Manufacturer (categorical, nominal), coded as A (American Home Food Products), G (General Mills), K (Kelloggs), N (Nabisco), P (Post), Q (Quaker Oats), and R (Ralston Purina).</li>
 <li>
-<code>type</code>: Cereal type, hot or cold (categorical-binary).</li>
+<code>type</code>: Cereal type, hot or cold (categorical, binary).</li>
 <li>
 <code>calories</code>: Calories per serving (numerical).</li>
 <li>
@@ -611,22 +588,22 @@ Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number o
 <li>
 <code>potass</code>: Milligrams of potassium per serving (numerical).</li>
 <li>
-<code>vitamins</code>: Percentage of recommended daily vitamins (categorical-ordinal: 0, 25, or 100).</li>
+<code>vitamins</code>: Percentage of recommended daily vitamins (ordinal: 0, 25, or 100).</li>
 <li>
-<code>shelf</code>: Display shelf position in stores (categorical-ordinal: 1, 2, or 3).</li>
+<code>shelf</code>: Store shelf position (ordinal: 1, 2, or 3).</li>
 <li>
 <code>weight</code>: Weight of one serving in ounces (numerical).</li>
 <li>
 <code>cups</code>: Number of cups per serving (numerical).</li>
 <li>
-<code>rating</code>: Cereal rating score (numerical).</li>
+<code>rating</code>: Overall cereal rating score (numerical).</li>
 </ul>
-<p>The dataset combines several feature types that reflect how real-world data is structured. It includes one binary variable (<code>type</code>), two nominal variables (<code>name</code> and <code>manuf</code>), and two ordinal variables (<code>vitamins</code> and <code>shelf</code>). The remaining variables are continuous numerical measures. Understanding these distinctions is essential for properly preparing the data for clustering.</p>
-<p>Before clustering, we need to prepare the data by addressing missing values, selecting relevant features, and applying scaling (steps that ensure the algorithm focuses on meaningful nutritional differences rather than artifacts of data format).</p>
-</section><section id="data-preprocessing" class="level3" data-number="13.4.2"><h3 data-number="13.4.2" class="anchored" data-anchor-id="data-preprocessing">
-<span class="header-section-number">13.4.2</span> Data Preprocessing</h3>
-<p>What makes some cereals more alike than others? Before we can explore that question with clustering, we must ensure that the data reflects meaningful similarities. This step corresponds to the second stage of the <em>Data Science Workflow</em> (<a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>): Data Preparation (Section <a href="3-Data-preparation.html" class="quarto-xref"><span>3</span></a>). Effective clustering depends on distance calculations, which in turn rely on clean and consistently scaled inputs. Data preprocessing is therefore essential (especially when working with real-world datasets that often contain inconsistencies or hidden assumptions).</p>
-<p>A summary of the cereal dataset reveals anomalous values in the <code>sugars</code>, <code>carbo</code>, and <code>potass</code> variables, where some entries are set to <code>-1</code>:</p>
+<p>The dataset combines feature types commonly encountered in practice, including nominal identifiers, ordinal variables, and continuous numerical measures. Recognizing these distinctions is important when preparing the data for clustering, as distance-based methods require numerical representations on comparable scales.</p>
+<p>Before applying K-means clustering, we therefore prepare the data by addressing missing values, selecting features that meaningfully reflect nutritional differences, and applying scaling. These steps ensure that the resulting clusters are driven by substantive patterns in the data rather than artifacts of measurement or representation.</p>
+</section><section id="data-preparation-for-clustering" class="level3" data-number="13.4.2"><h3 data-number="13.4.2" class="anchored" data-anchor-id="data-preparation-for-clustering">
+<span class="header-section-number">13.4.2</span> Data Preparation for Clustering</h3>
+<p>What makes some cereals more alike than others? Before exploring this question with clustering, we must ensure that the data reflects meaningful similarities rather than artifacts of measurement or coding. This step corresponds to the second stage of the Data Science Workflow (<a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>): Data Preparation (Section <a href="3-Data-preparation.html" class="quarto-xref"><span>3</span></a>). Because K-means relies on distance calculations, clustering outcomes are particularly sensitive to data quality and feature scaling, making careful preprocessing essential.</p>
+<p>A summary of the <code>cereal</code> dataset reveals anomalous values in the <code>sugars</code>, <code>carbo</code>, and <code>potass</code> variables, where some entries are recorded as <code>-1</code>:</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(cereal)</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>                           name    manuf    type       calories        protein           fat            sodium     </span>
@@ -654,7 +631,7 @@ Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number o
 <span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    Max.   <span class="sc">:</span><span class="fl">1.500</span>   Max.   <span class="sc">:</span><span class="fl">93.70</span>  </span>
 <span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>   </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>As discussed in Section <a href="3-Data-preparation.html#sec-ch3-missing-values" class="quarto-xref"><span>3.8</span></a>, it is common for datasets to use codes like <code>-1</code> or <code>999</code> to represent missing or unknown values (especially for attributes that should be non-negative). Since negative values are not valid for nutritional measurements, we treat these entries as missing:</p>
+<p>As discussed in Section <a href="3-Data-preparation.html#sec-ch3-missing-values" class="quarto-xref"><span>3.8</span></a>, placeholder values such as <code>-1</code> are often used to represent missing or unknown information, especially for variables that should be non-negative. Since negative values are not meaningful for nutritional measurements, we recode these entries as missing:</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>cereal[cereal <span class="sc">==</span> <span class="sc">-</span><span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -665,8 +642,8 @@ Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number o
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">3</span>,]   <span class="dv">5</span>  <span class="dv">11</span></span>
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">4</span>,]  <span class="dv">21</span>  <span class="dv">11</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The <code><a href="https://rdrr.io/pkg/liver/man/find.na.html">find.na()</a></code> function from the <strong>liver</strong> package reports the locations of missing values. This dataset contains 4 such entries, with the first one appearing in row 58 and column 9.</p>
-<p>To handle missing values in the <em>cereal</em> dataset, we apply <em>predictive imputation</em> using random forests, a method introduced in Section <a href="3-Data-preparation.html#sec-ch3-missing-values" class="quarto-xref"><span>3.8</span></a>. This approach leverages the relationships among observed variables to estimate missing entries. We use the <code>mice()</code> function from the <strong>mice</strong> package that creates a predictive model for each variable with missing values, using the other variables as predictors. In this example, we use the <code>"rf"</code> method to perform random forest imputation and we generate a single imputed dataset using one iteration and a small number of trees for demonstration purposes:</p>
+<p>The <code><a href="https://rdrr.io/pkg/liver/man/find.na.html">find.na()</a></code> function from the <strong>liver</strong> package reports the locations of missing values. In this dataset, there are 4 such entries, with the first occurring in row 58 and column 9.</p>
+<p>To handle missing values, we apply predictive imputation using random forests, as introduced in Section <a href="3-Data-preparation.html#sec-ch3-missing-values" class="quarto-xref"><span>3.8</span></a>. This approach exploits relationships among observed variables to estimate missing entries. We use the <code>mice()</code> function from the <strong>mice</strong> package with the <code>"rf"</code> method. For demonstration purposes, we generate a single imputed dataset using a small number of trees and one iteration, focusing on illustrating the workflow rather than optimizing imputation performance:</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mice)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -679,20 +656,18 @@ Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number o
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">find.na</span>(cereal)</span>
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">1</span>] <span class="st">" No missing values (NA) in the dataset."</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The <code>complete()</code> function extracts the imputed dataset from the <code>mice</code> object. By default, it returns the first completed version when only one is created. The <code>mice()</code> function also supports a range of other imputation methods, including mean imputation (<code>"mean"</code>), predictive mean matching (<code>"pmm"</code>), and classification and regression trees (<code>"cart"</code>), allowing users to tailor the imputation strategy to their data and modeling needs.</p>
-<p>The resulting <code>cereal</code> dataset contains no missing values, as confirmed by the <code><a href="https://rdrr.io/pkg/liver/man/find.na.html">find.na()</a></code> function. This imputation step ensures that subsequent clustering analyses are not biased by incomplete records.</p>
-<p>After imputation, no missing values remain, and the dataset is complete and ready for clustering. We now select the variables that will be used to group cereals. Three variables are excluded based on their role and structure:</p>
+<p>The resulting dataset contains no missing values, ensuring that all observations can be included in the clustering analysis.</p>
+<p>After addressing missing values, we select the variables used for clustering. Three variables are excluded based on their role and interpretation:</p>
 <ul>
-<li><p><code>name</code> is an identifier, functioning like an ID. It carries no analytical value for clustering.</p></li>
-<li><p><code>manuf</code> is a nominal variable with seven categories. Encoding it would require six dummy variables, which may inflate dimensionality and distort distance metrics.</p></li>
-<li><p><code>rating</code> reflects a subjective outcome (e.g., taste), rather than a feature of the cereal’s composition. It is more appropriate as a target variable in supervised learning than as an input for clustering.</p></li>
+<li><p><code>name</code> functions as an identifier and carries no analytical meaning for similarity-based grouping.</p></li>
+<li><p><code>manuf</code> is a nominal variable with multiple categories. Including it would require one-hot encoding, substantially increasing dimensionality and potentially dominating distance calculations.</p></li>
+<li><p><code>rating</code> reflects an outcome measure rather than an intrinsic product attribute and is therefore more appropriate for supervised analysis.</p></li>
 </ul>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">selected_variables</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">cereal</span><span class="op">)</span><span class="op">[</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">16</span><span class="op">)</span><span class="op">]</span></span>
-<span></span>
 <span><span class="va">cereal_subset</span> <span class="op">&lt;-</span> <span class="va">cereal</span><span class="op">[</span>, <span class="va">selected_variables</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Because the numerical features span different scales (e.g., milligrams of sodium vs.&nbsp;grams of fiber), we apply min-max scaling using the <code><a href="https://rdrr.io/pkg/liver/man/minmax.html">minmax()</a></code> function from the <strong>liver</strong> package:</p>
+<p>Because the remaining features are measured on different scales (for example, milligrams of sodium versus grams of fiber), we apply min–max scaling using the <code><a href="https://rdrr.io/pkg/liver/man/minmax.html">minmax()</a></code> function from the <strong>liver</strong> package:</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>cereal_mm <span class="ot">&lt;-</span> <span class="fu">minmax</span>(cereal_subset, <span class="at">col =</span> <span class="st">"all"</span>)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(cereal_mm)</span>
@@ -711,7 +686,7 @@ Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number o
 <span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> weight  <span class="sc">:</span> num  <span class="fl">0.5</span> <span class="fl">0.5</span> <span class="fl">0.5</span> <span class="fl">0.5</span> <span class="fl">0.5</span> <span class="fl">0.5</span> <span class="fl">0.5</span> <span class="fl">0.83</span> <span class="fl">0.5</span> <span class="fl">0.5</span> ...</span>
 <span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> cups    <span class="sc">:</span> num  <span class="fl">0.064</span> <span class="fl">0.6</span> <span class="fl">0.064</span> <span class="fl">0.2</span> <span class="fl">0.4</span> <span class="fl">0.4</span> <span class="fl">0.6</span> <span class="fl">0.4</span> <span class="fl">0.336</span> <span class="fl">0.336</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>To visualize the effect of min-max scaling, we compare the distribution of the <code>sodium</code> variable before and after scaling:</p>
+<p>To illustrate the effect of scaling, we compare the distribution of the <code>sodium</code> variable before and after transformation:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">ggplot</span><span class="op">(</span><span class="va">cereal</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu">geom_histogram</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">sodium</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu">labs</span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Sodium (mg)"</span>, y <span class="op">=</span> <span class="st">"Count"</span>, title <span class="op">=</span> <span class="st">"Before Min–Max Scaling"</span><span class="op">)</span></span>
@@ -719,7 +694,7 @@ Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number o
 <span><span class="fu">ggplot</span><span class="op">(</span><span class="va">cereal_mm</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu">geom_histogram</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>x <span class="op">=</span> <span class="va">sodium</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>    <span class="fu">labs</span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Scaled Sodium [0–1]"</span>, y <span class="op">=</span> <span class="st">"Count"</span>, title <span class="op">=</span> <span class="st">"After Min–Max Scaling"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell quarto-layout-panel" data-layout-ncol="2" data-layout-align="center">
+<div class="cell quarto-layout-panel" data-layout-align="center" data-layout-ncol="2">
 <div class="quarto-layout-row">
 <div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
 <div class="quarto-figure quarto-figure-center">
@@ -735,13 +710,12 @@ Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number o
 </div>
 </div>
 </div>
-<p>As shown in the histograms, the sodium feature is rescaled to the <span class="math inline">\([0, 1]\)</span> range. This prevents variables like sodium or potassium (originally measured in large units) from overpowering the clustering process.</p>
-<p>With the dataset cleaned, imputed, and scaled, we are now ready to explore how cereals naturally group together. But first, how many clusters should we use?</p>
+<p>As shown in the histograms, scaling maps sodium values to the <span class="math inline">\([0, 1]\)</span> range, preventing variables with larger units from disproportionately influencing distance calculations. With the data cleaned, imputed, and scaled, we are now prepared to apply K-means clustering. The next step is to determine how many clusters should be used.</p>
 </section><section id="selecting-the-number-of-clusters" class="level3" data-number="13.4.3"><h3 data-number="13.4.3" class="anchored" data-anchor-id="selecting-the-number-of-clusters">
 <span class="header-section-number">13.4.3</span> Selecting the Number of Clusters</h3>
-<p>A key decision in clustering is selecting how many clusters (<span class="math inline">\(k\)</span>) to use. Choosing too few clusters can obscure meaningful groupings, while too many may lead to overfitting or fragmented results. Because clustering is unsupervised, this decision must be guided by internal evaluation methods.</p>
-<p>One widely used approach is the <em>elbow method</em>, which evaluates how the total within-cluster sum of squares (WCSS) decreases as <span class="math inline">\(k\)</span> increases. Initially, adding more clusters significantly reduces WCSS, but beyond a certain point the improvement slows. The “elbow” in the plot (where the rate of decrease flattens) suggests a suitable value for <span class="math inline">\(k\)</span>.</p>
-<p>To create the elbow plot, we use the <code><a href="https://rdrr.io/pkg/factoextra/man/fviz_nbclust.html">fviz_nbclust()</a></code> function from the <strong>factoextra</strong> package. This package provides user-friendly tools for visualizing clustering results and evaluation metrics. The <code><a href="https://rdrr.io/pkg/factoextra/man/fviz_nbclust.html">fviz_nbclust()</a></code> function generates evaluation plots for different values of <span class="math inline">\(k\)</span> based on methods such as WCSS or silhouette width.</p>
+<p>A key decision in clustering is choosing the number of clusters, <span class="math inline">\(k\)</span>. Selecting too few clusters may mask meaningful structure, whereas too many can lead to fragmented and less interpretable results. Because clustering is unsupervised, this choice must be guided by internal evaluation criteria rather than predictive performance.</p>
+<p>In this case study, we use the <em>elbow method</em> to inform the selection of <span class="math inline">\(k\)</span>. This approach examines how the total within-cluster sum of squares (WCSS) changes as the number of clusters increases. As <span class="math inline">\(k\)</span> grows, WCSS decreases, but the marginal improvement diminishes beyond a certain point. The goal is to identify a value of <span class="math inline">\(k\)</span> at which further increases yield only limited gains.</p>
+<p>To visualize this relationship, we use the <code><a href="https://rdrr.io/pkg/factoextra/man/fviz_nbclust.html">fviz_nbclust()</a></code> function from the <strong>factoextra</strong> package to compute and plot WCSS for a range of candidate values:</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://www.sthda.com/english/rpkgs/factoextra">factoextra</a></span><span class="op">)</span></span>
 <span></span>
@@ -754,39 +728,38 @@ Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number o
 </div>
 </div>
 </div>
-<p>As shown in <a href="#fig-ch13-elbow" class="quarto-xref">Figure&nbsp;<span>13.8</span></a>, the WCSS drops sharply for small values of <span class="math inline">\(k\)</span>, but levels off after <span class="math inline">\(k = 4\)</span>. This suggests that four clusters may offer a reasonable balance between model complexity and within-cluster cohesion.</p>
+<p>As shown in <a href="#fig-ch13-elbow" class="quarto-xref">Figure&nbsp;<span>13.8</span></a>, the WCSS decreases rapidly for small values of <span class="math inline">\(k\)</span> and begins to level off around <span class="math inline">\(k = 4\)</span>. This pattern suggests that four clusters provide a reasonable trade-off between model simplicity and within-cluster cohesion for this dataset. As with all clustering heuristics, this choice should be interpreted in light of domain knowledge and the substantive meaning of the resulting clusters.</p>
 </section><section id="performing-k-means-clustering" class="level3" data-number="13.4.4"><h3 data-number="13.4.4" class="anchored" data-anchor-id="performing-k-means-clustering">
 <span class="header-section-number">13.4.4</span> Performing K-means Clustering</h3>
-<p>With the number of clusters selected, we now apply the K-means algorithm to segment the cereals into four groups. We use the <code><a href="https://rdrr.io/r/stats/kmeans.html">kmeans()</a></code> function from base R, which does not require any additional packages. Its key arguments include the input data (<code>x</code>), the number of clusters (<code>centers</code>), and optional parameters such as the number of random starts (<code>nstart</code>), which helps avoid poor local optima.</p>
-<p>We use <code><a href="https://rdrr.io/r/base/Random.html">set.seed()</a></code> to ensure that the results are reproducible. Since the K-means algorithm involves random initialization of cluster centers, setting the seed guarantees that the same clusters are obtained each time the code is run.</p>
+<p>With the number of clusters selected, we now apply the K-means algorithm to segment the cereals into four groups. We use the <code><a href="https://rdrr.io/r/stats/kmeans.html">kmeans()</a></code> function from base R, which implements the standard K-means procedure without requiring additional packages. Key arguments include the input data (<code>x</code>), the number of clusters (<code>centers</code>), and the number of random initializations (<code>nstart</code>), which helps reduce the risk of converging to a suboptimal solution.</p>
+<p>Because K-means relies on random initialization of cluster centers, results can vary across runs. To ensure reproducibility, we set a random seed. We also use multiple random starts so that the algorithm selects the solution with the lowest within-cluster sum of squares among several initializations.</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span>  <span class="co"># Ensure reproducibility</span></span>
-<span><span class="va">cereal_kmeans</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html">kmeans</a></span><span class="op">(</span><span class="va">cereal_mm</span>, centers <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span></span>
+<span><span class="va">cereal_kmeans</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html">kmeans</a></span><span class="op">(</span><span class="va">cereal_mm</span>, centers <span class="op">=</span> <span class="fl">4</span>, nstart <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The <code><a href="https://rdrr.io/r/stats/kmeans.html">kmeans()</a></code> function returns several useful components, including:</p>
+<p>The <code><a href="https://rdrr.io/r/stats/kmeans.html">kmeans()</a></code> function returns several components that summarize the clustering result:</p>
 <ul>
-<li>
-<code>cluster</code>: the cluster assignment for each observation,</li>
-<li>
-<code>centers</code>: the coordinates of the cluster centroids,</li>
-<li>
-<code>size</code>: the number of observations in each cluster,</li>
-<li>
-<code>tot.withinss</code>: the total within-cluster sum of squares (used earlier in the elbow method).</li>
+<li><p><code>cluster</code>: the cluster assignment for each observation,</p></li>
+<li><p><code>centers</code>: the coordinates of the cluster centroids, representing typical profiles,</p></li>
+<li><p><code>size</code>: the number of observations in each cluster,</p></li>
+<li><p><code>tot.withinss</code>: the total within-cluster sum of squares, reflecting overall cluster compactness.</p></li>
 </ul>
-<p>To check how the observations are distributed across the clusters:</p>
+<p>To examine how cereals are distributed across the clusters, we inspect the cluster sizes:</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cereal_kmeans<span class="sc">$</span>size</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">1</span>] <span class="dv">36</span> <span class="dv">10</span> <span class="dv">13</span> <span class="dv">18</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The output shows the number of cereals assigned to each cluster, which can help us understand the distribution of products across the four groups.</p>
+<p>The resulting counts indicate how many cereals are assigned to each group. While cluster size alone does not determine cluster quality, it provides a useful first check before moving on to visualization and substantive interpretation of the clusters.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Re-run the K-means algorithm with a different random seed or a different value of <code>nstart</code>. Do the cluster sizes change? What does this suggest about the stability of the clustering solution?</p>
+</blockquote>
 <section id="visualizing-the-clusters" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="visualizing-the-clusters">Visualizing the Clusters</h4>
-<p>To gain insight into the clustering results, we use the <code><a href="https://rdrr.io/pkg/factoextra/man/fviz_cluster.html">fviz_cluster()</a></code> function from the <strong>factoextra</strong> package to visualize the four groups:</p>
+<p>To gain insight into the clustering results, we visualize the four groups using the <code><a href="https://rdrr.io/pkg/factoextra/man/fviz_cluster.html">fviz_cluster()</a></code> function from the <strong>factoextra</strong> package:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/factoextra/man/fviz_cluster.html">fviz_cluster</a></span><span class="op">(</span><span class="va">cereal_kmeans</span>, <span class="va">cereal_mm</span>, </span>
-<span>             geom <span class="op">=</span> <span class="st">"point"</span>, </span>
-<span>             ellipse.type <span class="op">=</span> <span class="st">"norm"</span>, </span>
-<span>             palette <span class="op">=</span> <span class="st">"custom_palette"</span>, </span>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/factoextra/man/fviz_cluster.html">fviz_cluster</a></span><span class="op">(</span><span class="va">cereal_kmeans</span>, <span class="va">cereal_mm</span>,</span>
+<span>             geom <span class="op">=</span> <span class="st">"point"</span>,</span>
+<span>             ellipse.type <span class="op">=</span> <span class="st">"norm"</span>,</span>
 <span>             ggtheme <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html">theme_minimal</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -795,35 +768,36 @@ Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number o
 </div>
 </div>
 </div>
-<p>The resulting scatter plot displays the cluster structure, with each point representing a cereal. Colors indicate cluster membership, and ellipses represent the standard deviation around each cluster center. The plot is constructed using principal component analysis (PCA), which reduces the high-dimensional feature space to two principal components for visualization. Although some detail is inevitably lost, this projection helps reveal the overall shape and separation of the clusters.</p>
+<p>The resulting scatter plot displays each cereal as a point, with colors indicating cluster membership. The ellipses summarize the dispersion of observations around each cluster centroid. For visualization purposes, the plot is constructed using principal component analysis (PCA), which projects the high-dimensional feature space onto two principal components.</p>
+<p>This projection facilitates visual inspection of cluster structure, but it should be interpreted with care. Because PCA preserves variance rather than cluster separation, apparent overlap or separation in the plot does not necessarily reflect the true structure in the original feature space. The visualization therefore serves as an exploratory tool to support interpretation, rather than as a definitive assessment of clustering quality.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Recreate the cluster visualization using a different value of <span class="math inline">\(k\)</span> or by excluding one nutritional variable. How does the visual separation of clusters change, and what does this suggest about the robustness of the clustering?</p>
+</blockquote>
 </section><section id="interpreting-the-results" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="interpreting-the-results">Interpreting the Results</h4>
-<p>The clustering results reveal natural groupings among cereals based on their nutritional composition. For example:</p>
+<p>The clustering results suggest distinct groupings of cereals based on their nutritional characteristics. These clusters should be interpreted as data-driven groupings that summarize similarities in nutritional profiles, rather than as definitive product categories. Examining the cluster centroids and the distribution of key variables within each group helps clarify their substantive meaning.</p>
+<p>Based on the observed patterns, the clusters can be broadly characterized as follows:</p>
 <ul>
-<li><p>One cluster includes low-sugar, high-fiber cereals that are likely positioned for health-conscious consumers.</p></li>
-<li><p>Another contains high-calorie, high-sugar cereals typically marketed to children.</p></li>
-<li><p>A third represents balanced options with moderate levels of key nutrients.</p></li>
-<li><p>The fourth cluster combines cereals with higher protein or other distinctive profiles.</p></li>
+<li><p>One cluster is characterized by relatively low sugar content and higher fiber levels, consistent with cereals positioned toward health-conscious consumers.</p></li>
+<li><p>Another cluster exhibits higher calorie and sugar levels, reflecting products with more energy-dense nutritional profiles.</p></li>
+<li><p>A third cluster contains cereals with moderate values across several nutrients, representing more balanced nutritional compositions.</p></li>
+<li><p>The fourth cluster includes cereals with distinctive profiles, such as higher protein content or other notable nutritional features.</p></li>
 </ul>
-<p>To examine which cereals belong to a particular cluster (e.g., Cluster 1), we can use:</p>
+<p>To explore cluster composition in more detail, we can inspect which cereals are assigned to a given cluster. For example, the following command lists the cereals belonging to Cluster 1:</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cereal</span><span class="op">$</span><span class="va">name</span><span class="op">[</span><span class="va">cereal_kmeans</span><span class="op">$</span><span class="va">cluster</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>This command returns the names of cereals assigned to Cluster 1, allowing for further inspection and interpretation of that group’s defining features.</p>
-</section></section><section id="reflections-and-takeaways" class="level3" data-number="13.4.5"><h3 data-number="13.4.5" class="anchored" data-anchor-id="reflections-and-takeaways">
-<span class="header-section-number">13.4.5</span> Reflections and Takeaways</h3>
-<p>The cereal clustering analysis illustrates how K-means can be used to segment products based on measurable features (in this case, nutritional content). By combining careful preprocessing, feature scaling, and model evaluation, we identified coherent groupings that reflect distinct product profiles.</p>
-<p>More generally, this example highlights the value of unsupervised learning in discovering hidden patterns when no outcome variable is available. Clustering is widely used in domains such as marketing, health analytics, and customer segmentation, where understanding natural structure in the data leads to better decisions and targeted strategies.</p>
-<p>The process illustrated here (choosing relevant features, selecting the number of clusters, and interpreting results) forms the foundation for applying clustering techniques to other domains. Whether used for segmenting users, detecting anomalies, or grouping documents, clustering provides a flexible tool for uncovering structure and generating insights.</p>
-</section></section><section id="chapter-summary-and-takeaways" class="level2" data-number="13.5"><h2 data-number="13.5" class="anchored" data-anchor-id="chapter-summary-and-takeaways">
+<p>This inspection allows us to relate the quantitative clustering results back to individual products, supporting a more nuanced interpretation of each cluster’s defining characteristics.</p>
+<p>This case study illustrates how K-means clustering can be used to explore structure in unlabeled data through careful data preparation, feature selection, and interpretation of results. Rather than producing definitive product categories, the analysis highlights how clustering supports exploratory insight by summarizing similarities in nutritional profiles. The same workflow can be applied to other domains where the goal is to uncover patterns, generate hypotheses, or inform subsequent analysis.</p>
+</section></section></section><section id="chapter-summary-and-takeaways" class="level2" data-number="13.5"><h2 data-number="13.5" class="anchored" data-anchor-id="chapter-summary-and-takeaways">
 <span class="header-section-number">13.5</span> Chapter Summary and Takeaways</h2>
-<p>In this chapter, we introduced clustering as a fundamental technique for unsupervised learning (where the goal is to group observations based on similarity without using labeled outcomes).</p>
-<p>We focused on the K-means algorithm, one of the most widely used clustering methods. You learned how K-means iteratively partitions data into <span class="math inline">\(k\)</span> clusters by minimizing the within-cluster sum of squares. Selecting an appropriate number of clusters is crucial, and we explored common evaluation methods such as the elbow method.</p>
-<p>We emphasized the importance of proper data preparation, including selecting relevant features, handling missing values, and applying scaling techniques to ensure fair distance calculations.</p>
-<p>Through a case study using the cereal dataset, we demonstrated how to apply K-means in R, visualize the resulting clusters, and interpret their meaning in a real-world context. Unlike earlier chapters, we did not partition the dataset into training and testing sets. Since clustering is an unsupervised technique, there is no outcome variable to predict, and evaluation relies on internal measures such as within-cluster variance or silhouette scores.</p>
-<p>This practical application highlighted the value of clustering in uncovering patterns and informing decisions. Clustering is a versatile tool with wide applications (from customer segmentation to product classification and beyond). A solid understanding of its strengths and limitations is essential for every data scientist.</p>
+<p>In this chapter, we introduced clustering as a central technique for unsupervised learning, where the objective is to group observations based on similarity rather than to predict labeled outcomes. Clustering plays a key role in exploratory data analysis, particularly when no response variable is available.</p>
+<p>We focused on the K-means algorithm, one of the most widely used clustering methods. You learned how K-means iteratively partitions data into <span class="math inline">\(k\)</span> clusters by minimizing within-cluster variation, and why selecting an appropriate number of clusters is a critical modeling decision. Because clustering lacks an external ground truth, this choice relies on internal evaluation criteria, such as the elbow method, combined with interpretability and domain knowledge.</p>
+<p>Throughout the chapter, we emphasized the importance of careful data preparation for distance-based methods. Selecting meaningful features, handling missing values, and applying appropriate scaling are essential steps to ensure that similarity calculations reflect substantive structure rather than artifacts of measurement.</p>
+<p>Using a case study based on the cereal dataset, we demonstrated how clustering can be applied in practice, from preprocessing and model fitting to visualization and interpretation. Unlike supervised learning, clustering does not involve train–test splits or predictive accuracy; instead, evaluation focuses on internal coherence and the interpretability of the resulting groups.</p>
+<p>Overall, this chapter highlighted clustering as a flexible and informative tool for uncovering structure in unlabeled data. A clear understanding of its assumptions, limitations, and interpretive nature is essential for using clustering effectively as part of the data science workflow.</p>
 </section><section id="sec-ch13-exercises" class="level2" data-number="13.6"><h2 data-number="13.6" class="anchored" data-anchor-id="sec-ch13-exercises">
 <span class="header-section-number">13.6</span> Exercises</h2>
-<p>The exercises are grouped into two categories: conceptual questions and practical exercises using the <em>redWines</em> dataset, applying clustering techniques to real-world data.</p>
+<p>The following exercises are designed to reinforce both the conceptual foundations of clustering and its practical application. They are organized into conceptual questions and hands-on exercises using real-world data.</p>
 <section id="conceptual-questions" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="conceptual-questions">Conceptual Questions</h4>
 <ol type="1">
 <li><p>What is clustering, and how does it differ from classification?</p></li>
@@ -838,7 +812,7 @@ Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number o
 <li><p>Why is K-means sensitive to the initial selection of cluster centers? How does K-means++ address this issue?</p></li>
 <li><p>Describe a scenario where Euclidean distance might not be an appropriate similarity measure for clustering.</p></li>
 <li><p>Why do we need to scale features before applying K-means clustering?</p></li>
-<li><p>How does clustering help in dimensionality reduction and preprocessing for supervised learning?</p></li>
+<li><p>How can clustering be used as a preprocessing step for supervised learning tasks?</p></li>
 <li><p>What are the key assumptions of K-means clustering?</p></li>
 <li><p>How does the silhouette score help evaluate the quality of clustering?</p></li>
 <li><p>Compare K-means with hierarchical clustering. What are the advantages and disadvantages of each?</p></li>
@@ -846,15 +820,16 @@ Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number o
 <li><p>What is the difference between hard clustering (e.g., K-means) and soft clustering (e.g., Gaussian Mixture Models)?</p></li>
 <li><p>What are outliers, and how do they affect K-means clustering?</p></li>
 <li><p>What are alternative clustering methods that are more robust to outliers than K-means?</p></li>
-</ol></section><section id="hands-on-practice-k-mean-with-the-redwines-dataset" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="hands-on-practice-k-mean-with-the-redwines-dataset">Hands-On Practice: k-mean with the <em>redWines</em> Dataset</h4>
-<p>These exercises use the <em>redWines</em> dataset from the <strong>liver</strong> package, which contains chemical properties of red wines and their quality scores. Your goal is to apply clustering techniques to uncover natural groupings in the wines, without using the quality label during clustering.</p>
+</ol></section><section id="hands-on-practice-k-mean-with-the-red_wines-dataset" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="hands-on-practice-k-mean-with-the-red_wines-dataset">Hands-On Practice: K-mean with the <code>red_wines</code> Dataset</h4>
+<p>These exercises use the <code>red_wines</code> dataset from the <strong>liver</strong> package, which contains chemical properties of red wines and their quality scores. Your goal is to apply clustering techniques to uncover natural groupings in the wines, without using the quality label during clustering.</p>
 <section id="data-preparation-and-exploratory-analysis" class="level5 unnumbered"><h5 class="unnumbered anchored" data-anchor-id="data-preparation-and-exploratory-analysis">Data Preparation and Exploratory Analysis</h5>
 <ol start="21" type="1">
-<li>Load the <em>redWines</em> dataset from the <strong>liver</strong> package and inspect its structure.</li>
+<li>Load the <code>red_wines</code> dataset from the <strong>liver</strong> package and inspect its structure.</li>
 </ol>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://book-data-science-r.netlify.app">liver</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">redWines</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">redWines</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">red_wines</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">red_wines</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <ol start="22" type="1">
 <li><p>Summarize the dataset using <code><a href="https://rdrr.io/r/base/summary.html">summary()</a></code>. Identify any missing values.</p></li>
 <li><p>Check the distribution of wine quality scores in the dataset. What is the most common wine quality score?</p></li>
@@ -866,7 +841,7 @@ Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number o
 </ol>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://www.sthda.com/english/rpkgs/factoextra">factoextra</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/factoextra/man/fviz_nbclust.html">fviz_nbclust</a></span><span class="op">(</span><span class="va">redWines</span>, <span class="va">kmeans</span>, method <span class="op">=</span> <span class="st">"wss"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/pkg/factoextra/man/fviz_nbclust.html">fviz_nbclust</a></span><span class="op">(</span><span class="va">red_wines</span>, <span class="va">kmeans</span>, method <span class="op">=</span> <span class="st">"wss"</span>, k.max <span class="op">=</span> <span class="fl">15</span><span class="op">)</span> </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <ol start="27" type="1">
 <li><p>Based on the elbow plot, choose an appropriate value of <span class="math inline">\(k\)</span> and perform K-means clustering.</p></li>
 <li><p>Visualize the clusters using a scatter plot of two numerical features.</p></li>
@@ -880,10 +855,10 @@ Figure&nbsp;13.8: The elbow method visualizes the trade-off between the number o
 <li><p>Are certain wine types (e.g., high acidity, high alcohol content) concentrated in specific clusters?</p></li>
 <li><p>Experiment with different values of <span class="math inline">\(k\)</span> and compare the clustering results. Does increasing or decreasing <span class="math inline">\(k\)</span> improve the clustering?</p></li>
 <li><p>Visualize how wine acidity and alcohol content influence cluster formation.</p></li>
-<li><p>(Optional) The <strong>liver</strong> package also includes a <em>whiteWines</em> dataset with the same structure as <em>redWines</em>. Repeat the clustering process on this dataset, from preprocessing and elbow method to K-means application and interpretation. How do the cluster profiles differ between red and white wines?</p></li>
+<li><p>(Optional) The <strong>liver</strong> package also includes a <code>white_wines</code> dataset with the same structure as <code>red_wines</code>. Repeat the clustering process on this dataset, from preprocessing and elbow method to K-means application and interpretation. How do the cluster profiles differ between red and white wines?</p></li>
 </ol></section></section><section id="self-reflection" class="level4 unnumbered"><h4 class="unnumbered anchored" data-anchor-id="self-reflection">Self-reflection</h4>
 <ol start="38" type="1">
-<li>Reflect on your experience applying K-means clustering to the <em>redWines</em> dataset. What challenges did you encounter in interpreting the clusters, and how might you validate or refine your results if this were a real-world project? What role do domain insights (e.g., wine chemistry, customer preferences) play in making clustering results actionable?</li>
+<li>Reflect on your experience applying K-means clustering to the <code>red_wines</code> dataset. What challenges did you encounter in interpreting the clusters, and how might you validate or refine your results if this were a real-world project? What role do domain insights (e.g., wine chemistry, customer preferences) play in making clustering results actionable?</li>
 </ol>
 
 

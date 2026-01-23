@@ -34,17 +34,17 @@ Several aspects of data preparation, including outlier detection and missing-val
 
 This chapter introduces the essential techniques for transforming raw data into a format suitable for analysis and modeling. You will learn how to:
 
-- identify and detect outliers using visual and summary-based techniques;
+-   identify and detect outliers using visual and summary-based techniques;
 
-- decide how to handle outliers through removal, transformation, or imputation;
+-   decide how to handle outliers through removal, transformation, or imputation;
 
-- identify missing values, including those encoded using nonstandard placeholders;
+-   identify missing values, including those encoded using nonstandard placeholders;
 
-- apply principled imputation strategies to numerical and categorical variables;
+-   apply principled imputation strategies to numerical and categorical variables;
 
-- prepare real-world data for modeling through a complete, end-to-end case study.
+-   prepare real-world data for modeling through a complete, end-to-end case study.
 
-We begin by working with the *diamonds* dataset to demonstrate core data preparation techniques in a controlled setting. The chapter then progresses to a comprehensive case study based on the real-world *adult* income dataset, where these techniques are applied to a realistic prediction task. Together, these examples illustrate how thoughtful data preparation transforms raw data into a reliable foundation for meaningful insight and machine learning models.
+We begin by working with the `diamonds` dataset to demonstrate core data preparation techniques in a controlled setting. The chapter then progresses to a comprehensive case study based on the real-world *adult* income dataset, where these techniques are applied to a realistic prediction task. Together, these examples illustrate how thoughtful data preparation transforms raw data into a reliable foundation for meaningful insight and machine learning models.
 
 ## Key Considerations for Data Preparation
 
@@ -58,9 +58,9 @@ Finally, variables must be transformed into formats that are appropriate for mod
 
 Together, these considerations provide a practical lens for the data preparation steps that follow. Rather than applying preprocessing techniques mechanically, they encourage decisions that are aligned with both the structure of the data and the goals of the analysis.
 
-## Data Preparation in Action: The *diamonds* Dataset {#sec-ch3-problem-understanding} 
+## Data Preparation in Action: The `diamonds` Dataset {#sec-ch3-diamonds-prep}
 
-How can we quantify the value of a diamond? Why do two stones that appear nearly identical command markedly different prices? In this section, we bring the concepts of data preparation to life using the *diamonds* dataset, a rich and structured collection of gem characteristics provided by the **ggplot2** package. This dataset serves as a practical setting for exploring how data preparation supports meaningful analysis.
+How can we quantify the value of a diamond? Why do two stones that appear nearly identical command markedly different prices? In this section, we bring the concepts of data preparation to life using the `diamonds` dataset, a rich and structured collection of gem characteristics provided by the **ggplot2** package. This dataset serves as a practical setting for exploring how data preparation supports meaningful analysis.
 
 Our central goal is to understand how features such as carat, cut, color, and clarity relate to diamond prices. Before applying any cleaning or transformation steps, however, we must first clarify the analytical objective and the questions that guide it. Effective data preparation begins with a clear understanding of the problem the data is meant to address.
 
@@ -68,11 +68,11 @@ We focus on three guiding questions: which features are most informative for exp
 
 From a business perspective, answering these questions supports more informed pricing and inventory decisions for jewelers and online retailers. From a data science perspective, it ensures that data preparation choices are aligned with the modeling task rather than applied mechanically. This connection between domain understanding and technical preparation is what makes data preparation both effective and consequential.
 
-Later in the book, we return to the *diamonds* dataset in Chapter [-@sec-ch10-regression], where the features prepared in this chapter are used to build a predictive regression model, completing the progression from raw data to actionable insight.
+Later in the book, we return to the `diamonds` dataset in Chapter [-@sec-ch10-regression], where the features prepared in this chapter are used to build a predictive regression model, completing the progression from raw data to actionable insight.
 
-### Overview of the *diamonds* Dataset {.unnumbered .unlisted}
+### Overview of the `diamonds` Dataset {.unnumbered .unlisted}
 
-We use the *diamonds* dataset from the **ggplot2** package, which contains detailed information on the physical characteristics and quality ratings of individual diamonds. Each row represents a single diamond, described by variables such as carat weight, cut, color, clarity, and price. Although the dataset is relatively clean, it provides a realistic setting for practicing key data preparation techniques that arise in applied data science. A natural first step in data preparation is to load the dataset and inspect its structure to understand what information is available and how it is represented.
+We use the `diamonds` dataset from the **ggplot2** package, which contains detailed information on the physical characteristics and quality ratings of individual diamonds. Each row represents a single diamond, described by variables such as carat weight, cut, color, clarity, and price. Although the dataset is relatively clean, it provides a realistic setting for practicing key data preparation techniques that arise in applied data science. A natural first step in data preparation is to load the dataset and inspect its structure to understand what information is available and how it is represented.
 
 ```{r}
 library(ggplot2)
@@ -88,16 +88,16 @@ str(diamonds)
 
 This output reveals that the dataset contains `r nrow(diamonds)` observations and `r ncol(diamonds)` variables. It includes numerical features such as `carat`, `price`, and the physical dimensions `x`, `y`, and `z`, alongside categorical features describing quality attributes, including `cut`, `color`, and `clarity`. These variables form the basis for the price modeling task revisited in Chapter [-@sec-ch10-regression]. The key variables in the dataset are summarized below:
 
-* `carat`: weight of the diamond (approximately 0.2 to 5.01);
-* `cut`: quality of the cut (Fair, Good, Very Good, Premium, Ideal);
-* `color`: color grade, from D (most colorless) to J (least colorless);
-* `clarity`: clarity grade, from I1 (least clear) to IF (flawless);
-* `depth`: total depth percentage, calculated as `2 * z / (x + y)`;
-* `table`: width of the top facet relative to the widest point;
-* `x`, `y`, `z`: physical dimensions in millimeters;
-* `price`: price in US dollars.
+-   `carat`: weight of the diamond (approximately 0.2 to 5.01);
+-   `cut`: quality of the cut (Fair, Good, Very Good, Premium, Ideal);
+-   `color`: color grade, from D (most colorless) to J (least colorless);
+-   `clarity`: clarity grade, from I1 (least clear) to IF (flawless);
+-   `depth`: total depth percentage, calculated as `2 * z / (x + y)`;
+-   `table`: width of the top facet relative to the widest point;
+-   `x`, `y`, `z`: physical dimensions in millimeters;
+-   `price`: price in US dollars.
 
-Before cleaning or transforming these variables, it is important to understand how they are represented and what type of information they encode. Different feature types require different preparation strategies. In the next section, we examine how the variables in the *diamonds* dataset are structured and classified.
+Before cleaning or transforming these variables, it is important to understand how they are represented and what type of information they encode. Different feature types require different preparation strategies. In the next section, we examine how the variables in the `diamonds` dataset are structured and classified.
 
 ## Identifying Feature Types
 
@@ -113,19 +113,19 @@ Features are commonly grouped into two broad categories: *quantitative (numerica
 
 *Quantitative (Numerical) features* represent measurable quantities:
 
-* *Continuous features* can take any value within a range. In the *diamonds* dataset, variables such as `carat`, `price`, and the physical dimensions `x`, `y`, and `z` fall into this category.
+-   *Continuous features* can take any value within a range. In the `diamonds` dataset, variables such as `carat`, `price`, and the physical dimensions `x`, `y`, and `z` fall into this category.
 
-* *Discrete features* take on countable values, typically integers. While not present in the *diamonds* dataset, examples include counts such as the number of purchases or visits.
+-   *Discrete features* take on countable values, typically integers. While not present in the `diamonds` dataset, examples include counts such as the number of purchases or visits.
 
 *Categorical (Qualitative) features* describe group membership:
 
-* *Ordinal features* have a meaningful order, although the spacing between levels is not necessarily uniform. In the *diamonds* dataset, variables such as `cut`, `color`, and `clarity` are ordinal. For instance, `color` ranges from D (most colorless) to J (least colorless).
+-   *Ordinal features* have a meaningful order, although the spacing between levels is not necessarily uniform. In the `diamonds` dataset, variables such as `cut`, `color`, and `clarity` are ordinal. For instance, `color` ranges from D (most colorless) to J (least colorless).
 
-* *Nominal features* represent categories with no inherent order, such as product types or blood groups.
+-   *Nominal features* represent categories with no inherent order, such as product types or blood groups.
 
-* *Binary features* consist of exactly two categories, such as "yes"/"no" or "male"/"female", and are often encoded numerically as 0 and 1.
+-   *Binary features* consist of exactly two categories, such as "yes"/"no" or "male"/"female", and are often encoded numerically as 0 and 1.
 
-Although the *diamonds* dataset does not include discrete, nominal, or binary features, these variable types are common in applied data science and require distinct preparation strategies.
+Although the `diamonds` dataset does not include discrete, nominal, or binary features, these variable types are common in applied data science and require distinct preparation strategies.
 
 In R, the way a variable is stored affects how it is handled during analysis. Continuous variables are typically stored as `numeric`, discrete variables as `integer`, and categorical variables as `factor` objects, which may be either ordered or unordered. It is therefore important to verify how R interprets each variable. For example, a feature that is conceptually ordinal may be treated as an unordered factor unless it is explicitly declared as `ordered = TRUE`.
 
@@ -139,13 +139,13 @@ In applied settings, the presence of outliers often carries important implicatio
 
 Not all outliers should be treated as errors. Some represent meaningful exceptions that provide valuable insight, while others reflect noise or measurement issues. Deciding how to interpret outliers therefore requires both statistical reasoning and domain knowledge. Treating all extreme values uniformly, either by automatic removal or unquestioned retention, can lead to misleading conclusions.
 
-Outliers are often first identified using visual tools such as boxplots, histograms, and scatter plots, which provide an intuitive view of how observations are distributed. More formal criteria, including z-scores and interquartile range (IQR) thresholds, offer complementary quantitative perspectives. In the next section, we use visual diagnostics to examine how outliers appear in the *diamonds* dataset and why they matter for subsequent analysis.
+Outliers are often first identified using visual tools such as boxplots, histograms, and scatter plots, which provide an intuitive view of how observations are distributed. More formal criteria, including z-scores and interquartile range (IQR) thresholds, offer complementary quantitative perspectives. In the next section, we use visual diagnostics to examine how outliers appear in the `diamonds` dataset and why they matter for subsequent analysis.
 
 ## Spotting Outliers with Visual Tools
 
 Visualization provides a natural starting point for identifying outliers, offering an intuitive view of how observations are distributed and where extreme values occur. Visual tools make it easier to distinguish between typical variation and values that may warrant closer scrutiny, whether due to data entry errors, unusual measurement conditions, or genuinely rare cases.
 
-In this section, we illustrate visual outlier detection using the `y` variable (diamond width) from the *diamonds* dataset. This variable is particularly well suited for demonstration purposes, as it contains values that fall outside the range expected for real diamonds and therefore highlights how visual diagnostics can reveal implausible or extreme observations before formal modeling begins.
+In this section, we illustrate visual outlier detection using the `y` variable (diamond width) from the `diamonds` dataset. This variable is particularly well suited for demonstration purposes, as it contains values that fall outside the range expected for real diamonds and therefore highlights how visual diagnostics can reveal implausible or extreme observations before formal modeling begins.
 
 ### Boxplots: Visualizing and Flagging Outliers {.unnumbered .unlisted}
 
@@ -156,7 +156,7 @@ Boxplots provide a concise visual summary of a variable’s distribution by disp
 knitr::include_graphics("images/ch3_simple_boxplot.png")
 ```
 
-To illustrate this in practice, we apply boxplots to the `y` variable (diamond width) in the *diamonds* dataset:
+To illustrate this in practice, we apply boxplots to the `y` variable (diamond width) in the `diamonds` dataset:
 
 ```{r}
 #| layout-ncol: 2
@@ -206,11 +206,11 @@ This zoomed view highlights the presence of unusually small and large values tha
 
 Beyond boxplots and histograms, several other visualization tools are useful for identifying potential outliers in different analytical contexts.
 
-- *Scatter plots* are particularly effective for examining relationships between variables and identifying observations that deviate from overall trends, especially in bivariate or multivariate settings. For example, plotting `y` against `price` can reveal whether extreme widths correspond to unusual prices, a pattern we will revisit later in this chapter.
+-   *Scatter plots* are particularly effective for examining relationships between variables and identifying observations that deviate from overall trends, especially in bivariate or multivariate settings. For example, plotting `y` against `price` can reveal whether extreme widths correspond to unusual prices, a pattern we will revisit later in this chapter.
 
-- *Violin plots* combine distributional shape with summary statistics, allowing extreme values to be viewed in the context of the full density.
+-   *Violin plots* combine distributional shape with summary statistics, allowing extreme values to be viewed in the context of the full density.
 
-- *Density plots* offer a smoothed representation of the data distribution, making long tails, skewness, or multiple modes easier to detect.
+-   *Density plots* offer a smoothed representation of the data distribution, making long tails, skewness, or multiple modes easier to detect.
 
 These tools are most valuable during the early stages of analysis, when the goal is to scan for irregular patterns or unusual cases. As data dimensionality increases, however, visual inspection alone becomes less effective. In such situations, formal statistical methods provide more systematic and scalable approaches to outlier detection.
 
@@ -218,7 +218,7 @@ Having identified potential outliers using visual diagnostics, the next step is 
 
 > *Practice*: Create density plots for the variables `x`, `y`, and `z` to examine their distributional shapes. Compare the presence of skewness, long tails, or secondary modes across the three dimensions. Do the density plots reveal extreme values or patterns that were less apparent in the boxplots or histograms?
 
-## How to Handle Outliers {#sec-ch3-handle-outliers} 
+## How to Handle Outliers {#sec-ch3-handle-outliers}
 
 Outliers appear in nearly every real-world dataset, and deciding how to handle them is a recurring challenge in data science. An unusually small diamond width or an exceptionally high price may reflect a data entry error, a rare but valid case, or a meaningful signal. Distinguishing between these possibilities requires careful judgment rather than automatic rules.
 
@@ -226,25 +226,25 @@ Once outliers have been identified, either visually or through statistical crite
 
 Several practical strategies are commonly used, each with its own trade-offs:
 
-- *Retain the outlier* when it represents a valid observation that may carry important information. In fraud detection, for example, extreme values are often precisely the cases of interest. Similarly, in the *adult* income dataset examined later in this chapter, unusually large values of `capital.gain` may correspond to genuinely high-income individuals. Removing such observations can reduce predictive power or obscure meaningful variation.
+-   *Retain the outlier* when it represents a valid observation that may carry important information. In fraud detection, for example, extreme values are often precisely the cases of interest. Similarly, in the *adult* income dataset examined later in this chapter, unusually large values of `capital_gain` may correspond to genuinely high-income individuals. Removing such observations can reduce predictive power or obscure meaningful variation.
 
-- *Replace the outlier with a missing value* when there is strong evidence that it is erroneous. Implausible measurements, such as negative carat values or clearly duplicated records, are often best treated as missing. Replacing them with `NA` allows for flexible downstream handling, including imputation strategies discussed in the next section.
+-   *Replace the outlier with a missing value* when there is strong evidence that it is erroneous. Implausible measurements, such as negative carat values or clearly duplicated records, are often best treated as missing. Replacing them with `NA` allows for flexible downstream handling, including imputation strategies discussed in the next section.
 
-- *Flag and preserve the outlier* by creating an indicator variable (for example, `is_outlier`). This approach retains potentially informative observations while allowing models to account for their special status.
+-   *Flag and preserve the outlier* by creating an indicator variable (for example, `is_outlier`). This approach retains potentially informative observations while allowing models to account for their special status.
 
-- *Apply data transformations*, such as logarithmic or square-root transformations, to reduce the influence of extreme values while preserving relative differences. This strategy is particularly useful for skewed numerical variables.
+-   *Apply data transformations*, such as logarithmic or square-root transformations, to reduce the influence of extreme values while preserving relative differences. This strategy is particularly useful for skewed numerical variables.
 
-- *Use modeling techniques that are robust to outliers*. Methods such as decision trees, random forests, and median-based estimators are less sensitive to extreme values than models that rely heavily on means or squared errors.
+-   *Use modeling techniques that are robust to outliers*. Methods such as decision trees, random forests, and median-based estimators are less sensitive to extreme values than models that rely heavily on means or squared errors.
 
-- *Apply winsorization*, which caps extreme values at specified percentiles (for example, the 1st and 99th percentiles). This approach limits the influence of outliers while retaining all observations and can be effective for models that are sensitive to extreme values, such as linear regression.
+-   *Apply winsorization*, which caps extreme values at specified percentiles (for example, the 1st and 99th percentiles). This approach limits the influence of outliers while retaining all observations and can be effective for models that are sensitive to extreme values, such as linear regression.
 
-- *Remove the outlier* only when the value is clearly invalid, cannot be corrected or reasonably imputed, and would otherwise compromise the integrity of the analysis. This option should be considered a last resort rather than a default choice.
+-   *Remove the outlier* only when the value is clearly invalid, cannot be corrected or reasonably imputed, and would otherwise compromise the integrity of the analysis. This option should be considered a last resort rather than a default choice.
 
 In practice, a cautious and informed approach is essential. Automatically removing outliers may simplify analysis but risks discarding rare yet meaningful information. Thoughtful handling, guided by domain knowledge and analytical objectives, helps ensure that the data remain both reliable and informative.
 
 ## Outlier Treatment in Action
 
-Having identified potential outliers, we now demonstrate how to handle them in practice using the *diamonds* dataset. We focus on the `y` variable, which measures diamond width. As shown earlier, this variable contains implausible values, including widths equal to 0 and values exceeding 30 mm, which are unlikely for real diamonds and are best treated as erroneous measurements.
+Having identified potential outliers, we now demonstrate how to handle them in practice using the `diamonds` dataset. We focus on the `y` variable, which measures diamond width. As shown earlier, this variable contains implausible values, including widths equal to 0 and values exceeding 30 mm, which are unlikely for real diamonds and are best treated as erroneous measurements.
 
 To address these values, we replace them with missing values (`NA`) using the **dplyr** package. This approach preserves the remaining observations while allowing problematic entries to be handled flexibly in subsequent steps.
 
@@ -276,23 +276,23 @@ A common but risky response to missing data is to remove incomplete observations
 
 Broadly, two main approaches are used to handle missing data:
 
-- *Imputation*, which replaces missing values with plausible estimates based on observed data, allowing all records to be retained.
+-   *Imputation*, which replaces missing values with plausible estimates based on observed data, allowing all records to be retained.
 
-- *Removal*, which excludes rows or variables containing missing values and is typically reserved for cases where missingness is extensive or uninformative.
+-   *Removal*, which excludes rows or variables containing missing values and is typically reserved for cases where missingness is extensive or uninformative.
 
 In the sections that follow, we examine how to identify missing values in practice and introduce several imputation techniques that support more complete, reliable, and interpretable analyses.
 
-## Imputation Techniques {#sec-ch3-imputation-techniques} 
+## Imputation Techniques {#sec-ch3-imputation-techniques}
 
 Once missing values have been identified, the next step is to choose an appropriate strategy for estimating them. The choice of imputation method depends on the structure of the data, the purpose of the analysis, and the level of complexity that is warranted. Commonly used approaches include the following:
 
-- *Mean, median, or mode imputation* replaces missing values with a single summary statistic. Mean imputation is typically used for approximately symmetric numerical variables, median imputation for skewed distributions, and mode imputation for categorical variables. These methods are simple and efficient but may underestimate variability.
+-   *Mean, median, or mode imputation* replaces missing values with a single summary statistic. Mean imputation is typically used for approximately symmetric numerical variables, median imputation for skewed distributions, and mode imputation for categorical variables. These methods are simple and efficient but may underestimate variability.
 
-- *Random sampling imputation* replaces missing values by drawing at random from the observed values of the same variable. This approach better preserves the original distribution than mean or median imputation, but it introduces randomness into the dataset.
+-   *Random sampling imputation* replaces missing values by drawing at random from the observed values of the same variable. This approach better preserves the original distribution than mean or median imputation, but it introduces randomness into the dataset.
 
-- *Predictive imputation* estimates missing values using relationships with other variables, for example through linear regression, decision trees, or *k*-nearest neighbors. These methods are particularly effective when strong associations exist among features.
+-   *Predictive imputation* estimates missing values using relationships with other variables, for example through linear regression, decision trees, or *k*-nearest neighbors. These methods are particularly effective when strong associations exist among features.
 
-- *Multiple imputation* creates several completed datasets by repeatedly imputing missing values and then combining results across them. By accounting for uncertainty in the imputed values, this approach is especially useful for statistical inference and uncertainty quantification.
+-   *Multiple imputation* creates several completed datasets by repeatedly imputing missing values and then combining results across them. By accounting for uncertainty in the imputed values, this approach is especially useful for statistical inference and uncertainty quantification.
 
 Selecting an imputation strategy involves balancing simplicity, interpretability, and accuracy. For variables with limited missingness and weak dependencies, simple methods may be sufficient. When missingness is more substantial or variables are strongly related, predictive or multiple imputation approaches generally provide more reliable results. In cases where a variable is missing too frequently to be imputed credibly, excluding it or reconsidering its role in the analysis may be appropriate.
 
@@ -300,7 +300,7 @@ In the next subsection, we demonstrate random sampling imputation for its simpli
 
 ### Random Sampling Imputation in R {.unnumbered .unlisted}
 
-We now demonstrate imputation in practice using the `y` variable (diamond width) from the *diamonds* dataset. Implausible values identified earlier, such as widths equal to 0 or exceeding 30 mm, were recoded as missing (`NA`). The goal here is to replace these missing entries using *random sampling imputation*, a simple method that draws replacement values from the observed distribution of the same variable.
+We now demonstrate imputation in practice using the `y` variable (diamond width) from the `diamonds` dataset. Implausible values identified earlier, such as widths equal to 0 or exceeding 30 mm, were recoded as missing (`NA`). The goal here is to replace these missing entries using *random sampling imputation*, a simple method that draws replacement values from the observed distribution of the same variable.
 
 We use the `impute()` function from the **Hmisc** package, which supports several basic imputation strategies through the `fun` argument. Common options include `"mean"` and `"median"` for numerical variables, `"mode"` for categorical variables, and `"random"` for random sampling imputation. Each choice reflects a different trade-off. Mean or median imputation is deterministic and easy to interpret but may reduce variability, while random sampling preserves the marginal distribution at the cost of introducing randomness. The choice of method should therefore be guided by the structure of the variable and the goals of the analysis. Here we apply random sampling imputation:
 
@@ -342,7 +342,7 @@ When multiple variables contain correlated missing values, multivariate approach
 
 Although removing incomplete observations with `na.omit()` is simple, it is rarely advisable. This strategy can lead to substantial information loss and biased results, particularly when missingness is not random. In most applied settings, thoughtful imputation provides a more reliable foundation for subsequent analysis and modeling.
 
-## Case Study: Preparing Data to Predict High Earners {#sec-ch3-data-pre-adult} 
+## Case Study: Preparing Data to Predict High Earners {#sec-ch3-data-pre-adult}
 
 How can we determine whether an individual earns more than \$50,000 per year based on demographic and occupational characteristics? This question arises in a wide range of applied settings, including economic research, policy analysis, and the development of data-driven decision systems.
 
@@ -366,27 +366,27 @@ To examine the dataset structure and variable types, we use the `str()` function
 str(adult)
 ```
 
-The dataset contains `r nrow(adult)` observations and `r ncol(adult)` variables. Most variables serve as predictors, while the target variable, `income`, indicates whether an individual earns more than $50,000 per year (`>50K`) or not (`<=50K`). The dataset includes a mixture of numerical and categorical features describing demographic, educational, and economic characteristics.
+The dataset contains `r nrow(adult)` observations and `r ncol(adult)` variables. Most variables serve as predictors, while the target variable, `income`, indicates whether an individual earns more than \$50,000 per year (`>50K`) or not (`<=50K`). The dataset includes a mixture of numerical and categorical features describing demographic, educational, and economic characteristics.
 
 The main variables are summarized below:
 
-* `age`: age in years (numerical);
-* `workclass`: employment type (categorical, 6 levels);
-* `demogweight`: census weighting factor (numerical);
-* `education`: highest educational attainment (categorical, 16 levels);
-* `education.num`: years of education (numerical);
-* `marital.status`: marital status (categorical, 5 levels);
-* `occupation`: job type (categorical, 15 levels);
-* `relationship`: household role (categorical, 6 levels);
-* `race`: racial background (categorical, 5 levels);
-* `gender`: gender identity (categorical, 2 levels);
-* `capital.gain`: annual capital gains (numerical);
-* `capital.loss`: annual capital losses (numerical);
-* `hours.per.week`: weekly working hours (numerical);
-* `native.country`: country of origin (categorical, 42 levels);
-* `income`: income bracket (`<=50K` or `>50K`).
+-   `age`: age in years (numerical);
+-   `workclass`: employment type (categorical, 6 levels);
+-   `demogweight`: census weighting factor (numerical);
+-   `education`: highest educational attainment (categorical, 16 levels);
+-   `education_num`: years of education (numerical);
+-   `marital_status`: marital status (categorical, 5 levels);
+-   `occupation`: job type (categorical, 15 levels);
+-   `relationship`: household role (categorical, 6 levels);
+-   `race`: racial background (categorical, 5 levels);
+-   `gender`: gender identity (categorical, 2 levels);
+-   `capital_gain`: annual capital gains (numerical);
+-   `capital_loss`: annual capital losses (numerical);
+-   `hours_per_week`: weekly working hours (numerical);
+-   `native_country`: country of origin (categorical, 42 levels);
+-   `income`: income bracket (`<=50K` or `>50K`).
 
-For data preparation purposes, the variables can be grouped as follows. Numerical variables include `age`, `demogweight`, `education.num`, `capital.gain`, `capital.loss`, and `hours.per.week`. The variables `gender` and `income` are binary. The variable `education` is ordinal, with levels ordered from “Preschool” to “Doctorate”. The remaining categorical variables, namely `workclass`, `marital.status`, `occupation`, `relationship`, `race`, and `native.country`, are nominal.
+For data preparation purposes, the variables can be grouped as follows. Numerical variables include `age`, `demogweight`, `education_num`, `capital_gain`, `capital_loss`, and `hours_per_week`. The variables `gender` and `income` are binary. The variable `education` is ordinal, with levels ordered from “Preschool” to “Doctorate”. The remaining categorical variables, namely `workclass`, `marital_status`, `occupation`, `relationship`, `race`, and `native_country`, are nominal.
 
 To gain an initial overview of distributions and identify potential issues, we inspect summary statistics using:
 
@@ -396,9 +396,9 @@ summary(adult)
 
 This overview provides the starting point for the data preparation steps that follow. We begin by identifying and handling missing values, an essential task for ensuring the completeness and reliability of the dataset before modeling.
 
-### Handling Missing Values  {.unlisted}
+### Handling Missing Values {.unlisted}
 
-Inspection of the dataset using `summary()` reveals that three variables, `workclass`, `occupation`, and `native.country`, contain missing entries. In this dataset, however, missing values are not encoded as `NA` but as the string `"?"`, a placeholder commonly used in public datasets such as those from the UCI Machine Learning Repository. Because R does not automatically treat `"?"` as missing, these values must be recoded explicitly:
+Inspection of the dataset using `summary()` reveals that three variables, `workclass`, `occupation`, and `native_country`, contain missing entries. In this dataset, however, missing values are not encoded as `NA` but as the string `"?"`, a placeholder commonly used in public datasets such as those from the UCI Machine Learning Repository. Because R does not automatically treat `"?"` as missing, these values must be recoded explicitly:
 
 ```{r}
 adult[adult == "?"] <- NA
@@ -420,7 +420,7 @@ library(naniar)
 gg_miss_var(adult, show_pct = TRUE)
 ```
 
-The resulting plot confirms that missing values occur only in three variables: `workclass` with `r sum(is.na(adult$workclass))` entries, `occupation` with `r sum(is.na(adult$occupation))` entries, and `native.country` with `r sum(is.na(adult$native.country))` entries.
+The resulting plot confirms that missing values occur only in three variables: `workclass` with `r sum(is.na(adult$workclass))` entries, `occupation` with `r sum(is.na(adult$occupation))` entries, and `native_country` with `r sum(is.na(adult$native_country))` entries.
 
 Because the proportion of missing values is small, we choose to impute these entries rather than remove incomplete observations, which would lead to unnecessary information loss. To preserve the empirical distribution of each variable, we apply random sampling imputation using the `impute()` function from the **Hmisc** package:
 
@@ -428,7 +428,7 @@ Because the proportion of missing values is small, we choose to impute these ent
 library(Hmisc)
 
 adult$workclass      <- impute(adult$workclass,      fun = "random")
-adult$native.country <- impute(adult$native.country, fun = "random")
+adult$native_country <- impute(adult$native_country, fun = "random")
 adult$occupation     <- impute(adult$occupation,     fun = "random")
 ```
 
@@ -440,13 +440,13 @@ gg_miss_var(adult, show_pct = TRUE)
 
 With missing values handled, the dataset is now complete and ready for the next stage of preparation: simplifying and encoding categorical features for modeling.
 
-> *Practice*: Replace the random sampling imputation used above with an alternative strategy, such as mode imputation for the categorical variables `workclass`, `occupation`, and `native.country`. Compare the resulting category frequencies with those obtained using random sampling. How do different imputation choices affect the distribution of these variables, and what implications might this have for downstream modeling?
+> *Practice*: Replace the random sampling imputation used above with an alternative strategy, such as mode imputation for the categorical variables `workclass`, `occupation`, and `native_country`. Compare the resulting category frequencies with those obtained using random sampling. How do different imputation choices affect the distribution of these variables, and what implications might this have for downstream modeling?
 
 ### Preparing Categorical Features {.unnumbered .unlisted}
 
-Categorical variables with many distinct levels can pose challenges for both interpretation and modeling, particularly by increasing model complexity and sparsity. In the *adult* dataset, the variables `native.country` and `workclass` contain a relatively large number of categories. To improve interpretability and reduce dimensionality, we group related categories into broader, more meaningful classes.
+Categorical variables with many distinct levels can pose challenges for both interpretation and modeling, particularly by increasing model complexity and sparsity. In the *adult* dataset, the variables `native_country` and `workclass` contain a relatively large number of categories. To improve interpretability and reduce dimensionality, we group related categories into broader, more meaningful classes.
 
-We begin with the variable `native.country`, which contains `r length(levels(adult$native.country))` distinct country labels. Treating each country as a separate category would substantially expand the feature space without necessarily improving predictive performance. Instead, we group countries into broader geographic regions that reflect cultural and linguistic proximity.
+We begin with the variable `native_country`, which contains `r length(levels(adult$native_country))` distinct country labels. Treating each country as a separate category would substantially expand the feature space without necessarily improving predictive performance. Instead, we group countries into broader geographic regions that reflect cultural and linguistic proximity.
 
 Specifically, we define the following regions: Europe (France, Germany, Greece, Hungary, Ireland, Italy, Netherlands, Poland, Portugal, United Kingdom, Yugoslavia), North America (United States, Canada, and outlying US territories), Latin America (including Mexico, Central America, and parts of South America), the Caribbean (Jamaica, Haiti, Trinidad and Tobago), and Asia (including East, South, and Southeast Asian countries).
 
@@ -465,8 +465,8 @@ Caribbean <- c("Jamaica", "Haiti", "Trinidad&Tobago")
 
 Asia <- c("Cambodia", "China", "Hong-Kong", "India", "Iran", "Japan", "Laos", "Philippines", "South", "Taiwan", "Thailand", "Vietnam")
 
-adult$native.country <- fct_collapse(
-  adult$native.country,
+adult$native_country <- fct_collapse(
+  adult$native_country,
   "Europe"        = Europe,
   "North America" = North_America,
   "Latin America" = Latin_America,
@@ -478,7 +478,7 @@ adult$native.country <- fct_collapse(
 To verify the result, we inspect the frequency table of the updated variable:
 
 ```{r}
-table(adult$native.country)
+table(adult$native_country)
 ```
 
 A similar simplification is applied to the `workclass` variable. Two levels, `"Never-worked"` and `"Without-pay"`, occur infrequently and both describe individuals outside formal employment. Treating these categories separately adds sparsity without providing meaningful distinction. We therefore merge them into a single category, `Unemployed`:
@@ -494,19 +494,19 @@ Again, we verify the recoding using a frequency table:
 table(adult$workclass)
 ```
 
-By grouping `native.country` into broader regions and simplifying `workclass`, we reduce categorical sparsity while preserving interpretability. These steps help ensure that the dataset is well suited for modeling methods that are sensitive to high-cardinality categorical features.
+By grouping `native_country` into broader regions and simplifying `workclass`, we reduce categorical sparsity while preserving interpretability. These steps help ensure that the dataset is well suited for modeling methods that are sensitive to high-cardinality categorical features.
 
 ### Handling Outliers {.unlisted}
 
-We now examine the variable `capital.loss` from the *adult* dataset to assess the presence and relevance of outliers. This variable is a natural candidate for such analysis, as it contains a large proportion of zero values alongside a small number of relatively large observations.
+We now examine the variable `capital_loss` from the *adult* dataset to assess the presence and relevance of outliers. This variable is a natural candidate for such analysis, as it contains a large proportion of zero values alongside a small number of relatively large observations.
 
 We begin by inspecting basic summary statistics:
 
 ```{r}
-summary(adult$capital.loss)
+summary(adult$capital_loss)
 ```
 
-The output shows that the minimum value is `r min(adult$capital.loss)` and the maximum is `r max(adult$capital.loss)`. More than 75% of observations are equal to zero. The median, `r median(adult$capital.loss)`, is substantially lower than the mean, `r round(mean(adult$capital.loss), 2)`, indicating a right-skewed distribution driven by a small number of large values.
+The output shows that the minimum value is `r min(adult$capital_loss)` and the maximum is `r max(adult$capital_loss)`. More than 75% of observations are equal to zero. The median, `r median(adult$capital_loss)`, is substantially lower than the mean, `r round(mean(adult$capital_loss), 2)`, indicating a right-skewed distribution driven by a small number of large values.
 
 To explore this structure visually, we examine both a boxplot and a histogram:
 
@@ -516,43 +516,43 @@ To explore this structure visually, we examine both a boxplot and a histogram:
 #| fig-height: 4
 
 ggplot(data = adult) +
-     geom_boxplot(aes(y = capital.loss)) +
+     geom_boxplot(aes(y = capital_loss)) +
      ggtitle("Boxplot of Capital Loss")
 
 ggplot(data = adult) +
-     geom_histogram(aes(x = capital.loss)) +
+     geom_histogram(aes(x = capital_loss)) +
      ggtitle("Histogram of Capital Loss")
 ```
 
 Both plots confirm the strong positive skew: most individuals report no capital loss, while a small number exhibit substantially higher values, with visible concentration around 2,000 and 4,000.
 
-To better understand the distribution among individuals with nonzero capital loss, we restrict attention to observations where `capital.loss > 0`:
+To better understand the distribution among individuals with nonzero capital loss, we restrict attention to observations where `capital_loss > 0`:
 
 ```{r out.width = "100%"}
 #| layout-ncol: 2
 #| fig-width: 4
 #| fig-height: 4
 
-subset_adult <- subset(adult, capital.loss > 0)
+subset_adult <- subset(adult, capital_loss > 0)
 
 ggplot(data = subset_adult) +
-     geom_boxplot(aes(y = capital.loss)) +
+     geom_boxplot(aes(y = capital_loss)) +
      ggtitle("Boxplot of Nonzero Capital Loss")
 
 ggplot(data = subset_adult) +
-     geom_histogram(aes(x = capital.loss)) +
+     geom_histogram(aes(x = capital_loss)) +
      ggtitle("Histogram of Nonzero Capital Loss")
 ```
 
 Within this subset, most values lie below 500, with a small number exceeding 4,000. Despite their rarity, these larger values follow a relatively smooth and approximately symmetric pattern, suggesting that they represent genuine variation rather than data entry errors.
 
-Based on this evidence, we retain the extreme values in `capital.loss`. Removing them would risk discarding meaningful information about individuals with substantial financial losses. If these values later prove problematic for modeling, alternative strategies may be considered, such as applying a log or square-root transformation, creating a binary indicator for the presence of capital loss, or using winsorization to limit the influence of extreme values.
+Based on this evidence, we retain the extreme values in `capital_loss`. Removing them would risk discarding meaningful information about individuals with substantial financial losses. If these values later prove problematic for modeling, alternative strategies may be considered, such as applying a log or square-root transformation, creating a binary indicator for the presence of capital loss, or using winsorization to limit the influence of extreme values.
 
-This analysis also provides useful context for examining the related variable `capital.gain`, which we consider next. A hands-on extension of this analysis is included in the exercises at the end of the chapter.
+This analysis also provides useful context for examining the related variable `capital_gain`, which we consider next. A hands-on extension of this analysis is included in the exercises at the end of the chapter.
 
 ## Chapter Summary and Takeaways
 
-This chapter examined the practical foundations of data preparation, showing how raw and inconsistent data can be transformed into a structured and reliable form suitable for analysis and modeling. Through hands-on work with the *diamonds* and *adult* datasets, we addressed common challenges such as identifying and handling outliers, detecting and imputing missing values, and resolving inconsistencies in real-world data.
+This chapter examined the practical foundations of data preparation, showing how raw and inconsistent data can be transformed into a structured and reliable form suitable for analysis and modeling. Through hands-on work with the `diamonds` and *adult* datasets, we addressed common challenges such as identifying and handling outliers, detecting and imputing missing values, and resolving inconsistencies in real-world data.
 
 A central theme of the chapter was that data preparation is not a purely mechanical process. Decisions about how to treat outliers, encode categorical variables, or impute missing values must be guided by an understanding of the data-generating process and the goals of the analysis. Poor preparation can obscure meaningful patterns, while thoughtful preprocessing strengthens interpretability and model reliability.
 
@@ -560,35 +560,35 @@ These techniques form a critical foundation for all subsequent stages of the Dat
 
 In the next chapter, we build on this foundation by turning to exploratory data analysis, using visualization and summary statistics to investigate patterns, relationships, and potential signals that inform model development.
 
-## Exercises {#sec-ch3-exercises} 
+## Exercises {#sec-ch3-exercises}
 
-The exercises in this chapter strengthen both conceptual understanding and practical skills in data preparation. They progress from foundational questions on data types and missingness to hands-on applications using the *diamonds*, *adult*, and *housePrice* datasets. Together, they reinforce key tasks such as identifying outliers, imputing missing values, and cleaning categorical features, and conclude with self-reflection on the role of data preparation in reliable, ethical, and interpretable analysis.
+The exercises in this chapter strengthen both conceptual understanding and practical skills in data preparation. They progress from foundational questions on data types and missingness to hands-on applications using the *diamonds*, *adult*, and `house_price` datasets. Together, they reinforce key tasks such as identifying outliers, imputing missing values, and cleaning categorical features, and conclude with self-reflection on the role of data preparation in reliable, ethical, and interpretable analysis.
 
 #### Conceptual Questions {.unnumbered .unlisted}
 
-1. Explain the difference between continuous and discrete numerical variables, and provide a real-world example of each.
+1.  Explain the difference between continuous and discrete numerical variables, and provide a real-world example of each.
 
-2. Describe how ordinal and nominal categorical variables differ. Provide one example for each type.
+2.  Describe how ordinal and nominal categorical variables differ. Provide one example for each type.
 
-3. Explain how the `typeof()` and `class()` functions differ in R, and why both may be relevant when preparing data for modeling.
+3.  Explain how the `typeof()` and `class()` functions differ in R, and why both may be relevant when preparing data for modeling.
 
-4. Explain why it is important to identify the correct data types before modeling.
+4.  Explain why it is important to identify the correct data types before modeling.
 
-5. Discuss the advantages and disadvantages of removing outliers versus applying a transformation.
+5.  Discuss the advantages and disadvantages of removing outliers versus applying a transformation.
 
-6. In a dataset where 25% of income values are missing, explain which imputation strategy you would use and justify your choice.
+6.  In a dataset where 25% of income values are missing, explain which imputation strategy you would use and justify your choice.
 
-7. Explain why outlier detection should often be performed separately for numerical and categorical variables. Provide one example for each type.
+7.  Explain why outlier detection should often be performed separately for numerical and categorical variables. Provide one example for each type.
 
-8. Discuss how data preparation choices, such as imputation or outlier removal, can influence the fairness and interpretability of a predictive model.
+8.  Discuss how data preparation choices, such as imputation or outlier removal, can influence the fairness and interpretability of a predictive model.
 
-9. Describe how reproducibility can be ensured during data preparation. What practices or tools in R help document cleaning and transformation steps effectively?
+9.  Describe how reproducibility can be ensured during data preparation. What practices or tools in R help document cleaning and transformation steps effectively?
 
-#### Hands-On Practice: Data Preparation for *diamonds* Dataset {.unnumbered .unlisted}
+#### Hands-On Practice: Data Preparation for `diamonds` Dataset {.unnumbered .unlisted}
 
-10. Use `summary()` to inspect the *diamonds* dataset. What patterns or irregularities do you observe?
+10. Use `summary()` to inspect the `diamonds` dataset. What patterns or irregularities do you observe?
 
-11. Classify all variables in the *diamonds* dataset as numerical, ordinal, or nominal.
+11. Classify all variables in the `diamonds` dataset as numerical, ordinal, or nominal.
 
 12. Create histograms of `carat` and `price`. Describe their distributions and note any skewness or gaps.
 
@@ -610,31 +610,31 @@ The exercises in this chapter strengthen both conceptual understanding and pract
 
 20. Compute the proportion of individuals earning more than \$50K and interpret what this reveals about the income distribution.
 
-21. Create a boxplot and histogram of `capital.gain`. Describe any patterns, anomalies, or extreme values.
+21. Create a boxplot and histogram of `capital_gain`. Describe any patterns, anomalies, or extreme values.
 
-22. Identify outliers in `capital.gain` and suggest an appropriate method for handling them.
+22. Identify outliers in `capital_gain` and suggest an appropriate method for handling them.
 
 23. Compute and visualize a correlation matrix for the numerical variables. What do the correlations reveal about the relationships among features?
 
 24. Use the `cut()` function to group `age` into three categories: Young ($\le 30$), Middle-aged (31–50), and Senior ($>50$). Name the new variable `Age_Group`.
 
-25. Calculate the mean `capital.gain` for each `Age_Group`. What trends do you observe?
+25. Calculate the mean `capital_gain` for each `Age_Group`. What trends do you observe?
 
-26. Create a binary variable indicating whether an individual has nonzero `capital.gain`, and use it to produce an exploratory plot.
+26. Create a binary variable indicating whether an individual has nonzero `capital_gain`, and use it to produce an exploratory plot.
 
 27. Use `fct_collapse()` to group the education levels into broader categories. Propose at least three meaningful groupings and justify your choices.
 
-28. Define a new variable `net.capital` as the difference between `capital.gain` and `capital.loss`. Visualize its distribution and comment on your findings.
+28. Define a new variable `net.capital` as the difference between `capital_gain` and `capital_loss`. Visualize its distribution and comment on your findings.
 
-29. Investigate the relationship between `hours.per.week` and income level using boxplots or violin plots. What differences do you observe between income groups?
+29. Investigate the relationship between `hours_per_week` and income level using boxplots or violin plots. What differences do you observe between income groups?
 
 30. Detect missing or undefined values in the `occupation` variable and replace them with an appropriate imputation method. Justify your choice.
 
-31. Examine whether combining certain rare `native.country` categories (for example, by continent or region) improves interpretability without losing important variation. Discuss your reasoning.
+31. Examine whether combining certain rare `native_country` categories (for example, by continent or region) improves interpretability without losing important variation. Discuss your reasoning.
 
-#### Hands-On Practice: Data Preparation for *housePrice* Dataset {.unnumbered .unlisted}
+#### Hands-On Practice: Data Preparation for `house_price` Dataset {.unnumbered .unlisted}
 
-32. Load the *housePrice* dataset from the **liver** package. Identify variables with missing values and describe any observable patterns of missingness.
+32. Load the `house_price` dataset from the **liver** package. Identify variables with missing values and describe any observable patterns of missingness.
 
 33. Detect outliers in `SalePrice` using boxplots and histograms. Discuss whether they appear to be data entry errors or meaningful extremes.
 
@@ -656,15 +656,8 @@ The exercises in this chapter strengthen both conceptual understanding and pract
 
 41. Consider a model that performs well during training but poorly in production. Reflect on how decisions made during data preparation could contribute to this discrepancy.
 
-42. Reflect on a dataset you have worked with (or use the *housePrice* dataset). Which data preparation steps would you revise based on the techniques covered in this chapter?
+42. Reflect on a dataset you have worked with (or use the `house_price` dataset). Which data preparation steps would you revise based on the techniques covered in this chapter?
 
 43. Describe how data preparation choices, such as grouping categories or removing extreme values, can influence the fairness and interpretability of machine learning models.
 
 44. Summarize the most important lesson you learned from working through this chapter’s exercises. How will it change the way you approach raw data in future projects?
-
-
-
-
-
-
-

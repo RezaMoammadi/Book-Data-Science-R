@@ -22,165 +22,139 @@ When one door closes, another opens.
 ::::
 :::::
 
-Imagine a bank evaluating loan applications. Given details such as income, age, credit history, and debt-to-income ratio, how does the bank decide whether to approve or reject a loan? Similarly, how do online retailers recommend products based on customer preferences? These decisions, which mimic human reasoning, are often powered by *decision trees*. This simple yet powerful machine learning technique classifies data by following a series of logical rules.
+Banks routinely evaluate loan applications based on information such as income, age, credit history, and debt-to-income ratio. Online retailers, in turn, recommend products by learning patterns in customer preferences and past behavior. In many such settings, decisions can be modeled using *decision trees*, which represent predictive rules in a transparent, stepwise structure.
 
-Decision trees are used across diverse domains, from medical diagnosis and fraud detection to customer segmentation and automation. Their intuitive nature makes them highly interpretable, enabling data-driven decisions without requiring deep mathematical expertise. However, while individual trees are easy to understand, they are prone to overfitting: capturing noise in the data rather than general patterns. *Random forests* address this limitation by combining multiple decision trees to produce a more accurate and stable model.
+Decision trees are used across diverse domains, including medical diagnosis, fraud detection, customer segmentation, and process automation. Their main advantage is interpretability: the model can be expressed as a sequence of simple splitting rules that can be inspected and communicated. A limitation, however, is that a single tree can overfit the training data by adapting too closely to noise rather than capturing stable patterns. *Random forests* address this issue by aggregating many trees to obtain predictions that are typically more accurate and less variable.
 
-In the previous chapter, you learned how to build and evaluate regression models for continuous outcomes. We now turn to *tree-based models*, which unify both *classification* and *regression* within a single, flexible framework. Decision trees can predict categorical outcomes such as customer churn or loan default, as well as continuous variables like house prices or sales revenue. This versatility, combined with their ability to automatically capture nonlinear relationships and interactions, makes them a powerful and interpretable modeling tool.
+In Chapter [-@sec-ch10-regression], we focused on regression models for continuous outcomes. We now turn to *tree-based models*, which provide a unified framework for both *classification* and *regression*. Trees can predict categorical outcomes such as churn or default, as well as continuous outcomes such as house prices or sales revenue. Because they can capture nonlinear relationships and interactions without requiring an explicit functional form, tree-based models offer a flexible and widely used approach to supervised learning.
 
-To see decision trees in action, consider the example in @fig-ch11-simple-tree, which predicts whether a customer’s credit risk is classified as "good" or "bad" based on features such as `age` and `income`. This tree is trained on the *risk* dataset, introduced in Chapter [-@sec-ch9-bayes], and consists of decision nodes representing yes/no questions, such as whether yearly income is below 36,000 (`income < 36e+3`) or whether age is greater than 29. The final classification is determined at the terminal nodes, also known as leaves.
-
-Curious how this tree was built from real data? In the next sections, we will walk through each step of the process, from data to decision.
+Figure [-@fig-ch11-simple-tree] illustrates a classification tree trained on the `risk` dataset introduced in Chapter [-@sec-ch9-bayes]. The model predicts whether a customer is classified as a “good” or “bad” credit risk based on features such as `age` and `income`. Internal nodes represent splitting rules, and terminal nodes (leaves) provide the predicted class together with class probabilities.
 
 ```{r}
 #| label: fig-ch11-simple-tree
 #| echo: false
-#| out.width: "75%"
-#| fig.cap: A classification tree built using the CART algorithm on the risk dataset to predict credit risk based on age and income. Terminal nodes display predicted class and class probabilities, highlighting CART’s transparent, rule-based structure.
+#| out.width: "65%"
+#| fig-cap: A classification tree built using the CART algorithm on the risk dataset to predict credit risk based on age and income. Terminal nodes display predicted class and class probabilities, illustrating CART’s rule-based structure.
 
 data(risk)
-formula = risk ~ age + income + mortgage + nr.loans + marital
+formula = risk ~ age + income + mortgage + nr_loans + marital
 tree.cart = rpart(formula, data = risk, method = "class")
 rpart.plot(tree.cart, type = 4, extra = 104)
 ```
 
-Decision trees are highly interpretable, making them especially valuable in domains such as finance, healthcare, and marketing, where understanding model decisions is as important as accuracy. Their structured form allows for easy visualization of decision pathways, helping businesses with customer segmentation, risk assessment, and process optimization.
-
-In this chapter, we continue building on the *Data Science Workflow* introduced in Chapter [-@sec-ch2-intro-data-science]. So far, we have learned how to prepare and explore data, apply classification methods (such as *k-Nearest Neighbors* in Chapter [-@sec-ch7-classification-knn] and *Naive Bayes* in Chapter [-@sec-ch9-bayes]), as well as regression models (Chapter [-@sec-ch10-regression]), and evaluate performance (Chapter [-@sec-ch8-evaluation]). Decision trees and random forests now offer a powerful, non-parametric modeling strategy. They can handle both classification and regression tasks effectively.
+In the remainder of this chapter, we explain how decision trees are constructed, how their complexity can be controlled, and how ensemble methods such as random forests improve generalization. The chapter continues the modeling strand of the *Data Science Workflow* introduced in Chapter [-@sec-ch2-intro-data-science], building on earlier classification methods (Chapters [-@sec-ch7-classification-knn] and [-@sec-ch9-bayes]), regression models (Chapter [-@sec-ch10-regression]), and evaluation tools (Chapter [-@sec-ch8-evaluation]). Together, these methods introduce decision trees and random forests as non-parametric models that can be applied to both classification and regression tasks.
 
 ### What This Chapter Covers {.unnumbered}
 
-This chapter continues the modeling journey by building on what you learned in the previous chapters: both classification methods such as *k-Nearest Neighbors* and *Naive Bayes*, and regression models. Decision trees offer a flexible, non-parametric approach that can model complex relationships and interactions without requiring predefined equations. Their adaptability often leads to strong predictive performance in both classification and regression settings, especially when extended to ensemble methods like random forests.
+This chapter extends the modeling techniques introduced earlier by focusing on *tree-based methods* for supervised learning. Decision trees provide a flexible, non-parametric framework for modeling both classification and regression problems, allowing complex relationships and interactions to be captured without specifying a predefined functional form. Ensemble extensions such as random forests further enhance predictive performance by reducing variance and improving generalization.
 
-You will begin by learning how decision trees make predictions by recursively splitting the data into increasingly homogeneous subsets. We introduce two widely used algorithms: *CART* and *C5.0*, and explore how they differ in structure, splitting criteria, and performance. From there, you will discover *random forests*, an ensemble approach that builds multiple trees and aggregates their predictions for improved accuracy and generalization.
+We begin by examining how decision trees construct predictions through recursive data partitioning, leading to increasingly homogeneous subsets. Two widely used algorithms, *CART* and *C5.0*, are introduced and compared in terms of their splitting criteria, tree structure, and practical behavior. The chapter then introduces *random forests* as an ensemble approach that combines many decision trees to achieve more robust predictions.
 
-This chapter includes hands-on modeling examples using datasets on credit risk, income prediction, and customer churn. You will learn to interpret decision rules, assess model complexity, tune hyperparameters, and evaluate models using tools such as confusion matrices, ROC curves, and variable importance plots.
+Throughout the chapter, these methods are illustrated using real-world datasets on credit risk, income prediction, and customer churn. Practical emphasis is placed on interpreting decision rules, controlling model complexity, tuning key hyperparameters, and evaluating performance using tools such as confusion matrices, ROC curves, and variable importance measures.
 
-By the end of this chapter, you will be able to build, interpret, and evaluate tree-based models for both categorical and numeric outcomes. You will also understand when decision trees and random forests are the right tools for your data science problems, especially when balancing interpretability with predictive power.
+By the end of this chapter, readers will be able to build, interpret, and evaluate tree-based models for both categorical and continuous outcomes, and to assess when decision trees or random forests provide an appropriate balance between interpretability and predictive accuracy.
 
 ## How Decision Trees Work
 
-Are you interested in learning how to build decision trees like the one in @fig-ch11-simple-tree, trained on real-world data? In this section, we unpack the core ideas behind decision trees: how they decide where to split, how they grow, and how they ultimately classify or predict outcomes.
+This section introduces the fundamental principles behind decision trees, focusing on how trees are constructed, how they generate predictions, and how their complexity can be controlled. We illustrate these ideas using a simple two-dimensional example before returning to real-world applications later in the chapter.
 
-A decision tree makes predictions by recursively partitioning the data into increasingly homogeneous groups based on feature values. At each split, it chooses the question that best separates the data, gradually forming a tree-like structure of decision rules. This *divide-and-conquer* approach is intuitive, flexible, and capable of modeling both categorical and numerical outcomes. As a result, decision trees are a popular choice in many data science applications.
+A decision tree makes predictions by recursively partitioning the data into increasingly homogeneous subsets based on feature values. At each step, the algorithm selects a splitting rule that best separates the observations according to the target variable, gradually forming a hierarchical structure of decision rules. This recursive partitioning strategy enables decision trees to model both categorical and continuous outcomes within a unified framework.
 
-The quality of a split is assessed using a metric such as the *Gini Index* or *Entropy*, which are introduced in the following sections. The tree continues growing until it meets a stopping criterion, for example: a maximum depth, a minimum number of observations per node, or a lack of further improvement in predictive power.
+The quality of each split is assessed using a criterion such as the *Gini Index* or *Entropy*, which quantify how well the resulting subsets concentrate observations from the same class. Tree growth continues until a stopping criterion is met, such as a maximum tree depth, a minimum number of observations in a node, or insufficient improvement in the splitting criterion.
 
-To see this process in action, consider a simple dataset with two features ($x_1$ and $x_2$) and two classes (Class A and Class B), as shown in @fig-ch11-tree-1. The dataset consists of 50 data points, and the goal is to classify them into their respective categories.
+To illustrate the construction process, consider a toy dataset with two features ($x_1$ and $x_2$) and two classes (Class A and Class B), shown in @fig-ch11-tree-1. The dataset contains 50 observations, and the objective is to separate the two classes using a sequence of decision rules.
 
-```{r fig-ch11-tree-1, echo = FALSE, out.width = "70%", fig.cap = "A toy dataset with two features and two classes (Class A and Class B) with 50 observations (points). This example is used to illustrate the construction of a decision tree."}
+```{r fig-ch11-tree-1, echo = FALSE, out.width = "70%", fig.cap = "A toy dataset with two features and two classes (Class A and Class B) with 50 observations. This example illustrates the step-by-step construction of a decision tree."}
 knitr::include_graphics("images/ch11_ex_tree_1.png")
 ```
 
-The process begins by identifying the feature and threshold that best separate the two classes. The algorithm evaluates all possible splits and selects the one that most improves the homogeneity in the resulting subsets. For this dataset, the optimal split occurs at $x_1 = 10$, dividing the dataset into two regions:
+The algorithm begins by identifying the feature and threshold that best separate the two classes. The split at $x_1 = 10$ yields the greatest improvement in class homogeneity: in the left region ($x_1 < 10$), 80% of observations belong to Class A, whereas in the right region ($x_1 \geq 10$), 72% belong to Class B.
 
--   The left region contains data points where $x_1 < 10$, with 80% belonging to Class A and 20% to Class B.
-
--   The right region contains data points where $x_1 \geq 10$, with 28% in Class A and 72% in Class B.
-
-This first split is illustrated in @fig-ch11-tree-2, where the decision boundary is drawn at $x_1 = 10$.
+This initial partition is shown in @fig-ch11-tree-2. Although this split improves class separation, overlap between the classes remains. The algorithm therefore continues splitting the data by introducing additional decision rules based on $x_2$, resulting in smaller and more homogeneous regions.
 
 ```{r fig-ch11-tree-2, echo = FALSE, out.width = "100%", fig.cap = "Left: Decision boundary for a tree with depth 1. Right: The corresponding Decision Tree."}
 knitr::include_graphics("images/ch11_ex_tree_2.png")
 ```
 
-Although this split improves class separation, some overlap remains, suggesting that further refinement is needed. The tree-building process continues by introducing additional splits based on $x_2$, creating smaller, more homogeneous groups.
-
-In @fig-ch11-tree-3, the algorithm identifies new thresholds: $x_2 = 6$ for the left region and $x_2 = 8$ for the right region. These additional splits refine the classification process, improving the model’s ability to distinguish between the two classes.
+In @fig-ch11-tree-3, further splits at $x_2 = 6$ and $x_2 = 8$ refine the classification, improving the separation between the two classes.
 
 ```{r fig-ch11-tree-3, echo = FALSE, out.width = "100%", fig.cap = "Left: Decision boundary for a tree with depth 2. Right: The corresponding Decision Tree."}
 knitr::include_graphics("images/ch11_ex_tree_3.png")
 ```
 
-This recursive process continues until the tree reaches a stopping criterion. @fig-ch11-tree-4 shows a fully grown tree with a depth of 5, demonstrating how decision trees create increasingly refined decision boundaries.
+This recursive process continues until a stopping criterion is reached. @fig-ch11-tree-4 shows a fully grown tree with depth 5, where the decision boundaries closely follow the training data.
 
 ```{r fig-ch11-tree-4, echo = FALSE, out.width = "100%", fig.cap = "Left: Decision boundary for a tree with depth 5. Right: The corresponding Decision Tree."}
 knitr::include_graphics("images/ch11_ex_tree_4.png")
 ```
 
-At this depth, the tree has created highly specific decision boundaries that closely match the training data. While this deep tree perfectly classifies the training data, it may not generalize well to new observations. The model has likely captured not just meaningful patterns but also noise, a problem known as *overfitting*. Overfitted trees perform well on training data but struggle to make accurate predictions on unseen data.
-
-In the next subsection, we explore how decision trees make predictions and how their structure influences interpretability.
+While such a deep tree can perfectly classify the training data, it often captures noise in addition to meaningful structure. As a result, its predictive performance on new data may deteriorate, a phenomenon known as *overfitting*. The following subsections explain how predictions are made and how tree complexity can be managed to mitigate this issue.
 
 ### Making Predictions with a Decision Tree {.unnumbered}
 
-After a decision tree is built, making predictions involves following the decision rules from the root node down to a leaf. Each split narrows the possibilities, leading to a final classification or numeric prediction at the leaf. For classification tasks, the tree assigns a new observation to the most common class in the leaf where it ends up. For regression tasks, the predicted outcome is the average target value of the data points in that leaf.
+Once a decision tree has been constructed, predictions are obtained by traversing the tree from the root node to a terminal leaf. At each internal node, the observation is routed according to the splitting rule, progressively narrowing the set of possible outcomes. For classification tasks, the predicted class corresponds to the majority class among the training observations in the terminal node. For regression tasks, the prediction is given by the average response value of the observations in that leaf.
 
-To illustrate, consider a new data point with $x_1 = 8$ and $x_2 = 4$ in @fig-ch11-tree-3. The tree classifies it by following these steps:
+For example, consider a new observation with $x_1 = 8$ and $x_2 = 4$ in @fig-ch11-tree-3. The tree assigns a class label by following these steps:
 
-1.  Since $x_1 = 8$, the point moves to the left branch ($x_1 < 10$).
+1.  Since $x_1 = 8$, the observation is routed to the left branch ($x_1 < 10$).
 
-2.  Since $x_2 = 4$, the point moves to the lower-left region ($x_2 < 6$).
+2.  Since $x_2 = 4$, it proceeds to the lower-left region ($x_2 < 6$).
 
-3.  The final leaf node assigns the point to Class A with 80% confidence.
+3.  The terminal node assigns the observation to Class A with an estimated probability of 80%.
 
-This step-by-step path makes decision trees highly interpretable, especially in settings where knowing *why* a decision was made is just as important as the prediction itself.
+This explicit sequence of decision rules illustrates the interpretability of decision trees. Each prediction can be traced back to a small number of human-readable conditions, making tree-based models particularly valuable in applications where transparency and explanation are essential.
 
 ### Controlling Tree Complexity {.unnumbered}
 
-Have you ever wondered why a decision tree that performs perfectly on training data sometimes fails miserably on new data? This is the classic pitfall of *overfitting*, where a model becomes so tailored to the training data that it mistakes noise for signal.
+A decision tree that fits the training data extremely well may nevertheless perform poorly on unseen data. This phenomenon, known as *overfitting*, occurs when the model adapts too closely to idiosyncrasies of the training set and captures noise rather than underlying structure.
 
-Like a gardener shaping a tree, we must decide how much growth to allow. If we let the branches grow unchecked, the tree captures every detail but may become too complex and fragile. To strike the right balance, decision trees rely on techniques that control complexity and improve generalization.
+To mitigate overfitting, decision trees incorporate mechanisms that control model complexity and promote generalization. These mechanisms regulate how deeply the tree grows and how detailed the resulting decision rules become.
 
-One approach is *pre-pruning*, which restricts tree growth during training. The algorithm stops splitting when it hits limits such as a maximum depth, a minimum number of observations per node, or insufficient improvement in the splitting criterion. Pre-pruning acts like early shaping, preventing the model from becoming too specific too soon.
+One such mechanism is *pre-pruning*, which constrains tree growth during training. The algorithm stops splitting when predefined limits are reached, such as a maximum tree depth, a minimum number of observations per node, or insufficient improvement in the splitting criterion. By imposing these constraints early, pre-pruning prevents the tree from becoming overly complex.
 
-Another approach is *post-pruning*, where the tree is first grown to its full depth and then trimmed. After training, branches that add little to predictive accuracy are removed or merged. Post-pruning is like sculpting the tree after seeing its full form, often resulting in simpler, more interpretable models.
+An alternative strategy is *post-pruning*, in which the tree is first grown to its full size and then simplified. After training, branches that contribute little to predictive performance are removed or merged based on validation criteria. Post-pruning often yields smaller trees that generalize better while retaining interpretability.
 
-Which pruning strategy works best depends on the problem and dataset. In either case, the way we assess splits (using criteria like the *Gini Index* or *Entropy*) shapes the tree's structure and performance. We will delve into these splitting metrics next.
+The choice between pre-pruning and post-pruning depends on the dataset and modeling objectives. In both cases, the splitting criteria used during tree construction, such as the *Gini Index* or *Entropy*, play a central role in shaping the final tree structure. These criteria are examined in more detail in the next section.
 
 ## How CART Builds Decision Trees
 
-How do decision trees actually decide where to split? One of the most influential algorithms that answers this question is *CART* (short for *Classification and Regression Trees*). Introduced by Breiman et al. in 1984 [@breiman1984classification], CART remains a foundational tool in both academic research and applied machine learning. Let us take a closer look at how it works and why it continues to be so popular.
+*CART* (Classification and Regression Trees), introduced by Breiman et al. in 1984 [@breiman1984classification], is one of the most influential algorithms for constructing decision trees and remains widely used in both research and practice. This section explains the key principles underlying CART and highlights its strengths and limitations.
 
-CART generates *binary trees*, meaning that each decision node always results in two branches. It recursively splits the dataset into subsets of records that are increasingly similar with respect to the target variable. This is achieved by choosing the split that results in the *purest* possible child nodes, where each node contains mostly one class.
+CART constructs *binary trees*, meaning that each internal node splits the data into exactly two child nodes. Tree construction proceeds recursively by selecting, at each node, the feature and split point that best separate the observations with respect to the target variable. The objective is to create child nodes that are increasingly homogeneous.
 
-For classification tasks, CART typically uses the *Gini index* to measure node impurity. The Gini index is defined as:
+For classification tasks, CART typically measures node impurity using the *Gini index*, defined as $$
+Gini = 1 - \sum_{i=1}^k p_i^2,
+$$ where $p_i$ denotes the proportion of observations in the node belonging to class $i$, and $k$ is the number of classes. A node is considered pure when all observations belong to a single class, yielding a Gini index of zero. During tree construction, CART selects the split that maximizes the reduction in impurity, thereby producing two child nodes that are more homogeneous than the parent node.
 
-$$
-Gini = 1 - \sum_{i=1}^k p_i^2
-$$
+Because CART applies this splitting process recursively, it can generate highly detailed trees that fit the training data extremely well. While this reduces training error, it also increases the risk of overfitting. CART therefore incorporates *pruning* to control model complexity. After a large tree is grown, branches that contribute little to predictive performance are removed based on a complexity penalty that balances goodness of fit against tree size. The resulting pruned tree is typically smaller, easier to interpret, and better able to generalize to new data.
 
-where $p_i$ represents the proportion of samples in the node that belong to class $i$, and $k$ is the total number of classes. A node is considered pure when all data points in it belong to a single class, resulting in a Gini index of zero. During tree construction, CART selects the feature and threshold that result in the largest reduction in impurity, splitting the data to create two more homogeneous child nodes.
+CART is widely used because of its interpretability, flexibility, and ability to handle both classification and regression problems within a single framework. The tree structure provides a clear representation of decision rules, and the algorithm accommodates both numerical and categorical predictors without requiring extensive preprocessing.
 
-The recursive nature of CART can lead to highly detailed trees that fit the training data perfectly. While this minimizes the error rate on the training set, it often results in overfitting, where the tree becomes overly complex and fails to generalize to unseen data. To mitigate this, CART employs pruning techniques to simplify the tree.
+At the same time, CART has well-known limitations. The greedy nature of its splitting strategy means that locally optimal splits do not necessarily lead to a globally optimal tree. In addition, when the data are noisy or the sample size is small, CART may still produce unstable trees that vary substantially with small changes in the data.
 
-Pruning involves trimming branches that do not contribute meaningfully to predictive accuracy on a validation set. This is achieved by finding an adjusted error rate that penalizes overly complex trees with too many leaf nodes. The goal of pruning is to balance accuracy and simplicity, enhancing the tree’s ability to generalize to new data. The pruning process is discussed in detail by Breiman et al. [@breiman1984classification].
+These limitations have motivated the development of more advanced tree-based methods. Algorithms such as *C5.0* refine splitting and pruning strategies, while *random forests* reduce variance by aggregating predictions from many trees. The next sections build on the CART framework to introduce these extensions.
 
-Despite its simplicity, CART is widely used in practice due to its interpretability, versatility, and ability to handle both classification and regression tasks. The tree structure provides an intuitive way to visualize decision-making, making it highly explainable. Additionally, CART works well with both numerical and categorical data, making it applicable across a range of domains.
+## C5.0: More Flexible Decision Trees {#sec-ch11-c50}
 
-However, CART has limitations. The algorithm tends to produce deep trees that may overfit the training data, particularly when the dataset is small or noisy. Its reliance on greedy splitting can also result in suboptimal splits, as it evaluates one feature at a time rather than considering all possible combinations.
+C5.0, developed by J. Ross Quinlan, extends earlier decision tree algorithms such as ID3 and C4.5 by introducing more flexible splitting strategies and improved computational efficiency. Compared with CART, C5.0 is designed to produce more compact trees while maintaining strong predictive performance, particularly in classification problems. Although a commercial implementation is available through RuleQuest, open-source versions are widely used in R and other data science environments.
 
-To address these shortcomings, more advanced algorithms have been developed, such as *C5.0*, which incorporates improvements in splitting and pruning techniques, and *random forests*, which combine multiple decision trees to create more robust models. These approaches build on the foundations of CART, improving performance and reducing susceptibility to overfitting. The following sections explore these methods in detail.
+One important distinction between C5.0 and CART lies in the structure of the resulting trees. Whereas CART restricts all splits to be binary, C5.0 allows multi-way splits, especially for categorical predictors. This flexibility often leads to shallower trees that are easier to interpret, particularly when variables have many levels.
 
-## C5.0: More Flexible Decision Trees {#sec-C50}
-
-How can we improve on the classic decision tree? *C5.0*, developed by J. Ross Quinlan, offers an answer through smarter splitting, more flexible tree structures, and greater computational efficiency. As an evolution of earlier algorithms such as *ID3* and *C4.5*, it introduces enhancements that have made it widely used in both research and real-world applications. While a commercial version of C5.0 is available through RuleQuest, open-source implementations are integrated into R and other data science tools.
-
-C5.0 differs from other decision tree algorithms, such as *CART*, in several key ways:
-
--   Multi-way splits: Unlike CART, which constructs strictly binary trees, C5.0 allows for multi-way splits, particularly for categorical attributes. This flexibility often results in more compact and interpretable trees.
-
--   Entropy-based splitting: C5.0 uses entropy and information gain, concepts from information theory, to evaluate node purity, whereas CART relies on the Gini index or variance reduction.
-
-Entropy measures the degree of disorder in a dataset. Higher entropy indicates more class diversity; lower entropy suggests more homogeneous groups. C5.0 aims to find splits that reduce this disorder, creating purer subsets at each node. For a variable $x$ with $k$ classes, entropy is defined as: $$
+A second key difference concerns the criterion used to evaluate splits. C5.0 relies on entropy and information gain, concepts rooted in information theory, rather than the Gini index used by CART. Entropy measures the degree of uncertainty or disorder in a dataset, with higher values indicating greater class diversity. For a variable with $k$ classes, entropy is defined as $$
 Entropy(x) = - \sum_{i=1}^k p_i \log_2(p_i),
-$$ where $p_i$ is the proportion of observations in class $i$.
+$$ where $p_i$ denotes the proportion of observations belonging to class $i$.
 
-A dataset with all observations in one class has entropy 0 (maximum purity), while equal class distribution yields maximum entropy. When a dataset is split, the entropy of each resulting subset is weighted by its size and combined: $$
+When a dataset is partitioned by a candidate split, the entropy of the resulting subsets is computed and combined as a weighted average, $$
 H_S(T) = \sum_{i=1}^c \frac{|T_i|}{|T|} \times Entropy(T_i),
-$$ where $T$ is the original dataset, and $T_1, \dots, T_c$ are the resulting subsets from split $S$. The information gain from the split is then:
-
-$$
+$$ where $T$ denotes the original dataset and $T_1, \dots, T_c$ are the subsets created by split $S$. The information gain associated with the split is then given by $$
 gain(S) = H(T) - H_S(T).
-$$
-
-This value quantifies the improvement in class purity. C5.0 evaluates all possible splits and chooses the one that maximizes information gain.
+$$ C5.0 evaluates all candidate splits and selects the one that maximizes information gain, thereby producing child nodes that are more homogeneous than the parent node.
 
 ### A Simple C5.0 Example {.unnumbered}
 
-To illustrate how C5.0 constructs decision trees, consider its application to the *risk* dataset, which classifies a customer's credit risk as *good* or *bad* based on features such as `age` and `income`. Figure [-@fig-ch11-tree-C50] shows the tree generated by the `C5.0()` function from the *C50* package in R.
+To demonstrate how C5.0 constructs decision trees, we apply the algorithm to the `risk` dataset, which classifies customer credit risk as good or bad based on predictors such as `age` and `income`. Figure [-@fig-ch11-tree-C50] displays the decision tree produced by the `C5.0()` function from the C50 package in R.
 
-```{r fig-ch11-tree-C50, echo = FALSE, out.width = "90%", fig.cap = "C5.0 Decision Tree trained on the risk dataset. Unlike CART, this tree allows multi-way splits and uses entropy-based splitting criteria to classify credit risk."}
+```{r fig-ch11-tree-C50, echo = FALSE, out.width = "90%", fig.cap = "C5.0 decision tree trained on the `risk` dataset. Unlike CART, this tree allows multi-way splits and uses entropy-based splitting criteria to classify credit risk."}
 #| fig-width: 9
 #| fig-height: 12
 
@@ -189,85 +163,72 @@ formula = risk ~ age + income
 C50_fit = C5.0(formula, data = risk)
 
 par(mar = c(0, 0, 0, 0))
-#plot(C50_fit, type = "simple")
 plot(C50_fit)
 ```
 
-This tree illustrates several of C5.0’s features. While the earlier CART model in Figure [-@fig-ch11-simple-tree] used only binary splits, C5.0 enables multi-way splits when appropriate, which is especially useful when working with categorical features that have many levels. This often produces shallower trees that are easier to interpret without sacrificing accuracy.
+Compared with the CART tree shown in Figure [-@fig-ch11-simple-tree], this model illustrates several distinguishing features of C5.0. In particular, the use of multi-way splits allows categorical predictors to be partitioned more efficiently, often resulting in shallower tree structures. These more compact trees can improve interpretability while maintaining competitive predictive performance.
+
+> *Practice:* In Figure [-@fig-ch11-simple-tree], focus on the third terminal node from the right. Which decision rules define this leaf, and how should its predicted class and class probability be interpreted?
 
 ### Advantages and Limitations {.unnumbered}
 
-C5.0 offers several advantages over earlier decision tree algorithms. It is computationally efficient, making it suitable for large datasets and high-dimensional feature spaces. Its ability to perform multi-way splits leads to more compact trees, particularly when working with categorical variables that have many levels. Additionally, C5.0 includes mechanisms for weighting features, enabling the model to prioritize the most informative predictors. The algorithm also incorporates automatic pruning during training, which helps prevent overfitting and improves generalizability.
+C5.0 offers several advantages over earlier decision tree algorithms. It is computationally efficient and well suited to large datasets and high-dimensional feature spaces. The use of multi-way splits often produces more compact tree structures, particularly for categorical predictors with many levels. In addition, C5.0 supports feature weighting and incorporates pruning during training, both of which help focus the model on informative predictors and reduce the risk of overfitting.
 
-Despite these strengths, C5.0 is not without limitations. The trees it produces can become overly complex, especially in the presence of irrelevant predictors or categorical attributes with many distinct values. Furthermore, the evaluation of multi-way splits can be computationally demanding, particularly when the number of candidate splits grows large. Nonetheless, the internal optimizations of the algorithm help mitigate these concerns in practice.
+At the same time, C5.0 has limitations. The resulting trees can still become complex when the data contain many irrelevant predictors or highly granular categorical variables. Moreover, evaluating multi-way splits increases computational cost as the number of candidate partitions grows. Although internal optimizations alleviate these issues in many practical settings, model complexity and stability remain important considerations.
 
-In summary, C5.0 builds on the strengths of earlier decision tree models by combining entropy-based splitting with flexible tree structures. Its capacity to adapt to diverse data types while maintaining interpretability makes it a valuable tool for a wide range of classification problems. In the next section, we shift focus to *random forests*, an ensemble technique that aggregates many decision trees to further improve predictive performance.
+Overall, C5.0 extends earlier decision tree methods by combining entropy-based splitting with flexible tree structures and built-in regularization. While it often improves upon single-tree approaches such as CART, it does not fully eliminate sensitivity to data variability. This limitation motivates the use of ensemble methods such as random forests, which further enhance predictive performance by aggregating many decision trees.
 
 ## Random Forests
 
-What if you could take a room full of decision trees, each trained slightly differently, and let them vote on the best prediction? This is the idea behind *random forests*, one of the most popular and effective ensemble methods in modern machine learning.
+Random forests are an ensemble learning method that combines the predictions of many decision trees to improve predictive performance and stability. The central idea is to reduce the variance inherent in individual trees by averaging across a collection of diverse models.
 
-While individual decision trees offer clarity and interpretability, they are prone to overfitting, especially when allowed to grow deep and unpruned. Random forests overcome this limitation by aggregating the predictions of many diverse trees, each trained on a different subset of the data and using different subsets of features. This ensemble approach leads to models that are both more robust and more accurate.
+Single decision trees are easy to interpret but can be highly sensitive to the training data, particularly when they grow deep. Random forests address this limitation by constructing many trees, each trained on a different subset of the data and using different subsets of predictors. By aggregating these diverse trees, the model achieves greater robustness and improved generalization.
 
-Two key sources of randomness lie at the heart of random forests. The first is *bootstrap sampling*, where each tree is trained on a randomly sampled version of the training data (with replacement). The second is *random feature selection*, where only a subset of predictors is considered at each split. These two ingredients encourage diversity among the trees and prevent any single predictor or pattern from dominating the ensemble.
+Two sources of randomness are essential to this approach. First, each tree is trained on a bootstrap sample of the training data, drawn with replacement. Second, at each split, only a random subset of predictors is considered as candidates. Together, these mechanisms promote diversity among the trees and prevent any single predictor or data pattern from dominating the model.
 
-Once all trees are trained, their predictions are aggregated. In classification tasks, the forest chooses the class that receives the most votes across trees. For regression, it averages the predictions. This aggregation smooths over individual errors, reducing variance and improving generalization.
+After training, predictions are aggregated across trees. In classification problems, the predicted class is determined by majority voting, whereas in regression problems, predictions are obtained by averaging the individual tree outputs. This aggregation smooths out individual errors and substantially reduces variance.
 
 ### Strengths and Limitations of Random Forests {.unnumbered}
 
-Random forests are known for their strong predictive performance, particularly on datasets with complex interactions, nonlinear relationships, or high dimensionality. They typically outperform individual decision trees and are less sensitive to noise and outliers. Importantly, they also provide *variable importance scores*, helping analysts identify the most influential features in a model.
+Random forests are widely used because of their strong predictive performance, particularly in settings with complex interactions, nonlinear relationships, or high-dimensional feature spaces. They typically outperform single decision trees and are relatively robust to noise and outliers. In addition, random forests provide measures of variable importance, which offer insight into the relative influence of predictors.
 
-However, these strengths come with trade-offs. Random forests are less interpretable than single trees. Although we can assess overall variable importance, it is difficult to trace how a specific prediction was made. In addition, training and evaluating hundreds of trees can be computationally demanding, especially for large datasets or time-sensitive applications.
+These advantages come with trade-offs. Random forests are less interpretable than individual trees, as it is difficult to trace a specific prediction back to a small set of decision rules. Furthermore, training and evaluating a large number of trees can be computationally demanding, especially for large datasets or time-sensitive applications.
 
-Nonetheless, the balance random forests strike between accuracy and robustness has made them a cornerstone of predictive modeling. Whether predicting customer churn, disease outcomes, or financial risk, random forests offer a powerful and reliable tool.
-
-In the next section, we move from theory to practice. Using a real-world income dataset, we compare decision trees and random forests to explore how ensemble learning enhances performance and why it often becomes the go-to choice in applied data science.
+Despite these limitations, random forests have become a standard tool in applied data science because they offer a strong balance between predictive accuracy and robustness. In the next section, we move from theory to practice by comparing decision trees and random forests on a real-world income classification problem.
 
 ## Case Study: Who Can Earn More Than \$50K Per Year? {#sec-ch11-case-study}
 
-Predicting income levels is a common task in fields such as finance, marketing, and public policy. Banks use income models to assess creditworthiness, employers rely on them to benchmark compensation, and governments use them to inform taxation and welfare programs. In this case study, we apply decision trees and random forests to classify individuals based on their likelihood of earning more than \$50,000 annually.
+Predicting income levels is a common task in fields such as finance, marketing, and public policy. Banks use income models to assess creditworthiness, employers rely on them to benchmark compensation, and governments use them to inform taxation and welfare programs. In this case study, we apply decision trees and random forests to classify individuals according to their likelihood of earning more than \$50K per year.
 
-The analysis is based on the *adult* dataset, a widely used benchmark from the US Census Bureau, available in the **liver** package. This dataset, introduced earlier in Section [-@sec-ch3-data-pre-adult], includes demographic and employment-related attributes such as education, work hours, marital status, and occupation (factors that influence earning potential).
+The analysis is based on the `adult` dataset, a widely used benchmark derived from the US Census Bureau and available in the **liver** package. This dataset, introduced earlier in Section [-@sec-ch3-data-pre-adult], contains demographic and employment-related attributes such as education, working hours, marital status, and occupation, all of which are plausibly related to earning potential.
 
-Following the *Data Science Workflow* introduced in Chapter [-@sec-ch2-intro-data-science] and illustrated in @fig-ch2_DSW, we guide you through each stage of the process: from data preparation to modeling and evaluation. You will learn how to apply three tree-based algorithms (*CART*, *C5.0*, and *random forest*) to a real-world classification problem using R. Each step is grounded in the workflow to ensure reproducibility, clarity, and alignment with best practices in data science.
+The case study follows the Data Science Workflow introduced in Chapter [-@sec-ch2-intro-data-science] and illustrated in @fig-ch2_DSW, covering data preparation, model construction, and evaluation. Using the same dataset and predictors, we compare three tree-based methods: CART, C5.0, and random forests. This setup allows us to examine how model flexibility, interpretability, and predictive performance change as we move from single decision trees to ensemble methods.
 
 ### Overview of the Dataset {.unnumbered}
 
-The *adult* dataset, included in the **liver** package, is a classic benchmark in predictive modeling. It originates from the US Census Bureau and contains demographic and employment information about individuals, making it ideal for studying income classification problems in a realistic setting.
-
-To begin, we load the dataset into R and generate a summary:
+The `adult` dataset, included in the **liver** package, is a widely used benchmark in predictive modeling. Derived from the US Census Bureau, it contains demographic and employment-related information on individuals and is commonly used to study income classification problems. We begin by loading the dataset and examining its structure to understand the available variables and their types.
 
 ```{r}
 library(liver)
 
 data(adult)
 
-summary(adult)
+str(adult)
 ```
 
-The dataset contains `r nrow(adult)` observations and `r ncol(adult)` variables. The target variable is `income`, a binary factor with two levels: `<=50K` and `>50K`. The remaining `r ncol(adult) - 1` variables provide rich predictive features, spanning demographic characteristics, employment details, financial indicators, and household context.
+The dataset contains `r nrow(adult)` observations and `r ncol(adult)` variables. The response variable, `income`, is a binary factor with two levels: `<=50K` and `>50K`. The remaining variables serve as predictors and capture information on demographics, education and employment, financial status, and household characteristics.
 
-These predictors fall into the following thematic groups:
+Specifically, the dataset includes demographic variables such as `age`, `gender`, `race`, and `native_country`; education and employment variables including `education`, `education_num`, `workclass`, `occupation`, and `hours_per_week`; financial indicators such as `capital_gain` and `capital_loss`; and household-related variables such as `marital_status` and `relationship`.
 
--   *Demographics:* `age`, `gender`, `race`, and `native.country`.
-
--   *Education and employment:* `education`, `education.num`, `workclass`, `occupation`, and `hours.per.week`.
-
--   *Financial status:* `capital.gain` and `capital.loss`.
-
--   *Household and relationships:* `marital.status` and `relationship`.
-
-For example, `education.num` captures the total years of formal education, while `capital.gain` and `capital.loss` reflect financial investment outcomes (factors that plausibly affect earning potential). Some predictors, such as `native.country`, include many unique categories (42 levels), which we will address during preprocessing. This diversity of attributes makes the *adult* dataset well suited for exploring classification models like decision trees and random forests.
+Some predictors provide direct numeric information, for example `education_num`, which measures years of formal education, while others encode categorical information with many levels. In particular, `native_country` contains 42 distinct categories, a feature that motivates the preprocessing and grouping steps discussed later in the case study. The diversity of variable types and levels makes the `adult` dataset well suited for illustrating how decision trees and random forests handle mixed data structures in classification tasks.
 
 ### Data Preparation {.unnumbered}
 
-Before building predictive models, it is crucial to clean and preprocess the data to ensure consistency and interpretability. The *adult* dataset includes several features with missing values and complex categorical variables that must be addressed to improve model robustness.
-
-In Chapter [-@sec-ch3-data-pre-adult], we introduced the *adult* dataset as part of the *Data Science Workflow* and demonstrated how to handle missing values and transform categorical features. Here, we summarize the key preprocessing steps applied before training the tree-based models.
+Before fitting predictive models, the data must be cleaned and preprocessed to ensure consistency and reliable model behavior. The `adult` dataset contains missing values and high-cardinality categorical variables that require careful handling, particularly when using tree-based methods. As introduced in Chapter [-@sec-ch3-data-pre-adult], these preprocessing steps are part of the Data Science Workflow. Here, we briefly summarize the transformations applied prior to model training.
 
 #### Handling Missing Values {.unnumbered}
 
-Missing values in the dataset are encoded as `"?"`. These need to be replaced with standard `NA` values before proceeding. Unused factor levels are removed, and categorical variables with missing entries are imputed using random sampling from the observed categories (a simple but effective strategy for preserving variable distributions).
+In the `adult` dataset, missing values are encoded as `"?"`. These entries are first converted to standard `NA` values, and unused factor levels are removed. For categorical variables with missing entries, we apply random sampling imputation based on the observed categories, which preserves the marginal distributions of the variables.
 
 ```{r}
 library(Hmisc)
@@ -278,15 +239,15 @@ adult = droplevels(adult)
 
 # Impute missing categorical values using random sampling
 adult$workclass      = impute(factor(adult$workclass), 'random')
-adult$native.country = impute(factor(adult$native.country), 'random')
+adult$native_country = impute(factor(adult$native_country), 'random')
 adult$occupation     = impute(factor(adult$occupation), 'random')
 ```
 
 #### Transforming Categorical Features {.unnumbered}
 
-Some categorical variables in the *adult* dataset, such as `native.country` and `workclass`, include many distinct categories. Models can struggle with such features because rare or overly specific levels add unnecessary complexity and may lead to overfitting. To improve both interpretability and generalization, we group related categories into broader, conceptually meaningful classes.
+Several categorical predictors in the `adult` dataset contain many distinct levels, which can introduce unnecessary complexity and instability in tree-based models. To improve interpretability and generalization, related categories are grouped into broader, conceptually meaningful classes.
 
-We begin with the `native.country` variable, which originally includes `r length(levels(adult$native.country))` unique country names. To simplify interpretation while retaining geographic information, these countries are grouped into five major regions: Europe, North America, Latin America, the Caribbean, and Asia. This grouping also reduces the number of factor levels, allowing models to focus on regional patterns rather than specific countries.
+The variable `native_country` originally contains `r length(levels(adult$native_country))` distinct categories. To retain geographic information while reducing sparsity, countries are grouped into five regions: Europe, North America, Latin America, the Caribbean, and Asia.
 
 ```{r}
 library(forcats)
@@ -301,28 +262,24 @@ Caribbean <- c("Jamaica", "Haiti", "Trinidad&Tobago")
 
 Asia <- c("Cambodia", "China", "Hong-Kong", "India", "Iran", "Japan", "Laos", "Philippines", "South", "Taiwan", "Thailand", "Vietnam")
 
-adult$native.country <- fct_collapse(adult$native.country,
-      "Europe"        = Europe,
-      "North America" = North_America,
-      "Latin America" = Latin_America,
-      "Caribbean"     = Caribbean,
-      "Asia"          = Asia
-)
+adult$native_country <- fct_collapse(adult$native_country,
+      "Europe" = Europe, "North America" = North_America, "Latin America" = Latin_America, "Caribbean" = Caribbean, "Asia" = Asia)
 ```
 
-Next, we simplify the `workclass` variable, which contains rare categories representing individuals without formal employment. To improve consistency and interpretability, we group these categories into a single `"Unemployed"` class:
+We also simplify the `workclass` variable by grouping rare categories representing individuals without formal employment into a single level:
 
 ```{r}
-adult$workclass = fct_collapse(adult$workclass, "Unemployed" = c("Never-worked", "Without-pay"))
+adult$workclass = fct_collapse(adult$workclass, 
+                        "Unemployed" = c("Never-worked", "Without-pay"))
 ```
 
-These transformations make the data more interpretable and reduce sparsity in categorical variables. By consolidating infrequent levels, we help tree-based models focus on meaningful distinctions rather than noise, ultimately improving model stability and generalization. With these adjustments complete, the dataset is now well-prepared for the modeling and evaluation steps discussed in the next section.
+These transformations reduce sparsity in categorical predictors and help tree-based models focus on meaningful distinctions rather than idiosyncratic levels. With the data prepared, we proceed to model construction and evaluation in the following section.
 
 ### Data Setup for Modeling {.unnumbered}
 
-With the dataset cleaned and categorical variables simplified, we are ready to set up the data for training and evaluation. This corresponds to *Step 4: Data Setup for Modeling* in the Data Science Workflow introduced in Chapter [-@sec-ch2-intro-data-science] and discussed in detail in Chapter [-@sec-ch6-setup-data]. It marks the transition from data preparation to model development.
+With the data cleaned and categorical variables simplified, we proceed to set up the dataset for model training and evaluation. This step corresponds to Step 4 (Data Setup for Modeling) in the Data Science Workflow introduced in Chapter [-@sec-ch2-intro-data-science] and discussed in detail in Chapter [-@sec-ch6-setup-data]. It marks the transition from data preparation to model construction.
 
-To evaluate how well our models generalize to new data, we divide the dataset into two parts: a training set (80%) for model building and a testing set (20%) for performance assessment. This ensures an unbiased estimate of model accuracy on unseen data. Following the convention used in previous chapters, we use the `partition()` function from the **liver** package:
+To assess how well the models generalize to new data, the dataset is partitioned into a training set (80%) and a test set (20%). The training set is used for model fitting, while the test set serves as an independent holdout sample for performance evaluation. As in earlier chapters, we perform this split using the `partition()` function from the **liver** package:
 
 ```{r}
 set.seed(6)
@@ -335,161 +292,133 @@ test_set  = data_sets$part2
 test_labels = test_set$income
 ```
 
-Here, `set.seed()` ensures reproducibility of the split. The `train_set` is used to train the classification models, and `test_set` serves as a holdout sample for evaluation. The vector `test_labels` contains the true income classes for the test observations, which will later be compared with predicted values from the CART, C5.0, and Random Forest models.
+The function `set.seed()` ensures that the partitioning is reproducible. The vector `test_labels` contains the observed income classes for the test observations and is used later to evaluate model predictions.
 
-To ensure the training and test sets reflect the structure of the original dataset, we verified that the distribution of the `income` variable remains balanced after partitioning. While we do not show this diagnostic here, we refer interested readers to [Section -@sec-ch6-validate-partition] for more on validation techniques.
+To confirm that the partitioning preserves the structure of the original data, we verified that the distribution of the response variable `income` remains comparable across the training and test sets. Readers interested in formal validation procedures are referred to Section [-@sec-ch6-validate-partition].
 
-The set of predictors used for modeling includes variables spanning demographic, economic, and employment dimensions: `age`, `workclass`, `education.num`, `marital.status`, `occupation`, `gender`, `capital.gain`, `capital.loss`, `hours.per.week`, and `native.country`.
+For modeling, we select a set of predictors spanning demographic, educational, employment, and financial dimensions: `age`, `workclass`, `education_num`, `marital_status`, `occupation`, `gender`, `capital_gain`, `capital_loss`, `hours_per_week`, and `native_country`. These variables are chosen to capture key factors plausibly associated with income while avoiding redundancy.
 
-The following variables are excluded for the reasons below:
+Several variables are excluded for the following reasons. The variable `demogweight` serves as an identifier and does not contain predictive information. The variable `education` duplicates the information in `education_num`, which encodes years of education numerically. The variable `relationship` is strongly correlated with `marital_status` and is therefore omitted to reduce redundancy. Finally, `race` is excluded for ethical reasons.
 
--   `demogweight`: Treated as an identifier and does not contain predictive information.
-
--   `education`: Duplicates the information in `education.num`, which captures years of education numerically.
-
--   `relationship`: Strongly correlated with `marital.status` and unlikely to provide additional value.
-
--   `race`: Excluded for ethical reasons.
-
-We now define the formula that will be used across all three models:
+Using the selected predictors, we define the model formula that will be applied consistently across all three tree-based methods:
 
 ```{r}
-formula = income ~ age + workclass + education.num + marital.status + occupation + gender + capital.gain + capital.loss + hours.per.week + native.country
+formula = income ~ age + workclass + education_num + marital_status + occupation + gender + capital_gain + capital_loss + hours_per_week + native_country
 ```
 
-This formula will be used consistently across CART, C5.0, and Random Forest models to facilitate a fair comparison of predictive performance.
+Applying the same set of predictors across CART, C5.0, and random forest models ensures that differences in performance can be attributed to the modeling approach rather than to differences in input variables.
 
-Note that tree-based models such as CART, C5.0, and Random Forests do *not* require dummy encoding for categorical variables or rescaling of numeric features. These models can directly process mixed data types and are invariant to monotonic transformations of numerical predictors, making them especially convenient for datasets that include both categorical and continuous features. In contrast, algorithms like *k*-Nearest Neighbors\* (see Chapter [-@sec-ch7-classification-knn]) rely on distance computations and therefore require both dummy encoding and feature scaling to achieve optimal performance.
+Finally, it is worth noting that tree-based models do not require dummy encoding of categorical variables or rescaling of numerical features. These models can directly handle mixed data types and are invariant to monotonic transformations of numeric predictors. In contrast, distance-based methods such as k-nearest neighbors (Chapter [-@sec-ch7-classification-knn]) rely on distance calculations and therefore require both encoding and feature scaling.
+
+> *Practice:* Repartition the `adult` dataset into a 70% training set and a 30% test set using the same approach. Check whether the class distribution of the target variable `income` is similar in both subsets, and reflect on why preserving this balance is important for fair model evaluation.
 
 ### Building a Decision Tree with CART {.unnumbered}
 
-What happens inside a decision tree once it starts learning from data? Let us walk through the building process using the CART algorithm. To build a decision tree with CART in R, we use the [**rpart**](https://CRAN.R-project.org/package=rpart) package (Recursive Partitioning and Regression Trees), which provides a widely used implementation. This package includes functions for building, visualizing, and evaluating decision trees.
+We begin the modeling stage by fitting a decision tree using the CART algorithm. In R, CART is implemented in the **rpart** package, which provides tools for constructing, visualizing, and evaluating decision trees.
 
-First, ensure that the **rpart** package is installed. If needed, install it with `install.packages("rpart")`. Then, load the package into your R session:
+We start by loading the package and fitting a classification tree using the training data:
 
 ```{r}
 library(rpart)
-```
 
-Once the package is loaded, we can build the decision tree model using the `rpart()` function:
-
-```{r}
 cart_model = rpart(formula = formula, data = train_set, method = "class")
 ```
 
-The main arguments of `rpart()` include `formula`, which defines the relationship between the target variable (`income`) and the predictors, `data`, which specifies the training dataset, and `method`, which indicates the type of modeling task. In this example, we use `method = "class"` to build a classification tree, but the `method` argument can also be set to `"anova"` for regression tasks involving continuous outcomes, `"poisson"` for count data, or `"exp"` for survival analysis based on exponential models, highlighting the flexibility of CART across a wide range of predictive modeling tasks.
+The argument `formula` defines the relationship between the response variable (`income`) and the selected predictors, while `data` specifies the training set used for model fitting. Setting `method = "class"` indicates that the task is classification. The same framework can also be applied to regression and other modeling contexts by selecting an appropriate method, illustrating the generality of the CART approach. This fitted model serves as a baseline against which more flexible tree-based methods, including C5.0 and random forests, will later be compared.
 
-In the next subsection, we will visualize the decision tree to better understand the structure and decision-making process learned from the data.
-
-#### Visualizing the Decision Tree {.unnumbered}
-
-After building the model, it is helpful to visualize the decision tree to better understand the learned decision rules. For this, we use the [**rpart.plot**](https://CRAN.R-project.org/package=rpart.plot) package, which provides intuitive graphical tools for displaying **rpart** models (install it with `install.packages("rpart.plot")` if needed):
-
-```{r}
-library(rpart.plot)
-```
-
-The tree can be visualized with the following command:
+To better understand the learned decision rules, we visualize the fitted tree using the **rpart.plot** package:
 
 ```{r out.width = "100%"}
+library(rpart.plot)
+
 rpart.plot(cart_model, type = 4, extra = 104)
 ```
 
-The `type = 4` argument places decision rules inside the nodes for clarity, while the `extra = 104` argument displays both the predicted class and the probability of the most probable class at each terminal node.
+The argument `type = 4` places the splitting rules inside the nodes, making the tree structure easier to interpret. The argument `extra = 104` adds the predicted class and the corresponding class probability at each terminal node.
 
-If the tree is too large to fit within a single plot, an alternative is to examine a text-based structure using the `print()` function:
+When the tree is too large to be displayed clearly in graphical form, a text-based representation can be useful. The `print()` function provides a concise summary of the tree structure, listing the nodes, splits, and predicted outcomes:
 
 ```{r}
 print(cart_model)
 ```
 
-This textual output lists the nodes, splits, and predicted outcomes, offering a compact summary when graphical space is limited.
+Having examined the tree structure, we can now interpret how the model generates predictions. The fitted tree contains four internal decision nodes and five terminal leaves. Of the twelve candidate predictors, the algorithm selects three variables (`marital_status`, `capital_gain`, and `education_num`) as relevant for predicting income. The root node is defined by `marital_status`, indicating that marital status provides the strongest initial separation in the data.
 
-#### Interpreting the Decision Tree {.unnumbered}
+Each terminal leaf represents a distinct subgroup of individuals defined by a sequence of decision rules. In the visualization, blue leaves correspond to predictions of income less than or equal to \$50K, whereas green leaves correspond to predictions above this threshold.
 
-Now that we have visualized the tree, let us take a closer look at how it makes predictions. The model produces a binary tree with four decision nodes and five leaves. Among the twelve predictors, the algorithm selects three (`marital.status`, `capital.gain`, and `education.num`) as the most relevant for predicting income. The most influential predictor, `marital.status`, appears at the root node, meaning that marital status drives the first split in the tree.
+As an example, the rightmost leaf identifies individuals who are married and have at least 13 years of formal education (`education_num >= 13`). This subgroup accounts for approximately 14% of the observations, of which about 70% earn more than \$50K annually. The associated classification error for this leaf is therefore 0.30, computed as $1 - 0.70$.
 
-The tree organizes individuals into five distinct groups, each represented by a terminal leaf. Blue leaves indicate those predicted to earn less than \$50,000 (`income <= 50K`), while green leaves represent those predicted to earn more than \$50,000 (`income > 50K`).
+This example illustrates how decision trees partition the population into interpretable segments based on a small number of conditions. In the next section, we apply the C5.0 algorithm to the same dataset and compare its structure and predictive behavior with that of the CART model.
 
-Consider the rightmost leaf of the tree: it classifies individuals who are married and have at least 13 years of education (`education.num >= 13`). This group represents 14% of the dataset, with 70% of them earning more than \$50,000 annually. The error rate for this leaf is 0.30, calculated as $1 - 0.70$.
-
-In the next section, we apply the C5.0 algorithm to the same dataset and compare its structure and performance to the CART model.
+> *Practice:* In the decision tree shown in this subsection, focus on the leftmost terminal leaf. Which sequence of decision rules defines this group, and how should its predicted income class and class probability be interpreted?
 
 ### Building a Decision Tree with C5.0 {.unnumbered}
 
-Now that we have seen how CART builds decision trees, let us turn to *C5.0* (an algorithm designed to build faster, deeper, and often more accurate trees). In this part of the case study, you will see how easily C5.0 can be applied to real-world data, using just a few lines of R code.
+Having examined how CART constructs decision trees, we now turn to C5.0, an algorithm designed to produce more flexible and often more compact tree structures. In this part of the case study, we apply C5.0 to the same training data in order to contrast its behavior with that of the CART model.
 
-To fit a decision tree using the C5.0 algorithm in R, we use the [**C50**](https://CRAN.R-project.org/package=C50) package. If it is not already installed, it can be added with `install.packages("C50")`. After installation, load the package into your R session:
+In R, C5.0 is implemented in the **C50** package. Using the same model formula and training set as before, we fit a C5.0 decision tree as follows:
 
 ```{r}
 library(C50)
-```
 
-The model is constructed using the `C5.0()` function:
-
-```{r}
 C50_model = C5.0(formula, data = train_set)
 ```
 
-The key arguments are `formula`, which specifies the relationship between the target variable (`income`) and the predictors, and `data`, which defines the dataset used for training.
+The argument `formula` specifies the relationship between the response variable (`income`) and the predictors, while `data` identifies the training dataset. Using the same inputs as in the CART model ensures that differences in model behavior can be attributed to the algorithm rather than to changes in predictors or data.
 
-Compared to CART, C5.0 introduces several enhancements. It allows for multi-way splits, automatically assigns weights to predictors, and creates deeper but more compact trees when needed. This flexibility often results in stronger performance, especially when handling categorical variables with many levels.
+Compared to CART, C5.0 allows multi-way splits, assigns weights to predictors, and applies entropy-based splitting criteria. These features often result in deeper but more compact trees, particularly when categorical variables with many levels are present.
 
-Since the resulting tree can be quite large, we focus on summarizing the model rather than plotting its full structure. The `print()` function provides an overview:
+Because the resulting tree can be relatively large, we summarize the fitted model rather than plotting its full structure. The `print()` function provides a concise overview:
 
 ```{r}
 print(C50_model)
 ```
 
-The output displays important details, including the number of predictors used, the number of observations, and the total tree size. In this case, the tree consists of 74 decision nodes (substantially larger and potentially more powerful than the simpler CART tree). By allowing richer splitting strategies and prioritizing informative features, C5.0 offers a step forward in sophistication over earlier decision tree algorithms. In the next section, we explore *Random Forests*, an ensemble method that takes decision tree modeling to an entirely new level by combining the strengths of many trees.
+The output reports key characteristics of the fitted model, including the number of predictors, the number of training observations, and the total number of decision nodes. In this case, the tree contains 74 decision nodes, substantially more than the CART model. This increased complexity reflects C5.0’s greater flexibility in partitioning the feature space. In the next section, we move beyond single-tree models and introduce random forests, an ensemble approach that combines many decision trees to improve predictive performance and robustness.
+
+> *Practice:* Repartition the `adult` dataset into a 70% training set and a 30% test set. Fit both a CART and a C5.0 decision tree using this new split, and compare their structures with the trees obtained earlier. Which model appears more sensitive to the change in the training data, and why?
 
 ### Building a Random Forest Model {.unnumbered}
 
-What if instead of relying on a single decision tree, we could build hundreds of trees and combine their predictions to make smarter decisions? *Random forests* offer exactly this approach, dramatically improving robustness and accuracy.
+Single decision trees are easy to interpret but can be unstable, as small changes in the training data may lead to substantially different tree structures. Random forests address this limitation by aggregating many decision trees, each trained on a different bootstrap sample of the data and using different subsets of predictors. This ensemble strategy typically improves predictive accuracy and reduces overfitting.
 
-In R, random forests are implemented using the [**randomForest**](https://CRAN.R-project.org/package=randomForest) package, one of the most widely used and reliable implementations. If it is not already installed, add it with `install.packages("randomForest")`. Load the package into your R session:
+In R, random forests are implemented in the **randomForest** package. Using the same model formula and training data as before, we fit a random forest classifier with 100 trees:
 
 ```{r}
 library(randomForest)
-```
 
-Using the same set of predictors as before, we construct a random forest model with 100 decision trees:
-
-```{r}
 forest_model = randomForest(formula = formula, data = train_set, ntree = 100)
 ```
 
-Here, `formula` specifies the relationship between the target variable (`income`) and the predictors, `data` defines the training dataset, and `ntree = 100` sets the number of trees to grow. Increasing `ntree` generally improves accuracy but requires more computational time.
+The argument `ntree` specifies the number of trees grown in the ensemble. Increasing this value generally improves stability and predictive performance, although gains tend to diminish beyond a certain point.
 
-To evaluate which predictors contribute most to model accuracy, we can visualize variable importance:
+One advantage of random forests is that they provide measures of variable importance, which summarize how strongly each predictor contributes to model performance. We visualize these measures using the following command:
 
 ```{r out.width = "70%"}
 varImpPlot(forest_model, col = "#377EB8", 
            main = "Variable Importance in Random Forest Model")
 ```
 
-The resulting plot ranks predictors by their influence. In this case, `marital.status` emerges as the most important, followed by `capital.gain` and `education.num`.
+The resulting plot ranks predictors according to their importance. In this case, `marital_status` again emerges as the most influential variable, followed by `capital_gain` and `education_num`, consistent with the earlier tree-based models.
 
-We can also assess how model error evolves as more trees are added:
+Random forests also allow us to examine how classification error evolves as the number of trees increases:
 
 ```{r}
 plot(forest_model, col = "#377EB8",
      main = "Random Forest Error Rate vs. Number of Trees")
 ```
 
-This plot shows classification error as a function of the number of trees. Notice that the error rate stabilizes after about 40 trees, suggesting that adding further trees yields diminishing returns.
+The error rate stabilizes after approximately 40 trees, indicating that additional trees contribute little improvement. This behavior illustrates how random forests balance flexibility with robustness by averaging across many diverse trees.
 
-By aggregating many trees trained on different subsets of the data and features, random forests reduce overfitting while preserving flexibility. They offer a powerful and reliable alternative to single-tree models.
-
-In the next section, we compare the performance of the CART, C5.0, and Random Forest models side by side using evaluation metrics.
+Having fitted CART, C5.0, and random forest models using the same predictors and data split, we are now in a position to compare their predictive performance systematically. In the next section, we evaluate these models side by side using confusion matrices, ROC curves, and AUC values.
 
 ### Model Evaluation and Comparison {.unnumbered}
 
-Now that the models (CART, C5.0, and Random Forest) have been trained, it is time to see how well they perform when faced with new, unseen data. Model evaluation is the critical moment where we find out whether the patterns the models learned truly generalize or whether they simply memorized the training set.
+With the CART, C5.0, and Random Forest models fitted, we now evaluate their performance on the test set to assess how well they generalize to unseen data. Model evaluation allows us to distinguish between models that capture meaningful patterns and those that primarily reflect the training data.
 
-Following the evaluation techniques introduced in Chapter [-@sec-ch8-evaluation], we assess the models using confusion matrices to summarize classification errors, ROC curves to visualize performance across different classification thresholds, and Area Under the Curve (AUC) values to provide a concise single-number summary of overall model quality.
+Following the evaluation framework introduced in Chapter [-@sec-ch8-evaluation], we compare the models using confusion matrices, ROC curves, and Area Under the Curve (AUC) values. These tools provide complementary perspectives: confusion matrices summarize classification errors at a given threshold, while ROC curves and AUC values assess performance across all possible classification thresholds.
 
-To begin, we use the `predict()` function to generate predicted class probabilities for the test set. For all three models, we specify `type = "prob"` to obtain probabilities rather than discrete class labels:
+We begin by generating predicted class probabilities for the test set using the `predict()` function. For all three models, we request probabilities rather than hard class labels by specifying `type = "prob"`:
 
 ```{r}
 cart_probs   = predict(cart_model,   test_set, type = "prob")[, "<=50K"]
@@ -499,15 +428,11 @@ C50_probs    = predict(C50_model,    test_set, type = "prob")[, "<=50K"]
 forest_probs = predict(forest_model, test_set, type = "prob")[, "<=50K"]
 ```
 
-The `predict()` function returns a matrix of probabilities for each class. The `[, "<=50K"]` notation extracts the probability of belonging to the `<=50K` income class, which is important for evaluating the models' predictive accuracy.
-
-In the sections that follow, we first examine confusion matrices to assess misclassification patterns, and then move on to ROC curves and AUC scores for a broader perspective on model performance.
+The `predict()` function returns a matrix of class probabilities for each observation. Extracting the column corresponding to the `<=50K` class allows us to evaluate the models using threshold-dependent and threshold-independent metrics. In the following subsections, we first examine confusion matrices to analyze misclassification patterns and then use ROC curves and AUC values to compare overall discriminatory performance.
 
 #### Confusion Matrix and Classification Errors {.unnumbered}
 
-How well do our models separate high earners from others? A confusion matrix gives us an immediate snapshot by showing how many predictions were correct and what types of mistakes each model tends to make.
-
-We generate confusion matrices for each model using the `conf.mat.plot()` function from the **liver** package, which creates easy-to-read graphical summaries:
+Confusion matrices provide a direct way to examine how well the models distinguish between high earners and others, as well as the types of classification errors they make. We generate confusion matrices for each model using the `conf.mat.plot()` function from the **liver** package, which produces compact graphical summaries:
 
 ::: {#fig-ch11-conf-plots layout-ncol="3"}
 ```{r out.width = "95%"}
@@ -524,16 +449,16 @@ conf.mat.plot(C50_probs, test_labels, cutoff = 0.5, reference = "<=50K", main = 
 conf.mat.plot(forest_probs, test_labels, cutoff = 0.5, reference = "<=50K", main = "Random Forest Prediction")
 ```
 
-Confusion matrices for CART, C5.0, and Random Forest models using a cutoff value of $0.5$. Each matrix summarizes the number of true positives, true negatives, false positives, and false negatives for the corresponding model.
+Confusion matrices for CART, C5.0, and Random Forest models using a cutoff value of $0.5$. Each matrix summarizes true positives, true negatives, false positives, and false negatives for the corresponding model.
 :::
 
-In these plots, the cutoff value determines the decision boundary between the two income classes. By default, we set `cutoff = 0.5`, meaning that if the predicted probability of earning `<=50K` is at least 0.5, the model predicts "`<=50K`"; otherwise, it predicts "`>50K`". The argument `reference = "<=50K"` specifies that `<=50K` is treated as the positive class.
+In these plots, the cutoff determines the decision threshold between the two income classes. With `cutoff = 0.5`, observations with a predicted probability of at least 0.5 for the `<=50K` class are classified as `<=50K`; otherwise, they are classified as `>50K`. The argument `reference = "<=50K"` specifies the positive class.
 
-Because model predictions depend on this threshold, changing the cutoff alters the balance between true positives, false positives, and other outcomes in the confusion matrix. Each confusion matrix, therefore, represents model performance at a specific decision threshold rather than an absolute measure of accuracy.
+Because confusion matrices depend on a specific cutoff, they reflect model performance at a particular operating point rather than overall discriminatory ability. Changing the cutoff alters the balance between different types of classification errors, such as false positives and false negatives.
 
-In practice, a fixed cutoff of 0.5 may not be optimal. A more robust approach is to tune the cutoff using a *validation set* (see Section [-@sec-cross-validation]). The optimal threshold can be chosen to maximize a particular performance metric, such as the F1-score or balanced accuracy, depending on the problem context. Once this threshold is determined, it should be applied to the test set to obtain an unbiased estimate of generalization performance. This process also reveals how the relative ranking of models (CART, C5.0, and Random Forest) can change when using tuned rather than fixed thresholds.
+In practice, a fixed cutoff of 0.5 is not always optimal. A more principled approach is to select the cutoff using a validation set (see Section [-@sec-ch6-cross-validation]), optimizing a metric such as the F1-score or balanced accuracy. Once chosen, this cutoff can be applied to the test set to obtain an unbiased estimate of generalization performance.
 
-To access the numeric confusion matrices directly, use the `conf.mat()` function:
+To examine the numeric confusion matrices directly, we use the `conf.mat()` function:
 
 ```{r echo=TRUE}
 conf.mat(cart_probs, test_labels, cutoff = 0.5, reference = "<=50K")
@@ -545,241 +470,172 @@ conf.mat(forest_probs, test_labels, cutoff = 0.5, reference = "<=50K")
 
 ```{r echo=FALSE}
 cart_conf   = conf.mat(cart_probs, test_labels, cutoff = 0.5, reference = "<=50K")
-  
 C50_conf    = conf.mat(C50_probs, test_labels, cutoff = 0.5, reference = "<=50K")
-  
 forest_conf = conf.mat(forest_probs, test_labels, cutoff = 0.5, reference = "<=50K")
 ```
 
-The total number of correctly classified individuals is `r cart_conf[1, 1] + cart_conf[2, 2]` for CART, `r C50_conf[1, 1] + C50_conf[2, 2]` for C5.0, and `r forest_conf[1, 1] + forest_conf[2, 2]` for Random Forest. Among the three models, C5.0 achieves the highest number of correct predictions, indicating that its more flexible tree structure provides a tangible advantage in reducing misclassifications.
+Using this cutoff, the total number of correctly classified observations is `r cart_conf[1, 1] + cart_conf[2, 2]` for CART, `r C50_conf[1, 1] + C50_conf[2, 2]` for C5.0, and `r forest_conf[1, 1] + forest_conf[2, 2]` for Random Forest. Among the three models, C5.0 yields the highest number of correct classifications at this threshold, reflecting its greater flexibility in partitioning the feature space.
 
-*Practice:* What happens if you change the cutoff to 0.6 instead of 0.5? Re-run the `conf.mat.plot()` and `conf.mat()` functions with `cutoff = 0.6` and see how the confusion matrices shift. This small change can reveal important trade-offs between sensitivity and specificity (a topic we explore further with ROC curves and AUC values in the next part).
+> *Practice:* Change the cutoff from 0.5 to 0.6 and re-run the `conf.mat.plot()` and `conf.mat()` functions. How do the confusion matrices change, and what trade-offs between sensitivity and specificity become apparent?
 
 #### ROC Curve and AUC {.unnumbered}
 
-What happens if we shift the decision threshold? Could our models behave differently? To answer this, we turn to the ROC curve and the AUC, two powerful tools that reveal how well a model separates the two income groups across all possible cutoff points.
+Confusion matrices evaluate model performance at a single decision threshold. To assess performance across all possible thresholds, we turn to the ROC curve and the Area Under the Curve (AUC). These tools summarize a model’s ability to discriminate between the two income classes independently of any specific cutoff value.
 
-We use the **pROC** package for these evaluations. If it is not installed yet, add it with `install.packages("pROC")`, and then load it:
+We compute ROC curves for all three models using the **pROC** package:
 
 ```{r}
 library(pROC)
-```
 
-Next, we calculate the ROC curves for all three models:
-
-```{r}
 cart_roc   = roc(test_labels, cart_probs)
 C50_roc    = roc(test_labels, C50_probs)
 forest_roc = roc(test_labels, forest_probs)
 ```
 
-Instead of viewing the models separately, let us put them all on the same plot using `ggroc()`:
+To facilitate comparison, we display all three ROC curves on a single plot:
 
 ```{r out.width = "90%"}
 ggroc(list(cart_roc, C50_roc, forest_roc), size = 0.9) +
   scale_color_manual(values = c("#377EB8", "#E66101", "#4DAF4A"),
-                     labels = c(
-                       paste("CART (AUC =", round(auc(cart_roc), 3), ")"),
-                       paste("C5.0 (AUC =", round(auc(C50_roc), 3), ")"),
-                       paste("Random Forest (AUC =", round(auc(forest_roc), 3), ")")
-                     )) +
+                 labels = c(
+                   paste("CART; AUC =", round(auc(cart_roc), 3)),
+                   paste("C5.0; AUC =", round(auc(C50_roc), 3)),
+                   paste("Random Forest; AUC =", round(auc(forest_roc), 3))
+                 )) +
   ggtitle("ROC Curves with AUC for Three Models") + 
   theme(legend.title = element_blank(), legend.position = c(.7, .3))
 ```
 
-In the ROC plot, the [*blue*]{style="color:blue"} curve represents CART, the [*orange*]{style="color:orange"} curve represents C5.0, and the [*green*]{style="color:green"} curve represents Random Forest. Take a moment to study the curves: Which model consistently stays closest to the top-left corner (the sweet spot for perfect classification)?
+The ROC curves illustrate how each model trades off sensitivity and specificity across different threshold values. Curves closer to the top-left corner indicate stronger discriminatory performance.
 
-The AUC values confirm the visual impression, with CART achieving an AUC of `r round(auc(cart_roc), 3)`, C5.0 an AUC of `r round(auc(C50_roc), 3)`, and Random Forest an AUC of `r round(auc(forest_roc), 3)`. Random Forest attains the highest AUC, although C5.0 performs very similarly. While these differences are genuine, they remain relatively small, highlighting that model selection should also consider factors such as simplicity, computational efficiency, and interpretability.
+The AUC values provide a concise summary of these curves. CART achieves an AUC of `r round(auc(cart_roc), 3)`, C5.0 an AUC of `r round(auc(C50_roc), 3)`, and Random Forest an AUC of `r round(auc(forest_roc), 3)`. Among the three models, Random Forest attains the highest AUC, although the difference relative to C5.0 is small.
 
-### Reflections and Takeaways {.unnumbered}
+These results highlight that, while ensemble methods often deliver improved discrimination, the gains over well-tuned single-tree models may be modest. Consequently, model selection should consider not only predictive performance but also factors such as interpretability, computational cost, and ease of deployment.
 
-This case study demonstrated how tree-based models (such as *CART*, *C5.0*, and *Random Forest*) can be applied to a real-world classification problem, following the Data Science Workflow from data preparation through model evaluation.
+> *Practice:* Repartition the `adult` dataset into a 70% training set and a 30% test set. For this new split, compute the ROC curves and AUC values for the CART, C5.0, and Random Forest models. Compare the results with those obtained earlier and reflect on how sensitive the AUC values are to the choice of data split.
 
-A major lesson from this analysis is the central importance of data preparation. Careful handling of missing values, consolidating categorical variables, and thoughtful selection of predictors were crucial for building models that are both interpretable and effective. Without these steps, even the most sophisticated algorithms would have struggled to find meaningful patterns.
-
-The different tree-based algorithms each showed distinct strengths. *CART* offered a simple, easily interpretable structure but was more limited in flexibility. *C5.0* produced deeper and more nuanced trees, delivering the highest accuracy and AUC in this case. *Random Forest* demonstrated how combining multiple trees could achieve strong predictive performance with reduced overfitting, although at the cost of model interpretability.
-
-Evaluating models through multiple lenses (confusion matrices, ROC curves, and AUC values) revealed important trade-offs that would have been invisible if we had focused only on overall accuracy. It also highlighted the effect of adjusting classification thresholds, showing how different cutoff points can shift the balance between sensitivity and specificity.
-
-Finally, this case study emphasized that there is rarely a "one-size-fits-all" model. While *C5.0* slightly outperformed the others here, model choice always depends on the specific goals, resource constraints, and interpretability needs of a project.
+This case study illustrated how different tree-based models behave when applied to the same real-world classification problem. By keeping data preparation, predictors, and evaluation procedures fixed, we were able to isolate the strengths and limitations of CART, C5.0, and Random Forests. These observations motivate the broader lessons summarized in the following section.
 
 ## Chapter Summary and Takeaways {#sec-ch11-summary}
 
-This chapter introduced decision trees and random forests as flexible, non-parametric methods for supervised learning. Decision trees partition the feature space recursively based on splitting criteria such as the Gini index or entropy, offering interpretable models capable of capturing complex relationships. We explored two widely used algorithms (*CART* and *C5.0*) and demonstrated how *random forests* aggregate multiple trees to improve predictive performance and robustness.
+In this chapter, we examined decision trees and random forests as flexible, non-parametric approaches to supervised learning. Decision trees construct predictive models by recursively partitioning the feature space using criteria such as the Gini index or entropy, resulting in rule-based structures that are easy to interpret and capable of capturing nonlinear relationships and interactions. We explored two widely used tree-building algorithms, CART and C5.0, and showed how random forests extend these ideas by aggregating many trees to improve predictive stability and generalization.
 
-The case study on income prediction illustrated the practical application of these methods, emphasizing the importance of careful data preparation, thoughtful model evaluation, and the consideration of trade-offs between accuracy, interpretability, and computational efficiency. While C5.0 achieved the highest predictive performance in this example, model choice should always reflect the specific goals and constraints of the analysis.
+Through the income prediction case study, we demonstrated how these methods can be applied in practice within the Data Science Workflow. The analysis highlighted the importance of careful data preparation, consistent model setup, and evaluation using multiple performance measures. Although C5.0 achieved the strongest performance in this particular example, the comparison also underscored that no single model is universally optimal. Model choice must reflect the goals of the analysis, the need for interpretability, and available computational resources.
 
-*Reflection*: Tree-based models provide a natural balance between flexibility and interpretability. Single decision trees are transparent and easy to communicate but risk overfitting when grown too deeply. Ensemble methods such as random forests improve predictive accuracy at the cost of interpretability. As you move forward, consider how the complexity of a model aligns with the demands of the problem: when simplicity and explanation are paramount, shallow trees may suffice; when predictive power is critical, ensembles may be preferable.
+More broadly, tree-based models illustrate a fundamental trade-off in data science. Single decision trees offer transparency and ease of communication but are prone to overfitting when allowed to grow too complex. Ensemble methods such as random forests substantially improve predictive accuracy and robustness by averaging across many trees, at the cost of reduced interpretability. Effective modeling therefore requires balancing predictive performance against the need for explanation and simplicity, depending on the context in which the model will be used.
 
-You are encouraged to engage with the exercises provided at the end of the chapter, which reinforce the techniques discussed and build practical modeling skills. In the next chapter, the focus shifts to neural networks, extending the modeling toolkit to even more flexible, nonlinear approaches.
+The exercises at the end of this chapter provide further opportunities to practice building, evaluating, and interpreting tree-based models. In the next chapter, we extend the modeling toolkit to neural networks, which offer even greater flexibility for capturing complex nonlinear patterns, while introducing new challenges related to tuning, interpretation, and model transparency.
 
 ## Exercises {#sec-ch11-exercises}
 
-Ready to put theory into practice? The exercises below invite you to test your understanding of Decision Trees and Random Forests through conceptual questions and hands-on modeling with real datasets.
+The following exercises reinforce the concepts and methods introduced in this chapter through a combination of conceptual questions and hands-on modeling tasks. All exercises are designed to be implemented in R. They are organized into three levels: core exercises that focus on essential concepts and interpretation, applied exercises that involve end-to-end modeling with real datasets, and challenge exercises that encourage deeper exploration and critical reflection.
 
-#### Conceptual Questions {.unnumbered}
+#### Conceptual Questions (Core) {.unnumbered}
 
-1.  Explain the basic structure of a Decision Tree and how it makes predictions.
+1.  Describe the basic structure of a decision tree and explain how a tree makes predictions for a new observation.
 
-2.  What are the key differences between classification trees and regression trees?
+2.  Explain the difference between a classification tree and a regression tree. What is predicted at a terminal leaf in each case?
 
-3.  What is the purpose of splitting criteria in Decision Trees? Describe the Gini Index, Entropy, and Variance Reduction.
+3.  Explain the role of splitting criteria in decision trees. Describe the Gini index and entropy for classification, and variance reduction for regression.
 
-4.  Why are Decision Trees prone to overfitting? What techniques can be used to prevent it?
+4.  Explain why decision trees are prone to overfitting. Describe two strategies for controlling tree complexity.
 
-5.  Define pre-pruning and post-pruning in Decision Trees. How do they differ?
+5.  Define pre-pruning and post-pruning. How do they differ in terms of when complexity is controlled?
 
-6.  Explain the bias-variance tradeoff in Decision Trees.
+6.  Explain the bias-variance trade-off in the context of decision trees and random forests.
 
-7.  What are the advantages and disadvantages of Decision Trees compared to logistic regression for classification problems?
+7.  Compare decision trees with logistic regression for a binary classification problem. Discuss advantages and disadvantages in terms of interpretability and predictive performance.
 
-8.  What is the role of the maximum depth parameter in a Decision Tree? How does it affect model performance?
+8.  Explain how bagging (bootstrap aggregation) reduces variance. Why does bagging help decision trees in particular?
 
-9.  Why might a Decision Tree favor continuous variables over categorical variables when constructing splits?
+9.  Explain how random feature selection at each split contributes to the performance of random forests.
 
-10. Explain the differences between CART (Classification and Regression Trees) and C5.0 Decision Trees.
+10. Describe majority voting in random forest classification. How is aggregation performed for random forest regression?
 
-11. What is the fundamental difference between Decision Trees and Random Forests?
+11. Explain how variable importance is computed and interpreted in random forests. What are important caveats?
 
-12. How does bagging (Bootstrap Aggregation) improve Random Forest models?
+12. Discuss two limitations of random forests and describe situations where a single decision tree may be preferred.
 
-13. Explain how majority voting works in a Random Forest classification task.
+#### Hands-On Practice (Applied): Classification with the `churn_mlc` Dataset {.unnumbered}
 
-14. Why does a Random Forest tend to outperform a single Decision Tree?
-
-15. How can we determine feature importance in a Random Forest model?
-
-16. What are the limitations of Random Forests?
-
-17. How does increasing the number of trees (`ntree`) affect model performance?
-
-#### Hands-On Practice: Classification with the *churn* Dataset {.unnumbered}
-
-In the case study of the previous chapter (Section [-@sec-ch10-case-study]), we fitted Logistic Regression, Naive Bayes, and k-Nearest Neighbors models to the *churn* dataset using the Data Science Workflow. Here, we extend the analysis by applying tree-based models: Decision Trees (CART and C5.0) and Random Forests. You can reuse the earlier data preparation code and directly compare the new models with those from the previous case study to deepen your understanding of classification techniques.
-
-The *churn* dataset contains information about customer churn behavior in a telecommunications company. The goal is to predict whether a customer will churn based on various attributes.
+In Chapter [-@sec-ch10-case-study], we fitted logistic regression, Naive Bayes, and k-Nearest Neighbors models to `churn_mlc` using the Data Science Workflow. In this set of exercises, we extend the analysis by fitting tree-based models and comparing their performance to earlier methods. You can reuse your earlier data preparation and partitioning code.
 
 ##### Data Setup for Modeling {.unnumbered}
 
-18. Load the *churn* dataset and generate a summary. Identify the target variable and the predictors to be used in the analysis.
+13. Load `churn_mlc`, inspect its structure, and identify the response variable and candidate predictors.
 
-19. Partition the dataset into a training set (80%) and a test set (20%) using the `partition()` function from the **liver** package. For reproducibility, use the same random seed as in Section [-@sec-ch10-case-study].
+14. Partition the dataset into a training set (80%) and a test set (20%) using the `partition()` function from the **liver** package. Use the same random seed as in Section [-@sec-ch10-case-study].
 
-##### Modeling with Decision Trees (CART) {.unnumbered}
+15. Verify that the class distribution of the response variable is similar in the training and test sets. Briefly explain why this matters for model evaluation.
 
-20. Fit a Decision Tree using the CART algorithm, with `churn` as the response variable and the following predictors: `account.length`, `voice.plan`, `voice.messages`, `intl.plan`, `intl.mins`, `intl.calls`, `day.mins`, `day.calls`, `eve.mins`, `eve.calls`, `night.mins`, `night.calls`, and `customer.calls`. (See Section [-@sec-ch10-case-study] for the rationale behind these predictor choices.)
+##### Modeling with CART {.unnumbered}
 
-21. Visualize the fitted Decision Tree using `rpart.plot()`. Interpret the main decision rules.
+16. Fit a classification tree using CART with `churn` as the response variable and the following predictors: `account_length`, `voice_plan`, `voice_messages`, `intl_plan`, `intl_mins`, `intl_calls`, `day_mins`, `day_calls`, `eve_mins`, `eve_calls`, `night_mins`, `night_calls`, and `customer_calls`.
 
-22. Identify the most important predictors in the tree.
+17. Visualize the fitted tree using `rpart.plot()`. Identify the first split and interpret it in plain language.
 
-23. Compute the confusion matrix and evaluate model performance.
+18. Evaluate the CART model on the test set using a confusion matrix with cutoff 0.5. Report accuracy, sensitivity, and specificity.
 
-24. Plot the ROC curve and compute the AUC for the CART model.
+19. Compute the ROC curve and AUC for the CART model. Compare the conclusions from AUC to those from the confusion matrix.
 
-25. Evaluate the effect of pruning the tree by adjusting the complexity parameter (`cp`).
+20. Investigate pruning by fitting at least two additional CART models with different values of the complexity parameter `cp`. Compare their test-set performance and the resulting tree sizes.
 
-##### Modeling with Decision Trees (C5.0) {.unnumbered}
+##### Modeling with C5.0 {.unnumbered}
 
-26. Fit a C5.0 Decision Tree using the same predictors as in the CART model.
+21. Fit a C5.0 classification tree using the same predictors as in the CART model.
 
-27. Compare the structure and accuracy of the C5.0 tree with the CART tree.
-
-28. Compare the confusion matrices and overall classification accuracies between the CART and C5.0 models.
+22. Compare C5.0 and CART in terms of interpretability and predictive performance on the test set. Use confusion matrices and AUC to support your comparison.
 
 ##### Modeling with Random Forests {.unnumbered}
 
-29. Fit a Random Forest model using the same predictors.
+23. Fit a random forest classifier using the same predictors. Use `ntree = 100`.
 
-30. Identify the most important predictors using `varImpPlot()`.
+24. Evaluate the random forest on the test set using a confusion matrix (cutoff 0.5) and report accuracy, sensitivity, and specificity.
 
-31. Compare the accuracy of the Random Forest model to the CART and C5.0 models.
+25. Compute the ROC curve and AUC for the random forest. Compare the AUC values for CART, C5.0, and random forest and summarize the main trade-offs you observe.
 
-32. Compute the confusion matrix for the Random Forest model.
+#### Hands-On Practice (Applied): Regression Trees and Random Forests with the `red_wines` Dataset {.unnumbered}
 
-33. Plot the ROC curve and compute the AUC for the Random Forest model.
-
-34. Set `ntree = 200` and assess whether increasing the number of trees improves accuracy.
-
-35. Use `tuneRF()` to find the optimal value for `mtry`.
-
-36. Predict churn probabilities for a new customer using the Random Forest model.
-
-37. Train a Random Forest model using only the top three most important features.
-
-38. Evaluate whether the simplified Random Forest model performs comparably to the full model.
-
-#### Regression Trees and Random Forests {.unnumbered}
-
-We now turn to regression tasks, using the *redWines* dataset from **liver** package to predict wine quality.
-
-##### Conceptual Questions {.unnumbered}
-
-39. How does a regression tree differ from a classification tree?
-
-40. How is Mean Squared Error (MSE) used to evaluate regression trees?
-
-41. Why is Random Forest regression often preferred over a single regression tree?
-
-##### Hands-On Practice: Regression with the redWines Dataset {.unnumbered}
-
-Apply your understanding to a practical regression problem.
+In this part, we focus on regression using `red_wines` from the **liver** package.
 
 ##### Data Setup for Modeling {.unnumbered}
 
-Load the *redWines* dataset and partition it into a training set (70%) and a test set (30%).
+26. Load `red_wines`, inspect its structure, and identify the response variable used in the dataset for regression.
 
-```{r}
-data(redWines, package = "liver")
-
-set.seed(42)
-
-data_sets = partition(data = redWines, ratio = c(0.7, 0.3))
-
-train_set = data_sets$part1
-test_set  = data_sets$part2
-
-test_labels = test_set$quantity
-```
+27. Partition the dataset into a training set (70%) and a test set (30%). Use `set.seed(42)` for reproducibility.
 
 ##### Modeling and Evaluation {.unnumbered}
 
-42. Fit a regression tree predicting `quantity` based on all predictors.
+28. Fit a regression tree predicting the response variable based on all available predictors.
 
-43. Visualize the regression tree and interpret the main decision rules.
+29. Visualize the fitted regression tree. Identify the first split and interpret it in terms of how it changes the predicted outcome.
 
-44. Compute the MSE of the regression tree on the test set.
+30. Predict outcomes for the test set and compute the mean squared error (MSE). Also report the root mean squared error (RMSE).
 
-45. Fit a Random Forest regression model and compute its MSE.
+31. Fit a random forest regression model using the same predictors. Use `ntree = 200`.
 
-46. Compare the predictive performance of the Random Forest and the regression tree models.
+32. Compute test-set MSE and RMSE for the random forest model and compare results to the regression tree.
 
-47. Identify the top three most important predictors in the Random Forest model.
+33. Use `varImpPlot()` to identify the top five most important predictors in the random forest. Provide a short interpretation of why these predictors may matter.
 
-48. Predict wine quality for a new observation with the following attributes: `fixed.acidity = 8.5`, `volatile.acidity = 0.4`, `citric.acid = 0.3`, `residual.sugar = 2.0`, `chlorides = 0.08`, `free.sulfur.dioxide = 30`, `total.sulfur.dioxide = 100`, `density = 0.995`, `pH = 3.2`, `sulphates = 0.6`, `alcohol = 10.5`.
+34. Perform cross-validation (or repeated train-test splitting) to compare the stability of regression tree and random forest performance. Summarize your findings.
 
-49. Perform cross-validation to compare the regression tree and Random Forest models.
+#### Hands-On Practice (Challenge): High-Dimensional Classification with the `caravan` Dataset {.unnumbered}
 
-50. Reflect: Based on your findings, does the Random Forest significantly improve prediction accuracy compared to the single regression tree?
-
-##### Hands-On Practice: Regression with the *caravan* Dataset {.unnumbered}
-
-The *caravan* dataset from the **liver** package includes 5,822 customer records with 86 variables: 43 sociodemographic features and 43 indicators of insurance product ownership. The target variable, `Purchase`, shows whether a customer bought a caravan insurance policy. Originally collected for the CoIL 2000 Challenge, it aims to predict which customers are most likely to purchase such a policy.
+The `caravan` dataset in the **liver** package includes sociodemographic variables and indicators of insurance product ownership. The response variable, `Purchase`, indicates whether a customer bought a caravan insurance policy.
 
 ##### Data Setup for Modeling {.unnumbered}
 
-51. Load the *caravan* dataset and review its structure. Identify the response variable and the predictors.
+35. Load `caravan`, inspect its structure, and identify the response variable and predictor set. Report the proportion of customers with `Purchase = "Yes"`.
 
-52. Partition the dataset into a training set (70%) and a test set (30%) using the `partition()` function from the **liver** package. Use `set.seed(42)` for reproducibility.
+36. Partition the dataset into a training set (70%) and a test set (30%) using `partition()`. Use `set.seed(42)`.
 
-##### Modeling and Evaluation {.unnumbered}
+37. Fit a CART classification tree to predict `Purchase`. Evaluate performance on the test set using a confusion matrix and AUC. Comment on performance in light of class imbalance.
 
-53. Fit a regression tree predicting `Purchase` based on all available predictors. Interpret the main decision rules and identify the strongest predictors.
+##### Random Forest Classification and Tuning {.unnumbered}
 
-54. Fit a Random Forest regression model using the same predictors and compare its performance with the regression tree using Mean Squared Error (MSE).
+38. Fit a random forest classifier to predict `Purchase`. Evaluate performance using a confusion matrix and AUC. Compare results to CART.
 
-55. Use `varImpPlot()` to identify the five most important predictors. Which types of variables (sociodemographic or product ownership) appear most influential?
+39. Use `varImpPlot()` to identify the ten most important predictors. Discuss whether sociodemographic variables or product-ownership variables appear more influential.
 
-56. Predict the probability of caravan insurance purchase for a new customer with average sociodemographic characteristics and moderate ownership across other insurance products.
-
-57. Reflect: Does the Random Forest model substantially outperform the single regression tree? What insights can you draw about customer targeting and model interpretability?
+40. Tune the random forest by adjusting `mtry` (for example using `tuneRF()` or a small grid search). Report the tuned value and evaluate whether performance improves on the test set.

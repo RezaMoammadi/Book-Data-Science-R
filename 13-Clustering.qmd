@@ -22,88 +22,81 @@ We are pattern-seeking animals.
 ::::
 :::::
 
-Imagine walking into a grocery store and seeing shelves lined with cereal boxes. Without reading a single label, you might instinctively group them by shape, size, or color. Clustering algorithms aim to replicate this kind of human intuition—grouping similar items based on shared characteristics, even when no categories are given.
+Imagine walking into a grocery store and seeing shelves lined with cereal boxes. Without reading a single label, you might still group products by visible cues such as shape, size, or color. Clustering methods support a similar goal in data analysis: they organize observations into groups based on measured similarity, even when no categories are provided.
 
-How do apps know your habits when you never told them? From fitness trackers that sort users into behavioral types to streaming platforms that recommend shows tailored to your taste, machines often uncover structure in data without relying on labels. This process (known as *clustering*) enables systems to learn from raw, unlabeled information.
+How do apps seem to recognize user habits when no one has explicitly labeled the data? Fitness trackers may group users into behavioral profiles, and streaming platforms may identify viewing patterns that support recommendation. In such settings, clustering provides a way to uncover structure in unlabeled data and to summarize large collections of observations into a smaller number of representative groups.
 
-Clustering is a form of *unsupervised learning* that groups similar data points based on measurable traits, rather than predefined categories. It powers real-world applications such as customer segmentation, gene family discovery, and content recommendation. By organizing complex information into meaningful groups, clustering helps machines detect patterns and uncover structure hidden in the data.
+Clustering is a form of unsupervised learning that partitions data into clusters so that observations within the same cluster are more similar to one another than to observations in other clusters. Unlike classification, which predicts known labels (for example, spam versus not spam), clustering is exploratory: it proposes groupings that can guide interpretation, generate hypotheses, and support downstream analysis.
 
-Unlike classification, which predicts known labels (e.g., spam vs. not spam), clustering is *exploratory*. It reveals *hidden structures* (patterns that may not be immediately visible but are statistically meaningful). As such, clustering is a key part of the data scientist’s toolkit when the objective is *discovery* rather than prediction.
-
-Clustering is widely used across domains, including customer segmentation for identifying distinct user groups for personalized marketing, market research for understanding consumer behavior to improve product recommendations, document organization for automatically grouping large text collections by topic or theme, and bioinformatics for uncovering functional relationships between genes through expression pattern similarity.
+Because many practical datasets do not come with a clear outcome variable, clustering is widely used as an early step in data science projects. Common applications include customer segmentation, grouping documents by topic, and identifying patterns in biological measurements.
 
 ### What This Chapter Covers {.unnumbered}
 
-In this chapter, we introduce our first unsupervised learning technique (clustering) and continue progressing through the Data Science Workflow introduced in Chapter [-@sec-ch2-intro-data-science]. So far, our focus has been on supervised learning, applying models for classification and regression tasks, including neural networks (Chapter [-@sec-ch12-neural-networks]), tree-based methods (Chapter [-@sec-ch11-tree-models]), and regression analysis (Chapter [-@sec-ch10-regression]).
+This chapter introduces clustering as a core technique in unsupervised learning and continues the progression of the Data Science Workflow presented in Chapter [-@sec-ch2-intro-data-science]. In previous chapters, we focused on supervised learning methods for classification and regression, including regression models (Chapter [-@sec-ch10-regression]), tree-based approaches (Chapter [-@sec-ch11-tree-models]), and neural networks (Chapter [-@sec-ch12-neural-networks]). These methods rely on labeled data and well-defined outcome variables.
 
-Clustering now opens the door to data exploration when no labels are available, shifting our mindset from prediction to pattern discovery.
+Clustering addresses a different analytical setting: exploration without labels. Rather than predicting known outcomes, the goal is to uncover structure, summarize patterns, and support insight generation when no response variable is available.
 
-This chapter introduces the foundations of clustering, including:
+In this chapter, we examine:
 
--   The core idea of clustering and how it differs from classification,
+-   the fundamental principles of clustering and its distinction from classification,
 
--   How similarity is defined and measured in clustering algorithms,
+-   how similarity is defined and measured in clustering algorithms,
 
--   *K-means clustering*, one of the most intuitive and widely used methods,
+-   the K-means algorithm as a widely used clustering method, and
 
--   A hands-on case study: segmenting cereals based on their nutritional profiles.
+-   a case study that applies clustering to segment cereal products based on nutritional characteristics.
 
-By the end of the chapter, you will be able to apply clustering techniques to real-world datasets, evaluate cluster quality, and uncover meaningful patterns from unlabeled data.
+The chapter concludes with exercises that provide hands-on experience with clustering using real-world datasets, encouraging you to explore how design choices such as feature selection, scaling, and the number of clusters influence the resulting groupings.
+
+By the end of the chapter, you will be able to apply clustering techniques to unlabeled datasets, make informed choices about similarity measures and the number of clusters, and interpret clustering results in a substantive, domain-aware manner.
 
 ## What is Cluster Analysis? {#sec-ch13-cluster-what}
 
-Clustering is an unsupervised learning technique that organizes data into *clusters* of similar observations. Unlike supervised learning, which relies on labeled data, clustering is *exploratory* in nature, aiming to uncover *hidden patterns* or *latent structure* in raw data. A good clustering groups data points so that members of the same cluster are highly similar to one another, while those in different clusters are clearly distinct.
+Clustering is an unsupervised learning technique that organizes data into groups, or *clusters*, of similar observations. Unlike supervised learning, which relies on labeled examples, clustering is exploratory: it aims to reveal structure in data when no outcome variable is available. A well-constructed clustering groups observations so that those within the same cluster are more similar to one another than to observations assigned to different clusters.
 
-To better understand what makes clustering unique, it helps to compare it with *classification*, as introduced in Chapters [-@sec-ch7-classification-knn] and [-@sec-ch9-bayes]. *Classification* assigns new observations to known categories based on past examples (like identifying an email as spam or not spam). *Clustering*, by contrast, discovers groupings from unlabeled data. It generates labels rather than predicting existing ones, which is why it is sometimes loosely referred to as *unsupervised classification*, even though no labels are provided during training. These cluster labels can also be used downstream (for example, as input features for neural networks or tree-based models).
+To clarify this distinction, it is helpful to contrast clustering with *classification*, introduced in Chapters [-@sec-ch7-classification-knn] and [-@sec-ch9-bayes]. Classification assigns new observations to predefined categories based on labeled training data. Clustering, by contrast, infers groupings directly from the data itself. The resulting cluster labels are not known in advance and should be interpreted as analytical constructs rather than ground truth. In practice, such labels are often used to support interpretation or as derived features in downstream models, including neural networks and tree-based methods.
 
-The core objective of clustering is to ensure *high intra-cluster similarity* (points in the same cluster are alike) and *low inter-cluster similarity* (clusters are distinct). This idea is illustrated in @fig-ch13-cluster-1, where tight, well-separated groups represent an effective clustering.
+The objective of clustering is to achieve *high intra-cluster similarity* and *low inter-cluster similarity*. This principle is illustrated in @fig-ch13-cluster-1, where compact, well-separated groups correspond to an effective clustering solution.
 
 ```{r fig-ch13-cluster-1, echo = FALSE, out.width = "70%", fig.cap = "Clustering algorithms aim to minimize intra-cluster variation while maximizing inter-cluster separation."}
 knitr::include_graphics("images/ch13_cluster_illustration.png")
 ```
 
-Beyond helping us explore structure in data, clustering also plays a practical role in broader machine learning workflows. It is often used as a powerful *preprocessing tool*, summarizing a dataset into a smaller number of representative groups. This can:
+Beyond exploratory analysis, clustering often plays a practical role within broader machine learning workflows. By summarizing large datasets into a smaller number of representative groups, clustering can reduce computational complexity, improve interpretability, and support subsequent modeling tasks.
 
--   Reduce computation time for downstream models,
+Because many clustering methods rely on distance or similarity calculations, appropriate data preparation is essential. Features measured on different scales can disproportionately influence similarity, and categorical variables must be encoded numerically to be included in distance-based analyses. Without such preprocessing, clustering results may reflect artifacts of measurement rather than meaningful structure in the data.
 
--   Improve interpretability by simplifying complex data structures, and
-
--   Enhance predictive performance by transforming raw inputs into structured features.
-
-Before clustering can be applied effectively, the data often need to be preprocessed. Features measured on different scales can distort similarity measures, and categorical variables must be encoded numerically. These steps (such as scaling and one-hot encoding) not only improve algorithm performance but also ensure that the resulting clusters reflect meaningful structure.
-
-What makes two observations feel similar (and how do machines measure that)? Let us break it down in the next section.
+These considerations lead naturally to a central question: how do clustering algorithms quantify similarity between observations? We address this next.
 
 ### How Do Clustering Algorithms Measure Similarity? {.unnumbered}
 
-At the heart of clustering lies a fundamental question: *How similar are these data points?* Clustering algorithms answer this using *similarity measures* (quantitative tools for assessing how close or far apart two observations are). Choosing the right measure is essential for discovering meaningful clusters.
+At the core of clustering lies a fundamental question: *how similar are two observations?* Clustering algorithms address this question through *similarity measures*, which quantify the degree to which observations resemble one another. The choice of similarity measure is critical, as it directly shapes the structure of the resulting clusters.
 
-For numerical data, one of the most commonly used similarity measures is *Euclidean distance* (the straight-line distance between two points in space). You may recall this from the *k*-Nearest Neighbors algorithm (Section [-@sec-ch7-knn-distance-metrics]), where it helped identify the “nearest” neighbors. In clustering, it plays a similar role in grouping nearby observations together.
+For numerical features, the most commonly used measure is *Euclidean distance*, which captures the straight-line distance between two points in feature space. This measure was previously introduced in the context of the k-Nearest Neighbors algorithm (Section [-@sec-ch7-knn-distance-metrics]). In clustering, Euclidean distance plays a related role by determining which observations are considered close enough to belong to the same group.
 
-The Euclidean distance between two data points $x = (x_1, x_2, \ldots, x_n)$ and $y = (y_1, y_2, \ldots, y_n)$ with $n$ features is calculated as:
-
-$$
-\text{dist}(x, y) = \sqrt{ \sum_{i=1}^n (x_i - y_i)^2}
+Formally, the Euclidean distance between two observations\
+$x = (x_1, x_2, \ldots, x_n)$ and\
+$y = (y_1, y_2, \ldots, y_n)$\
+with $n$ features is defined as: $$
+\text{dist}(x, y) = \sqrt{ \sum_{i=1}^n (x_i - y_i)^2 }.
 $$
 
 ```{r}
 #| label: fig-ch13-euclidean-distance
 #| out.width: "70%"
-#| fig-cap: "Visual representation of Euclidean distance between two points in 2D space."
+#| fig-cap: "Visual representation of Euclidean distance between two points in two-dimensional space."
 #| echo: false
 
 # Define two points
 point1 <- c(2, 3)
 point2 <- c(6, 7)
 
-# Data frame for the two points
 points_df <- data.frame(
   x = c(point1[1], point2[1]),
   y = c(point1[2], point2[2]),
   label = c("A (2, 3)", "B (6, 7)")
 )
 
-# Data frame for the segment between the two points
 segment_df <- data.frame(
   x = point1[1],
   y = point1[2],
@@ -111,57 +104,44 @@ segment_df <- data.frame(
   yend = point2[2]
 )
 
-# Compute Euclidean distance
 euclidean_distance <- sqrt(sum((point1 - point2)^2))
 
-# Plot
 ggplot(points_df, aes(x = x, y = y)) +
-  geom_text(aes(label = label), vjust = -1.3, size = 5, color = "#377EB8") +
+  geom_text(aes(label = label), vjust = -1.3, size = 5) +
   geom_segment(data = segment_df,
                aes(x = x, y = y, xend = xend, yend = yend),
-               color = "#E66101", size = 1) +
+               size = 1) +
   annotate("text", x = 2.8, y = 5.4,
            label = paste0("Distance = ", round(euclidean_distance, 2)),
-           color = "#E66101", size = 5.5) +
-  geom_point(shape = 21, size = 4, stroke = 0.8, fill = "white", color = "#377EB8") +
+           size = 5.5) +
+  geom_point(size = 3, alpha  = 1) +
   xlim(0, 8) + ylim(0, 8) +
-  #coord_fixed(xlim = c(0, 8), ylim = c(0, 8), expand = TRUE) +
   labs(x = "X", y = "Y", title = "Euclidean Distance Between Two Points")
 ```
 
-In @fig-ch13-euclidean-distance, the line connecting Point A (2, 3) and Point B (6, 7) represents their Euclidean distance: $$
+As illustrated in @fig-ch13-euclidean-distance, Euclidean distance captures the geometric separation between two points. For Point A=(2, 3) and Point B=(6, 7), this distance is $$
 \text{dist}(A, B) = \sqrt{(6 - 2)^2 + (7 - 3)^2} = \sqrt{32} \approx 5.66.
-$$
+$$ While this interpretation is straightforward in two dimensions, clustering algorithms typically operate in much higher-dimensional spaces, often involving dozens or hundreds of features.
 
-While this is easy to visualize in two dimensions, clustering usually takes place in much higher dimensions, across dozens or even hundreds of features.
+Because distance calculations are sensitive to feature scales and data representation, appropriate preprocessing is essential. Features measured on different scales can dominate similarity calculations simply due to their units, making *feature scaling* a necessary step in distance-based clustering. Likewise, categorical variables must be converted into numerical form, for example through one-hot encoding, before they can be included in distance computations. Without these preparations, clustering results may reflect artifacts of measurement rather than meaningful structure in the data.
 
-Before we can meaningfully apply distance-based clustering, we must prepare the data:
-
--   *Feature scaling* (e.g., min-max scaling) ensures that no variable dominates the calculation simply because of its unit or range.
-
--   *Categorical variables* must be numerically encoded (e.g., with one-hot encoding) to be included in distance computations.
-
-Without these steps, even a good algorithm may find *spurious patterns* or miss *real ones*. Getting similarity right is the foundation of meaningful clustering.
-
-Other similarity measures (such as *Manhattan distance* or *cosine similarity*) are also used in specific contexts, but Euclidean distance remains the default for many clustering tasks.
+Although Euclidean distance is the default choice in many clustering algorithms, alternative measures such as Manhattan distance or cosine similarity are better suited to specific data types and analytical goals. Selecting an appropriate similarity measure is therefore a substantive modeling decision, not merely a technical detail.
 
 ## K-means Clustering {#sec-ch13-kmeans}
 
-How does an algorithm decide which points belong together? K-means clustering answers this by iteratively grouping observations into $k$ clusters, where each group contains data points that are similar to one another. The algorithm updates the cluster assignments and centers until the structure stabilizes, resulting in a set of well-separated clusters.
+How does an algorithm decide which observations belong together? K-means clustering addresses this question by representing each cluster through a *centroid* and assigning observations to the nearest centroid based on distance. By alternating between assignment and update steps, the algorithm gradually refines both the cluster memberships and their representative centers, leading to a stable partition of the data.
 
-The K-means algorithm requires the user to specify the number of clusters, $k$, in advance. It proceeds through the following steps:
+The K-means algorithm requires the number of clusters, $k$, to be specified in advance. Given a choice of $k$, the algorithm proceeds as follows:
 
-1.  *Initialize:* Randomly select $k$ data points as initial cluster centers.
+1.  *Initialization:* Select $k$ initial cluster centers, typically at random.
 
-2.  *Assign:* Assign each data point to the nearest center based on distance.
+2.  *Assignment:* Assign each observation to the nearest cluster center.
 
-3.  *Update:* Recalculate each cluster’s centroid (mean of its assigned points).
+3.  *Update:* Recompute each cluster center as the mean of the observations assigned to it.
 
-4.  *Repeat:* Iterate steps 2 and 3 until no data points change clusters.
+4.  *Iteration:* Repeat the assignment and update steps until cluster memberships no longer change.
 
-Although K-means is simple and efficient, it has limitations. The final clusters depend heavily on the initial choice of cluster centers, meaning different runs of the algorithm may produce different results. In addition, K-means assumes that clusters are spherical and of similar size, which may not always hold in real-world datasets. It is also sensitive to outliers, which can distort centroids and assignments.
-
-To illustrate how K-means works, consider a dataset with 50 records and two features, $x_1$ and $x_2$, as shown in @fig-ch13-example-1. The task is to partition the data into three clusters.
+To illustrate these steps, consider a dataset consisting of 50 observations with two features, $x_1$ and $x_2$, shown in @fig-ch13-example-1. The goal is to partition the data into three clusters.
 
 ```{r}
 #| label: fig-ch13-example-1
@@ -172,104 +152,92 @@ To illustrate how K-means works, consider a dataset with 50 records and two feat
 knitr::include_graphics("images/ch13_example_fig_1.png")
 ```
 
-In the first step, three data points are randomly selected as initial cluster centers (red stars), shown in the left panel of @fig-ch13-example-2. Each data point is then assigned to the nearest cluster, forming three groups labeled in blue (Cluster A), green (Cluster B), and orange (Cluster C). The right panel of the figure shows these initial assignments. The dashed lines depict the Voronoi diagram, which partitions the space into regions closest to each center.
+The algorithm begins by selecting three observations as initial cluster centers, illustrated by red stars in the left panel of @fig-ch13-example-2. Each data point is then assigned to its nearest center, producing an initial clustering shown in the right panel. The dashed lines indicate the corresponding Voronoi regions, which partition the feature space according to proximity to each center.
 
 ```{r}
 #| label: fig-ch13-example-2
 #| out.width: "100%"
-#| fig-cap: "First iteration of K-means clustering. Left panel shows randomly initialized cluster centers (red stars); right panel shows the resulting initial assignments and Voronoi regions."
+#| fig-cap: "First iteration of K-means clustering. Initial cluster centers (red stars) and the resulting assignments with Voronoi regions."
 #| echo: false
 
 knitr::include_graphics("images/ch13_example_fig_2.png")
 ```
 
-Because K-means is sensitive to initialization, poor placement of the initial cluster centers can lead to suboptimal results. To address this, the *K-means++* algorithm [@arthur2006k] was introduced in 2007. It selects starting points in a more informed way, improving convergence and reducing variability across different initializations.
-
-After the initial assignment, the algorithm enters the update phase. It recalculates the centroid of each cluster (that is, the mean position of all points in the group). The original cluster centers are updated by moving them to these new centroids, as shown in the left panel of @fig-ch13-example-3. The right panel shows how the Voronoi boundaries shift, causing some points to be reassigned.
+After the initial assignment, the algorithm updates the cluster centers by computing the centroid of each group. These updated centroids are shown in the left panel of @fig-ch13-example-3. As the centers move, the Voronoi boundaries shift, causing some observations to be reassigned, as shown in the right panel.
 
 ```{r}
 #| label: fig-ch13-example-3
 #| out.width: "100%"
-#| fig-cap: "Second iteration of K-means clustering. Left panel shows updated cluster centroids; right panel displays new assignments and the corresponding Voronoi regions."
+#| fig-cap: "Second iteration of K-means clustering. Updated cluster centroids and revised assignments."
 #| echo: false
 
 knitr::include_graphics("images/ch13_example_fig_3.png")
 ```
 
-This process of reassigning points and updating centroids continues iteratively. After another update, some points switch clusters again, leading to a refined partition of the space, as seen in @fig-ch13-example-4.
+This process of reassignment and centroid update continues iteratively. With each iteration, the cluster structure becomes more stable, as illustrated in @fig-ch13-example-4. Eventually, no observations change clusters, and the algorithm converges, producing the final clustering shown in @fig-ch13-example-5.
 
 ```{r}
 #| label: fig-ch13-example-4
 #| out.width: "100%"
-#| fig-cap: "Third iteration of K-means clustering. Cluster centroids and point assignments are updated again as the algorithm continues refining the groupings."
+#| fig-cap: "Later iteration of K-means clustering, showing further refinement of cluster assignments."
 #| echo: false
 
 knitr::include_graphics("images/ch13_example_fig_4.png")
 ```
 
-The algorithm continues until no more data points switch clusters. At this point, it has converged, and the final clusters are established, as shown in @fig-ch13-example-5.
-
 ```{r}
 #| label: fig-ch13-example-5
-#| out.width: "45%"
-#| fig-cap: "Final iteration of K-means clustering. Each data point is assigned to a stable cluster after convergence."
+#| out.width: "55%"
+#| fig-cap: "Final clustering after convergence, with stable cluster assignments."
 #| echo: false
 
 knitr::include_graphics("images/ch13_example_fig_5.png")
 ```
 
-Once clustering is complete, the results can be summarized in two ways:
+Once the algorithm has converged, the results can be summarized in two complementary ways: the *cluster assignments*, which indicate the group membership of each observation, and the *cluster centroids*, which serve as representative profiles of the clusters. These centroids are particularly useful in applications such as customer segmentation, image compression, and document clustering, where the goal is to reduce complexity while preserving meaningful structure.
 
--   *Cluster assignments:* Each data point is labeled as belonging to Cluster A, B, or C.
+Despite its simplicity and efficiency, K-means has important limitations. The solution depends on the initial placement of cluster centers, meaning that different runs may yield different results. The algorithm also assumes clusters of roughly spherical shape and similar size and is sensitive to outliers, which can distort centroid locations. In practice, techniques such as multiple random starts or the K-means++ initialization strategy [@arthur2006k] are commonly used to mitigate these issues.
 
--   *Centroid coordinates:* The final positions of the cluster centers can be used as representative points.
-
-These centroids are particularly useful in applications such as customer segmentation, image compression, and document clustering, where the goal is to reduce complexity while preserving meaningful structure.
-
-This simple example illustrates the core mechanics of K-means. But choosing how many clusters to use (our next topic) is just as critical to achieving meaningful results.
+This example illustrates the mechanics of K-means clustering. An equally important question, however, concerns the choice of the number of clusters, which we address next.
 
 ## Selecting the Optimal Number of Clusters {#sec-ch13-kmeans-choose}
 
-A central challenge in applying K-means clustering is determining the appropriate number of clusters, $k$. This choice directly affects the outcome: too few clusters may obscure important structure, while too many may overfit the data and lead to fragmentation. Unlike supervised learning (where performance metrics such as accuracy or AUC guide model selection), clustering lacks an external ground truth, making the selection of $k$ inherently more subjective.
+A central challenge in applying K-means clustering is determining an appropriate number of clusters, $k$. This choice has a direct impact on the resulting partition: too few clusters may obscure meaningful structure, whereas too many may fragment the data and reduce interpretability. Unlike supervised learning, where performance metrics such as accuracy or AUC guide model selection, clustering lacks an external ground truth. As a result, the choice of $k$ is inherently subjective, though not arbitrary.
 
-In practice, domain knowledge can offer initial guidance. For instance, when clustering films, the number of well-established genres might suggest a reasonable starting point. In marketing, teams may set $k = 3$ if they aim to develop three targeted strategies. Similarly, logistical constraints (such as seating capacity at a conference) may dictate the desired number of groups. However, in many cases, no natural grouping is evident, and data-driven approaches are needed to inform the decision.
+In some applications, domain knowledge provides useful initial guidance. For example, a marketing team may choose a small number of customer segments to align with strategic objectives, or an analyst may begin with a number of clusters suggested by known categories in the application domain. In many cases, however, no natural grouping is evident, and data-driven heuristics are needed to inform the decision.
 
-A widely used heuristic is the *elbow method*, which examines how within-cluster variation evolves as $k$ increases. As additional clusters are introduced, the average similarity within clusters improves, up to a point. Beyond that, the marginal gain becomes negligible. The objective is to identify this point of diminishing returns, known as the *elbow*.
+One widely used heuristic is the *elbow method*, which examines how within-cluster variation changes as the number of clusters increases. As additional clusters are introduced, within-cluster variation typically decreases, but the marginal improvement diminishes beyond a certain point. The aim is to identify this point of diminishing returns, often referred to as the *elbow*.
 
-This concept is illustrated in @fig-ch13-elbow, where the total within-cluster sum of squares (WCSS) is plotted against the number of clusters. The “elbow point” (a bend in the curve) suggests a reasonable choice for $k$ that balances simplicity with explanatory power.
+This idea is illustrated in @fig-ch13-elbow, which plots the total within-cluster sum of squares (WCSS) against the number of clusters. A pronounced bend in the curve suggests a value of $k$ that balances model simplicity with explanatory power.
 
 ```{r}
 #| label: fig-ch13-elbow
 #| out.width: "70%"
-#| fig-cap: "The elbow method visualizes the trade-off between the number of clusters and within-cluster variation, helping to identify an appropriate value for $k$."
+#| fig-cap: "The elbow method visualizes the trade-off between the number of clusters and within-cluster variation, helping to identify a suitable value for $k$."
 #| echo: false
 
 knitr::include_graphics("images/ch13_elbow.png")
 ```
 
-While the elbow method is accessible and visually intuitive, it is not without limitations. Some datasets yield no clear inflection point, and evaluating many values of $k$ can become computationally demanding in large-scale applications.
+While the elbow method is intuitive and easy to apply, it has limitations. Some datasets exhibit no clear elbow, and evaluating many values of $k$ may be computationally expensive for large datasets. For these reasons, the elbow method is often used in combination with other criteria.
 
-Alternative approaches can supplement or refine this decision:
+Alternative approaches include the silhouette score, which assesses how well observations fit within their assigned clusters relative to others, and the gap statistic, which compares the observed clustering structure to that expected under a null reference distribution. When clustering is used as a preprocessing step, the choice of $k$ may also be informed by performance in downstream tasks, such as the stability or usefulness of derived features in subsequent models.
 
--   *Silhouette Score:* Quantifies how well each data point fits within its assigned cluster compared to others. Higher values indicate more coherent clusters.
+Ultimately, the goal is not to identify a single “optimal” value of $k$, but to arrive at a clustering solution that is interpretable, stable, and appropriate for the analytical objective. Examining how clustering results change across different values of $k$ is often informative in itself. Stable groupings suggest meaningful structure, whereas highly variable solutions may indicate ambiguity in the data.
 
--   *Gap Statistic:* Compares the clustering result to that expected under a null reference distribution, helping assess whether structure exists at all.
-
--   *Performance in downstream tasks:* When clustering is used as a preprocessing step, such as for customer segmentation, different values of $k$ can be evaluated based on their impact on a subsequent predictive model.
-
-Ultimately, the goal is not necessarily to find a mathematically optimal $k$, but to identify a clustering solution that is both interpretable and practically useful. Clustering is frequently employed in exploratory analysis, and observing how results change across values of $k$ can itself be informative. Stable groupings that persist suggest meaningful structure; volatile groupings may reflect ambiguity in the data.
-
-In the next section, we apply these ideas in practice using a real-world dataset. We explore how domain knowledge, visualization, and iterative experimentation can jointly inform the choice of $k$ in applied settings.
+In the next section, we apply these ideas in a case study, illustrating how domain knowledge, visualization, and iterative experimentation jointly inform the choice of $k$ in practice.
 
 ## Case Study: Segmenting Cereal Brands by Nutrition {#sec-ch13-case-study}
 
-Why do some cereals end up on the “healthy” shelf while others are marketed to kids? Behind such decisions lies data-driven product segmentation. In this case study, we use *K-means clustering* to uncover meaningful groupings based on nutritional content. Using the *cereal* dataset from the **liver** package, we cluster 77 cereal brands using variables such as calories, fat, protein, and sugar. While simplified, this example demonstrates how unsupervised learning techniques can support product design, marketing strategy, and consumer targeting.
+Why do some breakfast cereals appear to target health-conscious consumers, while others are positioned toward children or indulgence-oriented markets? Such distinctions often reflect underlying differences in nutritional composition. In this case study, we use K-means clustering to explore how cereal products group naturally based on measurable nutritional attributes.
 
-This case study provides a focused, real-world example of how clustering works in practice, giving you hands-on experience applying K-means in R.
+Using the `cereal` dataset from the **liver** package, we analyze 77 cereal brands described by variables such as calories, fat, protein, and sugar. Rather than imposing predefined categories, clustering allows us to investigate whether distinct nutritional profiles emerge directly from the data. Although simplified, this example illustrates how unsupervised learning can support exploratory analysis and inform decisions in areas such as product positioning, marketing strategy, and consumer segmentation.
+
+The case study follows the Data Science Workflow (introduced in Chapter [-@sec-ch2-intro-data-science] and illustrated in @fig-ch2_DSW), emphasizing data preparation, thoughtful feature selection, and careful interpretation of clustering results. Rather than identifying definitive product categories, it illustrates how clustering can be used to uncover structure and generate insight from unlabeled data.
 
 ### Overview of the Dataset
 
-What do breakfast cereals reveal about nutritional marketing and consumer preferences? The *cereal* dataset offers a compact but information-rich glimpse into the world of packaged food products. It includes 77 breakfast cereals from major brands, described by 16 variables capturing nutritional content, product characteristics, and shelf placement. The dataset is included in the **liver** package and can be loaded with:
+What do breakfast cereals reveal about nutritional positioning and consumer targeting? The `cereal` dataset provides a compact yet information-rich snapshot of packaged food products. It contains data on 77 breakfast cereals from major manufacturers, described by 16 variables capturing nutritional composition, product characteristics, and shelf placement. The dataset is included in the **liver** package and can be loaded as follows:
 
 ```{r}
 library(liver)
@@ -277,17 +245,17 @@ library(liver)
 data(cereal)
 ```
 
-To view the structure of the dataset:
+To inspect the structure of the dataset, we use:
 
 ```{r}
 str(cereal)
 ```
 
-Here is an overview of the key variables:
+Here is an overview of the features included in the dataset:
 
--   `name`: Name of the cereal (categorical-nominal).
--   `manuf`: Manufacturer of cereal (categorical-nominal), coded into seven categories: "A" for American Home Food Products, "G" for General Mills, "K" for Kelloggs, "N" for Nabisco, "P" for Post, "Q" for Quaker Oats, and "R" for Ralston Purina.
--   `type`: Cereal type, hot or cold (categorical-binary).
+-   `name`: Name of the cereal (categorical, nominal).
+-   `manuf`: Manufacturer (categorical, nominal), coded as A (American Home Food Products), G (General Mills), K (Kelloggs), N (Nabisco), P (Post), Q (Quaker Oats), and R (Ralston Purina).
+-   `type`: Cereal type, hot or cold (categorical, binary).
 -   `calories`: Calories per serving (numerical).
 -   `protein`: Grams of protein per serving (numerical).
 -   `fat`: Grams of fat per serving (numerical).
@@ -296,27 +264,27 @@ Here is an overview of the key variables:
 -   `carbo`: Grams of carbohydrates per serving (numerical).
 -   `sugars`: Grams of sugar per serving (numerical).
 -   `potass`: Milligrams of potassium per serving (numerical).
--   `vitamins`: Percentage of recommended daily vitamins (categorical-ordinal: 0, 25, or 100).
--   `shelf`: Display shelf position in stores (categorical-ordinal: 1, 2, or 3).
+-   `vitamins`: Percentage of recommended daily vitamins (ordinal: 0, 25, or 100).
+-   `shelf`: Store shelf position (ordinal: 1, 2, or 3).
 -   `weight`: Weight of one serving in ounces (numerical).
 -   `cups`: Number of cups per serving (numerical).
--   `rating`: Cereal rating score (numerical).
+-   `rating`: Overall cereal rating score (numerical).
 
-The dataset combines several feature types that reflect how real-world data is structured. It includes one binary variable (`type`), two nominal variables (`name` and `manuf`), and two ordinal variables (`vitamins` and `shelf`). The remaining variables are continuous numerical measures. Understanding these distinctions is essential for properly preparing the data for clustering.
+The dataset combines feature types commonly encountered in practice, including nominal identifiers, ordinal variables, and continuous numerical measures. Recognizing these distinctions is important when preparing the data for clustering, as distance-based methods require numerical representations on comparable scales.
 
-Before clustering, we need to prepare the data by addressing missing values, selecting relevant features, and applying scaling (steps that ensure the algorithm focuses on meaningful nutritional differences rather than artifacts of data format).
+Before applying K-means clustering, we therefore prepare the data by addressing missing values, selecting features that meaningfully reflect nutritional differences, and applying scaling. These steps ensure that the resulting clusters are driven by substantive patterns in the data rather than artifacts of measurement or representation.
 
-### Data Preprocessing
+### Data Preparation for Clustering
 
-What makes some cereals more alike than others? Before we can explore that question with clustering, we must ensure that the data reflects meaningful similarities. This step corresponds to the second stage of the *Data Science Workflow* (@fig-ch2_DSW): Data Preparation (Section [-@sec-ch3-data-preparation]). Effective clustering depends on distance calculations, which in turn rely on clean and consistently scaled inputs. Data preprocessing is therefore essential (especially when working with real-world datasets that often contain inconsistencies or hidden assumptions).
+What makes some cereals more alike than others? Before exploring this question with clustering, we must ensure that the data reflects meaningful similarities rather than artifacts of measurement or coding. This step corresponds to the second stage of the Data Science Workflow (@fig-ch2_DSW): Data Preparation (Section [-@sec-ch3-data-preparation]). Because K-means relies on distance calculations, clustering outcomes are particularly sensitive to data quality and feature scaling, making careful preprocessing essential.
 
-A summary of the cereal dataset reveals anomalous values in the `sugars`, `carbo`, and `potass` variables, where some entries are set to `-1`:
+A summary of the `cereal` dataset reveals anomalous values in the `sugars`, `carbo`, and `potass` variables, where some entries are recorded as `-1`:
 
 ```{r}
 summary(cereal)
 ```
 
-As discussed in Section [-@sec-ch3-missing-values], it is common for datasets to use codes like `-1` or `999` to represent missing or unknown values (especially for attributes that should be non-negative). Since negative values are not valid for nutritional measurements, we treat these entries as missing:
+As discussed in Section [-@sec-ch3-missing-values], placeholder values such as `-1` are often used to represent missing or unknown information, especially for variables that should be non-negative. Since negative values are not meaningful for nutritional measurements, we recode these entries as missing:
 
 ```{r}
 cereal[cereal == -1] <- NA
@@ -324,9 +292,9 @@ cereal[cereal == -1] <- NA
 find.na(cereal)
 ```
 
-The `find.na()` function from the **liver** package reports the locations of missing values. This dataset contains `r nrow(find.na(cereal))` such entries, with the first one appearing in row `r find.na(cereal)[1, 1]` and column `r find.na(cereal)[1, 2]`.
+The `find.na()` function from the **liver** package reports the locations of missing values. In this dataset, there are `r nrow(find.na(cereal))` such entries, with the first occurring in row `r find.na(cereal)[1, 1]` and column `r find.na(cereal)[1, 2]`.
 
-To handle missing values in the *cereal* dataset, we apply *predictive imputation* using random forests, a method introduced in Section [-@sec-ch3-missing-values]. This approach leverages the relationships among observed variables to estimate missing entries. We use the `mice()` function from the **mice** package that creates a predictive model for each variable with missing values, using the other variables as predictors. In this example, we use the `"rf"` method to perform random forest imputation and we generate a single imputed dataset using one iteration and a small number of trees for demonstration purposes:
+To handle missing values, we apply predictive imputation using random forests, as introduced in Section [-@sec-ch3-missing-values]. This approach exploits relationships among observed variables to estimate missing entries. We use the `mice()` function from the **mice** package with the `"rf"` method. For demonstration purposes, we generate a single imputed dataset using a small number of trees and one iteration, focusing on illustrating the workflow rather than optimizing imputation performance:
 
 ```{r message=FALSE, warning=FALSE}
 library(mice)
@@ -337,32 +305,29 @@ cereal <- complete(imp)
 find.na(cereal)
 ```
 
-The `complete()` function extracts the imputed dataset from the `mice` object. By default, it returns the first completed version when only one is created. The `mice()` function also supports a range of other imputation methods, including mean imputation (`"mean"`), predictive mean matching (`"pmm"`), and classification and regression trees (`"cart"`), allowing users to tailor the imputation strategy to their data and modeling needs.
+The resulting dataset contains no missing values, ensuring that all observations can be included in the clustering analysis.
 
-The resulting `cereal` dataset contains no missing values, as confirmed by the `find.na()` function. This imputation step ensures that subsequent clustering analyses are not biased by incomplete records.
+After addressing missing values, we select the variables used for clustering. Three variables are excluded based on their role and interpretation:
 
-After imputation, no missing values remain, and the dataset is complete and ready for clustering. We now select the variables that will be used to group cereals. Three variables are excluded based on their role and structure:
+-   `name` functions as an identifier and carries no analytical meaning for similarity-based grouping.
 
--   `name` is an identifier, functioning like an ID. It carries no analytical value for clustering.
+-   `manuf` is a nominal variable with multiple categories. Including it would require one-hot encoding, substantially increasing dimensionality and potentially dominating distance calculations.
 
--   `manuf` is a nominal variable with seven categories. Encoding it would require six dummy variables, which may inflate dimensionality and distort distance metrics.
-
--   `rating` reflects a subjective outcome (e.g., taste), rather than a feature of the cereal’s composition. It is more appropriate as a target variable in supervised learning than as an input for clustering.
+-   `rating` reflects an outcome measure rather than an intrinsic product attribute and is therefore more appropriate for supervised analysis.
 
 ```{r}
 selected_variables <- colnames(cereal)[-c(1, 2, 16)]
-
 cereal_subset <- cereal[, selected_variables]
 ```
 
-Because the numerical features span different scales (e.g., milligrams of sodium vs. grams of fiber), we apply min-max scaling using the `minmax()` function from the **liver** package:
+Because the remaining features are measured on different scales (for example, milligrams of sodium versus grams of fiber), we apply min–max scaling using the `minmax()` function from the **liver** package:
 
 ```{r}
 cereal_mm <- minmax(cereal_subset, col = "all")
 str(cereal_mm)
 ```
 
-To visualize the effect of min-max scaling, we compare the distribution of the `sodium` variable before and after scaling:
+To illustrate the effect of scaling, we compare the distribution of the `sodium` variable before and after transformation:
 
 ```{r out.width = "100%"}
 #| layout-ncol: 2
@@ -378,17 +343,15 @@ ggplot(cereal_mm) +
     labs(x = "Scaled Sodium [0–1]", y = "Count", title = "After Min–Max Scaling")
 ```
 
-As shown in the histograms, the sodium feature is rescaled to the $[0, 1]$ range. This prevents variables like sodium or potassium (originally measured in large units) from overpowering the clustering process.
-
-With the dataset cleaned, imputed, and scaled, we are now ready to explore how cereals naturally group together. But first, how many clusters should we use?
+As shown in the histograms, scaling maps sodium values to the $[0, 1]$ range, preventing variables with larger units from disproportionately influencing distance calculations. With the data cleaned, imputed, and scaled, we are now prepared to apply K-means clustering. The next step is to determine how many clusters should be used.
 
 ### Selecting the Number of Clusters
 
-A key decision in clustering is selecting how many clusters ($k$) to use. Choosing too few clusters can obscure meaningful groupings, while too many may lead to overfitting or fragmented results. Because clustering is unsupervised, this decision must be guided by internal evaluation methods.
+A key decision in clustering is choosing the number of clusters, $k$. Selecting too few clusters may mask meaningful structure, whereas too many can lead to fragmented and less interpretable results. Because clustering is unsupervised, this choice must be guided by internal evaluation criteria rather than predictive performance.
 
-One widely used approach is the *elbow method*, which evaluates how the total within-cluster sum of squares (WCSS) decreases as $k$ increases. Initially, adding more clusters significantly reduces WCSS, but beyond a certain point the improvement slows. The "elbow" in the plot (where the rate of decrease flattens) suggests a suitable value for $k$.
+In this case study, we use the *elbow method* to inform the selection of $k$. This approach examines how the total within-cluster sum of squares (WCSS) changes as the number of clusters increases. As $k$ grows, WCSS decreases, but the marginal improvement diminishes beyond a certain point. The goal is to identify a value of $k$ at which further increases yield only limited gains.
 
-To create the elbow plot, we use the `fviz_nbclust()` function from the **factoextra** package. This package provides user-friendly tools for visualizing clustering results and evaluation metrics. The `fviz_nbclust()` function generates evaluation plots for different values of $k$ based on methods such as WCSS or silhouette width.
+To visualize this relationship, we use the `fviz_nbclust()` function from the **factoextra** package to compute and plot WCSS for a range of candidate values:
 
 ```{r}
 library(factoextra)
@@ -397,91 +360,96 @@ fviz_nbclust(cereal_mm, kmeans, method = "wss", k.max = 15) +
   geom_vline(xintercept = 4, linetype = 2, color = "gray")
 ```
 
-As shown in @fig-ch13-elbow, the WCSS drops sharply for small values of $k$, but levels off after $k = 4$. This suggests that four clusters may offer a reasonable balance between model complexity and within-cluster cohesion.
+As shown in @fig-ch13-elbow, the WCSS decreases rapidly for small values of $k$ and begins to level off around $k = 4$. This pattern suggests that four clusters provide a reasonable trade-off between model simplicity and within-cluster cohesion for this dataset. As with all clustering heuristics, this choice should be interpreted in light of domain knowledge and the substantive meaning of the resulting clusters.
 
 ### Performing K-means Clustering
 
-With the number of clusters selected, we now apply the K-means algorithm to segment the cereals into four groups. We use the `kmeans()` function from base R, which does not require any additional packages. Its key arguments include the input data (`x`), the number of clusters (`centers`), and optional parameters such as the number of random starts (`nstart`), which helps avoid poor local optima.
+With the number of clusters selected, we now apply the K-means algorithm to segment the cereals into four groups. We use the `kmeans()` function from base R, which implements the standard K-means procedure without requiring additional packages. Key arguments include the input data (`x`), the number of clusters (`centers`), and the number of random initializations (`nstart`), which helps reduce the risk of converging to a suboptimal solution.
 
-We use `set.seed()` to ensure that the results are reproducible. Since the K-means algorithm involves random initialization of cluster centers, setting the seed guarantees that the same clusters are obtained each time the code is run.
+Because K-means relies on random initialization of cluster centers, results can vary across runs. To ensure reproducibility, we set a random seed. We also use multiple random starts so that the algorithm selects the solution with the lowest within-cluster sum of squares among several initializations.
 
 ```{r}
 set.seed(3)  # Ensure reproducibility
-cereal_kmeans <- kmeans(cereal_mm, centers = 4)
+
+cereal_kmeans <- kmeans(cereal_mm, centers = 4, nstart = 10)
 ```
 
-The `kmeans()` function returns several useful components, including:
+The `kmeans()` function returns several components that summarize the clustering result:
 
 -   `cluster`: the cluster assignment for each observation,
--   `centers`: the coordinates of the cluster centroids,
--   `size`: the number of observations in each cluster,
--   `tot.withinss`: the total within-cluster sum of squares (used earlier in the elbow method).
 
-To check how the observations are distributed across the clusters:
+-   `centers`: the coordinates of the cluster centroids, representing typical profiles,
+
+-   `size`: the number of observations in each cluster,
+
+-   `tot.withinss`: the total within-cluster sum of squares, reflecting overall cluster compactness.
+
+To examine how cereals are distributed across the clusters, we inspect the cluster sizes:
 
 ```{r}
 cereal_kmeans$size
 ```
 
-The output shows the number of cereals assigned to each cluster, which can help us understand the distribution of products across the four groups.
+The resulting counts indicate how many cereals are assigned to each group. While cluster size alone does not determine cluster quality, it provides a useful first check before moving on to visualization and substantive interpretation of the clusters.
+
+> *Practice:* Re-run the K-means algorithm with a different random seed or a different value of `nstart`. Do the cluster sizes change? What does this suggest about the stability of the clustering solution?
 
 #### Visualizing the Clusters {.unnumbered}
 
-To gain insight into the clustering results, we use the `fviz_cluster()` function from the **factoextra** package to visualize the four groups:
+To gain insight into the clustering results, we visualize the four groups using the `fviz_cluster()` function from the **factoextra** package:
 
 ```{r}
-fviz_cluster(cereal_kmeans, cereal_mm, 
-             geom = "point", 
-             ellipse.type = "norm", 
-             palette = "custom_palette", 
+fviz_cluster(cereal_kmeans, cereal_mm,
+             geom = "point",
+             ellipse.type = "norm",
              ggtheme = theme_minimal())
 ```
 
-The resulting scatter plot displays the cluster structure, with each point representing a cereal. Colors indicate cluster membership, and ellipses represent the standard deviation around each cluster center. The plot is constructed using principal component analysis (PCA), which reduces the high-dimensional feature space to two principal components for visualization. Although some detail is inevitably lost, this projection helps reveal the overall shape and separation of the clusters.
+The resulting scatter plot displays each cereal as a point, with colors indicating cluster membership. The ellipses summarize the dispersion of observations around each cluster centroid. For visualization purposes, the plot is constructed using principal component analysis (PCA), which projects the high-dimensional feature space onto two principal components.
+
+This projection facilitates visual inspection of cluster structure, but it should be interpreted with care. Because PCA preserves variance rather than cluster separation, apparent overlap or separation in the plot does not necessarily reflect the true structure in the original feature space. The visualization therefore serves as an exploratory tool to support interpretation, rather than as a definitive assessment of clustering quality.
+
+> *Practice:* Recreate the cluster visualization using a different value of $k$ or by excluding one nutritional variable. How does the visual separation of clusters change, and what does this suggest about the robustness of the clustering?
 
 #### Interpreting the Results {.unnumbered}
 
-The clustering results reveal natural groupings among cereals based on their nutritional composition. For example:
+The clustering results suggest distinct groupings of cereals based on their nutritional characteristics. These clusters should be interpreted as data-driven groupings that summarize similarities in nutritional profiles, rather than as definitive product categories. Examining the cluster centroids and the distribution of key variables within each group helps clarify their substantive meaning.
 
--   One cluster includes low-sugar, high-fiber cereals that are likely positioned for health-conscious consumers.
+Based on the observed patterns, the clusters can be broadly characterized as follows:
 
--   Another contains high-calorie, high-sugar cereals typically marketed to children.
+-   One cluster is characterized by relatively low sugar content and higher fiber levels, consistent with cereals positioned toward health-conscious consumers.
 
--   A third represents balanced options with moderate levels of key nutrients.
+-   Another cluster exhibits higher calorie and sugar levels, reflecting products with more energy-dense nutritional profiles.
 
--   The fourth cluster combines cereals with higher protein or other distinctive profiles.
+-   A third cluster contains cereals with moderate values across several nutrients, representing more balanced nutritional compositions.
 
-To examine which cereals belong to a particular cluster (e.g., Cluster 1), we can use:
+-   The fourth cluster includes cereals with distinctive profiles, such as higher protein content or other notable nutritional features.
+
+To explore cluster composition in more detail, we can inspect which cereals are assigned to a given cluster. For example, the following command lists the cereals belonging to Cluster 1:
 
 ```{r eval = FALSE}
 cereal$name[cereal_kmeans$cluster == 1]
 ```
 
-This command returns the names of cereals assigned to Cluster 1, allowing for further inspection and interpretation of that group's defining features.
+This inspection allows us to relate the quantitative clustering results back to individual products, supporting a more nuanced interpretation of each cluster’s defining characteristics.
 
-### Reflections and Takeaways
-
-The cereal clustering analysis illustrates how K-means can be used to segment products based on measurable features (in this case, nutritional content). By combining careful preprocessing, feature scaling, and model evaluation, we identified coherent groupings that reflect distinct product profiles.
-
-More generally, this example highlights the value of unsupervised learning in discovering hidden patterns when no outcome variable is available. Clustering is widely used in domains such as marketing, health analytics, and customer segmentation, where understanding natural structure in the data leads to better decisions and targeted strategies.
-
-The process illustrated here (choosing relevant features, selecting the number of clusters, and interpreting results) forms the foundation for applying clustering techniques to other domains. Whether used for segmenting users, detecting anomalies, or grouping documents, clustering provides a flexible tool for uncovering structure and generating insights.
+This case study illustrates how K-means clustering can be used to explore structure in unlabeled data through careful data preparation, feature selection, and interpretation of results. Rather than producing definitive product categories, the analysis highlights how clustering supports exploratory insight by summarizing similarities in nutritional profiles. The same workflow can be applied to other domains where the goal is to uncover patterns, generate hypotheses, or inform subsequent analysis.
 
 ## Chapter Summary and Takeaways
 
-In this chapter, we introduced clustering as a fundamental technique for unsupervised learning (where the goal is to group observations based on similarity without using labeled outcomes).
+In this chapter, we introduced clustering as a central technique for unsupervised learning, where the objective is to group observations based on similarity rather than to predict labeled outcomes. Clustering plays a key role in exploratory data analysis, particularly when no response variable is available.
 
-We focused on the K-means algorithm, one of the most widely used clustering methods. You learned how K-means iteratively partitions data into $k$ clusters by minimizing the within-cluster sum of squares. Selecting an appropriate number of clusters is crucial, and we explored common evaluation methods such as the elbow method.
+We focused on the K-means algorithm, one of the most widely used clustering methods. You learned how K-means iteratively partitions data into $k$ clusters by minimizing within-cluster variation, and why selecting an appropriate number of clusters is a critical modeling decision. Because clustering lacks an external ground truth, this choice relies on internal evaluation criteria, such as the elbow method, combined with interpretability and domain knowledge.
 
-We emphasized the importance of proper data preparation, including selecting relevant features, handling missing values, and applying scaling techniques to ensure fair distance calculations.
+Throughout the chapter, we emphasized the importance of careful data preparation for distance-based methods. Selecting meaningful features, handling missing values, and applying appropriate scaling are essential steps to ensure that similarity calculations reflect substantive structure rather than artifacts of measurement.
 
-Through a case study using the cereal dataset, we demonstrated how to apply K-means in R, visualize the resulting clusters, and interpret their meaning in a real-world context. Unlike earlier chapters, we did not partition the dataset into training and testing sets. Since clustering is an unsupervised technique, there is no outcome variable to predict, and evaluation relies on internal measures such as within-cluster variance or silhouette scores.
+Using a case study based on the cereal dataset, we demonstrated how clustering can be applied in practice, from preprocessing and model fitting to visualization and interpretation. Unlike supervised learning, clustering does not involve train–test splits or predictive accuracy; instead, evaluation focuses on internal coherence and the interpretability of the resulting groups.
 
-This practical application highlighted the value of clustering in uncovering patterns and informing decisions. Clustering is a versatile tool with wide applications (from customer segmentation to product classification and beyond). A solid understanding of its strengths and limitations is essential for every data scientist.
+Overall, this chapter highlighted clustering as a flexible and informative tool for uncovering structure in unlabeled data. A clear understanding of its assumptions, limitations, and interpretive nature is essential for using clustering effectively as part of the data science workflow.
 
 ## Exercises {#sec-ch13-exercises}
 
-The exercises are grouped into two categories: conceptual questions and practical exercises using the *redWines* dataset, applying clustering techniques to real-world data.
+The following exercises are designed to reinforce both the conceptual foundations of clustering and its practical application. They are organized into conceptual questions and hands-on exercises using real-world data.
 
 #### Conceptual Questions {.unnumbered}
 
@@ -509,7 +477,7 @@ The exercises are grouped into two categories: conceptual questions and practica
 
 12. Why do we need to scale features before applying K-means clustering?
 
-13. How does clustering help in dimensionality reduction and preprocessing for supervised learning?
+13. How can clustering be used as a preprocessing step for supervised learning tasks?
 
 14. What are the key assumptions of K-means clustering?
 
@@ -525,18 +493,19 @@ The exercises are grouped into two categories: conceptual questions and practica
 
 20. What are alternative clustering methods that are more robust to outliers than K-means?
 
-#### Hands-On Practice: k-mean with the *redWines* Dataset {.unnumbered}
+#### Hands-On Practice: K-mean with the `red_wines` Dataset {.unnumbered}
 
-These exercises use the *redWines* dataset from the **liver** package, which contains chemical properties of red wines and their quality scores. Your goal is to apply clustering techniques to uncover natural groupings in the wines, without using the quality label during clustering.
+These exercises use the `red_wines` dataset from the **liver** package, which contains chemical properties of red wines and their quality scores. Your goal is to apply clustering techniques to uncover natural groupings in the wines, without using the quality label during clustering.
 
 ##### Data Preparation and Exploratory Analysis {.unnumbered}
 
-21. Load the *redWines* dataset from the **liver** package and inspect its structure.
+21. Load the `red_wines` dataset from the **liver** package and inspect its structure.
 
 ``` r
 library(liver)
-data(redWines)
-str(redWines)
+
+data(red_wines)
+str(red_wines)
 ```
 
 22. Summarize the dataset using `summary()`. Identify any missing values.
@@ -554,7 +523,7 @@ str(redWines)
 ``` r
 library(factoextra)
 
-fviz_nbclust(redWines, kmeans, method = "wss")
+fviz_nbclust(red_wines, kmeans, method = "wss", k.max = 15) 
 ```
 
 27. Based on the elbow plot, choose an appropriate value of $k$ and perform K-means clustering.
@@ -579,8 +548,8 @@ fviz_nbclust(redWines, kmeans, method = "wss")
 
 36. Visualize how wine acidity and alcohol content influence cluster formation.
 
-37. (Optional) The **liver** package also includes a *whiteWines* dataset with the same structure as *redWines*. Repeat the clustering process on this dataset, from preprocessing and elbow method to K-means application and interpretation. How do the cluster profiles differ between red and white wines?
+37. (Optional) The **liver** package also includes a `white_wines` dataset with the same structure as `red_wines`. Repeat the clustering process on this dataset, from preprocessing and elbow method to K-means application and interpretation. How do the cluster profiles differ between red and white wines?
 
 #### Self-reflection {.unnumbered}
 
-38. Reflect on your experience applying K-means clustering to the *redWines* dataset. What challenges did you encounter in interpreting the clusters, and how might you validate or refine your results if this were a real-world project? What role do domain insights (e.g., wine chemistry, customer preferences) play in making clustering results actionable?
+38. Reflect on your experience applying K-means clustering to the `red_wines` dataset. What challenges did you encounter in interpreting the clusters, and how might you validate or refine your results if this were a real-world project? What role do domain insights (e.g., wine chemistry, customer preferences) play in making clustering results actionable?
