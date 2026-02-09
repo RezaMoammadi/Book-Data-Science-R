@@ -247,27 +247,24 @@ The next subsection focuses on preparing the dataset for exploration by addressi
 
 ### Data Preparation for the `churn` Dataset {#sec-ch4-EDA-churn-prep}
 
-Before conducting exploratory data analysis, a limited amount of data preparation is required to ensure that summaries and visualizations accurately reflect the underlying data. An initial inspection of the `churn` dataset reveals that several categorical features (`education`, `income`, and `marital`) contain missing entries encoded as the string "unknown". These placeholders must be converted to standard missing values so that they are handled correctly during exploration.
+Before conducting exploratory data analysis, we carry out a limited amount of data preparation to ensure that summaries and visualisations accurately reflect the underlying data. An initial inspection of the `churn` dataset reveals that several categorical features (`education`, `income`, and `marital`) contain missing entries encoded as the string "unknown". These placeholders must be converted to standard missing values so that they are handled correctly during exploration.
 
-To standardise the representation of missing values, all occurrences of "unknown" are replaced with `NA`, and unused factor levels are removed:
+To standardise the representation of missing values, we replace all occurrences of "unknown" with `NA` and remove unused factor levels:
 
 ```{r}
 churn[churn == "unknown"] <- NA
-
 churn <- droplevels(churn)
 ```
 
-Before deciding how to handle missing values, it is helpful to assess their extent. The **naniar** package provides convenient tools for visualizing missingness. The function `gg_miss_var()` displays the proportion of missing observations for each feature:
+Before deciding how to handle the missing values, we assess their extent. The **naniar** package provides convenient tools for visualising missingness across features. The function `gg_miss_var()` displays the proportion of missing observations for each variable:
 
 ```{r}
 library(naniar)
-
 gg_miss_var(churn, show_pct = TRUE)
 ```
 
-The plot shows that three categorical features (`education`, `income`, and `marital`) contain missing values, with the highest proportion appearing in `education`. Although the overall level of missingness is modest, resolving these cases is important to maintain consistency across groups.
 
-Several approaches exist for imputing missing categorical values, including mode imputation, random assignment, or creating a separate category. Mode imputation would inflate the most common category, which could distort comparisons. A separate category would treat missingness as informative, which is not appropriate in this context. Random imputation preserves the original distribution of each feature, making it a suitable choice here. We use the function `impute()` from the **Hmisc** package:
+The plot shows that missing values are confined to three categorical features, with the highest proportion occurring in `education` (approximately 15%). Strategies for handling missing categorical data are discussed in detail in Chapter [-@sec-ch3-imputation-techniques]. For the purposes of exploratory analysis, we apply random imputation to preserve the observed distribution of each feature and avoid distorting group comparisons. We therefore apply random imputation using the `impute()` function from the **Hmisc** package:
 
 ```{r}
 library(Hmisc)
@@ -277,7 +274,7 @@ churn$income    <- impute(churn$income, "random")
 churn$marital   <- impute(churn$marital, "random")
 ```
 
-With missing values addressed and feature types confirmed, the dataset is ready for exploratory analysis. The following section applies visual and numerical tools to uncover the key patterns that help explain customer churn.
+With missing values addressed and feature types confirmed, the dataset is now suitable for exploratory analysis. In the next section, we apply visual and numerical tools to uncover patterns associated with customer churn.
 
 ## Exploring Categorical Features {#sec-EDA-categorical}
 
