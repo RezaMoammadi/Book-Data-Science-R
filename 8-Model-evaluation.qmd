@@ -94,8 +94,7 @@ This structure parallels the ideas of *Type I and Type II errors* discussed in C
 
 From the confusion matrix, we can compute several basic metrics. Two of the most general are *accuracy* and *error rate*. Accuracy, sometimes called the success rate, measures the proportion of correct predictions: $$
 \text{Accuracy} = \frac{\text{TP} + \text{TN}}{\text{TP} + \text{FP} + \text{FN} + \text{TN}}.
-$$
-The error rate is the proportion of incorrect predictions: $$
+$$ The error rate is the proportion of incorrect predictions: $$
 \text{Error Rate} = 1 - \text{Accuracy} = \frac{\text{FP} + \text{FN}}{\text{TP} + \text{FP} + \text{FN} + \text{TN}}.
 $$
 
@@ -112,18 +111,6 @@ library(liver)
 
 data(churn)
 
-library(Hmisc)
-set.seed(42)
-
-# Treat "unknown" as missing and drop unused levels
-churn[churn == "unknown"] <- NA
-churn <- droplevels(churn)
-
-# Random imputation as used in Chapter 4
-churn$education <- impute(churn$education, "random")
-churn$income    <- impute(churn$income, "random")
-churn$marital   <- impute(churn$marital, "random")
-
 # Train/test split
 data_sets = partition(data = churn, ratio = c(0.8, 0.2), set.seed = 42)
 
@@ -131,6 +118,29 @@ train_set = data_sets$part1
 test_set  = data_sets$part2
 
 test_labels = test_set$churn
+
+# Imputation for NA values
+# Treat "unknown" as missing
+train_set[train_set == "unknown"] <- NA
+test_set[test_set == "unknown"] <- NA
+
+# Training-derived modes
+mode_education = names(sort(table(train_set$education, useNA = "no"), decreasing = TRUE))[1]
+mode_income    = names(sort(table(train_set$income,    useNA = "no"), decreasing = TRUE))[1]
+mode_marital   = names(sort(table(train_set$marital,   useNA = "no"), decreasing = TRUE))[1]
+
+# Apply to training set
+train_set$education[is.na(train_set$education)] = mode_education
+train_set$income[is.na(train_set$income)]       = mode_income
+train_set$marital[is.na(train_set$marital)]     = mode_marital
+
+# Apply to test set using the same training-derived modes
+test_set$education[is.na(test_set$education)] = mode_education
+test_set$income[is.na(test_set$income)]       = mode_income
+test_set$marital[is.na(test_set$marital)]     = mode_marital
+
+train_set = droplevels(train_set)
+test_set  = droplevels(test_set)
 
 # Prepare categorical features using one-hot encoding
 categorical_features = c("gender", "education", "marital", "income", "card_category")
@@ -399,7 +409,7 @@ Up to this point, we have evaluated binary classifiers using metrics such as pre
 
 In multi-class problems, the confusion matrix becomes a square grid whose size matches the number of classes. Rows correspond to actual classes and columns to predicted classes, as shown in @fig-ch8-confusion-matrices. The left matrix illustrates the binary case (2×2), while the right matrix shows a general three-class (3×3) example. Correct predictions appear along the diagonal, whereas off-diagonal entries reveal which classes the model tends to confuse—information that is often critical for diagnosing systematic errors.
 
-```{r fig-ch8-confusion-matrices, echo = FALSE, out.width = "60%", fig.cap = "Confusion matrices for binary (left) and multi-class (right) classification. Diagonal cells show correct predictions; off-diagonal cells show misclassifications. Matrix size grows with the number of classes."}
+```{r fig-ch8-confusion-matrices, echo = FALSE, out.width = "70%", fig.cap = "Confusion matrices for binary (left) and multi-class (right) classification. Diagonal cells show correct predictions; off-diagonal cells show misclassifications. Matrix size grows with the number of classes."}
 knitr::include_graphics("images/ch8_confusion-matrices.png")
 ```
 

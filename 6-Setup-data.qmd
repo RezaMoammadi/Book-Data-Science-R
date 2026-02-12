@@ -80,30 +80,25 @@ By following this structure, we develop models that are both accurate and reliab
 
 ## Partitioning Data: The Train–Test Split {#sec-train-test-split}
 
-Having established why partitioning is essential, we now turn to how it is implemented in practice. The most common method is the *train–test split*, also known as the *holdout method*. In this approach, the dataset is divided into two subsets: a *training set* used to develop the model and a *test set* reserved for evaluating the model’s ability to generalize to new, unseen data. This separation is essential for assessing out-of-sample performance.
+Having established why partitioning is essential, we now turn to how it is implemented in practice. The most common method is the *train–test split*, also known as the *holdout method*. In this approach, the dataset is divided into two subsets: a *training set* used to develop the model and a *test set* reserved for evaluating its ability to generalize to new, unseen data.
 
-Typical split ratios include 70–30, 80–20, or 90–10, depending on the size of the dataset and the modeling objectives. Both subsets include the same predictor variables and the outcome of interest, but only the training set's outcome values are used during model fitting. The test set remains untouched during training to avoid data leakage and provides a realistic benchmark for evaluating the model’s predictive performance.
+Typical split ratios include 70–30, 80–20, or 90–10, depending on dataset size and modeling objectives. Both subsets contain the same predictor variables and outcome variable. However, only the training set outcomes are used during model fitting, while the test set outcomes are reserved exclusively for evaluation. Keeping the test set untouched during training ensures an unbiased assessment of predictive performance.
+
+As a general rule, partitioning should occur *before* applying any data-dependent preprocessing steps such as scaling, encoding, or imputation. This order helps prevent data leakage and preserves the integrity of model evaluation.
 
 ### Implementing the Train–Test Split in R {.unnumbered}
 
-We illustrate the train–test split using R and the **liver** package. We return to the `churn` dataset introduced in Chapter [-@sec-ch4-EDA-churn], where the goal is to predict customer churn using machine learning models (discussed in the next chapter). First, following the data preparation steps in Section [-@sec-ch4-EDA-churn-prep], we load and prepare the dataset as follows:
+We illustrate the train–test split using R and the **liver** package. We return to the `churn` dataset introduced in Chapter [-@sec-ch4-EDA-churn], where the goal is to predict customer churn using machine learning models (discussed in the next chapter). We load the dataset as follows:
 
 ```{r}
 library(liver)
 
 data(churn)
-
-churn[churn == "unknown"] <- NA
-churn <- droplevels(churn)
-
-library(Hmisc)
-
-churn$education <- impute(churn$education, "random")
-churn$income    <- impute(churn$income, "random")
-churn$marital   <- impute(churn$marital, "random")
 ```
 
-There are several ways to perform a train–test split in R, including functions from popular packages such as **rsample** or **caret**, or by writing custom sampling code in base R. In this book, we use the `partition()` function from the **liver** package because it provides a simple and consistent interface that supports the examples presented throughout the modeling chapters.
+Note that this dataset is relatively clean. A small number of entries in the `education`, `income`, and `marital` features are recorded as `"unknown"`. For simplicity in this section, we treat `"unknown"` as a valid category rather than converting it to a missing value. The focus here is solely on data partitioning; preprocessing steps will be addressed later in the chapter.
+
+There are several ways to perform a train–test split in R, including functions from packages such as **rsample** or **caret**, or by writing custom sampling code in base R. In this book, we use the `partition()` function from the **liver** package because it provides a simple and consistent interface used throughout the modeling chapters.
 
 The `partition()` function divides a dataset into subsets based on a specified ratio. Below, we split the dataset into 80 percent training and 20 percent test data:
 
@@ -118,11 +113,11 @@ test_set  = data_sets$part2
 test_labels = test_set$churn
 ```
 
-The use of `set.seed(42)` ensures reproducibility, meaning the same split will occur each time the code is run. This is a vital practice for ensuring consistent model development and evaluation. The `test_labels` vector stores the actual target values from the test set and is used for evaluating model predictions. These labels must remain hidden during model training to avoid data leakage.
+The use of `set.seed(42)` ensures reproducibility, so that the same split is generated each time the code is executed. The `test_labels` vector stores the true target values from the test set. These labels are used only during model evaluation and must remain unseen during model training to avoid data leakage.
 
 > *Practice:* Using the `partition()` function, repeat the train–test split with a 70–30 ratio. Compare the sizes of the training and test sets using `nrow(train_set)` and `nrow(test_set)`. Reflect on how the choice of split ratio may influence model performance and stability.
 
-Splitting data into training and test sets allows us to assess a model’s generalization performance, that is, how well it predicts new, unseen data. While the train–test split is widely used, it can yield variable results depending on how the data is divided. A more robust and reliable alternative is cross-validation, introduced in the next section.
+While the train–test split is simple and widely used, performance estimates can vary depending on how the data is divided. A more robust alternative is cross-validation, introduced in the next section.
 
 ## Cross-Validation for Reliable Model Evaluation {#sec-ch6-cross-validation}
 
@@ -131,6 +126,7 @@ While the train–test split is widely used for its simplicity, the resulting pe
 Cross-validation is a resampling method that offers a more comprehensive evaluation than a single train–test split. In *k*-fold cross-validation, the dataset is randomly partitioned into *k* non-overlapping subsets (folds) of approximately equal size. The model is trained on *k*–1 folds and evaluated on the remaining fold. This process is repeated *k* times, with each fold serving once as the validation set. The overall performance is then estimated by averaging the metrics across all *k* iterations. Common choices for *k* include 5 or 10, as illustrated in @fig-cross-validation.
 
 ```{r fig-cross-validation, echo = FALSE, out.width = "65%", fig.cap = "Illustration of k-fold cross-validation. The dataset is randomly split into k non-overlapping folds (k = 5 shown). In each iteration, the model is trained on k–1 folds (shown in green) and evaluated on the remaining fold (shown in yellow)."}
+
 knitr::include_graphics("images/ch6_cross_validation.png")
 ```
 

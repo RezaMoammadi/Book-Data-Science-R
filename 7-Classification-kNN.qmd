@@ -376,15 +376,7 @@ str(churn)
 
 The dataset is a data frame containing `r nrow(churn)` observations and `r ncol(churn) - 1` predictor variables, together with the binary outcome variable `churn`. Consistent with the earlier analysis in Chapter [-@sec-ch4-EDA], we exclude `customer_ID`, which is an identifier, and we remove predictors that are deterministic functions of other credit variables (`available_credit` and `utilization_ratio`). Excluding such variables reduces redundancy and helps ensure that distance calculations are not dominated by multiple representations of the same information.
 
-Before proceeding to Step 4 (Data Setup for Modeling) in Chapter [-@sec-ch6-setup-data], we prepare the dataset for modeling. To avoid data leakage (see Section [-@sec-ch6-data-leakage]), preprocessing steps that depend on the data distribution, including imputation and scaling, will be applied after partitioning the dataset into training and test sets. We also ensure that the outcome is coded as a factor with levels `no` and `yes`, which is required by several modeling and evaluation functions.
-
-```{r}
-# Ensure outcome coding is consistent
-churn$churn <- factor(churn$churn, levels = c("no", "yes"))
-
-# Drop any unused levels
-churn <- droplevels(churn)
-```
+Before proceeding to Step 4 (Data Setup for Modeling) in Chapter [-@sec-ch6-setup-data], we prepare the dataset for modeling. To avoid data leakage (see Section [-@sec-ch6-data-leakage]), preprocessing steps that depend on the data distribution, including imputation and scaling, will be applied after partitioning the dataset into training and test sets. 
 
 In the remainder of this case study, we proceed step by step: partitioning the data, applying preprocessing after the split to avoid leakage, selecting an appropriate value of $k$, fitting the model, generating predictions, and evaluating performance. Because kNN is distance-based, each step in data setup directly affects how similarity is measured and, therefore, how predictions are formed.
 
@@ -405,31 +397,39 @@ test_labels = test_set$churn
 
 The `partition()` function performs a random split while preserving the class distribution of the target variable. Readers may verify that the churn rate is similar across both sets (see Section [-@sec-ch6-validate-partition]).
 
-Preprocessing steps such as imputation depend on the data distribution, so they should be applied after partitioning to reduce the risk of data leakage (see Section [-@sec-ch6-data-leakage]). In this case study, we apply the same random imputation strategy separately within each subset after splitting.
+> *Practice:* Repartition the `churn` dataset into a 70% training set and a 30% test set and verify that the class distribution of `churn` is preserved across both sets.
+
+#### Imputation for kNN {.unnumbered}
+
+The `churn` dataset is relatively clean, except that some entries in `education`, `income`, and `marital` are recorded as `"unknown"`, indicating missing information. Because kNN relies on distance calculations, it cannot handle missing values directly. We therefore replace `"unknown"` with missing values and impute them before fitting the model.
+
+To avoid data leakage (see Section [-@sec-ch6-data-leakage]), imputation values are computed from the training set and then applied to both the training and test sets. Here we use mode imputation for these categorical features. This approach is simple and reproducible, although it can slightly over-represent the most frequent category.
 
 ```{r}
-library(Hmisc)
-
-set.seed(42)
-
 # Treat "unknown" as missing
 train_set[train_set == "unknown"] <- NA
 test_set[test_set == "unknown"] <- NA
 
-# Random imputation (applied separately within each set)
-train_set$education <- impute(train_set$education, "random")
-train_set$income    <- impute(train_set$income, "random")
-train_set$marital   <- impute(train_set$marital, "random")
+# Training-derived modes
+mode_education = names(sort(table(train_set$education, useNA = "no"), decreasing = TRUE))[1]
+mode_income    = names(sort(table(train_set$income,    useNA = "no"), decreasing = TRUE))[1]
+mode_marital   = names(sort(table(train_set$marital,   useNA = "no"), decreasing = TRUE))[1]
 
-test_set$education <- impute(test_set$education, "random")
-test_set$income    <- impute(test_set$income, "random")
-test_set$marital   <- impute(test_set$marital, "random")
+# Apply to training set
+train_set$education[is.na(train_set$education)] = mode_education
+train_set$income[is.na(train_set$income)]       = mode_income
+train_set$marital[is.na(train_set$marital)]     = mode_marital
 
-train_set <- droplevels(train_set)
-test_set  <- droplevels(test_set)
+# Apply to test set using the same training-derived modes
+test_set$education[is.na(test_set$education)] = mode_education
+test_set$income[is.na(test_set$income)]       = mode_income
+test_set$marital[is.na(test_set$marital)]     = mode_marital
+
+train_set = droplevels(train_set)
+test_set  = droplevels(test_set)
 ```
 
-> *Practice:* Repartition the `churn` dataset into a 70% training set and a 30% test set. Apply the same imputation strategy to each subset after splitting and verify that the class distribution of `churn` is preserved across both sets.
+> *Practice:* For the 70%–30% split, apply the same imputation strategy using training-derived modes and confirm that no missing values remain in `education`, `income`, and `marital`.
 
 #### Encoding Categorical Features for kNN {.unnumbered}
 
@@ -440,8 +440,6 @@ categorical_features = c("gender", "education", "marital", "income", "card_categ
 
 train_onehot = one.hot(train_set, cols = categorical_features)
 test_onehot  = one.hot(test_set,  cols = categorical_features)
-
-str(test_onehot)
 ```
 
 For each categorical variable with $m$ categories, the function creates $m$ binary columns (dummy variables). In practice, it is often preferable to use $m - 1$ dummy variables to avoid redundancy and multicollinearity, while maintaining interpretability and compatibility with distance-based algorithms.

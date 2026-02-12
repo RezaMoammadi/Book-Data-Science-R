@@ -327,7 +327,7 @@
 \title{{Data Science Foundations and Machine Learning with R: From Data
 to Decisions}}
 \author{\href{https://www.uva.nl/profile/a.mohammadi}{{Reza Mohammadi}}}
-\date{11 February 2026}
+\date{12 February 2026}
 
 \begin{document}
 \maketitle
@@ -10617,15 +10617,20 @@ is implemented in practice. The most common method is the
 \emph{train--test split}, also known as the \emph{holdout method}. In
 this approach, the dataset is divided into two subsets: a \emph{training
 set} used to develop the model and a \emph{test set} reserved for
-evaluating the model's ability to generalize to new, unseen data. This
-separation is essential for assessing out-of-sample performance.
+evaluating its ability to generalize to new, unseen data.
 
-Typical split ratios include 70--30, 80--20, or 90--10, depending on the
-size of the dataset and the modeling objectives. Both subsets include
-the same predictor variables and the outcome of interest, but only the
-training set's outcome values are used during model fitting. The test
-set remains untouched during training to avoid data leakage and provides
-a realistic benchmark for evaluating the model's predictive performance.
+Typical split ratios include 70--30, 80--20, or 90--10, depending on
+dataset size and modeling objectives. Both subsets contain the same
+predictor variables and outcome variable. However, only the training set
+outcomes are used during model fitting, while the test set outcomes are
+reserved exclusively for evaluation. Keeping the test set untouched
+during training ensures an unbiased assessment of predictive
+performance.
+
+As a general rule, partitioning should occur \emph{before} applying any
+data-dependent preprocessing steps such as scaling, encoding, or
+imputation. This order helps prevent data leakage and preserves the
+integrity of model evaluation.
 
 \subsection*{Implementing the Train--Test Split in
 R}\label{implementing-the-traintest-split-in-r}
@@ -10635,34 +10640,30 @@ R}
 We illustrate the train--test split using R and the \textbf{liver}
 package. We return to the \texttt{churn} dataset introduced in Chapter
 \ref{sec-ch4-EDA-churn}, where the goal is to predict customer churn
-using machine learning models (discussed in the next chapter). First,
-following the data preparation steps in Section
-\ref{sec-ch4-EDA-churn-prep}, we load and prepare the dataset as
-follows:
+using machine learning models (discussed in the next chapter). We load
+the dataset as follows:
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(liver)}
 
 \FunctionTok{data}\NormalTok{(churn)}
-
-\NormalTok{churn[churn }\SpecialCharTok{==} \StringTok{"unknown"}\NormalTok{] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
-\NormalTok{churn }\OtherTok{\textless{}{-}} \FunctionTok{droplevels}\NormalTok{(churn)}
-
-\FunctionTok{library}\NormalTok{(Hmisc)}
-
-\NormalTok{churn}\SpecialCharTok{$}\NormalTok{education }\OtherTok{\textless{}{-}} \FunctionTok{impute}\NormalTok{(churn}\SpecialCharTok{$}\NormalTok{education, }\StringTok{"random"}\NormalTok{)}
-\NormalTok{churn}\SpecialCharTok{$}\NormalTok{income    }\OtherTok{\textless{}{-}} \FunctionTok{impute}\NormalTok{(churn}\SpecialCharTok{$}\NormalTok{income, }\StringTok{"random"}\NormalTok{)}
-\NormalTok{churn}\SpecialCharTok{$}\NormalTok{marital   }\OtherTok{\textless{}{-}} \FunctionTok{impute}\NormalTok{(churn}\SpecialCharTok{$}\NormalTok{marital, }\StringTok{"random"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
+Note that this dataset is relatively clean. A small number of entries in
+the \texttt{education}, \texttt{income}, and \texttt{marital} features
+are recorded as \texttt{"unknown"}. For simplicity in this section, we
+treat \texttt{"unknown"} as a valid category rather than converting it
+to a missing value. The focus here is solely on data partitioning;
+preprocessing steps will be addressed later in the chapter.
+
 There are several ways to perform a train--test split in R, including
-functions from popular packages such as \textbf{rsample} or
-\textbf{caret}, or by writing custom sampling code in base R. In this
-book, we use the \texttt{partition()} function from the \textbf{liver}
-package because it provides a simple and consistent interface that
-supports the examples presented throughout the modeling chapters.
+functions from packages such as \textbf{rsample} or \textbf{caret}, or
+by writing custom sampling code in base R. In this book, we use the
+\texttt{partition()} function from the \textbf{liver} package because it
+provides a simple and consistent interface used throughout the modeling
+chapters.
 
 The \texttt{partition()} function divides a dataset into subsets based
 on a specified ratio. Below, we split the dataset into 80 percent
@@ -10681,12 +10682,11 @@ training and 20 percent test data:
 \end{Highlighting}
 \end{Shaded}
 
-The use of \texttt{set.seed(42)} ensures reproducibility, meaning the
-same split will occur each time the code is run. This is a vital
-practice for ensuring consistent model development and evaluation. The
-\texttt{test\_labels} vector stores the actual target values from the
-test set and is used for evaluating model predictions. These labels must
-remain hidden during model training to avoid data leakage.
+The use of \texttt{set.seed(42)} ensures reproducibility, so that the
+same split is generated each time the code is executed. The
+\texttt{test\_labels} vector stores the true target values from the test
+set. These labels are used only during model evaluation and must remain
+unseen during model training to avoid data leakage.
 
 \begin{quote}
 \emph{Practice:} Using the \texttt{partition()} function, repeat the
@@ -10696,10 +10696,8 @@ and test sets using \texttt{nrow(train\_set)} and
 influence model performance and stability.
 \end{quote}
 
-Splitting data into training and test sets allows us to assess a model's
-generalization performance, that is, how well it predicts new, unseen
-data. While the train--test split is widely used, it can yield variable
-results depending on how the data is divided. A more robust and reliable
+While the train--test split is simple and widely used, performance
+estimates can vary depending on how the data is divided. A more robust
 alternative is cross-validation, introduced in the next section.
 
 \section{Cross-Validation for Reliable Model
@@ -11263,8 +11261,8 @@ Let us take a quick look at the \texttt{marital} variable in the
 \begin{Highlighting}[]
 \FunctionTok{table}\NormalTok{(churn}\SpecialCharTok{$}\NormalTok{marital)}
    
-\NormalTok{    married   single divorced }
-       \DecValTok{5044}     \DecValTok{4275}      \DecValTok{808}
+\NormalTok{    married   single divorced  unknown }
+       \DecValTok{4687}     \DecValTok{3943}      \DecValTok{748}      \DecValTok{749}
 \end{Highlighting}
 \end{Shaded}
 
@@ -11290,19 +11288,17 @@ level, converting them into binary indicators.
 \NormalTok{churn\_encoded }\OtherTok{\textless{}{-}} \FunctionTok{one.hot}\NormalTok{(churn, }\AttributeTok{cols =} \FunctionTok{c}\NormalTok{(}\StringTok{"marital"}\NormalTok{), }\AttributeTok{dropCols =} \ConstantTok{FALSE}\NormalTok{)}
 
 \FunctionTok{str}\NormalTok{(churn\_encoded)}
-   \StringTok{\textquotesingle{}data.frame\textquotesingle{}}\SpecialCharTok{:}    \DecValTok{10127}\NormalTok{ obs. of  }\DecValTok{25}\NormalTok{ variables}\SpecialCharTok{:}
+   \StringTok{\textquotesingle{}data.frame\textquotesingle{}}\SpecialCharTok{:}    \DecValTok{10127}\NormalTok{ obs. of  }\DecValTok{26}\NormalTok{ variables}\SpecialCharTok{:}
     \ErrorTok{$}\NormalTok{ customer\_ID          }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{768805383} \DecValTok{818770008} \DecValTok{713982108} \DecValTok{769911858} \DecValTok{709106358} \DecValTok{713061558} \DecValTok{810347208} \DecValTok{818906208} \DecValTok{710930508} \DecValTok{719661558}\NormalTok{ ...}
     \SpecialCharTok{$}\NormalTok{ age                  }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{45} \DecValTok{49} \DecValTok{51} \DecValTok{40} \DecValTok{40} \DecValTok{44} \DecValTok{51} \DecValTok{32} \DecValTok{37} \DecValTok{48}\NormalTok{ ...}
     \SpecialCharTok{$}\NormalTok{ gender               }\SpecialCharTok{:}\NormalTok{ Factor w}\SpecialCharTok{/} \DecValTok{2}\NormalTok{ levels }\StringTok{"female"}\NormalTok{,}\StringTok{"male"}\SpecialCharTok{:} \DecValTok{2} \DecValTok{1} \DecValTok{2} \DecValTok{1} \DecValTok{2} \DecValTok{2} \DecValTok{2} \DecValTok{2} \DecValTok{2} \DecValTok{2}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ education            }\SpecialCharTok{:}\NormalTok{ Factor w}\SpecialCharTok{/} \DecValTok{6}\NormalTok{ levels }\StringTok{"uneducated"}\NormalTok{,}\StringTok{"highschool"}\NormalTok{,..}\SpecialCharTok{:} \DecValTok{2} \DecValTok{4} \DecValTok{4} \DecValTok{2} \DecValTok{1} \DecValTok{4} \DecValTok{4} \DecValTok{2} \DecValTok{1} \DecValTok{4}\NormalTok{ ...}
-\NormalTok{     ..}\SpecialCharTok{{-}} \FunctionTok{attr}\NormalTok{(}\SpecialCharTok{*}\NormalTok{, }\StringTok{"imputed"}\NormalTok{)}\OtherTok{=}\NormalTok{ int [}\DecValTok{1}\SpecialCharTok{:}\DecValTok{1519}\NormalTok{] }\DecValTok{7} \DecValTok{12} \DecValTok{16} \DecValTok{18} \DecValTok{24} \DecValTok{25} \DecValTok{28} \DecValTok{31} \DecValTok{42} \DecValTok{51}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ marital              }\SpecialCharTok{:}\NormalTok{ Factor w}\SpecialCharTok{/} \DecValTok{3}\NormalTok{ levels }\StringTok{"married"}\NormalTok{,}\StringTok{"single"}\NormalTok{,..}\SpecialCharTok{:} \DecValTok{1} \DecValTok{2} \DecValTok{1} \DecValTok{2} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{2} \DecValTok{2}\NormalTok{ ...}
-\NormalTok{     ..}\SpecialCharTok{{-}} \FunctionTok{attr}\NormalTok{(}\SpecialCharTok{*}\NormalTok{, }\StringTok{"imputed"}\NormalTok{)}\OtherTok{=}\NormalTok{ int [}\DecValTok{1}\SpecialCharTok{:}\DecValTok{749}\NormalTok{] }\DecValTok{4} \DecValTok{8} \DecValTok{11} \DecValTok{14} \DecValTok{16} \DecValTok{27} \DecValTok{39} \DecValTok{56} \DecValTok{73} \DecValTok{82}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ marital\_married      }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{1} \DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ marital\_single       }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{1}\NormalTok{ ...}
+    \SpecialCharTok{$}\NormalTok{ education            }\SpecialCharTok{:}\NormalTok{ Factor w}\SpecialCharTok{/} \DecValTok{7}\NormalTok{ levels }\StringTok{"uneducated"}\NormalTok{,}\StringTok{"highschool"}\NormalTok{,..}\SpecialCharTok{:} \DecValTok{2} \DecValTok{4} \DecValTok{4} \DecValTok{2} \DecValTok{1} \DecValTok{4} \DecValTok{7} \DecValTok{2} \DecValTok{1} \DecValTok{4}\NormalTok{ ...}
+    \SpecialCharTok{$}\NormalTok{ marital              }\SpecialCharTok{:}\NormalTok{ Factor w}\SpecialCharTok{/} \DecValTok{4}\NormalTok{ levels }\StringTok{"married"}\NormalTok{,}\StringTok{"single"}\NormalTok{,..}\SpecialCharTok{:} \DecValTok{1} \DecValTok{2} \DecValTok{1} \DecValTok{4} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{4} \DecValTok{2} \DecValTok{2}\NormalTok{ ...}
+    \SpecialCharTok{$}\NormalTok{ marital\_married      }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{1} \DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
+    \SpecialCharTok{$}\NormalTok{ marital\_single       }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{1}\NormalTok{ ...}
     \SpecialCharTok{$}\NormalTok{ marital\_divorced     }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ income               }\SpecialCharTok{:}\NormalTok{ Factor w}\SpecialCharTok{/} \DecValTok{5}\NormalTok{ levels }\StringTok{"\textless{}40K"}\NormalTok{,}\StringTok{"40K{-}60K"}\NormalTok{,..}\SpecialCharTok{:} \DecValTok{3} \DecValTok{1} \DecValTok{4} \DecValTok{1} \DecValTok{3} \DecValTok{2} \DecValTok{5} \DecValTok{3} \DecValTok{3} \DecValTok{4}\NormalTok{ ...}
-\NormalTok{     ..}\SpecialCharTok{{-}} \FunctionTok{attr}\NormalTok{(}\SpecialCharTok{*}\NormalTok{, }\StringTok{"imputed"}\NormalTok{)}\OtherTok{=}\NormalTok{ int [}\DecValTok{1}\SpecialCharTok{:}\DecValTok{1112}\NormalTok{] }\DecValTok{20} \DecValTok{29} \DecValTok{40} \DecValTok{45} \DecValTok{59} \DecValTok{84} \DecValTok{95} \DecValTok{101} \DecValTok{102} \DecValTok{139}\NormalTok{ ...}
+    \SpecialCharTok{$}\NormalTok{ marital\_unknown      }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
+    \SpecialCharTok{$}\NormalTok{ income               }\SpecialCharTok{:}\NormalTok{ Factor w}\SpecialCharTok{/} \DecValTok{6}\NormalTok{ levels }\StringTok{"\textless{}40K"}\NormalTok{,}\StringTok{"40K{-}60K"}\NormalTok{,..}\SpecialCharTok{:} \DecValTok{3} \DecValTok{1} \DecValTok{4} \DecValTok{1} \DecValTok{3} \DecValTok{2} \DecValTok{5} \DecValTok{3} \DecValTok{3} \DecValTok{4}\NormalTok{ ...}
     \SpecialCharTok{$}\NormalTok{ card\_category        }\SpecialCharTok{:}\NormalTok{ Factor w}\SpecialCharTok{/} \DecValTok{4}\NormalTok{ levels }\StringTok{"blue"}\NormalTok{,}\StringTok{"silver"}\NormalTok{,..}\SpecialCharTok{:} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{3} \DecValTok{2} \DecValTok{1} \DecValTok{1}\NormalTok{ ...}
     \SpecialCharTok{$}\NormalTok{ dependent\_count      }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{3} \DecValTok{5} \DecValTok{3} \DecValTok{4} \DecValTok{3} \DecValTok{2} \DecValTok{4} \DecValTok{0} \DecValTok{3} \DecValTok{2}\NormalTok{ ...}
     \SpecialCharTok{$}\NormalTok{ months\_on\_book       }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{39} \DecValTok{44} \DecValTok{36} \DecValTok{34} \DecValTok{21} \DecValTok{36} \DecValTok{46} \DecValTok{27} \DecValTok{36} \DecValTok{36}\NormalTok{ ...}
@@ -12513,19 +12509,7 @@ Before proceeding to Step 4 (Data Setup for Modeling) in Chapter
 data leakage (see Section \ref{sec-ch6-data-leakage}), preprocessing
 steps that depend on the data distribution, including imputation and
 scaling, will be applied after partitioning the dataset into training
-and test sets. We also ensure that the outcome is coded as a factor with
-levels \texttt{no} and \texttt{yes}, which is required by several
-modeling and evaluation functions.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# Ensure outcome coding is consistent}
-\NormalTok{churn}\SpecialCharTok{$}\NormalTok{churn }\OtherTok{\textless{}{-}} \FunctionTok{factor}\NormalTok{(churn}\SpecialCharTok{$}\NormalTok{churn, }\AttributeTok{levels =} \FunctionTok{c}\NormalTok{(}\StringTok{"no"}\NormalTok{, }\StringTok{"yes"}\NormalTok{))}
-
-\CommentTok{\# Drop any unused levels}
-\NormalTok{churn }\OtherTok{\textless{}{-}} \FunctionTok{droplevels}\NormalTok{(churn)}
-\end{Highlighting}
-\end{Shaded}
+and test sets.
 
 In the remainder of this case study, we proceed step by step:
 partitioning the data, applying preprocessing after the split to avoid
@@ -12560,41 +12544,58 @@ preserving the class distribution of the target variable. Readers may
 verify that the churn rate is similar across both sets (see Section
 \ref{sec-ch6-validate-partition}).
 
-Preprocessing steps such as imputation depend on the data distribution,
-so they should be applied after partitioning to reduce the risk of data
-leakage (see Section \ref{sec-ch6-data-leakage}). In this case study, we
-apply the same random imputation strategy separately within each subset
-after splitting.
+\begin{quote}
+\emph{Practice:} Repartition the \texttt{churn} dataset into a 70\%
+training set and a 30\% test set and verify that the class distribution
+of \texttt{churn} is preserved across both sets.
+\end{quote}
+
+\subsubsection*{Imputation for kNN}\label{imputation-for-knn}
+\addcontentsline{toc}{subsubsection}{Imputation for kNN}
+
+The \texttt{churn} dataset is relatively clean, except that some entries
+in \texttt{education}, \texttt{income}, and \texttt{marital} are
+recorded as \texttt{"unknown"}, indicating missing information. Because
+kNN relies on distance calculations, it cannot handle missing values
+directly. We therefore replace \texttt{"unknown"} with missing values
+and impute them before fitting the model.
+
+To avoid data leakage (see Section \ref{sec-ch6-data-leakage}),
+imputation values are computed from the training set and then applied to
+both the training and test sets. Here we use mode imputation for these
+categorical features. This approach is simple and reproducible, although
+it can slightly over-represent the most frequent category.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{library}\NormalTok{(Hmisc)}
-
-\FunctionTok{set.seed}\NormalTok{(}\DecValTok{42}\NormalTok{)}
-
 \CommentTok{\# Treat "unknown" as missing}
 \NormalTok{train\_set[train\_set }\SpecialCharTok{==} \StringTok{"unknown"}\NormalTok{] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
 \NormalTok{test\_set[test\_set }\SpecialCharTok{==} \StringTok{"unknown"}\NormalTok{] }\OtherTok{\textless{}{-}} \ConstantTok{NA}
 
-\CommentTok{\# Random imputation (applied separately within each set)}
-\NormalTok{train\_set}\SpecialCharTok{$}\NormalTok{education }\OtherTok{\textless{}{-}} \FunctionTok{impute}\NormalTok{(train\_set}\SpecialCharTok{$}\NormalTok{education, }\StringTok{"random"}\NormalTok{)}
-\NormalTok{train\_set}\SpecialCharTok{$}\NormalTok{income    }\OtherTok{\textless{}{-}} \FunctionTok{impute}\NormalTok{(train\_set}\SpecialCharTok{$}\NormalTok{income, }\StringTok{"random"}\NormalTok{)}
-\NormalTok{train\_set}\SpecialCharTok{$}\NormalTok{marital   }\OtherTok{\textless{}{-}} \FunctionTok{impute}\NormalTok{(train\_set}\SpecialCharTok{$}\NormalTok{marital, }\StringTok{"random"}\NormalTok{)}
+\CommentTok{\# Training{-}derived modes}
+\NormalTok{mode\_education }\OtherTok{=} \FunctionTok{names}\NormalTok{(}\FunctionTok{sort}\NormalTok{(}\FunctionTok{table}\NormalTok{(train\_set}\SpecialCharTok{$}\NormalTok{education, }\AttributeTok{useNA =} \StringTok{"no"}\NormalTok{), }\AttributeTok{decreasing =} \ConstantTok{TRUE}\NormalTok{))[}\DecValTok{1}\NormalTok{]}
+\NormalTok{mode\_income    }\OtherTok{=} \FunctionTok{names}\NormalTok{(}\FunctionTok{sort}\NormalTok{(}\FunctionTok{table}\NormalTok{(train\_set}\SpecialCharTok{$}\NormalTok{income,    }\AttributeTok{useNA =} \StringTok{"no"}\NormalTok{), }\AttributeTok{decreasing =} \ConstantTok{TRUE}\NormalTok{))[}\DecValTok{1}\NormalTok{]}
+\NormalTok{mode\_marital   }\OtherTok{=} \FunctionTok{names}\NormalTok{(}\FunctionTok{sort}\NormalTok{(}\FunctionTok{table}\NormalTok{(train\_set}\SpecialCharTok{$}\NormalTok{marital,   }\AttributeTok{useNA =} \StringTok{"no"}\NormalTok{), }\AttributeTok{decreasing =} \ConstantTok{TRUE}\NormalTok{))[}\DecValTok{1}\NormalTok{]}
 
-\NormalTok{test\_set}\SpecialCharTok{$}\NormalTok{education }\OtherTok{\textless{}{-}} \FunctionTok{impute}\NormalTok{(test\_set}\SpecialCharTok{$}\NormalTok{education, }\StringTok{"random"}\NormalTok{)}
-\NormalTok{test\_set}\SpecialCharTok{$}\NormalTok{income    }\OtherTok{\textless{}{-}} \FunctionTok{impute}\NormalTok{(test\_set}\SpecialCharTok{$}\NormalTok{income, }\StringTok{"random"}\NormalTok{)}
-\NormalTok{test\_set}\SpecialCharTok{$}\NormalTok{marital   }\OtherTok{\textless{}{-}} \FunctionTok{impute}\NormalTok{(test\_set}\SpecialCharTok{$}\NormalTok{marital, }\StringTok{"random"}\NormalTok{)}
+\CommentTok{\# Apply to training set}
+\NormalTok{train\_set}\SpecialCharTok{$}\NormalTok{education[}\FunctionTok{is.na}\NormalTok{(train\_set}\SpecialCharTok{$}\NormalTok{education)] }\OtherTok{=}\NormalTok{ mode\_education}
+\NormalTok{train\_set}\SpecialCharTok{$}\NormalTok{income[}\FunctionTok{is.na}\NormalTok{(train\_set}\SpecialCharTok{$}\NormalTok{income)]       }\OtherTok{=}\NormalTok{ mode\_income}
+\NormalTok{train\_set}\SpecialCharTok{$}\NormalTok{marital[}\FunctionTok{is.na}\NormalTok{(train\_set}\SpecialCharTok{$}\NormalTok{marital)]     }\OtherTok{=}\NormalTok{ mode\_marital}
 
-\NormalTok{train\_set }\OtherTok{\textless{}{-}} \FunctionTok{droplevels}\NormalTok{(train\_set)}
-\NormalTok{test\_set  }\OtherTok{\textless{}{-}} \FunctionTok{droplevels}\NormalTok{(test\_set)}
+\CommentTok{\# Apply to test set using the same training{-}derived modes}
+\NormalTok{test\_set}\SpecialCharTok{$}\NormalTok{education[}\FunctionTok{is.na}\NormalTok{(test\_set}\SpecialCharTok{$}\NormalTok{education)] }\OtherTok{=}\NormalTok{ mode\_education}
+\NormalTok{test\_set}\SpecialCharTok{$}\NormalTok{income[}\FunctionTok{is.na}\NormalTok{(test\_set}\SpecialCharTok{$}\NormalTok{income)]       }\OtherTok{=}\NormalTok{ mode\_income}
+\NormalTok{test\_set}\SpecialCharTok{$}\NormalTok{marital[}\FunctionTok{is.na}\NormalTok{(test\_set}\SpecialCharTok{$}\NormalTok{marital)]     }\OtherTok{=}\NormalTok{ mode\_marital}
+
+\NormalTok{train\_set }\OtherTok{=} \FunctionTok{droplevels}\NormalTok{(train\_set)}
+\NormalTok{test\_set  }\OtherTok{=} \FunctionTok{droplevels}\NormalTok{(test\_set)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{quote}
-\emph{Practice:} Repartition the \texttt{churn} dataset into a 70\%
-training set and a 30\% test set. Apply the same imputation strategy to
-each subset after splitting and verify that the class distribution of
-\texttt{churn} is preserved across both sets.
+\emph{Practice:} For the 70\%--30\% split, apply the same imputation
+strategy using training-derived modes and confirm that no missing values
+remain in \texttt{education}, \texttt{income}, and \texttt{marital}.
 \end{quote}
 
 \subsubsection*{Encoding Categorical Features for
@@ -12617,50 +12618,6 @@ this step by generating binary indicator variables:
 
 \NormalTok{train\_onehot }\OtherTok{=} \FunctionTok{one.hot}\NormalTok{(train\_set, }\AttributeTok{cols =}\NormalTok{ categorical\_features)}
 \NormalTok{test\_onehot  }\OtherTok{=} \FunctionTok{one.hot}\NormalTok{(test\_set,  }\AttributeTok{cols =}\NormalTok{ categorical\_features)}
-
-\FunctionTok{str}\NormalTok{(test\_onehot)}
-   \StringTok{\textquotesingle{}data.frame\textquotesingle{}}\SpecialCharTok{:}    \DecValTok{2025}\NormalTok{ obs. of  }\DecValTok{41}\NormalTok{ variables}\SpecialCharTok{:}
-    \ErrorTok{$}\NormalTok{ customer\_ID            }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{713061558} \DecValTok{816082233} \DecValTok{709327383} \DecValTok{806165208} \DecValTok{804424383} \DecValTok{709029408} \DecValTok{788658483} \DecValTok{715318008} \DecValTok{827111283} \DecValTok{720572508}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ age                    }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{44} \DecValTok{35} \DecValTok{45} \DecValTok{47} \DecValTok{63} \DecValTok{41} \DecValTok{53} \DecValTok{55} \DecValTok{45} \DecValTok{38}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ gender                 }\SpecialCharTok{:}\NormalTok{ Factor w}\SpecialCharTok{/} \DecValTok{2}\NormalTok{ levels }\StringTok{"female"}\NormalTok{,}\StringTok{"male"}\SpecialCharTok{:} \DecValTok{2} \DecValTok{2} \DecValTok{1} \DecValTok{2} \DecValTok{2} \DecValTok{2} \DecValTok{1} \DecValTok{1} \DecValTok{2} \DecValTok{1}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ gender\_female          }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{1} \DecValTok{0} \DecValTok{1}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ gender\_male            }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{1} \DecValTok{1} \DecValTok{0} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ education              }\SpecialCharTok{:}\NormalTok{ Factor w}\SpecialCharTok{/} \DecValTok{6}\NormalTok{ levels }\StringTok{"uneducated"}\NormalTok{,}\StringTok{"highschool"}\NormalTok{,..}\SpecialCharTok{:} \DecValTok{4} \DecValTok{4} \DecValTok{4} \DecValTok{6} \DecValTok{2} \DecValTok{4} \DecValTok{3} \DecValTok{3} \DecValTok{4} \DecValTok{4}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ education\_uneducated   }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ education\_highschool   }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ education\_college      }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{1} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ education\_graduate     }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{1}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ education\_post}\SpecialCharTok{{-}}\NormalTok{graduate}\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ education\_doctorate    }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ marital                }\SpecialCharTok{:}\NormalTok{ Factor w}\SpecialCharTok{/} \DecValTok{3}\NormalTok{ levels }\StringTok{"married"}\NormalTok{,}\StringTok{"single"}\NormalTok{,..}\SpecialCharTok{:} \DecValTok{1} \DecValTok{2} \DecValTok{1} \DecValTok{3} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{2} \DecValTok{2} \DecValTok{2}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ marital\_married        }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{1} \DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ marital\_single         }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{1} \DecValTok{1}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ marital\_divorced       }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ income                 }\SpecialCharTok{:}\NormalTok{ Factor w}\SpecialCharTok{/} \DecValTok{5}\NormalTok{ levels }\StringTok{"\textless{}40K"}\NormalTok{,}\StringTok{"40K{-}60K"}\NormalTok{,..}\SpecialCharTok{:} \DecValTok{2} \DecValTok{3} \DecValTok{1} \DecValTok{3} \DecValTok{3} \DecValTok{3} \DecValTok{1} \DecValTok{1} \DecValTok{4} \DecValTok{5}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ income\_}\SpecialCharTok{\textless{}}\DecValTok{40}\NormalTok{K            }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{1} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ income\_40K}\DecValTok{{-}60}\NormalTok{K         }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ income\_60K}\DecValTok{{-}80}\NormalTok{K         }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{1} \DecValTok{0} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ income\_80K}\DecValTok{{-}120}\NormalTok{K        }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{1} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ income\_}\SpecialCharTok{\textgreater{}}\DecValTok{120}\NormalTok{K           }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{1}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ card\_category          }\SpecialCharTok{:}\NormalTok{ Factor w}\SpecialCharTok{/} \DecValTok{4}\NormalTok{ levels }\StringTok{"blue"}\NormalTok{,}\StringTok{"silver"}\NormalTok{,..}\SpecialCharTok{:} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ card\_category\_blue     }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ card\_category\_silver   }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ card\_category\_gold     }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ card\_category\_platinum }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0} \DecValTok{0}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ dependent\_count        }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{2} \DecValTok{3} \DecValTok{2} \DecValTok{1} \DecValTok{1} \DecValTok{4} \DecValTok{2} \DecValTok{1} \DecValTok{3} \DecValTok{4}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ months\_on\_book         }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{36} \DecValTok{30} \DecValTok{37} \DecValTok{42} \DecValTok{56} \DecValTok{36} \DecValTok{38} \DecValTok{36} \DecValTok{41} \DecValTok{28}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ relationship\_count     }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{3} \DecValTok{5} \DecValTok{6} \DecValTok{5} \DecValTok{3} \DecValTok{4} \DecValTok{5} \DecValTok{4} \DecValTok{2} \DecValTok{2}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ months\_inactive        }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{2} \DecValTok{3} \DecValTok{1} \DecValTok{2} \DecValTok{2} \DecValTok{2} \DecValTok{3}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ contacts\_count\_12      }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{2} \DecValTok{3} \DecValTok{2} \DecValTok{0} \DecValTok{2} \DecValTok{2} \DecValTok{3} \DecValTok{1} \DecValTok{2} \DecValTok{3}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ credit\_limit           }\SpecialCharTok{:}\NormalTok{ num  }\DecValTok{4010} \DecValTok{8547} \DecValTok{14470} \DecValTok{20979} \DecValTok{10215}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ revolving\_balance      }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{1247} \DecValTok{1666} \DecValTok{1157} \DecValTok{1800} \DecValTok{1010} \DecValTok{2517} \DecValTok{1490} \DecValTok{1914} \DecValTok{578} \DecValTok{2055}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ available\_credit       }\SpecialCharTok{:}\NormalTok{ num  }\DecValTok{2763} \DecValTok{6881} \DecValTok{13313} \DecValTok{19179} \DecValTok{9205}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ transaction\_amount\_12  }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{1088} \DecValTok{1311} \DecValTok{1207} \DecValTok{1178} \DecValTok{1904} \DecValTok{1589} \DecValTok{1411} \DecValTok{1407} \DecValTok{1109} \DecValTok{1042}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ transaction\_count\_12   }\SpecialCharTok{:}\NormalTok{ int  }\DecValTok{24} \DecValTok{33} \DecValTok{21} \DecValTok{27} \DecValTok{40} \DecValTok{24} \DecValTok{28} \DecValTok{43} \DecValTok{28} \DecValTok{23}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ ratio\_amount\_Q4\_Q1     }\SpecialCharTok{:}\NormalTok{ num  }\FloatTok{1.376} \FloatTok{1.163} \FloatTok{0.966} \FloatTok{0.906} \FloatTok{0.843}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ ratio\_count\_Q4\_Q1      }\SpecialCharTok{:}\NormalTok{ num  }\FloatTok{0.846} \DecValTok{2} \FloatTok{0.909} \FloatTok{0.929} \DecValTok{1}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ utilization\_ratio      }\SpecialCharTok{:}\NormalTok{ num  }\FloatTok{0.311} \FloatTok{0.195} \FloatTok{0.08} \FloatTok{0.086} \FloatTok{0.099} \FloatTok{0.282} \FloatTok{0.562} \FloatTok{0.544} \FloatTok{0.018} \FloatTok{0.209}\NormalTok{ ...}
-    \SpecialCharTok{$}\NormalTok{ churn                  }\SpecialCharTok{:}\NormalTok{ Factor w}\SpecialCharTok{/} \DecValTok{2}\NormalTok{ levels }\StringTok{"no"}\NormalTok{,}\StringTok{"yes"}\SpecialCharTok{:} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1} \DecValTok{1}\NormalTok{ ...}
 \end{Highlighting}
 \end{Shaded}
 
@@ -12870,7 +12827,7 @@ customers who have churned:
 \end{Shaded}
 
 \begin{center}
-\includegraphics[width=0.3\linewidth,height=\textheight,keepaspectratio]{7-Classification-kNN_files/figure-pdf/unnamed-chunk-11-1.pdf}
+\includegraphics[width=0.3\linewidth,height=\textheight,keepaspectratio]{7-Classification-kNN_files/figure-pdf/unnamed-chunk-10-1.pdf}
 \end{center}
 
 conf\_max\_knn\_churn = conf.mat(kNN\_predict, test\_labels, reference =
@@ -12878,7 +12835,7 @@ conf\_max\_knn\_churn = conf.mat(kNN\_predict, test\_labels, reference =
 
 The resulting matrix displays the number of true positives, true
 negatives, false positives, and false negatives. In this example, the
-model correctly classified 1765 observations and misclassified 260.
+model correctly classified 1778 observations and misclassified 247.
 
 While the confusion matrix provides a useful snapshot of model
 performance, it does not capture all aspects of classification quality.
@@ -13425,8 +13382,8 @@ computes the confusion matrix for the test set:
 \FunctionTok{conf.mat}\NormalTok{(}\AttributeTok{pred =}\NormalTok{ kNN\_predict, }\AttributeTok{actual =}\NormalTok{ test\_labels, }\AttributeTok{reference =} \StringTok{"yes"}\NormalTok{)}
 \NormalTok{         Predict}
 \NormalTok{   Actual  yes   no}
-\NormalTok{      yes  }\DecValTok{108}  \DecValTok{221}
-\NormalTok{      no    }\DecValTok{38} \DecValTok{1658}
+\NormalTok{      yes  }\DecValTok{113}  \DecValTok{216}
+\NormalTok{      no    }\DecValTok{31} \DecValTok{1665}
 \end{Highlighting}
 \end{Shaded}
 
@@ -13435,10 +13392,10 @@ The \texttt{pred} argument specifies the predicted class labels, and
 argument identifies the positive class. The \texttt{cutoff} argument is
 used when predictions are probabilities, but it is not needed here.
 
-The confusion matrix shows that the model correctly identified 108
-churners (\emph{true positives}) and 1658 non-churners (\emph{true
-negatives}). However, it also incorrectly predicted that 38 non-churners
-would churn (\emph{false positives}), and failed to identify 221 actual
+The confusion matrix shows that the model correctly identified 113
+churners (\emph{true positives}) and 1665 non-churners (\emph{true
+negatives}). However, it also incorrectly predicted that 31 non-churners
+would churn (\emph{false positives}), and failed to identify 216 actual
 churners (\emph{false negatives}).
 
 We can also visualize the confusion matrix:
@@ -13455,12 +13412,12 @@ We can also visualize the confusion matrix:
 
 This plot provides a clear visual summary of prediction outcomes. Next,
 we compute the accuracy and error rate: \[
-\text{Accuracy} = \frac{108 + 1658}{2025} = 0.872,
+\text{Accuracy} = \frac{113 + 1665}{2025} = 0.878,
 \]
 
 \[
-\text{Error Rate} = \frac{38 + 221}{2025} = 0.128.
-\] Thus, the model correctly classified 87.2\% of cases, while 12.8\%
+\text{Error Rate} = \frac{31 + 216}{2025} = 0.122.
+\] Thus, the model correctly classified 87.8\% of cases, while 12.2\%
 were misclassified.
 
 \begin{quote}
@@ -13519,12 +13476,12 @@ sensitivity indicates the proportion of actual churners that the model
 correctly identified. Using the confusion matrix from the previous
 section: \[
 \text{Sensitivity} =
-\frac{108}
-     {108 + 221}
-= 0.328.
+\frac{113}
+     {113 + 216}
+= 0.343.
 \]
 
-Thus, the model correctly identified 32.8 percent of customers who
+Thus, the model correctly identified 34.3 percent of customers who
 churned.
 
 \begin{quote}
@@ -13560,12 +13517,12 @@ specificity indicates how well the model identified customers who
 \emph{did not churn}. Using the confusion matrix from the previous
 section: \[
 \text{Specificity} =
-\frac{1658}
-     {1658 + 38}
-= 0.978.
+\frac{1665}
+     {1665 + 31}
+= 0.982.
 \]
 
-Thus, the model correctly identified 97.8 percent of the customers who
+Thus, the model correctly identified 98.2 percent of the customers who
 remained with the company.
 
 \begin{quote}
@@ -13662,17 +13619,17 @@ customer will churn (\texttt{churn\ =\ yes}).
 
 \emph{Precision} measures how often the model's churn predictions are
 correct: \[
-\text{Precision} = \frac{\text{TP}}{\text{TP} + \text{FP}} = \frac{108}{108 + 38} = 0.74.
+\text{Precision} = \frac{\text{TP}}{\text{TP} + \text{FP}} = \frac{113}{113 + 31} = 0.785.
 \] This indicates that the model's predictions of churn are correct in
-74\% of cases.
+78.5\% of cases.
 
 \emph{Recall} (or sensitivity) reflects how many actual churners were
 correctly identified: \[
-\text{Recall} = \frac{\text{TP}}{\text{TP} + \text{FN}} = \frac{108}{108 + 221} = 0.328.
-\] The model thus successfully identifies 32.8\% of churners.
+\text{Recall} = \frac{\text{TP}}{\text{TP} + \text{FN}} = \frac{113}{113 + 216} = 0.343.
+\] The model thus successfully identifies 34.3\% of churners.
 
 \emph{F1-score} combines these into a single measure: \[
-F1 = \frac{2 \times 108}{2 \times 108 + 38 + 221} = 0.455.
+F1 = \frac{2 \times 113}{2 \times 113 + 31 + 216} = 0.478.
 \] This score summarizes the model's ability to correctly identify
 churners while balancing the cost of false predictions.
 
@@ -13740,7 +13697,7 @@ probability estimates instead of class labels:
 
 \FunctionTok{round}\NormalTok{(kNN\_prob[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{6}\NormalTok{, ], }\DecValTok{2}\NormalTok{)}
 \NormalTok{     yes  no}
-   \DecValTok{1} \FloatTok{0.4} \FloatTok{0.6}
+   \DecValTok{1} \FloatTok{0.2} \FloatTok{0.8}
    \DecValTok{2} \FloatTok{0.0} \FloatTok{1.0}
    \DecValTok{3} \FloatTok{0.0} \FloatTok{1.0}
    \DecValTok{4} \FloatTok{0.0} \FloatTok{1.0}
@@ -13754,7 +13711,7 @@ probabilities: the first column gives the estimated probability that an
 observation belongs to the positive class (\texttt{churn\ =\ yes}), and
 the second column gives the probability for the negative class
 (\texttt{churn\ =\ no}). For example, the first entry of the first
-column is 0.4, indicating that the model assigns a 40 percent chance
+column is 0.2, indicating that the model assigns a 20 percent chance
 that this customer will churn. Many classifiers can return probabilities
 rather than hard class labels. In our kNN implementation, this is done
 with \texttt{type\ =\ "prob"}.
@@ -13768,14 +13725,14 @@ compare two different thresholds:
 \FunctionTok{conf.mat}\NormalTok{(kNN\_prob[, }\StringTok{"yes"}\NormalTok{], test\_labels, }\AttributeTok{reference =} \StringTok{"yes"}\NormalTok{, }\AttributeTok{cutoff =} \FloatTok{0.5}\NormalTok{)}
 \NormalTok{         Predict}
 \NormalTok{   Actual  yes   no}
-\NormalTok{      yes  }\DecValTok{108}  \DecValTok{221}
-\NormalTok{      no    }\DecValTok{38} \DecValTok{1658}
+\NormalTok{      yes  }\DecValTok{113}  \DecValTok{216}
+\NormalTok{      no    }\DecValTok{31} \DecValTok{1665}
 
 \FunctionTok{conf.mat}\NormalTok{(kNN\_prob[, }\StringTok{"yes"}\NormalTok{], test\_labels, }\AttributeTok{reference =} \StringTok{"yes"}\NormalTok{, }\AttributeTok{cutoff =} \FloatTok{0.7}\NormalTok{)}
 \NormalTok{         Predict}
 \NormalTok{   Actual  yes   no}
-\NormalTok{      yes   }\DecValTok{61}  \DecValTok{268}
-\NormalTok{      no     }\DecValTok{7} \DecValTok{1689}
+\NormalTok{      yes   }\DecValTok{60}  \DecValTok{269}
+\NormalTok{      no     }\DecValTok{5} \DecValTok{1691}
 \end{Highlighting}
 \end{Shaded}
 
@@ -13976,15 +13933,15 @@ one created earlier using \texttt{roc()}, and returns a numeric value:
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{auc}\NormalTok{(roc\_knn)}
-\NormalTok{   Area under the curve}\SpecialCharTok{:} \FloatTok{0.7884}
+\NormalTok{   Area under the curve}\SpecialCharTok{:} \FloatTok{0.8016}
 \end{Highlighting}
 \end{Shaded}
 
 Here, \texttt{roc\_knn} is the ROC object based on predicted
 probabilities for \texttt{churn\ =\ yes}. The resulting value represents
 the model's ability to rank churners above non-churners. For example,
-the AUC for the kNN model is 0.788, meaning that it ranks churners
-higher than non-churners with a probability of 0.788.
+the AUC for the kNN model is 0.802, meaning that it ranks churners
+higher than non-churners with a probability of 0.802.
 
 \begin{quote}
 \emph{Practice:} Using the ROC object you constructed earlier for the
@@ -14029,7 +13986,7 @@ errors.
 
 \centering{
 
-\includegraphics[width=0.6\linewidth,height=\textheight,keepaspectratio]{images/ch8_confusion-matrices.png}
+\includegraphics[width=0.7\linewidth,height=\textheight,keepaspectratio]{images/ch8_confusion-matrices.png}
 
 }
 
