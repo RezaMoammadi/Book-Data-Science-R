@@ -365,9 +365,7 @@ Choosing *k* is ultimately an empirical process informed by validation and domai
 
 ## Case Study: Predicting Customer Churn with kNN {#sec-ch7-knn-churn}
 
-In this case study, we apply the kNN algorithm to a real-world classification problem. Using the `churn` dataset from the **liver** package in R, we follow the complete modeling workflow: data setup, model training, and evaluation. This provides a practical context to reinforce concepts introduced earlier in the chapter.
-
-The `churn` dataset summarizes customer characteristics and service usage across multiple dimensions, including account tenure, product holdings, transaction activity, and customer service interactions. Our goal is to predict whether a customer has churned (`yes`) or not (`no`) based on these features. Readers unfamiliar with the dataset are encouraged to review the exploratory analysis in Section [-@sec-ch4-EDA-churn], which provides context and preliminary findings. We begin by inspecting the structure:
+In this case study, we apply the kNN algorithm to a practical classification problem using the `churn` dataset from the **liver** package in R. The goal is to predict whether a customer has churned (`yes`) or not (`no`) based on demographic information and service usage patterns. Readers unfamiliar with the dataset are encouraged to review the exploratory analysis in Section [-@sec-ch4-EDA-churn], which provides context and preliminary findings. We begin by inspecting the structure:
 
 ```{r}
 library(liver)
@@ -376,34 +374,25 @@ data(churn)
 str(churn)
 ```
 
-The dataset is an R data frame containing `r nrow(churn)` observations and `r ncol(churn) - 1` predictor variables, along with a binary outcome variable, `churn`. Consistent with the earlier analysis in Chapter [-@sec-ch4-EDA], we exclude `customer_ID` (identifier) and `available_credit` (a deterministic transformation of other credit variables) from the predictor set. The candidate predictors for kNN are:
+The dataset is a data frame containing `r nrow(churn)` observations and `r ncol(churn) - 1` predictor variables, together with the binary outcome variable `churn`. Consistent with the earlier analysis in Chapter [-@sec-ch4-EDA], we exclude `customer_ID`, which is an identifier, and we remove predictors that are deterministic functions of other credit variables (`available_credit` and `utilization_ratio`). Excluding such variables reduces redundancy and helps ensure that distance calculations are not dominated by multiple representations of the same information.
 
-`age`, `gender`, `education`, `marital`, `income`, `card_category`, `dependent_count`, `months_on_book`, `relationship_count`, `months_inactive`, `contacts_count_12`, `credit_limit`, `revolving_balance`, `transaction_amount_12`, `transaction_count_12`, `ratio_amount_Q4_Q1`, and `ratio_count_Q4_Q1`.
-
-Before proceeding to *Data Setup for Modeling* (Chapter [-@sec-ch6-setup-data]), we harmonize missing and unknown values, following the approach in Section [-@sec-ch4-EDA-churn]. Because random imputation is involved, we set a seed for reproducibility. We also ensure the outcome is a factor with levels `no` and `yes`.
+Before proceeding to Step 4 (Data Setup for Modeling) in Chapter [-@sec-ch6-setup-data], we prepare the dataset for modeling. To avoid data leakage (see Section [-@sec-ch6-data-leakage]), preprocessing steps that depend on the data distribution, including imputation and scaling, will be applied after partitioning the dataset into training and test sets. We also ensure that the outcome is coded as a factor with levels `no` and `yes`, which is required by several modeling and evaluation functions.
 
 ```{r}
-library(Hmisc)
+# Ensure outcome coding is consistent
+churn$churn <- factor(churn$churn, levels = c("no", "yes"))
 
-set.seed(42)  # for reproducibility of random imputations
-
-# Treat "unknown" as missing and drop unused levels
-churn[churn == "unknown"] <- NA
+# Drop any unused levels
 churn <- droplevels(churn)
-
-# Random imputation as used in Chapter 4
-churn$education <- impute(churn$education, "random")
-churn$income    <- impute(churn$income, "random")
-churn$marital   <- impute(churn$marital, "random")
 ```
 
-In the remainder of this section, we proceed step by step: partitioning the data, applying preprocessing *after* the split to avoid leakage (scaling numeric features and encoding categorical variables for kNN), selecting an appropriate value of $k$, fitting the model, generating predictions, and evaluating classification performance.
+In the remainder of this case study, we proceed step by step: partitioning the data, applying preprocessing after the split to avoid leakage, selecting an appropriate value of $k$, fitting the model, generating predictions, and evaluating performance. Because kNN is distance-based, each step in data setup directly affects how similarity is measured and, therefore, how predictions are formed.
 
 ### Data Setup for kNN
 
-To evaluate how well the kNN model generalizes to new observations, we begin by splitting the dataset into training and test sets. This separation provides an unbiased estimate of predictive accuracy by testing the model on data not used during training.
+To evaluate how well the kNN model generalizes to new observations, we begin by splitting the dataset into training and test sets. This separation provides an unbiased estimate of predictive performance by assessing the model on data not used during training.
 
-Since the `churn` dataset has already been cleaned and imputed (see Chapter [-@sec-ch3-data-preparation]), we proceed directly to data partitioning using the `partition()` function from the **liver** package. This function divides the data into an 80% training set and a 20% test set:
+We use the `partition()` function from the **liver** package to divide the data into an 80% training set and a 20% test set:
 
 ```{r}
 data_sets = partition(data = churn, ratio = c(0.8, 0.2), set.seed = 42)
@@ -414,9 +403,33 @@ test_set  = data_sets$part2
 test_labels = test_set$churn
 ```
 
-The `partition()` function randomly splits the data. After splitting, one can check that the `churn` rate is similar across the training and test sets; We skip that code here for brevity (see Section [-@sec-ch6-validate-partition]).
+The `partition()` function performs a random split while preserving the class distribution of the target variable. Readers may verify that the churn rate is similar across both sets (see Section [-@sec-ch6-validate-partition]).
 
-> *Practice:* Repartition the `churn` dataset into a 70% training set and a 30% test set, following the approach used in this subsection. Validate the partition by checking that the class distribution of the target variable `churn` is preserved across both sets.
+Preprocessing steps such as imputation depend on the data distribution, so they should be applied after partitioning to reduce the risk of data leakage (see Section [-@sec-ch6-data-leakage]). In this case study, we apply the same random imputation strategy separately within each subset after splitting.
+
+```{r}
+library(Hmisc)
+
+set.seed(42)
+
+# Treat "unknown" as missing
+train_set[train_set == "unknown"] <- NA
+test_set[test_set == "unknown"] <- NA
+
+# Random imputation (applied separately within each set)
+train_set$education <- impute(train_set$education, "random")
+train_set$income    <- impute(train_set$income, "random")
+train_set$marital   <- impute(train_set$marital, "random")
+
+test_set$education <- impute(test_set$education, "random")
+test_set$income    <- impute(test_set$income, "random")
+test_set$marital   <- impute(test_set$marital, "random")
+
+train_set <- droplevels(train_set)
+test_set  <- droplevels(test_set)
+```
+
+> *Practice:* Repartition the `churn` dataset into a 70% training set and a 30% test set. Apply the same imputation strategy to each subset after splitting and verify that the class distribution of `churn` is preserved across both sets.
 
 #### Encoding Categorical Features for kNN {.unnumbered}
 

@@ -22,33 +22,31 @@ Prediction is very difficult, especially if it’s about the future.
 ::::
 :::::
 
-Suppose a churn prediction model reports 95% accuracy, yet consistently fails to identify customers who actually churn. What went wrong? In many cases, the issue lies not in the algorithm itself but in how the data was prepared for modeling. Before reliable machine learning models can be built, the dataset must be not only clean but also properly structured to support learning, validation, and generalization.
+Suppose a churn prediction model reports 95% accuracy, yet consistently fails to identify customers who actually churn. What went wrong? In many cases, the issue lies not in the algorithm itself but in how the data was prepared for modeling. Before reliable machine learning models can be built, the dataset must be structured to support learning, validation, and generalization.
 
 This chapter focuses on the fourth stage of the Data Science Workflow shown in @fig-ch2_DSW: *Data Setup for Modeling*. This stage involves organizing the dataset so that it enables fair training, trustworthy validation, and robust generalization to unseen data.
 
-To accomplish this, we cover four essential tasks:
+To accomplish this, we focus on four core components of data setup: partitioning the data, validating the split, addressing class imbalance, and preparing predictors for modeling. Throughout these steps, we emphasize how to prevent data leakage by ensuring that data-dependent decisions are learned from the training set only.
 
-1.  *Partitioning*: Splitting the dataset into training, validation, and testing subsets.
+The previous chapters laid the groundwork for this stage. In @sec-ch2-Problem-Understanding, we defined the modeling objective. In @sec-ch3-data-preparation and Chapter [-@sec-ch4-EDA], we cleaned and explored the data. Chapter [-@sec-ch5-statistics] introduced inferential tools that now help us assess whether training and test sets are statistically comparable.
 
-2.  *Validating*: Ensuring that the subsets are representative of the overall data distribution.
-
-3.  *Balancing*: Addressing class imbalance when one category dominates in classification problems.
-
-4.  *Feature Preparation*: Encoding categorical variables and scaling numerical features.
-
-The work in the previous chapters forms the foundation for this stage. In @sec-ch2-Problem-Understanding, we defined the modeling objective. In @sec-ch3-data-preparation, we cleaned the data and handled issues such as missing values and outliers. Chapter [-@sec-ch4-EDA] guided the exploratory analysis, and Chapter [-@sec-ch5-statistics] introduced tools to test whether differences between datasets are statistically meaningful.
-
-We now move to the *modeling setup phase*, a crucial but often underestimated step. It ensures that the data is not only clean but also statistically sound, well-structured, and ready for modeling. Proper data setup helps prevent common issues such as overfitting, biased evaluation, and data leakage, all of which can undermine model performance in practice.
+We now turn to *Data Setup for Modeling*, a crucial but often underestimated step. At this stage, the goal is no longer cleaning the data but structuring it for learning and evaluation. Proper data setup prevents overfitting, biased evaluation, and data leakage, all of which can undermine model performance in practice.
 
 This stage, particularly for newcomers, raises important questions: *Why is it necessary to partition the data?* *How can we verify that training and test sets are truly comparable?* *What can we do if one class is severely underrepresented?* *When and how should we scale or encode features?*
 
-These are not just technical details; they reflect essential principles in modern data science: *fairness, reproducibility,* and *trust*. By walking through partitioning, validation, balancing, and feature preparation, we lay the groundwork for building models that not only perform well but also do so reliably and transparently in real-world settings.
+These questions are not merely technical. They reflect fundamental principles of modern data science, including fairness, reproducibility, and reliable generalization. By walking through partitioning, validation, balancing, and feature preparation, we lay the groundwork for building models that perform well and generalize reliably in real-world settings.
 
 ### What This Chapter Covers {.unnumbered}
 
-This chapter completes Step 4 of the Data Science Workflow, *Data Setup for Modeling*. We learn how to partition a dataset into training and test subsets to simulate deployment scenarios and to support fair evaluation. We then validate that the split is statistically representative and free from data leakage, using the inferential tools introduced in Chapter [-@sec-ch5-statistics]. Next, we address class imbalance using approaches such as oversampling, undersampling, and class weighting, which are often essential when the minority class is the main analytical focus. Finally, we prepare predictors for modeling by scaling numerical features (using min–max and z-score transformations) and encoding categorical variables (using ordinal, one-hot, and frequency encoding) so that they can be used effectively by common machine learning algorithms.
+This chapter completes Step 4 of the Data Science Workflow: *Data Setup for Modeling*. We begin by partitioning the dataset into training and test subsets to simulate real-world deployment and support fair evaluation. We also introduce cross-validation as a more robust method for performance estimation and show how to assess whether the resulting split is statistically representative using the inferential tools presented in Chapter [-@sec-ch5-statistics].
 
-By mastering these tasks, we ensure that the data is not only clean but also properly structured for training machine learning models that are robust, fair, and generalizable.
+Next, we address class imbalance, a common challenge in classification tasks where one outcome dominates the dataset. We examine strategies such as oversampling, undersampling, and class weighting to ensure that minority classes are adequately represented during model training.
+
+We then examine data leakage as a cross-cutting risk in predictive modeling. We show how leakage can arise during partitioning, balancing, encoding, scaling, or imputation, and establish the guiding principle that all data-dependent transformations must be learned from the training set only and then applied unchanged to the test set.
+
+Finally, we prepare predictors for modeling by encoding categorical variables and scaling numerical features. We present ordinal and one-hot encoding techniques, along with min–max and z-score transformations, so that predictors are represented in a form suitable for common machine learning algorithms.
+
+Together, these components form the structural foundation required before building and evaluating predictive models in the chapters that follow.
 
 ## Why Is It Necessary to Partition the Data?
 
@@ -259,7 +257,29 @@ Balancing is not always necessary. Many modern algorithms incorporate internal s
 
 In summary, dealing with class imbalance helps the model focus on the right outcomes and make more equitable predictions. It is a crucial preparatory step in classification workflows, particularly when the minority class holds the greatest value.
 
-With class imbalance addressed, the next task is to prepare the predictors for modeling. Many datasets include categorical variables that must be converted into numerical form before they can be used by most machine learning algorithms. In the following section, we explore common strategies for encoding categorical features, followed by scaling methods for numerical variables to ensure consistent measurement across predictors.
+## Data Leakage and How to Prevent It {#sec-ch6-data-leakage}
+
+A common reason why models perform well during development but fail in deployment is *data leakage*: information from outside the training process unintentionally influences model fitting or model selection. Leakage produces overly optimistic performance estimates because the model is evaluated under conditions that would not be available in real-world use.
+
+Data leakage can occur in two broad ways. First, *feature leakage* happens when predictors contain information that is directly tied to the outcome or would only be known after the prediction is made. Second, *procedural leakage* arises when preprocessing decisions are informed by the full dataset before the train–test split, allowing the test set to influence the training process.
+
+The central principle for preventing leakage is straightforward: *all operations that learn from the data must be performed using the training set only*. Once a rule is learned from the training data (for example, an imputation value, a scaling parameter, or a set of selected features), the same rule can be applied unchanged to the test set.
+
+It is important to note that leakage can occur even earlier than this chapter’s workflow, during data preparation. For example, suppose missing values are imputed using the overall mean of a numerical feature computed from the full dataset. If the test set is included when computing that mean, the training process has indirectly “seen” information from the test set. The difference may appear small, but the evaluation is no longer strictly out-of-sample. The correct approach is to compute the imputation value from the training set only and then apply it to both the training and test sets.
+
+Leakage risks also arise throughout the data setup phase:
+
+* Partitioning and evaluation: The test set must remain untouched while models are developed. It should be used only once for final performance reporting.
+
+* Cross-validation and tuning: Cross-validation should be performed within the training set. Using the test set repeatedly to guide tuning decisions leaks information into model selection.
+
+* Class balancing: Oversampling, undersampling, and related methods must be applied only to the training set. Balancing the test set alters the evaluation distribution and yields misleading results.
+
+* Encoding and scaling: Encoding rules and scaling parameters must be estimated from the training set and then applied to the test set using the same settings.
+
+> *Practice:* Identify two preprocessing steps in this chapter (or in Chapter [-@sec-ch3-data-preparation]) that could cause data leakage if applied before partitioning. For each step, describe how you would modify the workflow so that the transformation is learned from the training set only and then applied unchanged to the test set.
+
+A practical example of leakage prevention is discussed in Section [-@sec-ch7-knn-proper-scaling], where feature scaling is performed correctly for a k-Nearest Neighbors model. The same principle applies throughout the modeling workflow: partition first, learn preprocessing rules using the training data only, tune models using cross-validation within the training set, and evaluate only once on the untouched test set.
 
 ## Encoding Categorical Features {#sec-ch6-encoding}
 
@@ -398,11 +418,15 @@ While min–max scaling ensures all features fall within a fixed range, some alg
 
 ## Z-Score Scaling {#sec-ch6-zscore}
 
-While min–max scaling rescales values into a fixed range, *z-score scaling*—also known as *standardization*—centers each numerical feature around zero and scales it to have unit variance. This technique is particularly useful for algorithms that assume normally distributed inputs or rely on gradient-based optimization, such as linear regression, logistic regression, and support vector machines.
+While min–max scaling rescales values into a fixed range, *z-score scaling*—also known as *standardization*—centers each numerical feature at zero and rescales it to have unit variance. This transformation ensures that features measured on different scales contribute comparably during model training.
 
-The formula for z-score scaling is $$
+Z-score scaling is particularly useful for algorithms that rely on gradient-based optimization or are sensitive to the relative magnitude of predictors, such as linear regression, logistic regression, and support vector machines. Unlike min–max scaling, which constrains values to a fixed interval, z-score scaling expresses each observation in terms of its deviation from the mean.
+
+The formula for z-score scaling is
+$$
 x_{\text{scaled}} = \frac{x - \text{mean}(x)}{\text{sd}(x)},
-$$ where $x$ is the original feature value, $\text{mean}(x)$ is the mean of the feature, and $\text{sd}(x)$ is its standard deviation. The result, $x_{\text{scaled}}$, indicates how many standard deviations a given value is from the mean.
+$$
+where $x$ is the original feature value, $\text{mean}(x)$ is the mean of the feature, and $\text{sd}(x)$ is its standard deviation. The result, $x_{\text{scaled}}$, represents the number of standard deviations that an observation lies above or below the mean.
 
 Z-score scaling places features with different units or magnitudes on a comparable scale. However, it remains sensitive to outliers, since both the mean and standard deviation can be influenced by extreme values.
 
@@ -423,32 +447,30 @@ ggplot(data = churn) +
   ggtitle("After Z-Score Scaling")
 ```
 
-The left panel shows the original distribution of `age` values, while the right panel displays the standardized version, where values are centered around 0 and expressed in units of standard deviation. Although the location and scale are adjusted, the shape of the distribution—including any skewness—remains unchanged.
+The left panel shows the original distribution of `age`, while the right panel displays the standardized version. Notice that the center of the distribution shifts to approximately zero and the spread is expressed in units of standard deviation. The overall shape of the distribution—including skewness—remains unchanged.
 :::
 
-It is important to note that z-score scaling does not make a variable normally distributed. It standardizes the location and spread but preserves the underlying shape of the data. If a variable is skewed before scaling, it will remain skewed after transformation.
+It is important to emphasize that z-score scaling does not make a variable normally distributed. It standardizes the location and scale but preserves the underlying distributional shape. If a variable is skewed before scaling, it will remain skewed after transformation.
 
-### Preventing Data Leakage during Scaling {.unnumbered}
-
-When applying feature scaling, it is essential to perform the transformation *after* partitioning the data. If scaling parameters (such as the mean, standard deviation, minimum, or maximum) are computed using the entire dataset before the split, information from the test set can inadvertently influence the training process—a phenomenon known as *data leakage*.
-
-To prevent this, always fit the scaling transformation on the training set and then apply the same parameters to the test set. This ensures that the model is evaluated under true deployment conditions. A practical example of this principle is demonstrated in Section [-@sec-ch7-knn-proper-scaling], where scaling is applied correctly in a k-Nearest Neighbors model.
-
-With both categorical and numerical features now properly encoded and scaled, and with safeguards in place to prevent data leakage, the dataset is ready for modeling. The next section summarizes the key concepts and best practices introduced in this chapter.
+When applying feature scaling, scaling parameters must be estimated using the training set only. If the mean and standard deviation are computed from the full dataset before partitioning, information from the test set influences the training process. This constitutes a form of data leakage and leads to overly optimistic performance estimates. The correct workflow is to compute the scaling parameters on the training data and then apply the same transformation, without recalibration, to the test set. A broader discussion of data leakage and its prevention is provided in Section [-@sec-ch6-data-leakage].
 
 ## Chapter Summary and Takeaways
 
-This chapter completed *Step 4: Data Setup for Modeling* in the Data Science Workflow and established the foundation for valid, generalizable, and trustworthy predictive modeling. We began by highlighting the importance of dividing data into training and testing sets. This separation is essential for reducing overfitting and for assessing how well a model is likely to perform on new data.
+This chapter completed *Step 4: Data Setup for Modeling* in the Data Science Workflow. We began by partitioning data into training and testing sets to support fair evaluation and assess how well models generalize to new observations.
 
-After creating the initial split, we examined how to validate its quality. Statistical tests applied to the target variable and key predictors helped verify that the two subsets were representative of the original dataset. Ensuring such balance supports reliable model evaluation and reduces the risk of biased conclusions.
+After creating the initial split, we examined how to validate its quality. Statistical tests applied to the target variable and selected predictors helped verify that the subsets were representative of the original dataset. This validation step reduces the risk of biased evaluation and misleading conclusions.
 
-We then discussed several practical considerations that arise during data preparation. Addressing class imbalance is critical when working with skewed outcomes, because models trained on imbalanced data often underestimate the minority class. Techniques such as oversampling, undersampling, and class weighting help mitigate this issue. Encoding categorical features and scaling numerical variables further standardize the data, ensuring that all predictors contribute appropriately during model fitting.
+We then addressed class imbalance, a common challenge in classification tasks where one outcome dominates the dataset. Techniques such as oversampling, undersampling, and class weighting help ensure that minority classes are adequately represented during training.
 
-In larger projects, it is often useful to bundle preprocessing steps and model training into a unified workflow. In R, the **mlr3pipelines** package supports such pipelines by allowing users to chain together tasks such as scaling, encoding, feature selection, and model fitting. Although this book demonstrates each step explicitly, pipeline frameworks help prevent data leakage, improve reproducibility, and provide a structured way to manage complex modeling workflows. Readers seeking further guidance may consult *Applied Machine Learning Using mlr3 in R* by Bischl et al. [@bischl2024applied], which offers a comprehensive introduction to the mlr3 ecosystem.
+We also introduced data leakage as a key risk in predictive modeling. We showed how leakage can arise when information from the test set influences model training, whether during partitioning, balancing, encoding, scaling, or imputation. The guiding principle is straightforward: all data-dependent transformations must be learned from the training set only and then applied unchanged to the test set.
 
-Unlike other chapters, this chapter does not include a standalone case study. Instead, the techniques introduced here (partitioning, validation, balancing, encoding, and scaling) are applied directly in the modeling chapters that follow. For example, the churn classification case study in Section [-@sec-ch7-knn-churn] demonstrates how these preparatory steps support the development of a robust classifier.
+Finally, we prepared predictors for modeling by encoding categorical variables and scaling numerical features. Ordinal and one-hot encoding techniques allow qualitative information to be used effectively by learning algorithms, while min–max and z-score transformations place numerical variables on comparable scales.
 
-Together, these components form a crucial foundation for predictive modeling. They reduce common risks such as biased evaluation, data leakage, and misleading comparisons between models. With these safeguards in place, the next chapter introduces classification models, beginning with *k*-Nearest Neighbors.
+In larger projects, preprocessing and model training are often combined within a unified workflow. In R, the **mlr3pipelines** package supports such structured pipelines, helping prevent data leakage and improve reproducibility. Readers seeking a deeper treatment may consult *Applied Machine Learning Using mlr3 in R* by Bischl et al. [@bischl2024applied].
+
+Unlike other chapters, this chapter does not include a standalone case study. Instead, the techniques introduced here—partitioning, validation, balancing, leakage prevention, encoding, and scaling—are integrated into the modeling chapters that follow. For example, the churn classification case study in Section [-@sec-ch7-knn-churn] demonstrates how these steps support the development of a robust classifier.
+
+With the data now properly structured for learning and evaluation, we are ready to construct and compare predictive models. The next chapter begins with one of the most intuitive classification methods: *k*-Nearest Neighbors.
 
 ## Exercises {#sec-ch6-exercises}
 
