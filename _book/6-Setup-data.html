@@ -356,8 +356,8 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#what-if-the-partition-is-invalid" id="toc-what-if-the-partition-is-invalid" class="nav-link" data-scroll-target="#what-if-the-partition-is-invalid">What If the Partition Is Invalid?</a></li>
   </ul></li>
-  <li><a href="#sec-ch6-balancing" id="toc-sec-ch6-balancing" class="nav-link" data-scroll-target="#sec-ch6-balancing"><span class="header-section-number">6.5</span> Dealing with Class Imbalance</a></li>
-  <li><a href="#sec-ch6-data-leakage" id="toc-sec-ch6-data-leakage" class="nav-link" data-scroll-target="#sec-ch6-data-leakage"><span class="header-section-number">6.6</span> Data Leakage and How to Prevent It</a></li>
+  <li><a href="#sec-ch6-data-leakage" id="toc-sec-ch6-data-leakage" class="nav-link" data-scroll-target="#sec-ch6-data-leakage"><span class="header-section-number">6.5</span> Data Leakage and How to Prevent It</a></li>
+  <li><a href="#sec-ch6-balancing" id="toc-sec-ch6-balancing" class="nav-link" data-scroll-target="#sec-ch6-balancing"><span class="header-section-number">6.6</span> Dealing with Class Imbalance</a></li>
   <li><a href="#sec-ch6-encoding" id="toc-sec-ch6-encoding" class="nav-link" data-scroll-target="#sec-ch6-encoding"><span class="header-section-number">6.7</span> Encoding Categorical Features</a></li>
   <li><a href="#sec-ch6-ordinal-encoding" id="toc-sec-ch6-ordinal-encoding" class="nav-link" data-scroll-target="#sec-ch6-ordinal-encoding"><span class="header-section-number">6.8</span> Ordinal Encoding</a></li>
   <li><a href="#sec-ch6-one-hot-encoding" id="toc-sec-ch6-one-hot-encoding" class="nav-link" data-scroll-target="#sec-ch6-one-hot-encoding"><span class="header-section-number">6.9</span> One-Hot Encoding</a>
@@ -410,8 +410,8 @@ window.Quarto = {
 <section id="what-this-chapter-covers" class="level3 unnumbered">
 <h3 class="unnumbered anchored" data-anchor-id="what-this-chapter-covers">What This Chapter Covers</h3>
 <p>This chapter completes Step 4 of the Data Science Workflow: <em>Data Setup for Modeling</em>. We begin by partitioning the dataset into training and test subsets to simulate real-world deployment and support fair evaluation. We also introduce cross-validation as a more robust method for performance estimation and show how to assess whether the resulting split is statistically representative using the inferential tools presented in Chapter <a href="5-Statistics.html" class="quarto-xref"><span>5</span></a>.</p>
-<p>Next, we address class imbalance, a common challenge in classification tasks where one outcome dominates the dataset. We examine strategies such as oversampling, undersampling, and class weighting to ensure that minority classes are adequately represented during model training.</p>
-<p>We then examine data leakage as a cross-cutting risk in predictive modeling. We show how leakage can arise during partitioning, balancing, encoding, scaling, or imputation, and establish the guiding principle that all data-dependent transformations must be learned from the training set only and then applied unchanged to the test set.</p>
+<p>Next, we then examine data leakage as a cross-cutting risk in predictive modeling. We show how leakage can arise during partitioning, balancing, encoding, scaling, or imputation, and establish the guiding principle that all data-dependent transformations must be learned from the training set only and then applied unchanged to the test set.</p>
+<p>We then address class imbalance, a common challenge in classification tasks where one outcome dominates the dataset. We examine strategies such as oversampling, undersampling, and class weighting to ensure that minority classes are adequately represented during model training.</p>
 <p>Finally, we prepare predictors for modeling by encoding categorical variables and scaling numerical features. We present ordinal and one-hot encoding techniques, along with min–max and z-score transformations, so that predictors are represented in a form suitable for common machine learning algorithms.</p>
 <p>Together, these components form the structural foundation required before building and evaluating predictive models in the chapters that follow.</p>
 </section>
@@ -607,78 +607,69 @@ H_a:  \pi_{\text{churn, train}} \neq \pi_{\text{churn, test}}
 </blockquote>
 <section id="what-if-the-partition-is-invalid" class="level3 unnumbered">
 <h3 class="unnumbered anchored" data-anchor-id="what-if-the-partition-is-invalid">What If the Partition Is Invalid?</h3>
-<p>What should you do if the training and testing sets turn out to be significantly different? If validation reveals statistical imbalances, it is essential to take corrective steps to ensure that both subsets more accurately reflect the original dataset:</p>
-<ul>
-<li><p><em>Revisit the random split</em>: Even a random partition can result in imbalance due to chance. Try adjusting the random seed or modifying the split ratio to improve representativeness.</p></li>
-<li><p><em>Use stratified sampling</em>: This approach preserves the proportions of key categorical features, especially the target variable, across both training and test sets.</p></li>
-<li><p><em>Apply cross-validation</em>: Particularly valuable for small or imbalanced datasets, cross-validation reduces reliance on a single split and yields more stable performance estimates.</p></li>
-</ul>
-<p>Even with careful attention, some imbalance may persist, especially in small or high-dimensional datasets. In such cases, additional techniques like bootstrapping or repeated sampling can improve stability and provide more reliable evaluations.</p>
-<p>Remember, validation is more than a procedural checkpoint, it is a safeguard for the integrity of your modeling workflow. By ensuring that the training and test sets are representative, you enable models that learn honestly, perform reliably, and yield trustworthy insights. In the next section, we tackle another common issue: imbalanced classes in the training set.</p>
+<p>What should you do if the training and testing sets turn out to be significantly different? If validation reveals meaningful distributional differences between the subsets, corrective action is necessary to ensure that both more accurately reflect the original dataset.</p>
+<p>One option is to revisit the random split. Even when sampling is random, uneven distributions may arise by chance. Adjusting the random seed or slightly modifying the split ratio can improve representativeness.</p>
+<p>Another approach is to use stratified sampling, which preserves the proportions of key categorical variables—especially the target variable—across both training and test sets. This is particularly important in classification tasks where maintaining class proportions supports fair evaluation.</p>
+<p>When sample sizes are limited or when a single split yields unstable results, cross-validation offers a more reliable alternative. By repeatedly training and validating the model on different subsets of the data, cross-validation reduces dependence on a single partition and provides more stable performance estimates.</p>
+<p>Even with careful design, minor discrepancies may persist, particularly in small or high-dimensional datasets. In such cases, repeated sampling or bootstrapping techniques can further improve evaluation stability.</p>
+<p>Validation is more than a procedural checkpoint; it is a safeguard for the integrity of the modeling workflow. By ensuring that the training and test sets are statistically comparable, we support fair evaluation and trustworthy conclusions.</p>
+<p>However, even a perfectly balanced split does not guarantee valid evaluation. Another fundamental risk in predictive modeling remains: data leakage.</p>
 </section>
 </section>
-<section id="sec-ch6-balancing" class="level2" data-number="6.5">
-<h2 data-number="6.5" class="anchored" data-anchor-id="sec-ch6-balancing"><span class="header-section-number">6.5</span> Dealing with Class Imbalance</h2>
-<p>Imagine training a fraud detection model that labels every transaction as legitimate. It might boast 99% accuracy, yet fail completely at catching fraud. This scenario highlights the risk of <em>class imbalance</em>, where one class dominates the dataset and overshadows the rare but critical outcomes we aim to detect.</p>
-<p>In many real-world classification tasks, one class is far less common than the other, a challenge known as <em>class imbalance</em>. This can lead to models that perform well on paper, often reporting high overall accuracy, while failing to identify the minority class. For example, in fraud detection, fraudulent cases are rare, and in churn prediction, most customers stay. If the model always predicts the majority class, it may appear accurate but will miss the cases that matter most.</p>
-<p>Most machine learning algorithms optimize for <em>overall accuracy</em>, which can be misleading when the rare class is the true focus. A churn model trained on imbalanced data might predict nearly every customer as a non-churner, yielding high accuracy but missing actual churners, the very cases we care about. Addressing class imbalance is therefore an important step in data setup for modeling, particularly when the minority class carries high business or scientific value.</p>
-<p>Several strategies are commonly used to balance the training dataset and ensure that both classes are adequately represented during learning. <em>Oversampling</em> increases the number of minority class examples by duplicating existing cases or generating synthetic data. The popular SMOTE (Synthetic Minority Over-sampling Technique) method creates realistic synthetic examples instead of simple copies. <em>Undersampling</em> reduces the number of majority class examples by randomly removing observations and is useful when the dataset is large and contains redundant examples. <em>Hybrid methods</em> combine both approaches to achieve a balanced representation. Another powerful technique is <em>class weighting</em>, which adjusts the algorithm to penalize misclassification of the minority class more heavily. Many models, including logistic regression, decision trees, and support vector machines, support this approach natively.</p>
-<p>These techniques must be applied <em>only to the training set</em> to avoid data leakage. The best choice depends on factors such as dataset size, the degree of imbalance, and the algorithm being used.</p>
-<p>Let us walk through a concrete example using the <code>churn</code> dataset. The goal is to predict whether a customer has churned. First, we examine the distribution of the target variable in the training dataset:</p>
-<div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the class distribution</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(train_set<span class="sc">$</span>churn)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    yes   no </span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>   <span class="dv">1298</span> <span class="dv">6804</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">prop.table</span>(<span class="fu">table</span>(train_set<span class="sc">$</span>churn))</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>         yes        no </span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>   <span class="fl">0.1602074</span> <span class="fl">0.8397926</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>The output shows that churners (<code>churn = "yes"</code>) represent only a small proportion of the data, about 0.16, compared to non-churners. This class imbalance can result in a model that underemphasizes the very group we are most interested in predicting.</p>
-<p>To address this in R, we can use the <code>ovun.sample()</code> function from the <strong>ROSE</strong> package to oversample the minority class so that it makes up 30% of the training set. This target ratio is illustrative; the optimal value depends on the use case and modeling goals.</p>
-<p>If the <strong>ROSE</strong> package is not yet installed, use <code>install.packages("ROSE")</code>.</p>
-<div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the ROSE package</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ROSE)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Oversample the training set to balance the classes with 30% churners</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>balanced_train_set <span class="ot">&lt;-</span> <span class="fu">ovun.sample</span>(churn <span class="sc">~</span> ., <span class="at">data =</span> train_set, <span class="at">method =</span> <span class="st">"over"</span>, <span class="at">p =</span> <span class="fl">0.3</span>)<span class="sc">$</span>data</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the new class distribution</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(balanced_train_set<span class="sc">$</span>churn)</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>     no  yes </span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>   <span class="dv">6804</span> <span class="dv">2864</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="fu">prop.table</span>(<span class="fu">table</span>(balanced_train_set<span class="sc">$</span>churn))</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>   </span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>         no      yes </span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>   <span class="fl">0.703765</span> <span class="fl">0.296235</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>The <code>ovun.sample()</code> function generates a new training set in which the minority class is oversampled to represent 30% of the data. The formula <code>churn ~ .</code> tells R to balance based on the target variable while keeping all predictors.</p>
-<p>Always apply balancing after the data has been partitioned and <em>only</em> to the training set. Modifying the test set would introduce bias and make the model’s performance appear artificially better than it would be in deployment. This safeguard prevents <em>data leakage</em> and ensures honest evaluation.</p>
-<p>Balancing is not always necessary. Many modern algorithms incorporate internal strategies for handling class imbalance, such as class weighting or ensemble techniques. These adjust the model to account for rare events without requiring explicit data manipulation. Furthermore, rather than relying solely on overall accuracy, evaluation metrics such as <em>precision</em>, <em>recall</em>, <em>F1-score</em>, and <em>AUC-ROC</em> offer more meaningful insights into model performance on imbalanced data. We will explore these evaluation metrics in more depth in <a href="8-Model-evaluation.html" class="quarto-xref"><span>Chapter 8</span></a>, where we assess model performance under class imbalance.</p>
-<p>In summary, dealing with class imbalance helps the model focus on the right outcomes and make more equitable predictions. It is a crucial preparatory step in classification workflows, particularly when the minority class holds the greatest value.</p>
-</section>
-<section id="sec-ch6-data-leakage" class="level2" data-number="6.6">
-<h2 data-number="6.6" class="anchored" data-anchor-id="sec-ch6-data-leakage"><span class="header-section-number">6.6</span> Data Leakage and How to Prevent It</h2>
-<p>A common reason why models perform well during development but fail in deployment is <em>data leakage</em>: information from outside the training process unintentionally influences model fitting or model selection. Leakage produces overly optimistic performance estimates because the model is evaluated under conditions that would not be available in real-world use.</p>
-<p>Data leakage can occur in two broad ways. First, <em>feature leakage</em> happens when predictors contain information that is directly tied to the outcome or would only be known after the prediction is made. Second, <em>procedural leakage</em> arises when preprocessing decisions are informed by the full dataset before the train–test split, allowing the test set to influence the training process.</p>
-<p>The central principle for preventing leakage is straightforward: <em>all operations that learn from the data must be performed using the training set only</em>. Once a rule is learned from the training data (for example, an imputation value, a scaling parameter, or a set of selected features), the same rule can be applied unchanged to the test set.</p>
-<p>It is important to note that leakage can occur even earlier than this chapter’s workflow, during data preparation. For example, suppose missing values are imputed using the overall mean of a numerical feature computed from the full dataset. If the test set is included when computing that mean, the training process has indirectly “seen” information from the test set. The difference may appear small, but the evaluation is no longer strictly out-of-sample. The correct approach is to compute the imputation value from the training set only and then apply it to both the training and test sets.</p>
-<p>Leakage risks also arise throughout the data setup phase:</p>
-<ul>
-<li><p>Partitioning and evaluation: The test set must remain untouched while models are developed. It should be used only once for final performance reporting.</p></li>
-<li><p>Cross-validation and tuning: Cross-validation should be performed within the training set. Using the test set repeatedly to guide tuning decisions leaks information into model selection.</p></li>
-<li><p>Class balancing: Oversampling, undersampling, and related methods must be applied only to the training set. Balancing the test set alters the evaluation distribution and yields misleading results.</p></li>
-<li><p>Encoding and scaling: Encoding rules and scaling parameters must be estimated from the training set and then applied to the test set using the same settings.</p></li>
-</ul>
+<section id="sec-ch6-data-leakage" class="level2" data-number="6.5">
+<h2 data-number="6.5" class="anchored" data-anchor-id="sec-ch6-data-leakage"><span class="header-section-number">6.5</span> Data Leakage and How to Prevent It</h2>
+<p>A common reason why models appear to perform well during development yet disappoint in practice is <em>data leakage</em>: information from outside the training process unintentionally influences model fitting or model selection. Leakage leads to overly optimistic performance estimates because evaluation no longer reflects truly unseen data.</p>
+<p>Data leakage can occur in two broad ways. First, <em>feature leakage</em> arises when predictors contain information that is directly tied to the outcome or would only be known after the prediction is made. Second, <em>procedural leakage</em> occurs when preprocessing decisions are informed by the full dataset before the train–test split, allowing the test set to influence the training process.</p>
+<p>The guiding principle for preventing leakage is simple: all data-dependent operations must be learned from the training set only. Once a rule is estimated from the training data—such as an imputation value, a scaling parameter, or a selected subset of features—the same rule should be applied unchanged to the test set.</p>
+<p>Leakage can arise even earlier than this chapter’s workflow, during data preparation. For example, suppose missing values are imputed using the overall mean of a numerical feature computed from the full dataset. If the test set is included when computing that mean, the training process has indirectly incorporated information from the test set. Although the numerical difference may seem small, the evaluation is no longer strictly out-of-sample. The correct approach is to compute imputation values using the training set only and then apply them to both the training and test sets.</p>
+<p>This discipline must be maintained throughout the data setup phase. The test set should remain untouched while models are developed and compared and should be used only once for final evaluation. Cross-validation and hyperparameter tuning must be conducted entirely within the training set. Class balancing techniques such as oversampling or undersampling must also be applied exclusively to the training data. Likewise, encoding rules and scaling parameters should be estimated from the training set and then applied to the test set without recalibration. Any deviation from this workflow allows information from the test data to influence model development and compromises the validity of performance estimates.</p>
 <blockquote class="blockquote">
 <p><em>Practice:</em> Identify two preprocessing steps in this chapter (or in Chapter <a href="3-Data-preparation.html" class="quarto-xref"><span>3</span></a>) that could cause data leakage if applied before partitioning. For each step, describe how you would modify the workflow so that the transformation is learned from the training set only and then applied unchanged to the test set.</p>
 </blockquote>
 <p>A practical example of leakage prevention is discussed in Section <a href="7-Classification-kNN.html#sec-ch7-knn-proper-scaling" class="quarto-xref"><span>7.5.1</span></a>, where feature scaling is performed correctly for a k-Nearest Neighbors model. The same principle applies throughout the modeling workflow: partition first, learn preprocessing rules using the training data only, tune models using cross-validation within the training set, and evaluate only once on the untouched test set.</p>
+</section>
+<section id="sec-ch6-balancing" class="level2" data-number="6.6">
+<h2 data-number="6.6" class="anchored" data-anchor-id="sec-ch6-balancing"><span class="header-section-number">6.6</span> Dealing with Class Imbalance</h2>
+<p>Imagine training a fraud detection model that labels every transaction as legitimate. It might achieve 99% accuracy, yet fail completely at detecting fraud. This illustrates the challenge of class imbalance, a situation in which one class dominates the dataset while the rare class carries the greatest practical importance.</p>
+<p>In many real-world classification tasks, the outcome of interest is relatively uncommon. Fraudulent transactions are rare, most customers do not churn, and most medical tests are negative. When a model is trained on such data, it may optimize overall accuracy by predicting the majority class most of the time. Although this strategy yields high accuracy, it fails precisely where predictive insight is most valuable: identifying the minority class.</p>
+<p>Addressing class imbalance is therefore an important step in data setup for modeling, particularly when the minority class has substantial business or scientific relevance.</p>
+<p>Several strategies are commonly used to rebalance the training dataset and ensure that both classes are adequately represented during learning. Oversampling increases the number of minority class observations, either by duplicating existing cases or by generating synthetic examples. The widely used SMOTE (Synthetic Minority Over-sampling Technique) algorithm creates artificial minority observations based on nearest neighbors rather than simple copies. Undersampling reduces the number of majority class observations and is especially useful when the dataset is large. Hybrid approaches combine both strategies. Another powerful alternative is class weighting, in which the learning algorithm penalizes misclassification of the minority class more heavily. Many models, including logistic regression, decision trees, and support vector machines, support class weighting directly.</p>
+<p>Let us illustrate with the <code>churn</code> dataset. After partitioning the data, we examine the distribution of the target variable in the training set:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(train_set<span class="sc">$</span>churn)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    yes   no </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>   <span class="dv">1298</span> <span class="dv">6804</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">prop.table</span>(<span class="fu">table</span>(train_set<span class="sc">$</span>churn))</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>         yes        no </span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>   <span class="fl">0.1602074</span> <span class="fl">0.8397926</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The output indicates that churners (<code>churn = "yes"</code>) constitute only a small proportion of the observations. A model trained on this distribution may underemphasize churners unless corrective measures are taken.</p>
+<p>To rebalance the training data in R, we can use the <code>ovun.sample()</code> function from the <strong>ROSE</strong> package to oversample the minority class so that it represents 30% of the training set:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ROSE)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>balanced_train_set <span class="ot">&lt;-</span> <span class="fu">ovun.sample</span>(</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  churn <span class="sc">~</span> ., </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> train_set, </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"over"</span>, </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">p =</span> <span class="fl">0.3</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>)<span class="sc">$</span>data</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(balanced_train_set<span class="sc">$</span>churn)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>     no  yes </span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>   <span class="dv">6804</span> <span class="dv">2864</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="fu">prop.table</span>(<span class="fu">table</span>(balanced_train_set<span class="sc">$</span>churn))</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>         no      yes </span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>   <span class="fl">0.703765</span> <span class="fl">0.296235</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The argument <code>churn ~ .</code> specifies that balancing should be performed with respect to the target variable while retaining all predictors.</p>
+<p>Balancing must always be performed <em>after partitioning</em> and applied <em>only to the training set</em>. The test set should retain the original class distribution, since it represents the real-world population on which the model will ultimately be evaluated. Altering the test distribution would distort performance estimates and undermine the validity of model evaluation.</p>
+<p>Balancing is not always necessary. Some algorithms incorporate internal mechanisms, such as class weighting or ensemble strategies, that account for rare events without explicit resampling. Moreover, evaluation should not rely solely on overall accuracy. Metrics such as precision and recall provide a more informative assessment of performance when classes are imbalanced. These metrics are discussed in detail in Section <a href="8-Model-evaluation.html" class="quarto-xref"><span>8</span></a>.</p>
+<p>In summary, class imbalance requires careful consideration during model development. By ensuring that the training process pays adequate attention to the minority class while preserving the natural distribution in the test set, we support fair evaluation and more meaningful predictive performance.</p>
 </section>
 <section id="sec-ch6-encoding" class="level2" data-number="6.7">
 <h2 data-number="6.7" class="anchored" data-anchor-id="sec-ch6-encoding"><span class="header-section-number">6.7</span> Encoding Categorical Features</h2>
@@ -803,7 +794,7 @@ x_{\text{scaled}} = \frac{x - x_{\text{min}}}{x_{\text{max}} - x_{\text{min}}},
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> churn) <span class="sc">+</span></span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">minmax</span>(age)), <span class="at">bins =</span> <span class="dv">15</span>) <span class="sc">+</span></span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"After Min–Max Scaling"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell quarto-layout-panel" data-layout-align="center" data-layout-ncol="2">
+<div class="cell quarto-layout-panel" data-layout-ncol="2" data-layout-align="center">
 <div class="quarto-layout-row">
 <div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
 <div class="quarto-figure quarto-figure-center">
@@ -842,7 +833,7 @@ x_{\text{scaled}} = \frac{x - \text{mean}(x)}{\text{sd}(x)},
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> churn) <span class="sc">+</span></span>
 <span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">zscore</span>(age)), <span class="at">bins =</span> <span class="dv">15</span>) <span class="sc">+</span></span>
 <span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"After Z-Score Scaling"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell quarto-layout-panel" data-layout-align="center" data-layout-ncol="2">
+<div class="cell quarto-layout-panel" data-layout-ncol="2" data-layout-align="center">
 <div class="quarto-layout-row">
 <div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
 <div class="quarto-figure quarto-figure-center">
@@ -863,7 +854,7 @@ x_{\text{scaled}} = \frac{x - \text{mean}(x)}{\text{sd}(x)},
 <p>The left panel shows the original distribution of <code>age</code>, while the right panel displays the standardized version. Notice that the center of the distribution shifts to approximately zero and the spread is expressed in units of standard deviation. The overall shape of the distribution—including skewness—remains unchanged.</p>
 </div>
 <p>It is important to emphasize that z-score scaling does not make a variable normally distributed. It standardizes the location and scale but preserves the underlying distributional shape. If a variable is skewed before scaling, it will remain skewed after transformation.</p>
-<p>When applying feature scaling, scaling parameters must be estimated using the training set only. If the mean and standard deviation are computed from the full dataset before partitioning, information from the test set influences the training process. This constitutes a form of data leakage and leads to overly optimistic performance estimates. The correct workflow is to compute the scaling parameters on the training data and then apply the same transformation, without recalibration, to the test set. A broader discussion of data leakage and its prevention is provided in Section <a href="#sec-ch6-data-leakage" class="quarto-xref"><span>6.6</span></a>.</p>
+<p>When applying feature scaling, scaling parameters must be estimated using the training set only. If the mean and standard deviation are computed from the full dataset before partitioning, information from the test set influences the training process. This constitutes a form of data leakage and leads to overly optimistic performance estimates. The correct workflow is to compute the scaling parameters on the training data and then apply the same transformation, without recalibration, to the test set. A broader discussion of data leakage and its prevention is provided in Section <a href="#sec-ch6-data-leakage" class="quarto-xref"><span>6.5</span></a>.</p>
 </section>
 <section id="chapter-summary-and-takeaways" class="level2" data-number="6.13">
 <h2 data-number="6.13" class="anchored" data-anchor-id="chapter-summary-and-takeaways"><span class="header-section-number">6.13</span> Chapter Summary and Takeaways</h2>

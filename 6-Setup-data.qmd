@@ -40,9 +40,9 @@ These questions are not merely technical. They reflect fundamental principles of
 
 This chapter completes Step 4 of the Data Science Workflow: *Data Setup for Modeling*. We begin by partitioning the dataset into training and test subsets to simulate real-world deployment and support fair evaluation. We also introduce cross-validation as a more robust method for performance estimation and show how to assess whether the resulting split is statistically representative using the inferential tools presented in Chapter [-@sec-ch5-statistics].
 
-Next, we address class imbalance, a common challenge in classification tasks where one outcome dominates the dataset. We examine strategies such as oversampling, undersampling, and class weighting to ensure that minority classes are adequately represented during model training.
+Next, we then examine data leakage as a cross-cutting risk in predictive modeling. We show how leakage can arise during partitioning, balancing, encoding, scaling, or imputation, and establish the guiding principle that all data-dependent transformations must be learned from the training set only and then applied unchanged to the test set.
 
-We then examine data leakage as a cross-cutting risk in predictive modeling. We show how leakage can arise during partitioning, balancing, encoding, scaling, or imputation, and establish the guiding principle that all data-dependent transformations must be learned from the training set only and then applied unchanged to the test set.
+We then address class imbalance, a common challenge in classification tasks where one outcome dominates the dataset. We examine strategies such as oversampling, undersampling, and class weighting to ensure that minority classes are adequately represented during model training.
 
 Finally, we prepare predictors for modeling by encoding categorical variables and scaling numerical features. We present ordinal and one-hot encoding techniques, along with min–max and z-score transformations, so that predictors are represented in a form suitable for common machine learning algorithms.
 
@@ -194,88 +194,78 @@ Beyond the target, it is helpful to compare distributions of influential predict
 
 ### What If the Partition Is Invalid? {.unnumbered}
 
-What should you do if the training and testing sets turn out to be significantly different? If validation reveals statistical imbalances, it is essential to take corrective steps to ensure that both subsets more accurately reflect the original dataset:
+What should you do if the training and testing sets turn out to be significantly different? If validation reveals meaningful distributional differences between the subsets, corrective action is necessary to ensure that both more accurately reflect the original dataset.
 
--   *Revisit the random split*: Even a random partition can result in imbalance due to chance. Try adjusting the random seed or modifying the split ratio to improve representativeness.
+One option is to revisit the random split. Even when sampling is random, uneven distributions may arise by chance. Adjusting the random seed or slightly modifying the split ratio can improve representativeness. 
 
--   *Use stratified sampling*: This approach preserves the proportions of key categorical features, especially the target variable, across both training and test sets.
+Another approach is to use stratified sampling, which preserves the proportions of key categorical variables—especially the target variable—across both training and test sets. This is particularly important in classification tasks where maintaining class proportions supports fair evaluation. 
 
--   *Apply cross-validation*: Particularly valuable for small or imbalanced datasets, cross-validation reduces reliance on a single split and yields more stable performance estimates.
+When sample sizes are limited or when a single split yields unstable results, cross-validation offers a more reliable alternative. By repeatedly training and validating the model on different subsets of the data, cross-validation reduces dependence on a single partition and provides more stable performance estimates.
 
-Even with careful attention, some imbalance may persist, especially in small or high-dimensional datasets. In such cases, additional techniques like bootstrapping or repeated sampling can improve stability and provide more reliable evaluations.
+Even with careful design, minor discrepancies may persist, particularly in small or high-dimensional datasets. In such cases, repeated sampling or bootstrapping techniques can further improve evaluation stability.
 
-Remember, validation is more than a procedural checkpoint, it is a safeguard for the integrity of your modeling workflow. By ensuring that the training and test sets are representative, you enable models that learn honestly, perform reliably, and yield trustworthy insights. In the next section, we tackle another common issue: imbalanced classes in the training set.
+Validation is more than a procedural checkpoint; it is a safeguard for the integrity of the modeling workflow. By ensuring that the training and test sets are statistically comparable, we support fair evaluation and trustworthy conclusions. 
 
-## Dealing with Class Imbalance {#sec-ch6-balancing}
-
-Imagine training a fraud detection model that labels every transaction as legitimate. It might boast 99% accuracy, yet fail completely at catching fraud. This scenario highlights the risk of *class imbalance*, where one class dominates the dataset and overshadows the rare but critical outcomes we aim to detect.
-
-In many real-world classification tasks, one class is far less common than the other, a challenge known as *class imbalance*. This can lead to models that perform well on paper, often reporting high overall accuracy, while failing to identify the minority class. For example, in fraud detection, fraudulent cases are rare, and in churn prediction, most customers stay. If the model always predicts the majority class, it may appear accurate but will miss the cases that matter most.
-
-Most machine learning algorithms optimize for *overall accuracy*, which can be misleading when the rare class is the true focus. A churn model trained on imbalanced data might predict nearly every customer as a non-churner, yielding high accuracy but missing actual churners, the very cases we care about. Addressing class imbalance is therefore an important step in data setup for modeling, particularly when the minority class carries high business or scientific value.
-
-Several strategies are commonly used to balance the training dataset and ensure that both classes are adequately represented during learning. *Oversampling* increases the number of minority class examples by duplicating existing cases or generating synthetic data. The popular SMOTE (Synthetic Minority Over-sampling Technique) method creates realistic synthetic examples instead of simple copies. *Undersampling* reduces the number of majority class examples by randomly removing observations and is useful when the dataset is large and contains redundant examples. *Hybrid methods* combine both approaches to achieve a balanced representation. Another powerful technique is *class weighting*, which adjusts the algorithm to penalize misclassification of the minority class more heavily. Many models, including logistic regression, decision trees, and support vector machines, support this approach natively.
-
-These techniques must be applied *only to the training set* to avoid data leakage. The best choice depends on factors such as dataset size, the degree of imbalance, and the algorithm being used.
-
-Let us walk through a concrete example using the `churn` dataset. The goal is to predict whether a customer has churned. First, we examine the distribution of the target variable in the training dataset:
-
-```{r}
-# Check the class distribution
-table(train_set$churn)
-
-prop.table(table(train_set$churn))
-```
-
-The output shows that churners (`churn = "yes"`) represent only a small proportion of the data, about `r round(prop.table(table(train_set$churn))[1], 2)`, compared to non-churners. This class imbalance can result in a model that underemphasizes the very group we are most interested in predicting.
-
-To address this in R, we can use the `ovun.sample()` function from the **ROSE** package to oversample the minority class so that it makes up 30% of the training set. This target ratio is illustrative; the optimal value depends on the use case and modeling goals.
-
-If the **ROSE** package is not yet installed, use `install.packages("ROSE")`.
-
-```{r}
-# Load the ROSE package
-library(ROSE)
-
-# Oversample the training set to balance the classes with 30% churners
-balanced_train_set <- ovun.sample(churn ~ ., data = train_set, method = "over", p = 0.3)$data
-
-# Check the new class distribution
-table(balanced_train_set$churn)
-prop.table(table(balanced_train_set$churn))
-```
-
-The `ovun.sample()` function generates a new training set in which the minority class is oversampled to represent 30% of the data. The formula `churn ~ .` tells R to balance based on the target variable while keeping all predictors.
-
-Always apply balancing after the data has been partitioned and *only* to the training set. Modifying the test set would introduce bias and make the model’s performance appear artificially better than it would be in deployment. This safeguard prevents *data leakage* and ensures honest evaluation.
-
-Balancing is not always necessary. Many modern algorithms incorporate internal strategies for handling class imbalance, such as class weighting or ensemble techniques. These adjust the model to account for rare events without requiring explicit data manipulation. Furthermore, rather than relying solely on overall accuracy, evaluation metrics such as *precision*, *recall*, *F1-score*, and *AUC-ROC* offer more meaningful insights into model performance on imbalanced data. We will explore these evaluation metrics in more depth in @sec-ch8-evaluation, where we assess model performance under class imbalance.
-
-In summary, dealing with class imbalance helps the model focus on the right outcomes and make more equitable predictions. It is a crucial preparatory step in classification workflows, particularly when the minority class holds the greatest value.
+However, even a perfectly balanced split does not guarantee valid evaluation. Another fundamental risk in predictive modeling remains: data leakage.
 
 ## Data Leakage and How to Prevent It {#sec-ch6-data-leakage}
 
-A common reason why models perform well during development but fail in deployment is *data leakage*: information from outside the training process unintentionally influences model fitting or model selection. Leakage produces overly optimistic performance estimates because the model is evaluated under conditions that would not be available in real-world use.
+A common reason why models appear to perform well during development yet disappoint in practice is *data leakage*: information from outside the training process unintentionally influences model fitting or model selection. Leakage leads to overly optimistic performance estimates because evaluation no longer reflects truly unseen data.
 
-Data leakage can occur in two broad ways. First, *feature leakage* happens when predictors contain information that is directly tied to the outcome or would only be known after the prediction is made. Second, *procedural leakage* arises when preprocessing decisions are informed by the full dataset before the train–test split, allowing the test set to influence the training process.
+Data leakage can occur in two broad ways. First, *feature leakage* arises when predictors contain information that is directly tied to the outcome or would only be known after the prediction is made. Second, *procedural leakage* occurs when preprocessing decisions are informed by the full dataset before the train–test split, allowing the test set to influence the training process.
 
-The central principle for preventing leakage is straightforward: *all operations that learn from the data must be performed using the training set only*. Once a rule is learned from the training data (for example, an imputation value, a scaling parameter, or a set of selected features), the same rule can be applied unchanged to the test set.
+The guiding principle for preventing leakage is simple: all data-dependent operations must be learned from the training set only. Once a rule is estimated from the training data—such as an imputation value, a scaling parameter, or a selected subset of features—the same rule should be applied unchanged to the test set.
 
-It is important to note that leakage can occur even earlier than this chapter’s workflow, during data preparation. For example, suppose missing values are imputed using the overall mean of a numerical feature computed from the full dataset. If the test set is included when computing that mean, the training process has indirectly “seen” information from the test set. The difference may appear small, but the evaluation is no longer strictly out-of-sample. The correct approach is to compute the imputation value from the training set only and then apply it to both the training and test sets.
+Leakage can arise even earlier than this chapter’s workflow, during data preparation. For example, suppose missing values are imputed using the overall mean of a numerical feature computed from the full dataset. If the test set is included when computing that mean, the training process has indirectly incorporated information from the test set. Although the numerical difference may seem small, the evaluation is no longer strictly out-of-sample. The correct approach is to compute imputation values using the training set only and then apply them to both the training and test sets.
 
-Leakage risks also arise throughout the data setup phase:
-
-* Partitioning and evaluation: The test set must remain untouched while models are developed. It should be used only once for final performance reporting.
-
-* Cross-validation and tuning: Cross-validation should be performed within the training set. Using the test set repeatedly to guide tuning decisions leaks information into model selection.
-
-* Class balancing: Oversampling, undersampling, and related methods must be applied only to the training set. Balancing the test set alters the evaluation distribution and yields misleading results.
-
-* Encoding and scaling: Encoding rules and scaling parameters must be estimated from the training set and then applied to the test set using the same settings.
+This discipline must be maintained throughout the data setup phase. The test set should remain untouched while models are developed and compared and should be used only once for final evaluation. Cross-validation and hyperparameter tuning must be conducted entirely within the training set. Class balancing techniques such as oversampling or undersampling must also be applied exclusively to the training data. Likewise, encoding rules and scaling parameters should be estimated from the training set and then applied to the test set without recalibration. Any deviation from this workflow allows information from the test data to influence model development and compromises the validity of performance estimates.
 
 > *Practice:* Identify two preprocessing steps in this chapter (or in Chapter [-@sec-ch3-data-preparation]) that could cause data leakage if applied before partitioning. For each step, describe how you would modify the workflow so that the transformation is learned from the training set only and then applied unchanged to the test set.
 
 A practical example of leakage prevention is discussed in Section [-@sec-ch7-knn-proper-scaling], where feature scaling is performed correctly for a k-Nearest Neighbors model. The same principle applies throughout the modeling workflow: partition first, learn preprocessing rules using the training data only, tune models using cross-validation within the training set, and evaluate only once on the untouched test set.
+
+## Dealing with Class Imbalance {#sec-ch6-balancing}
+
+Imagine training a fraud detection model that labels every transaction as legitimate. It might achieve 99% accuracy, yet fail completely at detecting fraud. This illustrates the challenge of class imbalance, a situation in which one class dominates the dataset while the rare class carries the greatest practical importance.
+
+In many real-world classification tasks, the outcome of interest is relatively uncommon. Fraudulent transactions are rare, most customers do not churn, and most medical tests are negative. When a model is trained on such data, it may optimize overall accuracy by predicting the majority class most of the time. Although this strategy yields high accuracy, it fails precisely where predictive insight is most valuable: identifying the minority class.
+
+Addressing class imbalance is therefore an important step in data setup for modeling, particularly when the minority class has substantial business or scientific relevance.
+
+Several strategies are commonly used to rebalance the training dataset and ensure that both classes are adequately represented during learning. Oversampling increases the number of minority class observations, either by duplicating existing cases or by generating synthetic examples. The widely used SMOTE (Synthetic Minority Over-sampling Technique) algorithm creates artificial minority observations based on nearest neighbors rather than simple copies. Undersampling reduces the number of majority class observations and is especially useful when the dataset is large. Hybrid approaches combine both strategies. Another powerful alternative is class weighting, in which the learning algorithm penalizes misclassification of the minority class more heavily. Many models, including logistic regression, decision trees, and support vector machines, support class weighting directly.
+
+Let us illustrate with the `churn` dataset. After partitioning the data, we examine the distribution of the target variable in the training set:
+
+```{r}
+table(train_set$churn)
+prop.table(table(train_set$churn))
+```
+
+The output indicates that churners (`churn = "yes"`) constitute only a small proportion of the observations. A model trained on this distribution may underemphasize churners unless corrective measures are taken.
+
+To rebalance the training data in R, we can use the `ovun.sample()` function from the **ROSE** package to oversample the minority class so that it represents 30% of the training set:
+
+```{r}
+library(ROSE)
+
+balanced_train_set <- ovun.sample(
+  churn ~ ., 
+  data = train_set, 
+  method = "over", 
+  p = 0.3
+)$data
+
+table(balanced_train_set$churn)
+prop.table(table(balanced_train_set$churn))
+```
+
+The argument `churn ~ .` specifies that balancing should be performed with respect to the target variable while retaining all predictors.
+
+Balancing must always be performed *after partitioning* and applied *only to the training set*. The test set should retain the original class distribution, since it represents the real-world population on which the model will ultimately be evaluated. Altering the test distribution would distort performance estimates and undermine the validity of model evaluation.
+
+Balancing is not always necessary. Some algorithms incorporate internal mechanisms, such as class weighting or ensemble strategies, that account for rare events without explicit resampling. Moreover, evaluation should not rely solely on overall accuracy. Metrics such as precision and recall provide a more informative assessment of performance when classes are imbalanced. These metrics are discussed in detail in Section [-@sec-ch8-evaluation].
+
+In summary, class imbalance requires careful consideration during model development. By ensuring that the training process pays adequate attention to the minority class while preserving the natural distribution in the test set, we support fair evaluation and more meaningful predictive performance.
 
 ## Encoding Categorical Features {#sec-ch6-encoding}
 
