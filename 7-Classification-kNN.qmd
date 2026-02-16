@@ -376,7 +376,7 @@ str(churn)
 
 The dataset is a data frame containing `r nrow(churn)` observations and `r ncol(churn) - 1` predictor variables, together with the binary outcome variable `churn`. Consistent with the earlier analysis in Chapter [-@sec-ch4-EDA], we exclude `customer_ID`, which is an identifier, and we remove predictors that are deterministic functions of other credit variables (`available_credit` and `utilization_ratio`). Excluding such variables reduces redundancy and helps ensure that distance calculations are not dominated by multiple representations of the same information.
 
-Before proceeding to Step 4 (Data Setup for Modeling) in Chapter [-@sec-ch6-setup-data], we prepare the dataset for modeling. To avoid data leakage (see Section [-@sec-ch6-data-leakage]), preprocessing steps that depend on the data distribution, including imputation and scaling, will be applied after partitioning the dataset into training and test sets. 
+Before proceeding to Step 4 (Data Setup for Modeling) in Chapter [-@sec-ch6-setup-data], we prepare the dataset for modeling. To avoid data leakage (see Section [-@sec-ch6-data-leakage]), preprocessing steps that depend on the data distribution, including imputation and scaling, will be applied after partitioning the dataset into training and test sets.
 
 In the remainder of this case study, we proceed step by step: partitioning the data, applying preprocessing after the split to avoid leakage, selecting an appropriate value of $k$, fitting the model, generating predictions, and evaluating performance. Because kNN is distance-based, each step in data setup directly affects how similarity is measured and, therefore, how predictions are formed.
 
@@ -433,20 +433,40 @@ test_set  = droplevels(test_set)
 
 #### Encoding Categorical Features for kNN {.unnumbered}
 
-Because the kNN algorithm relies on distance calculations between observations, all input features must be numeric. Therefore, categorical variables need to be transformed into numerical representations. In the `churn` dataset, the variables `gender`, `education`, `marital`, `income`, and `card_category` are categorical and require encoding. The `one.hot()` function from the **liver** package automates this step by generating binary indicator variables:
+Because the kNN algorithm computes distances between observations in feature space, all predictors must be numeric and meaningfully represented. Categorical features therefore require transformation into numerical form. In the `churn` dataset, the variables `gender`, `education`, `marital`, `income`, and `card_category` are categorical and must be encoded before applying kNN.
+
+Since the `income` feature is ordinal, we follow the guidance in Section [-@sec-ch6-ordinal-encoding] and assign representative numeric values that approximate the economic magnitude of each income range. Specifically, we encode `"<40K"` = 20, `"40K-60K"` = 50, `"60K-80K"` = 70, `"80K-120K"` = 100, and `">120K"` = 140, for both the training and test sets:
 
 ```{r}
-categorical_features = c("gender", "education", "marital", "income", "card_category")
+train_set$income_rank <- as.numeric(factor(train_set$income, 
+  levels = c("<40K", "40K-60K", "60K-80K", "80K-120K", ">120K"), 
+  labels = c(20, 50, 70, 100, 140)
+))
+
+test_set$income_rank <- as.numeric(factor(test_set$income, 
+  levels = c("<40K", "40K-60K", "60K-80K", "80K-120K", ">120K"), 
+  labels = c(20, 50, 70, 100, 140)
+))
+```
+
+For other categorical variables that are nominal (without inherent order), we apply one-hot encoding to create binary indicator variables for each category. The `one.hot()` function from the **liver** package automates this process:
+
+```{r}
+categorical_features = c("gender", "education", "marital", "card_category")
 
 train_onehot = one.hot(train_set, cols = categorical_features)
 test_onehot  = one.hot(test_set,  cols = categorical_features)
 ```
 
-For each categorical variable with $m$ categories, the function creates $m$ binary columns (dummy variables). In practice, it is often preferable to use $m - 1$ dummy variables to avoid redundancy and multicollinearity, while maintaining interpretability and compatibility with distance-based algorithms.
+For a variable with $m$ categories, the function creates $m$ binary columns. For regression models, it is common to use $m - 1$ dummy variables to avoid multicollinearity. For kNN, including all $m$ binary indicators does not create estimation issues, but it increases dimensionality and may influence distance calculations.
 
-> *Practice:* After applying `one.hot()` to the training data, inspect the structure of `train_onehot`. Which categorical variables generate the largest number of binary indicators? How could this influence similarity calculations in kNN?
+Because kNN is sensitive to the geometry of the feature space, one-hot encoding variables with many categories can substantially increase dimensionality. This expansion may dilute distance-based similarity and affect model performance.
 
-> *Practice:* Using a 70%–30% train–test split, apply one-hot encoding to the categorical variables in both sets. Check whether the resulting encoded datasets have the same set of predictor variables. Why is this consistency important for distance-based methods such as kNN?
+It is essential that both the training and test sets contain the same encoded columns in the same order. Otherwise, distance calculations between observations would be invalid.
+
+> *Practice:* After applying `one.hot()` to the training data, inspect the structure of `train_onehot`. Which categorical variables generate the largest number of binary indicators? How might this influence similarity calculations in kNN?
+
+> *Practice:* Using a 70%–30% train–test split, first apply ordinal encoding to the `income` feature. Then apply one-hot encoding to the remaining categorical variables in both sets. Verify that the resulting training and test datasets contain identical predictor columns in the same order. Why is this consistency essential for distance-based methods such as kNN?
 
 #### Feature Scaling for kNN {.unnumbered}
 
@@ -483,7 +503,7 @@ The **liver** package simplifies this process with the `kNN.plot()` function, wh
 Before running the function, we define a `formula` object that specifies the relationship between the target variable (`churn`) and the predictor variables. The predictors include all scaled numeric variables and the binary indicators generated through one-hot encoding, such as `gender_female`, `education_uneducated`, and others:
 
 ```{r}
-formula = churn ~ gender_female + age + education_uneducated  + education_highschool + education_college  + education_graduate + `education_post-graduate` + marital_married + marital_single + `income_<40K` + `income_40K-60K` + `income_60K-80K` + `income_80K-120K` + card_category_blue + card_category_silver + card_category_gold + dependent_count + months_on_book + relationship_count + months_inactive + contacts_count_12 + credit_limit + revolving_balance + transaction_amount_12 + transaction_count_12 + ratio_amount_Q4_Q1 + ratio_count_Q4_Q1
+formula = churn ~ gender_female + age + income_rank + education_uneducated  + education_highschool + education_college  + education_graduate + `education_post-graduate` + marital_married + marital_single + card_category_blue + card_category_silver + card_category_gold + dependent_count + months_on_book + relationship_count + months_inactive + contacts_count_12 + credit_limit + revolving_balance + transaction_amount_12 + transaction_count_12 + ratio_amount_Q4_Q1 + ratio_count_Q4_Q1
 ```
 
 We now apply the `kNN.plot()` function:
@@ -498,6 +518,10 @@ kNN.plot(formula = formula,
 ```
 
 The arguments in `kNN.plot()` control various aspects of the evaluation. The `train` and `test` inputs specify the scaled datasets, ensuring comparable feature scales for distance computation. The argument `k.max = 20` defines the largest number of neighbors to test, allowing us to visualize model performance over a meaningful range. Setting `reference = "yes"` designates the `"yes"` class as the positive outcome (customer churn), and `set.seed = 42` ensures reproducibility.
+
+It is important to note that in this illustration, the test set is used to compare different values of $k$. Strictly speaking, this approach can introduce optimistic bias, because information from the test data influences hyperparameter selection. This represents a form of information leakage during model selection, because the test data influence the tuning process (see Section [-@sec-ch6-data-leakage]).
+
+A more principled strategy is to use cross-validation within the training set to choose $k$, and then evaluate the final model on a separate test set (see Section [-@sec-ch6-cross-validation]). In practice, this may involve splitting the data into three subsets: a training set for fitting the model, a validation set for tuning $k$, and a test set for final evaluation. Alternatively, cross-validation within the training data provides a more stable and lower-variance basis for hyperparameter tuning.
 
 The resulting plot shows how model accuracy changes with $k$. In this case, accuracy peaks at $k = 5$, suggesting that this value strikes a good balance between capturing local patterns and maintaining generalization. With the optimal $k$ determined, we can now apply the kNN model to classify new customer records in the test set.
 

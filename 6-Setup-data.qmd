@@ -196,15 +196,15 @@ Beyond the target, it is helpful to compare distributions of influential predict
 
 What should you do if the training and testing sets turn out to be significantly different? If validation reveals meaningful distributional differences between the subsets, corrective action is necessary to ensure that both more accurately reflect the original dataset.
 
-One option is to revisit the random split. Even when sampling is random, uneven distributions may arise by chance. Adjusting the random seed or slightly modifying the split ratio can improve representativeness. 
+One option is to revisit the random split. Even when sampling is random, uneven distributions may arise by chance. Adjusting the random seed or slightly modifying the split ratio can improve representativeness.
 
-Another approach is to use stratified sampling, which preserves the proportions of key categorical variables—especially the target variable—across both training and test sets. This is particularly important in classification tasks where maintaining class proportions supports fair evaluation. 
+Another approach is to use stratified sampling, which preserves the proportions of key categorical variables—especially the target variable—across both training and test sets. This is particularly important in classification tasks where maintaining class proportions supports fair evaluation.
 
 When sample sizes are limited or when a single split yields unstable results, cross-validation offers a more reliable alternative. By repeatedly training and validating the model on different subsets of the data, cross-validation reduces dependence on a single partition and provides more stable performance estimates.
 
 Even with careful design, minor discrepancies may persist, particularly in small or high-dimensional datasets. In such cases, repeated sampling or bootstrapping techniques can further improve evaluation stability.
 
-Validation is more than a procedural checkpoint; it is a safeguard for the integrity of the modeling workflow. By ensuring that the training and test sets are statistically comparable, we support fair evaluation and trustworthy conclusions. 
+Validation is more than a procedural checkpoint; it is a safeguard for the integrity of the modeling workflow. By ensuring that the training and test sets are statistically comparable, we support fair evaluation and trustworthy conclusions.
 
 However, even a perfectly balanced split does not guarantee valid evaluation. Another fundamental risk in predictive modeling remains: data leakage.
 
@@ -281,37 +281,32 @@ The following subsections demonstrate these encoding techniques in practice, beg
 
 ## Ordinal Encoding {#sec-ch6-ordinal-encoding}
 
-For *ordinal* features with a meaningful ranking (such as `low`, `medium`, `high`), it is preferable to assign numeric values that reflect their order (e.g., `low = 1`, `medium = 2`, `high = 3`). This preserves the ordinal relationship in distance-based calculations, which would otherwise be lost with one-hot encoding.
+For ordinal features with a meaningful ranking (such as `low`, `medium`, `high`), it is preferable to assign numeric values that reflect their order. This preserves the ordinal relationship in calculations, which would otherwise be lost with one-hot encoding.
 
-Consider the `income` variable in the `churn` dataset, which has levels `<40K`, `40K-60K`, `60K-80K`, `80K-120K`, and `>120K`. We can convert this variable to numeric scores as follows:
+There are two common approaches to ordinal encoding. The first assigns simple rank values (e.g., `low = 1`, `medium = 2`, `high = 3`). This approach preserves order but assumes equal spacing between categories. The second assigns values that reflect approximate magnitudes when such information is available.
+
+Consider the `income` variable in the `churn` dataset, which has levels `<40K`, `40K-60K`, `60K-80K`, `80K-120K`, and `>120K`. A common approach is to assign simple rank-based values from 1 through 5. However, this assumes that the distance between `<40K` and `40K-60K` is the same as the distance between `80K-120K` and `>120K`, which may not reflect true economic differences.
+
+When category ranges represent meaningful numerical intervals, we may instead assign representative values (for example, approximate midpoints) as follows:
 
 ```{r}
-# Convert an ordinal variable to numeric scores
-churn$income_level <- factor(churn$income, 
-                         levels = c("<40K", "40K-60K", "60K-80K", "80K-120K", ">120K"), 
-                         labels = c(1, 2, 3, 4, 5))
+churn$income_rank <- factor(churn$income, 
+  levels = c("<40K", "40K-60K", "60K-80K", "80K-120K", ">120K"), 
+  labels = c(20, 50, 70, 100, 140)
+)
 
-churn$income_level <- as.numeric(churn$income_level)
+churn$income_rank <- as.numeric(churn$income_rank)
 ```
 
-If the feature were stored as a *character* variable, it should first be converted to a factor before applying this transformation:
+This alternative better reflects economic distance between categories and may be more appropriate for linear or distance-based models, where numerical spacing directly influences model behavior.
 
-```{r, eval = FALSE}
-churn$income_level <- factor(churn$income_level, 
-                         levels = c("<40K", "40K-60K", "60K-80K", "80K-120K", ">120K"))
+The choice depends on the modeling objective. If only rank matters, simple ordinal encoding is sufficient. If approximate magnitude is meaningful, representative numerical values may provide a more realistic transformation.
 
-churn$income_level <- as.numeric(churn$income_level)
-```
+> *Practice:* Apply ordinal encoding to the `cut` variable in the `diamonds` dataset. The levels of `cut` are `Fair`, `Good`, `Very Good`, `Premium`, and `Ideal`. Assign numeric values from 1 to 5, reflecting their order from lowest to highest quality. Then reflect on whether the distances between these quality levels should be treated as equal.
 
-Both approaches ensure that the encoded values preserve the intended order of categories.
+Ordinal encoding should be applied only when the order of categories is genuinely meaningful. Using it for nominal variables such as “red,” “green,” and “blue” would impose an artificial numerical hierarchy and could distort model interpretation.
 
-> *Practice:* Apply ordinal encoding to the `cut` variable in the *diamonds* dataset. The levels of `cut` are `Fair`, `Good`, `Very Good`, `Premium`, and `Ideal`. Assign numeric values from 1 to 5, reflecting their order from lowest to highest quality.
-
-This transformation retains the ordinal structure and allows models that recognize ordered relationships—such as linear regression, decision trees, or ordinal logistic regression—to make more meaningful predictions.
-
-However, ordinal encoding should only be applied when the order of categories is genuinely meaningful. Using it for nominal variables such as “red,” “green,” and “blue” would falsely imply a numerical hierarchy and could distort model interpretation and performance.
-
-In summary, ordinal encoding is appropriate for variables with a natural ranking, where numerical values meaningfully represent category order. For variables without inherent order, a different approach is needed. The next section introduces *one-hot encoding*, a method designed specifically for nominal features.
+In summary, ordinal encoding always preserves order and, when values are carefully chosen, can also approximate magnitude. Thoughtful encoding ensures that numerical representations align with the substantive meaning of the data rather than introducing unintended assumptions. For features without inherent order, a different approach is needed. The next section introduces one-hot encoding, a method designed specifically for nominal features.
 
 ## One-Hot Encoding {#sec-ch6-one-hot-encoding}
 
@@ -408,11 +403,9 @@ While min–max scaling rescales values into a fixed range, *z-score scaling*—
 
 Z-score scaling is particularly useful for algorithms that rely on gradient-based optimization or are sensitive to the relative magnitude of predictors, such as linear regression, logistic regression, and support vector machines. Unlike min–max scaling, which constrains values to a fixed interval, z-score scaling expresses each observation in terms of its deviation from the mean.
 
-The formula for z-score scaling is
-$$
+The formula for z-score scaling is $$
 x_{\text{scaled}} = \frac{x - \text{mean}(x)}{\text{sd}(x)},
-$$
-where $x$ is the original feature value, $\text{mean}(x)$ is the mean of the feature, and $\text{sd}(x)$ is its standard deviation. The result, $x_{\text{scaled}}$, represents the number of standard deviations that an observation lies above or below the mean.
+$$ where $x$ is the original feature value, $\text{mean}(x)$ is the mean of the feature, and $\text{sd}(x)$ is its standard deviation. The result, $x_{\text{scaled}}$, represents the number of standard deviations that an observation lies above or below the mean.
 
 Z-score scaling places features with different units or magnitudes on a comparable scale. However, it remains sensitive to outliers, since both the mean and standard deviation can be influenced by extreme values.
 
