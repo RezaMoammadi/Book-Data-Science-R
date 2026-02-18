@@ -150,7 +150,7 @@ For Patient 3, shown in the right panel of Figure [-@fig-ch7-ex-drug-3], classif
 #| fig-cap: "Zoomed-in views of new Patient 2 (left) and new Patient 3 (right) with their three nearest neighbors."
 #| fig-width: 8
 #| fig-height: 4
-#| out-width: 100%
+#| out-width: 90%
 
 p = ggplot(train_set, aes(x = age, y = ratio, color = type, shape = type)) +
   geom_point(alpha = 0.7, size = 4, show.legend = FALSE) +
@@ -158,7 +158,7 @@ p = ggplot(train_set, aes(x = age, y = ratio, color = type, shape = type)) +
   labs(x = "Age", y = "Sodium-to-Potassium Ratio") 
 
 r_x = 3.2; r_y = 2
-size = if(knitr::is_latex_output()) 111 else 113
+size = if(knitr::is_latex_output()) 111 else 111
 
 # For patient 2
 x = test_set$age[2]
@@ -347,21 +347,23 @@ Note that scaling parameters should always be derived from the training data and
 
 With similarity measurement and data preparation steps now complete, the next task is to determine an appropriate value of $k$. The following section examines how this crucial hyperparameter influences the behavior and performance of the kNN algorithm.
 
-## Choosing the Right Value of *k* in kNN {#sec-ch7-knn-choose-k}
+## Selecting an Appropriate Value of $k$ in kNN {#sec-ch7-knn-choose-k}
 
 Imagine you are new to a city and looking for a good coffee shop. If you ask just one person, you might get a recommendation based on their personal taste, which may differ from yours. If you ask too many people, you could be overwhelmed by conflicting opinions or suggestions that average out to a generic option. The sweet spot is asking a few individuals whose preferences align with your own. Similarly, in the kNN algorithm, selecting an appropriate number of neighbors ($k$) requires balancing specificity and generalization.
 
-The parameter *k*, which determines how many nearest neighbors are considered during classification, plays a central role in shaping model performance. There is no universally optimal value for *k*; the best choice depends on the structure of the dataset and the nature of the classification task. Selecting *k* involves navigating the trade-off between overfitting and underfitting.
+The parameter $k$, which determines how many nearest neighbors are considered during classification, plays a central role in shaping model performance. There is no universally optimal value for $k$; the best choice depends on the structure of the dataset and the nature of the classification task. Selecting $k$ involves navigating the trade-off between overfitting and underfitting.
 
-When *k* is too small, such as $k = 1$, the model becomes overly sensitive to individual training points. Each new observation is classified based solely on its nearest neighbor, making the model highly reactive to noise and outliers. This often leads to *overfitting*, where the model performs well on the training data but generalizes poorly to new cases. A small cluster of mislabeled examples, for instance, could disproportionately influence the results.
+When $k$ is too small, such as $k = 1$, the model becomes overly sensitive to individual training points. Each new observation is classified based solely on its nearest neighbor, making the model highly reactive to noise and outliers. This often leads to *overfitting*, where the model performs well on the training data but generalizes poorly to new cases. A small cluster of mislabeled examples, for instance, could disproportionately influence the results.
 
-As *k* increases, the algorithm includes more neighbors in its classification decisions, smoothing the decision boundary and reducing the influence of noisy observations. However, when *k* becomes too large, the model may begin to overlook meaningful patterns, leading to *underfitting*. If *k* approaches the size of the training set, predictions may default to the majority class label.
+As $k$ increases, the algorithm includes more neighbors in its classification decisions, smoothing the decision boundary and reducing the influence of noisy observations. However, when $k$ becomes too large, the model may begin to overlook meaningful patterns, leading to *underfitting*. If $k$ approaches the size of the training set, predictions may default to the majority class label.
 
-To determine a suitable value of *k*, it is common to evaluate a range of options using a validation set or cross-validation. Performance metrics such as accuracy, precision, recall, and the F1-score can guide this choice. These metrics are discussed in detail in Chapter [-@sec-ch8-evaluation]. For simplicity, we focus here on *accuracy* (also called the success rate), which measures the proportion of correct predictions.
+To determine a suitable value of $k$, it is common to evaluate a range of options using a validation set or cross-validation. Importantly, hyperparameter selection should not be performed on the final test set, as this would allow information from the test data to influence model selection and lead to optimistic bias (see Section [-@sec-ch6-data-leakage]). Instead, $k$ should be chosen using only the training data, either by splitting it into training and validation subsets or by applying cross-validation (see Section [-@sec-ch6-cross-validation]).
 
-As an example, Figure [-@fig-ch7-kNN-plot] presents the accuracy of the kNN classifier for *k* values ranging from 1 to 30, generated with the `kNN.plot()` function from the **liver** package in R. Accuracy fluctuates as *k* increases, with the best performance achieved at $k = 5$, where the algorithm reaches its highest accuracy.
+Performance metrics such as accuracy, precision, recall, and the F1-score can guide this choice. These metrics are discussed in detail in Chapter [-@sec-ch8-evaluation]. For simplicity, we focus here on *accuracy* (also called the success rate), which measures the proportion of correct predictions.
 
-Choosing *k* is ultimately an empirical process informed by validation and domain knowledge. There is no universal rule, but careful experimentation helps identify a value that generalizes well for the problem at hand. A detailed case study in the following section revisits this example and walks through the complete modeling process.
+As an example, Figure [-@fig-ch7-kNN-plot] presents the accuracy of the kNN classifier for $k$ values ranging from 1 to 20. Accuracy fluctuates as $k$ increases, with the best performance achieved at $k = 7$, where the algorithm reaches its highest validation accuracy.
+
+Selecting $k$ is ultimately an empirical process informed by validation and domain knowledge. There is no universal rule, but careful experimentation helps identify a value that generalizes well for the problem at hand. A detailed case study in the following section revisits this example and walks through the complete modeling process.
 
 ## Case Study: Predicting Customer Churn with kNN {#sec-ch7-knn-churn}
 
@@ -387,10 +389,10 @@ To evaluate how well the kNN model generalizes to new observations, we begin by 
 We use the `partition()` function from the **liver** package to divide the data into an 80% training set and a 20% test set:
 
 ```{r}
-data_sets = partition(data = churn, ratio = c(0.8, 0.2), set.seed = 42)
+splits = partition(data = churn, ratio = c(0.8, 0.2), set.seed = 42)
 
-train_set = data_sets$part1
-test_set  = data_sets$part2
+train_set = splits$part1
+test_set  = splits$part2
 
 test_labels = test_set$churn
 ```
@@ -492,44 +494,51 @@ This step places all variables on a comparable scale, ensuring that those with l
 
 > *Practice:* After creating a 70%–30% train–test split, verify that the minimum and maximum values used for scaling are computed only from the training data. What could go wrong if the test set were scaled independently?
 
-### Finding the Best Value for $k$
+### Selecting an Appropriate Value of $k$
 
-The number of neighbors ($k$) is a key hyperparameter in the kNN algorithm. Choosing a very small $k$ can make the model overly sensitive to noise, whereas a very large $k$ can oversmooth decision boundaries and obscure meaningful local patterns.
+The number of neighbors ($k$) is a key hyperparameter in the kNN algorithm. Choosing a small $k$ can make the model overly sensitive to noise, whereas a large $k$ can oversmooth decision boundaries and obscure meaningful local patterns.
 
-In R, there are several ways to identify the optimal value of $k$. A common approach is to assess model accuracy across a range of values (for example, from 1 to 30) and select the $k$ that yields the highest performance. This can be implemented manually with a `for` loop that records the accuracy for each value of $k$.
+Several approaches can be used to identify an appropriate value of $k$. A common strategy is to evaluate model accuracy across a range of candidate values (for example, from 1 to 20) and select the value that yields the best performance. This process can be implemented manually with a `for` loop that records accuracy for each value of $k$.
 
-The **liver** package simplifies this process with the `kNN.plot()` function, which automatically computes accuracy across a specified range of $k$ values and visualizes the results. This enables quick identification of the best-performing model.
+The **liver** package provides the `kNN.plot()` function, which automatically computes accuracy across a specified range of $k$ values and visualizes the results. This allows us to examine how performance changes as the neighborhood size varies.
 
 Before running the function, we define a `formula` object that specifies the relationship between the target variable (`churn`) and the predictor variables. The predictors include all scaled numeric variables and the binary indicators generated through one-hot encoding, such as `gender_female`, `education_uneducated`, and others:
 
 ```{r}
-formula = churn ~ gender_female + age + income_rank + education_uneducated  + education_highschool + education_college  + education_graduate + `education_post-graduate` + marital_married + marital_single + card_category_blue + card_category_silver + card_category_gold + dependent_count + months_on_book + relationship_count + months_inactive + contacts_count_12 + credit_limit + revolving_balance + transaction_amount_12 + transaction_count_12 + ratio_amount_Q4_Q1 + ratio_count_Q4_Q1
+formula = churn ~ gender_female + age + income_rank + education_uneducated +
+  education_highschool + education_college + education_graduate +
+  `education_post-graduate` + marital_married + marital_single +
+  card_category_blue + card_category_silver + card_category_gold +
+  dependent_count + months_on_book + relationship_count +
+  months_inactive + contacts_count_12 + credit_limit +
+  revolving_balance + transaction_amount_12 +
+  transaction_count_12 + ratio_amount_Q4_Q1 + ratio_count_Q4_Q1
 ```
 
 We now apply the `kNN.plot()` function:
 
-```{r fig-ch7-kNN-plot, echo = TRUE, out.width = "85%", fig.cap = "Accuracy of the kNN algorithm on the churn dataset for values of k ranging from 1 to 20."}
-kNN.plot(formula = formula, 
-         train = train_scaled, 
-         test = test_scaled, 
-         k.max = 20, 
-         reference = "yes", 
-         set.seed = 42)
+```{r fig-ch7-kNN-plot, echo=TRUE, out.width="85%", fig.cap="Accuracy of the kNN algorithm on the churn dataset for values of k ranging from 1 to 20."}
+kNN.plot(
+  formula = formula,
+  train   = train_scaled,
+  ratio   = c(0.7, 0.3),
+  k.max   = 20,
+  reference = "yes",
+  set.seed = 42
+)
 ```
 
-The arguments in `kNN.plot()` control various aspects of the evaluation. The `train` and `test` inputs specify the scaled datasets, ensuring comparable feature scales for distance computation. The argument `k.max = 20` defines the largest number of neighbors to test, allowing us to visualize model performance over a meaningful range. Setting `reference = "yes"` designates the `"yes"` class as the positive outcome (customer churn), and `set.seed = 42` ensures reproducibility.
+The arguments in `kNN.plot()` control various aspects of the evaluation. The `train` argument specifies the scaled training set, ensuring that distance calculations are performed on properly prepared data. The argument `ratio = c(0.7, 0.3)` instructs the function to internally partition the training data into a temporary training subset (70%) and a validation subset (30%) for tuning $k$. This allows performance to be assessed without using the external test set. The argument `k.max = 20` defines the largest number of neighbors to evaluate, enabling visualization of model accuracy across a meaningful range of values. Setting `reference = "yes"` designates `"yes"` as the positive class (customer churn), and `set.seed = 42` ensures reproducibility of the internal partition.
 
-It is important to note that in this illustration, the test set is used to compare different values of $k$. Strictly speaking, this approach can introduce optimistic bias, because information from the test data influences hyperparameter selection. This represents a form of information leakage during model selection, because the test data influence the tuning process (see Section [-@sec-ch6-data-leakage]).
+By performing hyperparameter selection using only the training data, we prevent information from the test set from influencing the tuning process. This avoids optimistic bias and preserves the integrity of the final model evaluation (see Section [-@sec-ch6-data-leakage]).
 
-A more principled strategy is to use cross-validation within the training set to choose $k$, and then evaluate the final model on a separate test set (see Section [-@sec-ch6-cross-validation]). In practice, this may involve splitting the data into three subsets: a training set for fitting the model, a validation set for tuning $k$, and a test set for final evaluation. Alternatively, cross-validation within the training data provides a more stable and lower-variance basis for hyperparameter tuning.
+The resulting plot shows how model accuracy changes with $k$. In this case, accuracy peaks at $k = 7$, indicating that this value balances local sensitivity and generalization. With the selected value of $k$, we can now fit the final model on the full training set and evaluate it once on the separate test set.
 
-The resulting plot shows how model accuracy changes with $k$. In this case, accuracy peaks at $k = 5$, suggesting that this value strikes a good balance between capturing local patterns and maintaining generalization. With the optimal $k$ determined, we can now apply the kNN model to classify new customer records in the test set.
-
-> *Practice:* Using a 70%–30% train–test split, apply `kNN.plot()` to select an appropriate value of $k$. Compare the resulting accuracy curve with the one obtained using the 80%–20% split. Does the value of $k$ that maximizes accuracy remain the same? What does this tell you about the stability of hyperparameter tuning in kNN?
+> *Practice:* Using a 70%–30% train–test split, apply `kNN.plot()` to choose an appropriate value of $k$, following the approach used in this section and without using the test set. Compare the resulting accuracy curve with the one obtained using the 80%–20% split. Does the value of $k$ that maximizes accuracy remain the same? What does this tell you about the stability of hyperparameter tuning in kNN?
 
 ### Applying the kNN Classifier
 
-With the optimal value $k = 5$ identified, we now apply the kNN algorithm to classify customer churn in the test set. This step brings together the work from the previous sections—data preparation, feature encoding, scaling, and hyperparameter tuning. Unlike many machine learning algorithms, kNN does not build an explicit predictive model during training. Instead, it retains the training data and performs classification *on demand* by computing distances to identify the closest training observations.
+With the optimal value $k = 7$ identified, we now apply the kNN algorithm to classify customer churn in the test set. This step brings together the work from the previous sections—data preparation, feature encoding, scaling, and hyperparameter tuning. Unlike many machine learning algorithms, kNN does not build an explicit predictive model during training. Instead, it retains the training data and performs classification *on demand* by computing distances to identify the closest training observations.
 
 In R, we use the `kNN()` function from the **liver** package to implement the k-Nearest Neighbors algorithm. This function provides a formula-based interface consistent with other modeling functions in R, making the syntax more readable and the workflow more transparent. An alternative is the `knn()` function from the class package, which requires specifying input matrices and class labels manually. While effective, this approach is less intuitive for beginners and is not used in this book:
 
@@ -537,10 +546,10 @@ In R, we use the `kNN()` function from the **liver** package to implement the k-
 kNN_predict = kNN(formula = formula, 
                   train = train_scaled, 
                   test = test_scaled, 
-                  k = 5)
+                  k = 7)
 ```
 
-In this command, `formula` defines the relationship between the response variable (`churn`) and the predictors. The `train` and `test` arguments specify the scaled datasets prepared in earlier steps. The parameter `k = 5` sets the number of nearest neighbors, as determined in the tuning step. The `kNN()` function classifies each test observation by computing its distance to all training records and assigning the majority class among the *five* nearest neighbors.
+In this command, `formula` defines the relationship between the response variable (`churn`) and the predictors. The `train` and `test` arguments specify the scaled datasets prepared in earlier steps. The parameter `k = 7` sets the number of nearest neighbors, as determined in the tuning step. The `kNN()` function classifies each test observation by computing its distance to all training records and assigning the majority class among the *seven* nearest neighbors.
 
 ### Evaluating Model Performance of the kNN Model
 

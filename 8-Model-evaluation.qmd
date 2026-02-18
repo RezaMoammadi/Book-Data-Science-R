@@ -104,7 +104,7 @@ To understand a model’s strengths and weaknesses more fully, especially how we
 
 In R, a confusion matrix can be computed using the `conf.mat()` function from the **liver** package, which provides a consistent interface for classification evaluation. The package also includes `conf.mat.plot()` for visualizing confusion matrices.
 
-To see this in practice, we revisit the kNN model used in the churn case study in Chapter 7 (Section [-@sec-ch7-knn-churn]). The following code computes the confusion matrix for the test set:
+To see this in practice, we revisit the kNN model used in the churn case study of the previous chapter (Section [-@sec-ch7-knn-churn]). The following code computes the confusion matrix for the test set:
 
 ```{r echo=FALSE}
 library(liver)
@@ -112,10 +112,10 @@ library(liver)
 data(churn)
 
 # Train/test split
-data_sets = partition(data = churn, ratio = c(0.8, 0.2), set.seed = 42)
+splits = partition(data = churn, ratio = c(0.8, 0.2), set.seed = 42)
 
-train_set = data_sets$part1
-test_set  = data_sets$part2
+train_set = splits$part1
+test_set  = splits$part2
 
 test_labels = test_set$churn
 
@@ -183,7 +183,7 @@ formula = churn ~ gender_female + age +
 kNN_predict = kNN(formula = formula, 
                   train = train_scaled, 
                   test = test_scaled, 
-                  k = 5)
+                  k = 7)
 ```
 
 ```{r}
@@ -212,7 +212,7 @@ $$
 \text{Error Rate} = \frac{`r conf_max_knn_churn[2, 1]` + `r conf_max_knn_churn[1, 2]`}{`r sum(conf_max_knn_churn)`} = `r round((conf_max_knn_churn[2, 1] + conf_max_knn_churn[1, 2]) / sum(conf_max_knn_churn), 3)`.
 $$ Thus, the model correctly classified `r round((conf_max_knn_churn[1, 1] + conf_max_knn_churn[2, 2]) / sum(conf_max_knn_churn), 3) * 100`% of cases, while `r round((conf_max_knn_churn[2, 1] + conf_max_knn_churn[1, 2]) / sum(conf_max_knn_churn), 3) * 100`% were misclassified.
 
-> *Practice:* Follow the steps from Section [-@sec-ch7-knn-churn] and repeat the kNN classification using $k = 2$ instead of $k = 5$. Compare the resulting confusion matrix with the one reported above. Which error type increases? Does the model identify more churners, or fewer? How does this affect the accuracy and the error rate?
+> *Practice:* Follow the steps from Section [-@sec-ch7-knn-churn] and repeat the kNN classification using $k = 2$ instead of $k = 7$. Compare the resulting confusion matrix with the one reported above. Which error type increases? Does the model identify more churners, or fewer? How does this affect the accuracy and the error rate?
 
 Having reviewed accuracy and error rate, we now turn to additional evaluation metrics that provide deeper insight into a model’s strengths and limitations, particularly in imbalanced or high-stakes classification settings. The next section introduces *sensitivity*, *specificity*, *precision*, and *recall*.
 
@@ -239,7 +239,7 @@ $$
 
 Thus, the model correctly identified `r round(conf_max_knn_churn[1, 1] / (conf_max_knn_churn[1, 1] + conf_max_knn_churn[1, 2]), 3) * 100` percent of customers who churned.
 
-> *Practice:* Repeat the kNN classification from Section [-@sec-ch7-knn-churn] using $k = 2$ and compute the corresponding confusion matrix. Using that confusion matrix, calculate the sensitivity and compare it with the value obtained earlier for $k = 5$. How does changing $k$ affect the model’s ability to identify churners, and what might explain the difference?
+> *Practice:* Repeat the kNN classification from Section [-@sec-ch7-knn-churn] using $k = 2$ and compute the corresponding confusion matrix. Using that confusion matrix, calculate the sensitivity and compare it with the value obtained earlier for $k = 7$. How does changing $k$ affect the model’s ability to identify churners, and what might explain the difference?
 
 A model with *100 percent sensitivity* flags every observation as positive. Although this yields perfect sensitivity, it is not useful in practice. Sensitivity must therefore be interpreted alongside measures that describe performance on the negative class, such as specificity and precision.
 
@@ -258,7 +258,7 @@ $$
 
 Thus, the model correctly identified `r round(conf_max_knn_churn[2, 2] / (conf_max_knn_churn[2, 2] + conf_max_knn_churn[2, 1]), 3) * 100` percent of the customers who remained with the company.
 
-> *Practice:* Repeat the kNN classification from Section [-@sec-ch7-knn-churn] using $k = 2$ and compute the corresponding confusion matrix. Using that confusion matrix, calculate the specificity and compare it with the value obtained earlier for $k = 5$. How does changing $k$ affect the model’s ability to correctly identify non-churners? What does this reveal about the relationship between $k$ and false positive predictions?
+> *Practice:* Repeat the kNN classification from Section [-@sec-ch7-knn-churn] using $k = 2$ and compute the corresponding confusion matrix. Using that confusion matrix, calculate the specificity and compare it with the value obtained earlier for $k = 7$. How does changing $k$ affect the model’s ability to correctly identify non-churners? What does this reveal about the relationship between $k$ and false positive predictions?
 
 Sensitivity and specificity must be interpreted together. Improving sensitivity often increases the number of false positives and therefore reduces specificity, whereas improving specificity can lead to more false negatives and therefore lower sensitivity. The appropriate balance depends on the relative costs of these errors. In medical diagnostics, missing a disease case (a false negative) may be far more serious than issuing a false alarm, favoring higher sensitivity. In contrast, applications such as spam filtering often prioritise higher specificity to avoid incorrectly flagging legitimate messages.
 
@@ -302,7 +302,7 @@ $$ This score summarizes the model’s ability to correctly identify churners wh
 
 The F1-score is a valuable metric when precision and recall are both important. However, in practice, their relative importance depends on the context. In healthcare, recall might be prioritized to avoid missing true cases. In contrast, in filtering systems like spam detection, precision may be more important to avoid misclassifying valid items.
 
-> *Practice:* Repeat the kNN classification from Section [-@sec-ch7-knn-churn] using $k = 2$. Compute the resulting confusion matrix and calculate the precision, recall, and F1-score. How do these values compare with those for $k = 5$? Which metrics increase, which decrease, and what does this reveal about the effect of $k$ on model behavior?
+> *Practice:* Repeat the kNN classification from Section [-@sec-ch7-knn-churn] using $k = 2$. Compute the resulting confusion matrix and calculate the precision, recall, and F1-score. How do these values compare with those for $k = 7$? Which metrics increase, which decrease, and what does this reveal about the effect of $k$ on model behavior?
 
 In the next section, we shift our focus to metrics that evaluate classification models across a range of thresholds, rather than at a fixed cutoff. This leads us to the ROC curve and AUC, which offer a broader view of classification performance.
 
@@ -320,7 +320,7 @@ To illustrate how thresholds influence predictions, we return to the kNN model f
 kNN_prob = kNN(formula = formula, 
                train = train_scaled, 
                test = test_scaled, 
-               k = 5,
+               k = 7,
                type = "prob")
 
 round(kNN_prob[1:6, ], 2)
@@ -385,7 +385,7 @@ ggroc(roc_knn, colour = "#377EB8") +
 This curve shows how the model’s true positive rate and false positive rate change as the threshold varies. The proximity of the curve to the top-left corner indicates how effectively the model distinguishes churners from non-churners.
 :::
 
-> *Practice:* Repeat the kNN classification from Section [-@sec-ch7-knn-churn] using $k = 2$ and obtain the predicted probabilities for `churn = yes`. Using these probabilities, construct the ROC curve with the `roc()` and `ggroc()` functions. How does the ROC curve for $k = 2$ compare with the curve obtained earlier for $k = 5$? Which model shows stronger discriminatory ability?
+> *Practice:* Repeat the kNN classification from Section [-@sec-ch7-knn-churn] using $k = 2$ and obtain the predicted probabilities for `churn = yes`. Using these probabilities, construct the ROC curve with the `roc()` and `ggroc()` functions. How does the ROC curve for $k = 2$ compare with the curve obtained earlier for $k = 7$? Which model shows stronger discriminatory ability?
 
 While the ROC curve provides a visual summary of performance across thresholds, it is often useful to have a single numeric measure for comparison. The next section introduces the AUC, which captures the overall discriminatory ability of a classifier in one value.
 
@@ -409,7 +409,7 @@ auc(roc_knn)
 
 Here, `roc_knn` is the ROC object based on predicted probabilities for `churn = yes`. The resulting value represents the model’s ability to rank churners above non-churners. For example, the AUC for the kNN model is `r round(auc(roc_knn), 3)`, meaning that it ranks churners higher than non-churners with a probability of `r round(auc(roc_knn), 3)`.
 
-> *Practice:* Using the ROC object you constructed earlier for the kNN model with $k = 2$, compute its AUC value with the `auc()` function. Compare this AUC with the value for $k = 5$. Which model achieves the higher AUC? Does this comparison align with what you observed in the ROC curves?
+> *Practice:* Using the ROC object you constructed earlier for the kNN model with $k = 2$, compute its AUC value with the `auc()` function. Compare this AUC with the value for $k = 7$. Which model achieves the higher AUC? Does this comparison align with what you observed in the ROC curves?
 
 AUC is especially useful when comparing multiple models or when the costs of false positives and false negatives differ. Unlike accuracy, AUC is *threshold-independent*, providing a more holistic measure of model quality. Together, the ROC curve and the AUC offer a robust framework for evaluating classifiers, particularly on imbalanced datasets or in applications where the balance between sensitivity and specificity is important. In the next section, we extend these ideas to *multi-class classification*, where evaluation requires new strategies to accommodate more than two outcome categories.
 
