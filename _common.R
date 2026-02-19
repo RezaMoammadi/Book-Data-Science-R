@@ -264,6 +264,7 @@ write_bib(
     "naniar",  # for visualizing missing values
     "ROSE",
     "gganimate", # for animation in ch4
+    "gifski",     # for rendering gifs in ch4 
     "ggcorrplot", # for correlation plot in ch4
     "dslabs",    # for gapminder dataset in ch4
     
