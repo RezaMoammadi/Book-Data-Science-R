@@ -36,7 +36,7 @@ This chapter introduces statistical inference, a set of methods that allow us to
 
 The chapter begins with point estimation, where sample statistics are used to estimate unknown population parameters. It then introduces confidence intervals, which provide a principled way to express the uncertainty associated with these estimates. Hypothesis testing follows, offering a framework for assessing whether observed differences or associations are likely to have arisen by chance. Along the way, you will work with several real-world datasets, including `churn` and `diamonds` in the main text, and the `bank`, `churn_mlc`, and `marketing` datasets from the **liver** package in the exercises.
 
-Throughout the chapter, you will apply these inferential tools in R to evaluate patterns, interpret p-values and confidence intervals, and distinguish statistical significance from practical relevance. These skills form the basis for reliable, data-driven conclusions and support the Modeling work that follows.
+Throughout the chapter, you will apply these inferential tools in R to evaluate patterns, interpret *p*-values and confidence intervals, and distinguish statistical significance from practical relevance. These skills form the basis for reliable, data-driven conclusions and support the Modeling work that follows.
 
 The chapter concludes by revisiting how statistical inference supports later phases of the data science workflow, including validating data partitions and assessing feature relevance for Modeling, topics that will be developed further in Chapter [-@sec-ch6-setup-data].
 
@@ -97,7 +97,7 @@ The estimated proportion of churners is `r round(prop.table(table(churn$churn))[
 :::
 
 ::: {#ex-est-service-call .example}
-**Example:** Estimating the *average annual transaction amount* among churners.
+**Example:** Estimating the average annual transaction amount among churners.
 
 ```{r}
 # Filter churners
@@ -114,90 +114,105 @@ While point estimates are informative, they do not communicate how precise those
 
 ## Confidence Intervals: Quantifying Uncertainty {#sec-ch5-confidence-interval}
 
-Suppose the exploratory analysis in the `churn` dataset suggests that churned customers make fewer transactions than active customers. A natural follow-up question is: how precise is our estimate of the average transaction amount among churners? Could the true average be noticeably higher or lower? A single number rarely tells the whole story. This is where confidence intervals become essential.
+Suppose the exploratory analysis in the `churn` dataset suggests that churned customers exhibit lower total transaction amounts than active customers. A natural follow-up question is: how precise is our estimate of the average annual transaction amount among churners? Could the true average be meaningfully higher or lower? A single number rarely tells the whole story. This is where confidence intervals become essential.
 
-Confidence intervals quantify the uncertainty associated with estimates of population parameters. Rather than reporting only a point estimate, such as “the average annual transaction amount for churners is \$3,900,” a confidence interval might state that “we are 95 percent confident that the true average lies between \$3,780 and \$4,020.” This range incorporates the natural sampling variation present whenever we work with data from a subset rather than an entire population.
+Confidence intervals quantify the uncertainty associated with estimates of population parameters. Rather than reporting only a point estimate, such as “the average annual transaction amount for churners is \$3,900,” a confidence interval might state that “we are 95 percent confident that the true average lies between \$3,780 and \$4,020.” This range reflects the sampling variability that arises whenever we draw conclusions from a sample rather than observe the entire population.
 
-Formally, a confidence interval combines a point estimate (such as a sample mean or proportion) with a margin of error that reflects expected sampling variability. The general form is: $$
+At its core, a confidence interval has a simple structure:
+$$
 \text{Point Estimate} \pm \text{Margin of Error}.
 $$
+The margin of error tells us how much uncertainty surrounds our estimate. It can be written as
+$$
+\text{Margin of Error} = \text{Critical Value} \times \text{Standard Error}.
+$$
 
-For a population mean, the confidence interval is often calculated using: $$
-\bar{x} \pm z_{\alpha/2}\left(\frac{s}{\sqrt{n}}\right),
-$$ where $\bar{x}$ is the sample mean, $s$ the sample standard deviation, $n$ the sample size, and $z_{\alpha/2}$ the critical value from the standard normal distribution (for example, 1.96 for a 95 percent confidence level).
+The *standard error* measures how much the sample mean is expected to vary from sample to sample. For a sample mean, it is computed as
+
+$$
+\frac{s}{\sqrt{n}},
+$$
+where $s$ is the sample standard deviation and $n$ is the sample size. This expression highlights two important ideas. Larger samples reduce uncertainty because the denominator $\sqrt{n}$ increases as $n$ grows. At the same time, greater variability in the data increases uncertainty because a larger value of $s$ leads to a wider interval.
+
+The *critical value* determines how wide the interval must be to achieve a chosen confidence level. For example, a 95 percent confidence level requires a multiplier large enough so that, in repeated sampling, approximately 95 percent of constructed intervals contain the true parameter.
+
+When estimating a population mean and the population standard deviation is unknown (which is almost always the case in practice), we use the $t$-distribution. The resulting confidence interval becomes
+
+$$
+\bar{x} \pm t_{\frac{\alpha}{2}, n-1}\left(\frac{s}{\sqrt{n}}\right),
+$$
+where $\bar{x}$ is the sample mean and $t_{\alpha/2, n-1}$ is the critical value from the $t$-distribution with $n-1$ degrees of freedom. Although the notation may appear technical, the structure remains simple: estimate ± (multiplier × uncertainty).
+
+When the population standard deviation $\sigma$ is known, the normal distribution can be used instead, leading to
+$$
+\bar{x} \pm z_{\frac{\alpha}{2}}\left(\frac{\sigma}{\sqrt{n}}\right).
+$$
+In practice, however, $\sigma$ is rarely known, so we estimate it using $s$ and rely on the $t$-distribution. For large sample sizes, the $t$-distribution closely approximates the standard normal distribution, and the resulting intervals are nearly identical. The distinction between $z$ and $t$ is therefore most important in smaller samples.
 
 ```{r fig-confidence-interval, echo = FALSE, out.width = "80%", fig.cap = "Confidence interval for a population mean. The interval is centered around the point estimate, with its width determined by the margin of error. The confidence level specifies the long-run proportion of such intervals that contain the true parameter."}
+
 knitr::include_graphics("images/ch5_confidence_interval.png")
 ```
 
-Several factors influence the width of a confidence interval. Larger sample sizes typically produce narrower intervals, reflecting more precise estimates. Greater variability leads to wider intervals, indicating more uncertainty. The confidence level also plays a role: a 99 percent interval is wider than a 90 percent interval because it must accommodate a broader range of plausible values.
+The width of a confidence interval reflects the combined influence of sample size, variability, and the chosen confidence level.
 
-To illustrate these ideas, we construct a 95 percent confidence interval for the *average annual transaction amount* among churned customers in the `churn` dataset:
+In practice, statistical software computes this interval directly. To illustrate, we construct a 95 percent confidence interval for the average annual transaction amount among churned customers in the `churn` dataset:
 
 ```{r}
 # Identify churned customers
 churned_customers = subset(churn, churn == "yes")
 
-# Calculate mean and standard error
-mean_amount <- mean(churned_customers$transaction_amount_12)
-se_amount <- sd(churned_customers$transaction_amount_12) / sqrt(nrow(churned_customers))
+# Compute confidence interval using t-test
+t_result = t.test(churned_customers$transaction_amount_12,
+                  conf.level = 0.95)
 
-# Confidence interval
-z_score <- 1.96  # For 95 percent confidence
-ci_lower <- mean_amount - z_score * se_amount
-ci_upper <- mean_amount + z_score * se_amount
-
-cat("95% Confidence Interval: (", ci_lower, ",", ci_upper, ")")
+t_result$conf.int
 ```
 
-The resulting interval (`r round(ci_lower, 2)`, `r round(ci_upper, 2)`) indicates that we are 95 percent confident the true average annual transaction amount for churned customers lies within this range. More formally, if we were to draw many random samples and compute an interval from each, approximately 95 percent of those intervals would contain the true population mean.
+The resulting interval indicates that we are 95 percent confident the true average annual transaction amount for churned customers lies within this range. More precisely, if we were to draw many random samples of the same size and compute an interval from each sample, approximately 95 percent of those intervals would contain the true population mean.
 
-An alternative is to use the `z.conf()` function from the **liver** package, which computes the interval directly:
+It is important to interpret this carefully. The confidence level describes the long-run reliability of the procedure, not the probability that the true mean lies inside this particular interval. Once the interval has been calculated, the population mean is fixed; the randomness lies in the interval, not in the parameter.
 
-```{r}
-z.conf(churned_customers$transaction_amount_12, conf = 0.95)
-```
-
-Confidence intervals also play an important role when comparing groups. For instance, if the confidence intervals for churners and non-churners differ substantially or show little overlap, this suggests meaningful differences in behavior worthy of further investigation. By providing a range of plausible values, confidence intervals offer a transparent measure of uncertainty and help avoid over-interpretation of single-number summaries.
-
-In the next section, we extend these ideas through *hypothesis testing*, a formal framework for assessing whether observed patterns in a sample are likely to reflect genuine differences in the population or could plausibly arise by random chance.
+Confidence intervals also play an important role when comparing groups. Constructing separate intervals for churned and active customers allows us to assess whether their average transaction amounts plausibly differ at the population level. By presenting a range of plausible values rather than a single estimate, confidence intervals provide a transparent measure of uncertainty and prepare the ground for the hypothesis testing framework introduced next.
 
 ## Hypothesis Testing
 
-Suppose a bank introduces a new customer service protocol and wants to know whether it reduces churn. After implementing the change for a subset of customers, analysts observe a slightly lower churn rate in the treated group. But is this difference meaningful, or could it simply be due to chance? Hypothesis testing provides a structured framework for addressing such questions.
+Suppose a bank introduces a new customer service protocol and randomly implements it for a subset of customers. Analysts observe a slightly lower churn rate in the treated group. But is this difference meaningful, or could it simply be due to chance? Hypothesis testing provides a structured framework for addressing such questions.
 
 Within the data science workflow, hypothesis testing forms a bridge between exploratory observations and formal evidence. For example, Chapter [-@sec-ch4-EDA-churn] showed that churn tends to be higher among customers with low spending and few transactions. Hypothesis testing allows us to examine whether such patterns are statistically credible or could have arisen from sampling variability.
 
-Hypothesis testing evaluates claims about population parameters using sample data. Whereas confidence intervals offer a range of plausible values for an estimate, hypothesis testing evaluates whether the observed evidence supports a specific claim. The overall logic of this decision-making process is summarized in Figure [-@fig-hypothesis-testing].
+Hypothesis testing evaluates claims about population parameters using sample data. Whereas confidence intervals provide a range of plausible values for an estimate, hypothesis testing evaluates whether the observed evidence supports a specific claim. The overall logic of this decision-making process is summarized in Figure [-@fig-hypothesis-testing].
 
 ```{r fig-hypothesis-testing, echo = FALSE, out.width = "80%", fig.cap = "Visual summary of hypothesis testing, showing how sample evidence informs the decision to reject or not reject the null hypothesis ($H_0$)."}
+
 knitr::include_graphics("images/ch5_hypothesis_testing.png")
 ```
 
-The framework is built around two competing statements:
+The framework is built around two competing statements. The null hypothesis ($H_0$) represents the default assumption that there is no difference, no association, or no systematic relationship between variables. The alternative hypothesis ($H_a$) represents the competing claim that such a difference or relationship does exist.
 
--   The null hypothesis ($H_0$): the default assumption that there is no effect, difference, or association.
+To assess the strength of evidence against $H_0$, we calculate a *p*-value: the probability of obtaining results at least as extreme as those observed, under the assumption that $H_0$ is true. Small *p*-values indicate stronger evidence against $H_0$. We compare the *p*-value to a chosen significance level $\alpha$ (typically 0.05) to decide whether the evidence is strong enough to reject the null hypothesis.
 
--   The alternative hypothesis ($H_a$): the competing claim that an effect or difference does exist.
+> Reject $H_0$ when the *p*-value is less than $\alpha$.
 
-To assess the strength of evidence against $H_0$, we calculate a p-value: the probability of obtaining results at least as extreme as those observed, assuming $H_0$ is true. Small p-values indicate stronger evidence against $H_0$. We compare the p-value to a chosen significance level $\alpha$ (typically 0.05) to decide whether the evidence is strong enough to reject the null hypothesis.
+For example, if $p = 0.03$ and $\alpha = 0.05$, the evidence is considered sufficient to reject $H_0$. If $p = 0.12$, we do not reject $H_0$ because the evidence is not strong enough to support $H_a$. Importantly, a *p*-value does not represent the probability that $H_0$ is true. Instead, it measures how unusual the observed data would be if $H_0$ were true.
 
-> Reject $H_0$ when the p-value is less than $\alpha$.
-
-For example, if $p = 0.03$ and $\alpha = 0.05$, the evidence is considered sufficient to reject $H_0$. If $p = 0.12$, we retain $H_0$ because the evidence is not strong enough to support $H_a$. It is important to remember that a *p*-value does not reflect the probability that $H_0$ is true, but rather the likelihood of observing such data if $H_0$ were true.
-
-A useful way to understand this logic is to consider the analogy of a criminal trial: the null hypothesis represents the presumption of innocence, the alternative hypothesis represents guilt, and the jury must decide whether the evidence is strong enough to overturn the presumption of innocence. Just as legal verdicts can result in mistakes, hypothesis testing is subject to two types of error, summarized in [-@tbl-hypothesis-errors].
+A useful analogy is a criminal trial. The null hypothesis represents the presumption of innocence, and the alternative hypothesis represents guilt. The decision-maker must determine whether the evidence is strong enough to overturn the presumption of innocence. As in legal settings, statistical decisions are subject to two types of error, summarized in [-@tbl-hypothesis-errors].
 
 ::: {#tbl-hypothesis-errors .table}
-| Decision | Reality: $H_0$ is True | Reality: $H_0$ is False |
-|------------------|----------------------------|--------------------------|
-| Do not Reject $H_0$ | *Correct Decision*: Acquit an innocent person. | *Type II Error (*$\beta$): Acquit a guilty person. |
-| Reject $H_0$ | *Type I Error (*$\alpha$): Convict an innocent person. | *Correct Decision*: Convict a guilty person. |
+
+| Decision            | Reality: $H_0$ is True                                 | Reality: $H_0$ is False                            |
+| ------------------- | ------------------------------------------------------ | -------------------------------------------------- |
+| Do not Reject $H_0$ | *Correct Decision*: Acquit an innocent person.         | *Type II Error ($\beta$)*: Acquit a guilty person. |
+| Reject $H_0$        | *Type I Error ($\alpha$)*: Convict an innocent person. | *Correct Decision*: Convict a guilty person.       |
 
 Possible outcomes of hypothesis testing, with two correct decisions and two types of error.
 :::
 
-A Type I error ($\alpha$) occurs when we reject $H_0$ even though it is true. A Type II error ($\beta$) occurs when we do not reject $H_0$ even though it is false. The significance level $\alpha$ determines the probability of a Type I error and is chosen before the test is performed. The probability of a Type II error depends on several factors, including the sample size, the variability of the data, and the size of the true effect. A related concept is statistical power, the probability of detecting a real effect when one exists. Higher power reduces the risk of a Type II error and is typically achieved by increasing the sample size.
+A Type I error ($\alpha$) occurs when we reject $H_0$ even though it is true. The significance level $\alpha$ is chosen before the test is performed and represents the probability of making this error.
+
+A Type II error ($\beta$) occurs when we do not reject $H_0$ even though it is false. The probability of a Type II error depends on several factors, including the sample size, data variability, and the magnitude of the true difference.
+
+A related concept is statistical power, defined as the probability of correctly rejecting $H_0$ when it is false. Higher power reduces the risk of a Type II error and is typically achieved by increasing the sample size or detecting larger effects.
 
 ### Choosing the Appropriate Hypothesis Test
 
@@ -320,14 +335,14 @@ prop_test
 
 Here, `x` is the number of churned customers, `n` is the total sample size, and `p = 0.15` specifies the hypothesised population proportion. The test uses a chi-square approximation to evaluate whether the observed sample proportion differs significantly from this value.
 
-The output provides three key results: the p-value, a confidence interval for the true proportion, and the estimated sample proportion. The p-value is `r round(prop_test$p.value, 3)`. Because it is less than the significance level ($\alpha = 0.05$), we reject the null hypothesis. This indicates statistical evidence that the true churn rate differs from 15 percent.
+The output provides three key results: the *p*-value, a confidence interval for the true proportion, and the estimated sample proportion. The *p*-value is `r round(prop_test$p.value, 3)`. Because it is less than the significance level ($\alpha = 0.05$), we reject the null hypothesis. This indicates statistical evidence that the true churn rate differs from 15 percent.
 
 The 95 percent confidence interval for the population proportion is (`r round(prop_test$conf.int[1], 3)`, `r round(prop_test$conf.int[2], 3)`). Since this interval does not contain $0.15$, the conclusion is consistent with the decision to reject ($H_0$). The observed sample proportion is `r round(prop_test$estimate, 3)`, which serves as our point estimate of the population churn rate.
 :::
 
 > *Practice:* Test whether the proportion of churned customers exceeds 15 percent. Set up a right-tailed one-sample proportion test using the option `alternative = "greater"` in the `prop.test()` function.
 
-This example shows how a test for a single proportion can be used to validate operational assumptions about customer behavior. The p-value indicates whether a difference is statistically significant, whereas the confidence interval and estimated proportion help assess practical relevance. When combined with domain knowledge, this method supports evidence-informed decisions about customer retention.
+This example shows how a test for a single proportion can be used to validate operational assumptions about customer behavior. The *p*-value indicates whether a difference is statistically significant, whereas the confidence interval and estimated proportion help assess practical relevance. When combined with domain knowledge, this method supports evidence-informed decisions about customer retention.
 
 ## Two-sample t-test {#sec-ch5-two-sample-t-test}
 
