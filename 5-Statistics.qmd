@@ -122,13 +122,12 @@ At its core, a confidence interval has a simple structure:
 $$
 \text{Point Estimate} \pm \text{Margin of Error}.
 $$
+
 The margin of error tells us how much uncertainty surrounds our estimate. It can be written as
 $$
 \text{Margin of Error} = \text{Critical Value} \times \text{Standard Error}.
 $$
-
 The *standard error* measures how much the sample mean is expected to vary from sample to sample. For a sample mean, it is computed as
-
 $$
 \frac{s}{\sqrt{n}},
 $$
@@ -137,16 +136,18 @@ where $s$ is the sample standard deviation and $n$ is the sample size. This expr
 The *critical value* determines how wide the interval must be to achieve a chosen confidence level. For example, a 95 percent confidence level requires a multiplier large enough so that, in repeated sampling, approximately 95 percent of constructed intervals contain the true parameter.
 
 When estimating a population mean and the population standard deviation is unknown (which is almost always the case in practice), we use the $t$-distribution. The resulting confidence interval becomes
-
 $$
 \bar{x} \pm t_{\frac{\alpha}{2}, n-1}\left(\frac{s}{\sqrt{n}}\right),
 $$
-where $\bar{x}$ is the sample mean and $t_{\alpha/2, n-1}$ is the critical value from the $t$-distribution with $n-1$ degrees of freedom. Although the notation may appear technical, the structure remains simple: estimate ± (multiplier × uncertainty).
+where $\bar{x}$ is the sample mean and $t_{\alpha/2, n-1}$ is the critical value from the $t$-distribution with $n-1$ degrees of freedom. Although the notation may appear technical, the structure remains simple: estimate ± (multiplier × uncertainty). The width of the interval reflects the combined influence of sample size, variability, and the chosen confidence level.
+
+The $t$-distribution and the standard normal ($z$) distribution are two fundamental probability distributions used throughout statistical inference. They describe how sample statistics behave under repeated sampling when uncertainty is present. The normal distribution arises naturally when sample sizes are large or when population variability is known. The $t$-distribution adjusts for additional uncertainty when the population variance is estimated from the data. These distributions will reappear in the following sections, where they form the basis of many hypothesis tests.
 
 When the population standard deviation $\sigma$ is known, the normal distribution can be used instead, leading to
 $$
 \bar{x} \pm z_{\frac{\alpha}{2}}\left(\frac{\sigma}{\sqrt{n}}\right).
 $$
+
 In practice, however, $\sigma$ is rarely known, so we estimate it using $s$ and rely on the $t$-distribution. For large sample sizes, the $t$-distribution closely approximates the standard normal distribution, and the resulting intervals are nearly identical. The distinction between $z$ and $t$ is therefore most important in smaller samples.
 
 ```{r fig-confidence-interval, echo = FALSE, out.width = "80%", fig.cap = "Confidence interval for a population mean. The interval is centered around the point estimate, with its width determined by the margin of error. The confidence level specifies the long-run proportion of such intervals that contain the true parameter."}
@@ -154,9 +155,7 @@ In practice, however, $\sigma$ is rarely known, so we estimate it using $s$ and 
 knitr::include_graphics("images/ch5_confidence_interval.png")
 ```
 
-The width of a confidence interval reflects the combined influence of sample size, variability, and the chosen confidence level.
-
-In practice, statistical software computes this interval directly. To illustrate, we construct a 95 percent confidence interval for the average annual transaction amount among churned customers in the `churn` dataset:
+In practice, we do not compute these quantities manually. Statistical software determines the appropriate critical value and standard error automatically. To illustrate, we construct a 95 percent confidence interval for the average annual transaction amount among churned customers in the `churn` dataset:
 
 ```{r}
 # Identify churned customers
@@ -169,11 +168,13 @@ t_result = t.test(churned_customers$transaction_amount_12,
 t_result$conf.int
 ```
 
-The resulting interval indicates that we are 95 percent confident the true average annual transaction amount for churned customers lies within this range. More precisely, if we were to draw many random samples of the same size and compute an interval from each sample, approximately 95 percent of those intervals would contain the true population mean.
+The `t.test()` function in R performs a $t$-test and, by default, also returns a confidence interval for the population mean. In this example, we use it to compute the 95 percent confidence interval for the average annual transaction amount among churned customers. The argument `conf.level = 0.95` specifies the desired confidence level, while the function automatically determines the appropriate $t$ critical value based on the sample size. Although we focus here on the confidence interval, the same function will be used in Sections [-@sec-ch5-one-sample-t-test] and [-@sec-ch5-two-sample-t-test] to test hypotheses about population means.
+
+The resulting interval provides a range of plausible values for the true average annual transaction amount among churned customers. If we were to draw many random samples of the same size and compute an interval from each sample, approximately 95 percent of those intervals would contain the true population mean.
 
 It is important to interpret this carefully. The confidence level describes the long-run reliability of the procedure, not the probability that the true mean lies inside this particular interval. Once the interval has been calculated, the population mean is fixed; the randomness lies in the interval, not in the parameter.
 
-Confidence intervals also play an important role when comparing groups. Constructing separate intervals for churned and active customers allows us to assess whether their average transaction amounts plausibly differ at the population level. By presenting a range of plausible values rather than a single estimate, confidence intervals provide a transparent measure of uncertainty and prepare the ground for the hypothesis testing framework introduced next.
+Confidence intervals also play an important role when comparing groups. Constructing separate intervals for churned and active customers allows us to assess whether their average transaction amounts plausibly differ at the population level. In this way, confidence intervals not only quantify uncertainty but also prepare the ground for the formal hypothesis testing framework introduced next.
 
 ## Hypothesis Testing
 
@@ -244,7 +245,7 @@ Common hypothesis tests, their null hypotheses, and the types of variables they 
 
 These tests each serve a specific purpose and together form a core part of the data analyst’s toolkit. The following sections demonstrate how to apply them to real examples from the `churn` dataset, providing guidance on both interpretation and implementation in R.
 
-## One-sample t-test
+## One-sample t-test {#sec-ch5-one-sample-t-test}
 
 Suppose a bank believes that customers typically remain active for 36 months before they churn. Has customer behavior changed in recent years? Is the average tenure of churned customers still close to this benchmark? The one-sample t-test provides a principled way to evaluate such questions.
 
