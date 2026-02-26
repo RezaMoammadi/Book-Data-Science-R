@@ -42,47 +42,69 @@ The chapter concludes by revisiting how statistical inference supports later pha
 
 ## Introduction to Statistical Inference
 
-Statistical inference connects what we observe in a sample with what we seek to understand about the broader population, as illustrated in @fig-inference. It occupies a central position in the Data Science Workflow (see @fig-ch2_DSW), following exploratory data analysis and preceding predictive Modeling. While exploratory data analysis helps reveal potential patterns, such as the higher churn rates among customers with many customer service interactions in the `churn` dataset (via `contacts_count_12`), inference provides a formal framework for evaluating whether these patterns reflect genuine population-level effects or are likely to have arisen by chance.
+Data science is not only about describing data; it is about learning from data in order to understand the real world. When we analyze a dataset such as `churn`, we observe information about a particular group of customers. Yet our ultimate goal is rarely limited to those specific observations. Instead, we seek to draw conclusions about the broader customer population: Are churn rates increasing? Do customers with frequent service interactions tend to leave more often? Are observed differences meaningful, or are they simply the result of random fluctuations?
 
-Inference also plays an important role in later stages of the workflow. For example, hypothesis testing can help verify that training and test sets retain key characteristics of the full dataset, as discussed in Chapter [-@sec-ch6-setup-data].
+Statistical inference provides the framework for answering such questions. It connects the data observed in a sample with the larger population from which that sample is drawn. Because we rarely have access to the entire population, we must rely on partial information. This reliance introduces uncertainty, and probability serves as the language used to quantify it, as illustrated in @fig-inference.
+
+A crucial assumption underlying statistical inference is that the data meaningfully represent the population of interest. In classical settings, this is achieved through random sampling, where each member of the population has a known and non-zero probability of being included in the sample. Random sampling does not eliminate variability; rather, it ensures that differences we observe are driven by natural randomness instead of systematic bias.
+
+In many real-world data science applications, however, datasets are observational rather than generated through carefully designed sampling schemes. The principle remains the same: valid inference depends on whether the data reasonably reflect the population about which conclusions are drawn. If certain groups are overrepresented or underrepresented, conclusions may be distorted.
+
+When we analyze a dataset, we observe only one realization of a broader process. If we were to collect another sample from the same population, the numerical summaries would almost certainly differ. Statistical inference acknowledges this variability and provides tools to assess how much confidence we should place in our conclusions.
+
+In statistical notation, we distinguish between population parameters and sample statistics. Population parameters, which are fixed but unknown, are typically denoted by Greek letters such as $\mu$ (population mean), $\sigma$ (population standard deviation), and $\pi$ (population proportion). Their observable counterparts computed from data are denoted by symbols such as $\bar{x}$ (sample mean), $s$ (sample standard deviation), and $p$ (sample proportion). The aim of inference is to use sample statistics to learn about unknown population parameters, as illustrated in Figure [-@fig-inference].
 
 ```{r fig-inference, echo=FALSE, out.width="100%", fig.cap="A conceptual overview of statistical inference. Data from a sample are used to infer properties of the population, with probability quantifying uncertainty."}
 knitr::include_graphics("images/ch5_inference.png")
 ```
 
-As summarized in @fig-stat-inference-pillars, statistical inference is built around three core components:
+To formalize how sample statistics vary across repeated samples, statistical inference relies on probability distributions. Certain distributions play a central role. The normal distribution often arises when sample sizes are large. The $t$-distribution accounts for additional uncertainty when population variability is estimated from the data. The chi-square distribution is commonly used when analyzing categorical data and assessing variability in frequency tables. These distributions form the mathematical foundation for the confidence intervals and hypothesis tests developed later in this chapter.
 
--   *Point estimation*: Estimating population parameters (e.g., the mean or proportion) using sample data.
+Within the Data Science Workflow (see @fig-ch2_DSW), inference bridges exploratory data analysis and predictive modeling. Exploratory analysis helps reveal potential patterns, such as higher churn rates among customers with many service contacts (`contacts_count_12`). Inference then evaluates whether these patterns are likely to reflect genuine population-level relationships or could plausibly have arisen by chance.
 
--   *Confidence intervals*: Quantifying uncertainty around these estimates.
+Statistical thinking therefore requires more than applying formulas or running functions in R. It involves asking how the data were generated, what assumptions are being made, and whether observed patterns are likely to persist beyond the specific sample at hand. A statistically significant result is meaningful only if the data are relevant to the question and reasonably representative of the population of interest. Without this foundation, even technically correct calculations may lead to misleading interpretations. In this sense, statistical inference is not merely a computational procedure but a disciplined way of thinking about evidence, variability, and generalization.
 
--   *Hypothesis testing*: Assessing whether observed effects are statistically significant or likely due to chance.
+Statistical inference is typically organized around three interconnected components (see @fig-stat-inference-pillars). Point estimation provides numerical summaries that serve as estimates of population parameters. Confidence intervals quantify the uncertainty surrounding those estimates. Hypothesis testing offers a structured framework for evaluating whether observed patterns are statistically credible.
 
 ```{r fig-stat-inference-pillars, echo=FALSE, out.width="95%", fig.cap="The three core goals of statistical inference: point estimation, confidence intervals, and hypothesis testing. Together they support reliable generalization from sample data."}
 knitr::include_graphics("images/ch5_inference_pillars.png")
 ```
 
-These components build on one another: estimation provides a starting point, confidence intervals express the associated uncertainty, and hypothesis testing offers a structured approach to evaluating whether observed effects are statistically meaningful. Together, they allow analysts to move beyond description toward evidence-based conclusions. The remainder of this chapter introduces each component in turn, beginning with point estimation and progressing through confidence intervals and hypothesis testing, supported by worked examples and applications in R.
+These components build on one another. Estimation provides an initial summary, confidence intervals express the associated uncertainty, and hypothesis testing formalizes decisions about statistical evidence. Together, they allow analysts to move beyond description toward principled, evidence-based conclusions. The remainder of this chapter introduces each component in turn, beginning with point estimation and progressing through confidence intervals and hypothesis testing, supported by practical implementation in R.
 
 ## Point Estimation
 
-When analyzing sample data, an essential first step in statistical inference is to estimate characteristics of the population from which the sample is drawn. These characteristics include quantities such as the average number of customer service contacts, the typical transaction amount, or the proportion of customers who churn. Because we rarely have access to the entire population, we rely on *point estimates* derived from sample data.
+When analyzing sample data, an essential first step in statistical inference is to estimate characteristics of the population from which the sample is drawn. In Chapter [-@sec-ch4-EDA-churn], we summarized patterns in the `churn` dataset using descriptive statistics. We now formalize those summaries as estimates of population parameters. These parameters include quantities such as the average number of customer service contacts, the typical transaction amount, or the proportion of customers who churn.
 
-A point estimate is a single numerical value that serves as our best guess for a population parameter. For example, the sample mean is a point estimate of the population mean, and the sample proportion is a point estimate of the population proportion. In the context of the `churn` dataset, such estimates help quantify patterns observed during exploratory analysis. For instance, we might estimate the proportion of customers who churn or assess the average annual spending among those who leave the service.
+Because we rarely have access to the entire population, we rely on *point estimates* computed from sample data. A population parameter is fixed but unknown, whereas a sample statistic is observable and varies from sample to sample. A point estimate is a single numerical value that serves as our best guess for a population parameter. For example, the sample mean estimates the population mean, and the sample proportion estimates the population proportion.
 
-These estimates form the foundation for interval estimation and hypothesis testing, which incorporate uncertainty and offer tools for formal decision-making. We begin with simple examples of point estimation using familiar summaries from the `churn` dataset.
-
-::: {#ex-est-churn-proportion .example}
-**Example:** Estimating the *proportion of churners* in the customer population.
+To illustrate, consider the proportion of customers who churn in the `churn` dataset:
 
 ```{r}
-library(liver)
+library(liver) # load the liver package to access the churn dataset
+data(churn)    # load the churn dataset
 
-data(churn)
-
-# Compute the sample proportion of churners
 prop.table(table(churn$churn))["yes"]
 ```
+
+The resulting value,
+`r round(prop.table(table(churn$churn))["yes"], 2)`,
+provides a sample-based estimate of the true proportion of churners in the broader customer population.
+
+Similarly, we can estimate the average annual transaction amount across all customers:
+
+```{r}
+mean(churn$transaction_amount_12)
+```
+
+The computed mean,
+`r round(mean(churn$transaction_amount_12), 2)`,
+serves as a point estimate of the corresponding population mean.
+
+> *Practice:* Estimate the average annual transaction amount among customers who churn (`churn == "yes"`) in the `churn` dataset by first subsetting the data and then computing the sample mean of `transaction_amount_12`. How does this estimate compare to the overall average computed above? What might this difference suggest about the spending behavior of churned customers?
+
+While point estimates provide useful summaries, they do not communicate how precise those estimates are. A single number does not reveal how much it might vary across different samples. Without accounting for uncertainty, we risk mistaking random variation for meaningful insight. Confidence intervals address this limitation by providing a principled way to express uncertainty and assess the reliability of our estimates. The next section introduces confidence intervals and explores questions such as: *How close is our estimate likely to be to the true value?* and *What range of values is supported by the data?*
+
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 churn[churn == "unknown"] <- NA
@@ -92,25 +114,6 @@ churn$education <- impute(churn$education, "random")
 churn$income    <- impute(churn$income, "random")
 churn$marital   <- impute(churn$marital, "random")
 ```
-
-The estimated proportion of churners is `r round(prop.table(table(churn$churn))[1], 2)`. This value provides a sample-based estimate of the true proportion in the wider customer population.
-:::
-
-::: {#ex-est-service-call .example}
-**Example:** Estimating the average annual transaction amount among churners.
-
-```{r}
-# Filter churners
-churned_customers = subset(churn, churn == "yes")
-
-# Calculate the sample mean
-mean(churned_customers$transaction_amount_12)
-```
-
-The average annual transaction amount among churners is `r round(mean(churned_customers$transaction_amount_12), 2)`. This sample mean serves as a point estimate of the corresponding population mean.
-:::
-
-While point estimates are informative, they do not communicate how precise those estimates are. Without accounting for uncertainty, we risk mistaking random variation for meaningful insight, a common pitfall when interpreting small or noisy datasets. Confidence intervals address this limitation by providing a principled way to express uncertainty and assess the reliability of our estimates. The next section introduces confidence intervals and explores questions such as: *How close is our estimate likely to be to the true value?* and *What range of values is supported by the data?*
 
 ## Confidence Intervals: Quantifying Uncertainty {#sec-ch5-confidence-interval}
 
@@ -155,24 +158,22 @@ In practice, however, $\sigma$ is rarely known, so we estimate it using $s$ and 
 knitr::include_graphics("images/ch5_confidence_interval.png")
 ```
 
-In practice, we do not compute these quantities manually. Statistical software determines the appropriate critical value and standard error automatically. To illustrate, we construct a 95 percent confidence interval for the average annual transaction amount among churned customers in the `churn` dataset:
+In practice, we do not compute these quantities manually. Statistical software determines the appropriate critical value and standard error automatically. To illustrate, we construct a 95 percent confidence interval for the average annual transaction amount in the `churn` dataset:
 
 ```{r}
-# Identify churned customers
-churned_customers = subset(churn, churn == "yes")
-
-# Compute confidence interval using t-test
-t_result = t.test(churned_customers$transaction_amount_12,
-                  conf.level = 0.95)
+# Compute confidence interval for overall average transaction amount
+t_result = t.test(churn$transaction_amount_12, conf.level = 0.95)
 
 t_result$conf.int
 ```
 
-The `t.test()` function in R performs a $t$-test and, by default, also returns a confidence interval for the population mean. In this example, we use it to compute the 95 percent confidence interval for the average annual transaction amount among churned customers. The argument `conf.level = 0.95` specifies the desired confidence level, while the function automatically determines the appropriate $t$ critical value based on the sample size. Although we focus here on the confidence interval, the same function will be used in Sections [-@sec-ch5-one-sample-t-test] and [-@sec-ch5-two-sample-t-test] to test hypotheses about population means.
+The `t.test()` function in R performs a $t$-test and, by default, also returns a confidence interval for the population mean. In this example, we use it to compute the 95 percent confidence interval for the average annual transaction amount across customers in the dataset. The argument `conf.level = 0.95` specifies the desired confidence level, while the function automatically determines the appropriate $t$ critical value based on the sample size. Although we focus here on the confidence interval, the same function will be used in Sections [-@sec-ch5-one-sample-t-test] and [-@sec-ch5-two-sample-t-test] to test hypotheses about population means.
 
-The resulting interval provides a range of plausible values for the true average annual transaction amount among churned customers. If we were to draw many random samples of the same size and compute an interval from each sample, approximately 95 percent of those intervals would contain the true population mean.
+The resulting interval provides a range of plausible values for the true average annual transaction amount in the customer population. If we were to draw many random samples of the same size and compute an interval from each sample, approximately 95 percent of those intervals would contain the true population mean.
 
 It is important to interpret this carefully. The confidence level describes the long-run reliability of the procedure, not the probability that the true mean lies inside this particular interval. Once the interval has been calculated, the population mean is fixed; the randomness lies in the interval, not in the parameter.
+
+> *Practice:* Construct a 95 percent confidence interval for the average annual transaction amount among customers who churn (`churn == "yes"`) in the `churn` dataset by first subsetting the data and then applying `t.test()` with `conf.level = 0.95`. Compare the resulting interval with the overall confidence interval computed above. How does the average transaction amount among churned customers differ from the overall average, and how might differences in sample size or variability influence the width of the interval?
 
 Confidence intervals also play an important role when comparing groups. Constructing separate intervals for churned and active customers allows us to assess whether their average transaction amounts plausibly differ at the population level. In this way, confidence intervals not only quantify uncertainty but also prepare the ground for the formal hypothesis testing framework introduced next.
 
@@ -276,8 +277,7 @@ The hypotheses depend on the aim of the analysis:
 
 Before turning to an example, it is helpful to link this test to the `churn` dataset. In earlier exploratory analysis, we observed that the tenure variable `months_on_book` differs between churners and non-churners and plays an important role in retention behavior. This makes it a natural choice for illustrating the one-sample t-test and for assessing whether the average tenure of churned customers aligns with a commonly used benchmark.
 
-::: {#ex-one-sample-test .example}
-**Example:** Suppose we want to test whether the average account tenure of churned customers differs from the benchmark of 36 months at the 5 percent significance level ($\alpha = 0.05$). The hypotheses are: $$
+Suppose we want to test whether the average account tenure of churned customers differs from the benchmark of 36 months at the 5 percent significance level ($\alpha = 0.05$). The hypotheses are: $$
 \begin{cases}
 H_0: \mu = 36 \\
 H_a: \mu \neq 36
@@ -297,12 +297,7 @@ t_test <- t.test(churned_customers$months_on_book, mu = 36)
 t_test
 ```
 
-The output includes the test statistic, the *p*-value, the confidence interval, and the degrees of freedom. The *p*-value is `r round(t_test$p.value, 2)`, which is greater than $\alpha = 0.05$. We therefore do not reject the null hypothesis and conclude that the average tenure is not statistically different from 36 months.
-
-The 95 percent confidence interval is (`r round(t_test$conf.int[1], 2)`, `r round(t_test$conf.int[2], 2)`), which includes 36. This is consistent with the decision not to reject $H_0$. The sample mean is `r round(t_test$estimate, 2)`, which serves as a point estimate of the population mean.
-
-Because the population standard deviation is unknown, the test statistic follows a t-distribution with $n - 1$ degrees of freedom.
-:::
+The output includes the test statistic, the *p*-value, the confidence interval, and the degrees of freedom. The *p*-value is `r round(t_test$p.value, 2)`, which is greater than $\alpha = 0.05$. We therefore do not reject the null hypothesis and conclude that the average tenure is not statistically different from 36 months. The 95 percent confidence interval is (`r round(t_test$conf.int[1], 2)`, `r round(t_test$conf.int[2], 2)`), which includes 36. This is consistent with the decision not to reject $H_0$. The sample mean is `r round(t_test$estimate, 2)`, which serves as a point estimate of the population mean. Because the population standard deviation is unknown, the test statistic follows a t-distribution with $n - 1$ degrees of freedom.
 
 > *Practice:* Test whether the average account tenure of churned customers is less than 36 months. Set up a left-tailed test using `t.test(churned_customers$months_on_book, mu = 36, alternative = "less")`.
 
@@ -316,8 +311,8 @@ Suppose a bank believes that 15 percent of its credit card customers churn each 
 
 A proportion test evaluates whether the population proportion ($\pi$) of a particular category is equal to a hypothesised value ($\pi_0$). It is most appropriate when analysing binary categorical variables, such as service subscription, default status, or churn. The `prop.test()` function in R implements this test and can be used either for a single proportion or for comparing two proportions.
 
-::: {#ex-test-proportion .example}
-**Example:** A bank assumes that 15 percent of its customers churn. To evaluate whether the churn rate in the `churn` dataset differs from this expectation, we set up the following hypotheses: $$
+Suppose we want to test whether the observed churn rate in the `churn` dataset differs from the bank’s expectation of 15 percent. The hypotheses for a two-tailed test are: 
+$$
 \begin{cases}
 H_0: \pi = 0.15 \\ 
 H_a: \pi \neq 0.15
@@ -339,7 +334,6 @@ Here, `x` is the number of churned customers, `n` is the total sample size, and 
 The output provides three key results: the *p*-value, a confidence interval for the true proportion, and the estimated sample proportion. The *p*-value is `r round(prop_test$p.value, 3)`. Because it is less than the significance level ($\alpha = 0.05$), we reject the null hypothesis. This indicates statistical evidence that the true churn rate differs from 15 percent.
 
 The 95 percent confidence interval for the population proportion is (`r round(prop_test$conf.int[1], 3)`, `r round(prop_test$conf.int[2], 3)`). Since this interval does not contain $0.15$, the conclusion is consistent with the decision to reject ($H_0$). The observed sample proportion is `r round(prop_test$estimate, 3)`, which serves as our point estimate of the population churn rate.
-:::
 
 > *Practice:* Test whether the proportion of churned customers exceeds 15 percent. Set up a right-tailed one-sample proportion test using the option `alternative = "greater"` in the `prop.test()` function.
 

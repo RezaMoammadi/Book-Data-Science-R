@@ -117,13 +117,13 @@ scale_color_discrete  <- function(...) ggplot2::discrete_scale("color", "book_co
 
 # ---- Consistent defaults for geoms ----
 # Histogram
-ggplot2::update_geom_defaults("histogram", list(colour = "white", fill = "#377EB8"))
+ggplot2::update_geom_defaults("histogram", list(colour = "white", linewidth = 0.1, fill = "#377EB8"))
 
 # Bar plots (discrete data)
-ggplot2::update_geom_defaults("bar", list(colour = "white", fill = "#377EB8"))
+ggplot2::update_geom_defaults("bar", list(colour = "white", linewidth = 0.1, fill = "#377EB8"))
 
 # Column plots (used for summarized data, often numeric x)
-ggplot2::update_geom_defaults("col", list(colour = "white", fill = "#377EB8"))
+ggplot2::update_geom_defaults("col", list(colour = "white", linewidth = 0.1, fill = "#377EB8"))
 
 # Default (theoretical reference)
 ggplot2::update_geom_defaults("abline", list(colour = "#377EB8", linewidth = 1))
