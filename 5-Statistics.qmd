@@ -184,12 +184,7 @@ Suppose a bank introduces a new customer service protocol and randomly implement
 
 Within the data science workflow, hypothesis testing forms a bridge between exploratory observations and formal evidence. For example, Chapter [-@sec-ch4-EDA-churn] showed that churn tends to be higher among customers with low spending and few transactions. Hypothesis testing allows us to examine whether such patterns are statistically credible or could have arisen from sampling variability.
 
-Hypothesis testing evaluates claims about population parameters using sample data. Whereas confidence intervals provide a range of plausible values for an estimate, hypothesis testing evaluates whether the observed evidence supports a specific claim. The overall logic of this decision-making process is summarized in Figure [-@fig-hypothesis-testing].
-
-```{r fig-hypothesis-testing, echo = FALSE, out.width = "80%", fig.cap = "Visual summary of hypothesis testing, showing how sample evidence informs the decision to reject or not reject the null hypothesis ($H_0$)."}
-
-knitr::include_graphics("images/ch5_hypothesis_testing.png")
-```
+Hypothesis testing evaluates claims about population parameters using sample data. Whereas confidence intervals provide a range of plausible values for an estimate, hypothesis testing evaluates whether the observed evidence supports a specific claim. 
 
 The framework is built around two competing statements. The null hypothesis ($H_0$) represents the default assumption that there is no difference, no association, or no systematic relationship between variables. The alternative hypothesis ($H_a$) represents the competing claim that such a difference or relationship does exist.
 
@@ -197,9 +192,14 @@ To assess the strength of evidence against $H_0$, we calculate a *p*-value: the 
 
 > Reject $H_0$ when the *p*-value is less than $\alpha$.
 
-For example, if $p = 0.03$ and $\alpha = 0.05$, the evidence is considered sufficient to reject $H_0$. If $p = 0.12$, we do not reject $H_0$ because the evidence is not strong enough to support $H_a$. Importantly, a *p*-value does not represent the probability that $H_0$ is true. Instead, it measures how unusual the observed data would be if $H_0$ were true.
+For example, if $p = 0.03$ and $\alpha = 0.05$, the evidence is considered sufficient to reject $H_0$. If $p = 0.12$, we do not reject $H_0$ because the evidence is not strong enough to support $H_a$. Importantly, a *p*-value does not represent the probability that $H_0$ is true. Instead, it measures how unusual the observed data would be if $H_0$ were true. The overall logic of this decision-making process is summarized in Figure [-@fig-hypothesis-testing].
 
-A useful analogy is a criminal trial. The null hypothesis represents the presumption of innocence, and the alternative hypothesis represents guilt. The decision-maker must determine whether the evidence is strong enough to overturn the presumption of innocence. As in legal settings, statistical decisions are subject to two types of error, summarized in [-@tbl-hypothesis-errors].
+```{r fig-hypothesis-testing, echo = FALSE, out.width = "80%", fig.cap = "Visual summary of hypothesis testing, showing how sample evidence informs the decision to reject or not reject the null hypothesis ($H_0$)."}
+
+knitr::include_graphics("images/ch5_hypothesis_testing.png")
+```
+
+A useful analogy is a criminal trial. The null hypothesis represents the presumption of innocence, and the alternative hypothesis represents guilt. The decision-maker must determine whether the evidence is strong enough to overturn the presumption of innocence. As in legal settings, statistical decisions are subject to two types of error, summarized in Table [-@tbl-hypothesis-errors].
 
 ::: {#tbl-hypothesis-errors .table}
 
@@ -278,29 +278,23 @@ The hypotheses depend on the aim of the analysis:
 
 Before turning to an example, it is helpful to link this test to the `churn` dataset. In earlier exploratory analysis, we observed that the tenure variable `months_on_book` differs between churners and non-churners and plays an important role in retention behavior. This makes it a natural choice for illustrating the one-sample t-test and for assessing whether the average tenure of churned customers aligns with a commonly used benchmark.
 
-Suppose we want to test whether the average account tenure of churned customers differs from the benchmark of 36 months at the 5 percent significance level ($\alpha = 0.05$). The hypotheses are: $$
+Suppose we want to test whether the average account tenure of customers differs from the benchmark of 36 months at the 5 percent significance level ($\alpha = 0.05$). The hypotheses are: $$
 \begin{cases}
 H_0: \mu = 36 \\
 H_a: \mu \neq 36
 \end{cases}
 $$
 
-We begin by filtering the `churn` dataset:
-
-```{r}
-churned_customers <- subset(churn, churn == "yes")
-```
-
 The relevant variable is `months_on_book`, which records how long each customer has had an account with the bank. We apply the one-sample t-test:
 
 ```{r}
-t_test <- t.test(churned_customers$months_on_book, mu = 36)
+t_test <- t.test(churn$months_on_book, mu = 36)
 t_test
 ```
 
 The output includes the test statistic, the *p*-value, the confidence interval, and the degrees of freedom. The *p*-value is `r round(t_test$p.value, 2)`, which is greater than $\alpha = 0.05$. We therefore do not reject the null hypothesis and conclude that the average tenure is not statistically different from 36 months. The 95 percent confidence interval is (`r round(t_test$conf.int[1], 2)`, `r round(t_test$conf.int[2], 2)`), which includes 36. This is consistent with the decision not to reject $H_0$. The sample mean is `r round(t_test$estimate, 2)`, which serves as a point estimate of the population mean. Because the population standard deviation is unknown, the test statistic follows a t-distribution with $n - 1$ degrees of freedom.
 
-> *Practice:* Test whether the average account tenure of churned customers is less than 36 months. Set up a left-tailed test using `t.test(churned_customers$months_on_book, mu = 36, alternative = "less")`.
+> *Practice:* Test whether the average account tenure of customers is less than 36 months. Set up a left-tailed test using `t.test(churned_customers$months_on_book, mu = 36, alternative = "less")`.
 
 > *Practice:* Use a one-sample t-test to assess whether the average annual transaction amount (`transaction_amount_12`) among churned customers differs from \$4,000.
 
