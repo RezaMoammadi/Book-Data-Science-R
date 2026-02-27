@@ -104,9 +104,6 @@ serves as a point estimate of the corresponding population mean.
 
 > *Practice:* Estimate the average annual transaction amount among customers who churn (`churn == "yes"`) in the `churn` dataset by first subsetting the data and then computing the sample mean of `transaction_amount_12`. How does this estimate compare to the overall average computed above? What might this difference suggest about the spending behavior of churned customers?
 
-While point estimates provide useful summaries, they do not communicate how precise those estimates are. A single number does not reveal how much it might vary across different samples. Without accounting for uncertainty, we risk mistaking random variation for meaningful insight. Confidence intervals address this limitation by providing a principled way to express uncertainty and assess the reliability of our estimates. The next section introduces confidence intervals and explores questions such as: *How close is our estimate likely to be to the true value?* and *What range of values is supported by the data?*
-
-
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 churn[churn == "unknown"] <- NA
 churn <- droplevels(churn)
@@ -118,63 +115,97 @@ churn$marital   <- impute(churn$marital, "random")
 
 ## Confidence Intervals: Quantifying Uncertainty {#sec-ch5-confidence-interval}
 
-Suppose the exploratory analysis in the `churn` dataset suggests that churned customers exhibit lower total transaction amounts than active customers. A natural follow-up question is: how precise is our estimate of the average annual transaction amount among churners? Could the true average be meaningfully higher or lower? A single number rarely tells the whole story. This is where confidence intervals become essential.
+While point estimates provide useful summaries, they do not indicate how precise those estimates are. A single number does not reveal how much it might vary across different samples. Without accounting for this variability, we risk interpreting random fluctuations as meaningful patterns. Confidence intervals address this limitation by providing a principled way to quantify uncertainty and assess the reliability of our estimates.
 
-Confidence intervals quantify the uncertainty associated with estimates of population parameters. Rather than reporting only a point estimate, such as “the average annual transaction amount for churners is \$3,900,” a confidence interval might state that “we are 95 percent confident that the true average lies between \$3,780 and \$4,020.” This range reflects the sampling variability that arises whenever we draw conclusions from a sample rather than observe the entire population.
+Confidence intervals express the uncertainty associated with estimating population parameters. Rather than reporting only a point estimate, such as “the average annual transaction amount in the `churn` dataset is \$4,404,” a confidence interval might state that “we are 95 percent confident that the true average lies between \$4,337 and \$4,470.” This range reflects the sampling variability that arises whenever conclusions are drawn from a sample rather than from the entire population.
 
 At its core, a confidence interval has a simple structure:
 $$
 \text{Point Estimate} \pm \text{Margin of Error}.
 $$
 
-The margin of error tells us how much uncertainty surrounds our estimate. It can be written as
+The margin of error quantifies the uncertainty surrounding the estimate and can be written as
 $$
 \text{Margin of Error} = \text{Critical Value} \times \text{Standard Error}.
 $$
-The *standard error* measures how much the sample mean is expected to vary from sample to sample. For a sample mean, it is computed as
-$$
-\frac{s}{\sqrt{n}},
-$$
-where $s$ is the sample standard deviation and $n$ is the sample size. This expression highlights two important ideas. Larger samples reduce uncertainty because the denominator $\sqrt{n}$ increases as $n$ grows. At the same time, greater variability in the data increases uncertainty because a larger value of $s$ leads to a wider interval.
 
-The *critical value* determines how wide the interval must be to achieve a chosen confidence level. For example, a 95 percent confidence level requires a multiplier large enough so that, in repeated sampling, approximately 95 percent of constructed intervals contain the true parameter.
+The standard error measures how much a statistic is expected to vary from sample to sample. The critical value determines how wide the interval must be to achieve a chosen confidence level, such as 95 percent. Together, these components translate sampling variability into an interpretable range of plausible values. We now develop confidence intervals for two fundamental population parameters: a population mean and a population proportion.
 
-When estimating a population mean and the population standard deviation is unknown (which is almost always the case in practice), we use the $t$-distribution. The resulting confidence interval becomes
+### Confidence Interval for a Population Mean
+
+Suppose we wish to estimate the average annual transaction amount in the customer population represented by the `churn` dataset. Let $\mu$ denote the unknown population mean and $\bar{x}$ the sample mean.
+
+For a sample of size $n$ with sample standard deviation $s$, the standard error of the mean is
+$$
+\frac{s}{\sqrt{n}}.
+$$
+
+This expression reveals two important ideas. Larger samples reduce uncertainty because the denominator $\sqrt{n}$ increases as $n$ grows. Conversely, greater variability in the data increases uncertainty, since a larger value of $s$ produces a wider interval.
+
+To construct a confidence interval, we multiply the standard error by a *critical value*, which determines how wide the interval must be to achieve a chosen confidence level. For example, a 95 percent confidence level requires a multiplier large enough so that, in repeated sampling, approximately 95 percent of constructed intervals contain the true population mean.
+
+When the population standard deviation $\sigma$ is unknown, which is almost always the case in practice, we use the $t$-distribution. The confidence interval for the population mean is
 $$
 \bar{x} \pm t_{\frac{\alpha}{2}, n-1}\left(\frac{s}{\sqrt{n}}\right),
 $$
-where $\bar{x}$ is the sample mean and $t_{\alpha/2, n-1}$ is the critical value from the $t$-distribution with $n-1$ degrees of freedom. Although the notation may appear technical, the structure remains simple: estimate ± (multiplier × uncertainty). The width of the interval reflects the combined influence of sample size, variability, and the chosen confidence level.
 
-The $t$-distribution and the standard normal ($z$) distribution are two fundamental probability distributions used throughout statistical inference. They describe how sample statistics behave under repeated sampling when uncertainty is present. The normal distribution arises naturally when sample sizes are large or when population variability is known. The $t$-distribution adjusts for additional uncertainty when the population variance is estimated from the data. These distributions will reappear in the following sections, where they form the basis of many hypothesis tests.
+where $t_{\alpha/2, n-1}$ denotes the critical value from the $t$-distribution with $n-1$ degrees of freedom. Although the notation may appear technical, the structure remains intuitive: estimate $\pm$ (multiplier $\times$ uncertainty). The width of the interval reflects the combined influence of sample size, variability, and the chosen confidence level. See Figure [-@fig-confidence-interval] for a visual representation of confidence interval for a population mean.
 
-When the population standard deviation $\sigma$ is known, the normal distribution can be used instead, leading to
-$$
-\bar{x} \pm z_{\frac{\alpha}{2}}\left(\frac{\sigma}{\sqrt{n}}\right).
-$$
-
-In practice, however, $\sigma$ is rarely known, so we estimate it using $s$ and rely on the $t$-distribution. For large sample sizes, the $t$-distribution closely approximates the standard normal distribution, and the resulting intervals are nearly identical. The distinction between $z$ and $t$ is therefore most important in smaller samples.
-
-```{r fig-confidence-interval, echo = FALSE, out.width = "80%", fig.cap = "Confidence interval for a population mean. The interval is centered around the point estimate, with its width determined by the margin of error. The confidence level specifies the long-run proportion of such intervals that contain the true parameter."}
+```{r fig-confidence-interval, echo = FALSE, out.width = "80%", fig.cap = "Confidence interval for a population mean. The interval is centered around the point estimate, with its width determined by the margin of error. The confidence level specifies the long-run proportion of such intervals that contain the true parameter."} 
 
 knitr::include_graphics("images/ch5_confidence_interval.png")
 ```
 
-In practice, we do not compute these quantities manually. Statistical software determines the appropriate critical value and standard error automatically. To illustrate, we construct a 95 percent confidence interval for the average annual transaction amount in the `churn` dataset:
+The $t$-distribution closely resembles the standard normal ($z$) distribution but accounts for additional uncertainty introduced when $\sigma$ is estimated from the data. When $\sigma$ is known, the interval becomes
+$$
+\bar{x} \pm z_{\frac{\alpha}{2}}\left(\frac{\sigma}{\sqrt{n}}\right).
+$$
+
+In practice, however, $\sigma$ is rarely known, so the $t$-distribution is typically used. For large sample sizes, the $t$-distribution approaches the normal distribution, and the resulting intervals are nearly identical.
+
+In practice, we rarely compute these quantities manually. Statistical software determines the appropriate critical value and standard error automatically. To construct a 95 percent confidence interval for the average annual transaction amount in the `churn` dataset, we use:
 
 ```{r}
-# Compute confidence interval for overall average transaction amount
 t_result = t.test(churn$transaction_amount_12, conf.level = 0.95)
-
 t_result$conf.int
 ```
 
 The `t.test()` function in R performs a $t$-test and, by default, also returns a confidence interval for the population mean. In this example, we use it to compute the 95 percent confidence interval for the average annual transaction amount across customers in the dataset. The argument `conf.level = 0.95` specifies the desired confidence level, while the function automatically determines the appropriate $t$ critical value based on the sample size. Although we focus here on the confidence interval, the same function will be used in Sections [-@sec-ch5-one-sample-t-test] and [-@sec-ch5-two-sample-t-test] to test hypotheses about population means.
 
-The resulting interval provides a range of plausible values for the true average annual transaction amount in the customer population. If we were to draw many random samples of the same size and compute an interval from each sample, approximately 95 percent of those intervals would contain the true population mean.
-
-It is important to interpret this carefully. The confidence level describes the long-run reliability of the procedure, not the probability that the true mean lies inside this particular interval. Once the interval has been calculated, the population mean is fixed; the randomness lies in the interval, not in the parameter.
+Interpretation requires care. A 95 percent confidence interval does not mean that there is a 95 percent probability that the true mean lies within this specific interval. Instead, it means that if we were to repeatedly draw samples of the same size and construct an interval from each sample, approximately 95 percent of those intervals would contain the true population mean.
 
 > *Practice:* Construct a 95 percent confidence interval for the average annual transaction amount among customers who churn (`churn == "yes"`) in the `churn` dataset by first subsetting the data and then applying `t.test()` with `conf.level = 0.95`. Compare the resulting interval with the overall confidence interval computed above. How does the average transaction amount among churned customers differ from the overall average, and how might differences in sample size or variability influence the width of the interval?
+
+### Confidence Interval for a Population Proportion
+
+Suppose we wish to estimate the overall churn rate in the customer population. From the `churn` dataset, we can compute the sample proportion of customers who churn. But how precise is this estimate? How much might it vary if we were to observe a different sample?
+
+Let $\pi$ denote the true population proportion of customers who churn, and let $p$ be the sample proportion computed from the data. For sufficiently large samples, the sampling distribution of $p$ is approximately normal. A common rule of thumb is that both $np$ and $n(1-p)$ should be at least 5 (or 10) to justify this approximation. Under this condition, the standard error of the sample proportion is
+$$
+\sqrt{\frac{p(1-p)}{n}}.
+$$
+
+A confidence interval for the population proportion is therefore given by
+$$
+p \pm z_{\frac{\alpha}{2}} \sqrt{\frac{p(1-p)}{n}},
+$$
+where $z_{\alpha/2}$ is the critical value from the standard normal distribution corresponding to the chosen confidence level.
+
+To construct a 95 percent confidence interval for the proportion of customers who churn in the `churn` dataset, we use:
+
+```{r}
+prop_result = prop.test(table(churn$churn)["yes"],
+                        n = nrow(churn),
+                        conf.level = 0.95)
+
+prop_result$conf.int
+```
+
+The `prop.test()` function computes the interval automatically using a normal approximation (with a continuity correction by default). The resulting interval provides a range of plausible values for the true churn rate in the broader customer population.
+
+As with the mean, interpretation requires care. A 95 percent confidence interval for $\pi$ does not imply that there is a 95 percent probability that the true proportion lies within this specific interval. Rather, it means that if we repeatedly drew samples of the same size and constructed intervals in the same way, approximately 95 percent of those intervals would contain the true population proportion. The width of the interval depends on both the sample size and the variability in the data. Larger samples produce narrower intervals, reflecting greater precision.
+
+> *Practice:* Construct a 90 percent confidence interval for the proportion of customers who churn by setting `conf.level = 0.90`. Compare its width with the 95 percent interval. How does changing the confidence level alter the critical value, and what does this imply about the trade-off between precision and certainty?
 
 Confidence intervals also play an important role when comparing groups. Constructing separate intervals for churned and active customers allows us to assess whether their average transaction amounts plausibly differ at the population level. In this way, confidence intervals not only quantify uncertainty but also prepare the ground for the formal hypothesis testing framework introduced next.
 
