@@ -26,7 +26,7 @@ Suppose a churn prediction model reports 95% accuracy, yet consistently fails to
 
 This chapter focuses on the fourth stage of the Data Science Workflow shown in @fig-ch2_DSW: *Data Setup for Modeling*. This stage involves organizing the dataset so that it enables fair training, trustworthy validation, and robust generalization to unseen data.
 
-To accomplish this, we focus on four core components of data setup: partitioning the data, validating the split, addressing class imbalance, and preparing predictors for modeling. Throughout these steps, we emphasize how to prevent data leakage by ensuring that data-dependent decisions are learned from the training set only.
+To accomplish this, we focus on four core components of data setup: partitioning the data, validating the split, preparing predictors for modeling, and addressing class imbalance. Throughout these steps, we emphasize how to prevent data leakage by ensuring that data-dependent decisions are learned from the training set only.
 
 The previous chapters laid the groundwork for this stage. In @sec-ch2-Problem-Understanding, we defined the modeling objective. In @sec-ch3-data-preparation and Chapter [-@sec-ch4-EDA], we cleaned and explored the data. Chapter [-@sec-ch5-statistics] introduced inferential tools that now help us assess whether training and test sets are statistically comparable.
 
@@ -42,9 +42,9 @@ This chapter completes Step 4 of the Data Science Workflow: *Data Setup for Mode
 
 Next, we then examine data leakage as a cross-cutting risk in predictive modeling. We show how leakage can arise during partitioning, balancing, encoding, scaling, or imputation, and establish the guiding principle that all data-dependent transformations must be learned from the training set only and then applied unchanged to the test set.
 
-We then address class imbalance, a common challenge in classification tasks where one outcome dominates the dataset. We examine strategies such as oversampling, undersampling, and class weighting to ensure that minority classes are adequately represented during model training.
+We then prepare predictors for modeling by encoding categorical variables and scaling numerical features. We present ordinal and one-hot encoding techniques, along with min–max and z-score transformations, so that predictors are represented in a form suitable for common machine learning algorithms.
 
-Finally, we prepare predictors for modeling by encoding categorical variables and scaling numerical features. We present ordinal and one-hot encoding techniques, along with min–max and z-score transformations, so that predictors are represented in a form suitable for common machine learning algorithms.
+Finally, we address class imbalance, a common challenge in classification tasks where one outcome dominates the dataset. We examine strategies such as oversampling, undersampling, and class weighting to ensure that minority classes are adequately represented during model training.
 
 Together, these components form the structural foundation required before building and evaluating predictive models in the chapters that follow.
 
@@ -224,49 +224,6 @@ This discipline must be maintained throughout the data setup phase. The test set
 
 A practical example of leakage prevention is discussed in Section [-@sec-ch7-knn-proper-scaling], where feature scaling is performed correctly for a k-Nearest Neighbors model. The same principle applies throughout the modeling workflow: partition first, learn preprocessing rules using the training data only, tune models using cross-validation within the training set, and evaluate only once on the untouched test set.
 
-## Dealing with Class Imbalance {#sec-ch6-balancing}
-
-Imagine training a fraud detection model that labels every transaction as legitimate. It might achieve 99% accuracy, yet fail completely at detecting fraud. This illustrates the challenge of class imbalance, a situation in which one class dominates the dataset while the rare class carries the greatest practical importance.
-
-In many real-world classification tasks, the outcome of interest is relatively uncommon. Fraudulent transactions are rare, most customers do not churn, and most medical tests are negative. When a model is trained on such data, it may optimize overall accuracy by predicting the majority class most of the time. Although this strategy yields high accuracy, it fails precisely where predictive insight is most valuable: identifying the minority class.
-
-Addressing class imbalance is therefore an important step in data setup for modeling, particularly when the minority class has substantial business or scientific relevance.
-
-Several strategies are commonly used to rebalance the training dataset and ensure that both classes are adequately represented during learning. Oversampling increases the number of minority class observations, either by duplicating existing cases or by generating synthetic examples. The widely used SMOTE (Synthetic Minority Over-sampling Technique) algorithm creates artificial minority observations based on nearest neighbors rather than simple copies. Undersampling reduces the number of majority class observations and is especially useful when the dataset is large. Hybrid approaches combine both strategies. Another powerful alternative is class weighting, in which the learning algorithm penalizes misclassification of the minority class more heavily. Many models, including logistic regression, decision trees, and support vector machines, support class weighting directly.
-
-Let us illustrate with the `churn` dataset. After partitioning the data, we examine the distribution of the target variable in the training set:
-
-```{r}
-table(train_set$churn)
-prop.table(table(train_set$churn))
-```
-
-The output indicates that churners (`churn = "yes"`) constitute only a small proportion of the observations. A model trained on this distribution may underemphasize churners unless corrective measures are taken.
-
-To rebalance the training data in R, we can use the `ovun.sample()` function from the **ROSE** package to oversample the minority class so that it represents 30% of the training set:
-
-```{r}
-library(ROSE)
-
-balanced_train_set <- ovun.sample(
-  churn ~ ., 
-  data = train_set, 
-  method = "over", 
-  p = 0.3
-)$data
-
-table(balanced_train_set$churn)
-prop.table(table(balanced_train_set$churn))
-```
-
-The argument `churn ~ .` specifies that balancing should be performed with respect to the target variable while retaining all predictors.
-
-Balancing must always be performed *after partitioning* and applied *only to the training set*. The test set should retain the original class distribution, since it represents the real-world population on which the model will ultimately be evaluated. Altering the test distribution would distort performance estimates and undermine the validity of model evaluation.
-
-Balancing is not always necessary. Some algorithms incorporate internal mechanisms, such as class weighting or ensemble strategies, that account for rare events without explicit resampling. Moreover, evaluation should not rely solely on overall accuracy. Metrics such as precision and recall provide a more informative assessment of performance when classes are imbalanced. These metrics are discussed in detail in Section [-@sec-ch8-evaluation].
-
-In summary, class imbalance requires careful consideration during model development. By ensuring that the training process pays adequate attention to the minority class while preserving the natural distribution in the test set, we support fair evaluation and more meaningful predictive performance.
-
 ## Encoding Categorical Features {#sec-ch6-encoding}
 
 Categorical features often need to be transformed into numerical format before they can be used in machine learning models. Algorithms such as *k*-Nearest Neighbors and neural networks require numerical inputs, and failing to encode categorical data properly can lead to misleading results or even errors during model training.
@@ -347,7 +304,7 @@ Once categorical features are properly encoded, attention turns to numerical var
 
 What happens when one variable, such as price in dollars, spans tens of thousands, while another, like carat weight, ranges only from 0 to 5? Without scaling, machine learning models that rely on distances or gradients may give disproportionate weight to features with larger numerical ranges, regardless of their actual importance.
 
-*Feature scaling* addresses this imbalance by adjusting the range or distribution of numerical variables to make them comparable. It is particularly important for algorithms such as *k*-Nearest Neighbors (Chapter [-@sec-ch7-classification-knn]), support vector machines, and neural networks. Scaling can also improve optimization stability in models such as logistic regression and enhance the interpretability of coefficients.
+*Feature scaling* addresses this imbalance by adjusting the range or distribution of numerical variables to make them comparable. It is particularly important for algorithms such as *k*-Nearest Neighbors (Chapter [-@sec-ch7-classification-knn]) and neural networks (Chapter [-@sec-ch12-neural-networks]). Scaling can also improve optimization stability in models such as logistic regression and enhance the interpretability of coefficients.
 
 In the `churn` dataset, for example, `available_credit` ranges from `r min(churn$available_credit)` to `r max(churn$available_credit)`, while `utilization_ratio` spans from `r min(churn$utilization_ratio)` to `r max(churn$utilization_ratio)`. Without scaling, features such as `available_credit` may dominate the learning process—not because they are more predictive, but simply because of their larger magnitude.
 
@@ -373,7 +330,7 @@ The transformation is defined by the formula $$
 x_{\text{scaled}} = \frac{x - x_{\text{min}}}{x_{\text{max}} - x_{\text{min}}},
 $$ where $x$ is the original value and $x_{\text{min}}$ and $x_{\text{max}}$ are the minimum and maximum of the feature. This operation ensures that the smallest value becomes 0 and the largest becomes 1.
 
-Min–max scaling is particularly useful for algorithms that depend on distance or gradient information, such as neural networks and support vector machines. However, this technique is sensitive to outliers: extreme values can stretch the scale, compressing the majority of observations into a narrow band and reducing the resolution for typical values.
+Min–max scaling is particularly useful for algorithms that depend on distance or gradient information, such as *k*-Nearest Neighbors and neural networks. However, this technique is sensitive to outliers: extreme values can stretch the scale, compressing the majority of observations into a narrow band and reducing the resolution for typical values.
 
 ::: {#ex-min-max .example}
 To illustrate min–max scaling, consider the variable `age` in the `churn` dataset, which ranges from approximately `r min(churn$age)` to `r max(churn$age)`. We use the `minmax()` function from the **liver** package to rescale its values to the $[0, 1]$ interval:
@@ -401,7 +358,7 @@ While min–max scaling ensures all features fall within a fixed range, some alg
 
 While min–max scaling rescales values into a fixed range, *z-score scaling*—also known as *standardization*—centers each numerical feature at zero and rescales it to have unit variance. This transformation ensures that features measured on different scales contribute comparably during model training.
 
-Z-score scaling is particularly useful for algorithms that rely on gradient-based optimization or are sensitive to the relative magnitude of predictors, such as linear regression, logistic regression, and support vector machines. Unlike min–max scaling, which constrains values to a fixed interval, z-score scaling expresses each observation in terms of its deviation from the mean.
+Z-score scaling is particularly useful for algorithms that rely on gradient-based optimization or are sensitive to the relative magnitude of predictors, such as linear regression and logistic regression. Unlike min–max scaling, which constrains values to a fixed interval, z-score scaling expresses each observation in terms of its deviation from the mean.
 
 The formula for z-score scaling is $$
 x_{\text{scaled}} = \frac{x - \text{mean}(x)}{\text{sd}(x)},
@@ -433,19 +390,60 @@ It is important to emphasize that z-score scaling does not make a variable norma
 
 When applying feature scaling, scaling parameters must be estimated using the training set only. If the mean and standard deviation are computed from the full dataset before partitioning, information from the test set influences the training process. This constitutes a form of data leakage and leads to overly optimistic performance estimates. The correct workflow is to compute the scaling parameters on the training data and then apply the same transformation, without recalibration, to the test set. A broader discussion of data leakage and its prevention is provided in Section [-@sec-ch6-data-leakage].
 
+## Dealing with Class Imbalance {#sec-ch6-balancing}
+
+Imagine training a fraud detection model that labels every transaction as legitimate. It might achieve 99% accuracy, yet fail completely at detecting fraud. This illustrates the challenge of class imbalance, a situation in which one class dominates the dataset while the rare class carries the greatest practical importance.
+
+In many real-world classification tasks, the outcome of interest is relatively uncommon. Fraudulent transactions are rare, most customers do not churn, and most medical tests are negative. When a model is trained on such data, it may optimize overall accuracy by predicting the majority class most of the time. Although this strategy yields high accuracy, it fails precisely where predictive insight is most valuable: identifying the minority class. Addressing class imbalance is therefore an important step in data setup for modeling, particularly when the minority class has substantial business or scientific relevance.
+
+Several strategies are commonly used to rebalance the training dataset and ensure that both classes are adequately represented during learning. Oversampling increases the number of minority class observations, either by duplicating existing cases or by generating synthetic examples. SMOTE (Synthetic Minority Over-sampling Technique) generates synthetic minority observations by interpolating between nearest neighbors rather than duplicating existing cases. Undersampling reduces the number of majority class observations and is especially useful when the dataset is large. Hybrid approaches combine both strategies. Another powerful alternative is class weighting, in which the learning algorithm penalizes misclassification of the minority class more heavily. Many models, including logistic regression and decision trees, support class weighting directly.
+
+Let us illustrate with the `churn` dataset. After partitioning the data, we examine the distribution of the target variable in the training set:
+
+```{r}
+table(train_set$churn)
+prop.table(table(train_set$churn))
+```
+
+In this dataset, churners represent approximately `r round(prop.table(table(train_set$churn))["yes"], 2) * 100`\% of the training observations. While this proportion does not imply automatic intervention, it raises concern about the model’s ability to detect churn effectively.
+
+Balancing is not always necessary. There is no universal threshold that defines when a dataset is “too imbalanced.” As a practical heuristic, when the minority class represents roughly 10–15\% or less of the observations, imbalance often begins to influence model training and evaluation, particularly in small to moderate-sized datasets. However, the decision to apply balancing techniques should not rely solely on class proportions. A more reliable indicator is model behavior. If a classifier achieves high overall accuracy but exhibits poor recall or precision for the minority class, corrective measures may be warranted. Furthermore, when the minority outcome carries substantial practical cost—such as fraud detection, disease diagnosis, or customer churn—even moderate imbalance may justify intervention. The choice to rebalance should therefore consider class proportions, model performance, and the consequences of misclassification.
+
+To rebalance the training data in R, we can use the `ovun.sample()` function from the **ROSE** package to oversample the minority class so that it represents 30\% of the training set:
+
+```{r}
+library(ROSE)
+
+balanced_train_set <- ovun.sample(
+  churn ~ ., 
+  data = train_set, 
+  method = "over", 
+  p = 0.3
+)$data
+
+table(balanced_train_set$churn)
+prop.table(table(balanced_train_set$churn))
+```
+
+The argument `churn ~ .` specifies that balancing should be performed with respect to the target variable while retaining all predictors.
+
+Balancing must always be performed after partitioning and applied only to the training set. The test set should retain the original class distribution, since it represents the real-world population on which the model will ultimately be evaluated. Altering the test distribution would distort performance estimates and undermine the validity of model evaluation.
+
+In summary, class imbalance requires careful consideration during model development. By ensuring that the training process pays adequate attention to the minority class while preserving the natural distribution in the test set, we support fair evaluation and ensure that reported performance reflects meaningful predictive capability rather than majority-class dominance.
+
 ## Chapter Summary and Takeaways
 
 This chapter completed *Step 4: Data Setup for Modeling* in the Data Science Workflow. We began by partitioning data into training and testing sets to support fair evaluation and assess how well models generalize to new observations.
 
 After creating the initial split, we examined how to validate its quality. Statistical tests applied to the target variable and selected predictors helped verify that the subsets were representative of the original dataset. This validation step reduces the risk of biased evaluation and misleading conclusions.
 
-We then addressed class imbalance, a common challenge in classification tasks where one outcome dominates the dataset. Techniques such as oversampling, undersampling, and class weighting help ensure that minority classes are adequately represented during training.
+We then introduced data leakage as a key risk in predictive modeling. We showed how leakage can arise when information from the test set influences model training, whether during partitioning, balancing, encoding, scaling, or imputation. The guiding principle is straightforward: all data-dependent transformations must be learned from the training set only and then applied unchanged to the test set.
 
-We also introduced data leakage as a key risk in predictive modeling. We showed how leakage can arise when information from the test set influences model training, whether during partitioning, balancing, encoding, scaling, or imputation. The guiding principle is straightforward: all data-dependent transformations must be learned from the training set only and then applied unchanged to the test set.
+We also prepared predictors for modeling by encoding categorical variables and scaling numerical features. Ordinal and one-hot encoding techniques allow qualitative information to be used effectively by learning algorithms, while min–max and z-score transformations place numerical variables on comparable scales.
 
-Finally, we prepared predictors for modeling by encoding categorical variables and scaling numerical features. Ordinal and one-hot encoding techniques allow qualitative information to be used effectively by learning algorithms, while min–max and z-score transformations place numerical variables on comparable scales.
+Finally, we addressed class imbalance, a common challenge in classification tasks where one outcome dominates the dataset. Techniques such as oversampling, undersampling, and class weighting help ensure that minority classes are adequately represented during training.
 
-In larger projects, preprocessing and model training are often combined within a unified workflow. In R, the **mlr3pipelines** package supports such structured pipelines, helping prevent data leakage and improve reproducibility. Readers seeking a deeper treatment may consult *Applied Machine Learning Using mlr3 in R* by Bischl et al. [@bischl2024applied].
+In larger projects, preprocessing and model training are often combined within a unified workflow. In R, the **mlr3pipelines** package supports such structured pipelines, helping prevent data leakage and improve reproducibility. Readers seeking a deeper treatment may consult *Applied Machine Learning Using mlr3 in R* by [-@bischl2024applied].
 
 Unlike other chapters, this chapter does not include a standalone case study. Instead, the techniques introduced here—partitioning, validation, balancing, leakage prevention, encoding, and scaling—are integrated into the modeling chapters that follow. For example, the churn classification case study in Section [-@sec-ch7-knn-churn] demonstrates how these steps support the development of a robust classifier.
 
@@ -461,45 +459,45 @@ This section combines *conceptual questions* and *applied programming exercises*
 
 2.  What is the main risk of training a model without separating the dataset into training and testing subsets? Provide an example where this could lead to misleading results.
 
-3.  Explain the difference between *overfitting* and *underfitting*. How does proper partitioning help address these issues?
+3.  Explain the difference between overfitting and underfitting. How does proper partitioning help address these issues?
 
-4.  Describe the role of the *training set* and the *testing set* in machine learning. Why should the test set remain unseen during model training?
+4.  Describe the role of the training set and the testing set in machine learning. Why should the test set remain unseen during model training?
 
-5.  What is *data leakage*, and how can it occur during data partitioning? Provide an example of a scenario where data leakage could lead to overly optimistic model performance.
+5.  What is data leakage, and how can it occur during data partitioning? Provide an example of a scenario where data leakage could lead to overly optimistic model performance.
 
 6.  Why is it necessary to validate the partition after splitting the dataset? What could go wrong if the training and test sets are significantly different?
 
 7.  How would you test whether numerical features, such as `age` in the `churn` dataset, have similar distributions in both the training and testing sets?
 
-8.  If a dataset is highly imbalanced, why might a model trained on it fail to generalize well? Provide an example from a real-world domain where class imbalance is a serious issue.
+8. Why must categorical variables often be converted to numeric form before being used in machine learning models?
 
-9.  Why should balancing techniques be applied *only* to the training dataset and *not* to the test dataset?
+9. What is the key difference between ordinal and nominal categorical variables, and how does this difference determine the appropriate encoding technique?
 
-10. Some machine learning algorithms are robust to class imbalance, while others require explicit handling of imbalance. Which types of models typically require class balancing, and which can handle imbalance naturally?
+10. Explain how one-hot encoding represents categorical variables and why this method avoids imposing artificial order on nominal features.
 
-11. When dealing with class imbalance, why is *accuracy* not always the best metric to evaluate model performance? Which alternative metrics should be considered?
+11. What is the main drawback of one-hot encoding when applied to variables with many categories (high cardinality)?
 
-12. Suppose a dataset has a rare but critical class (e.g., fraud detection). What steps should be taken during the *data partitioning and balancing* phase to ensure effective model learning?
+12. When is ordinal encoding preferred over one-hot encoding, and what risks arise if it is incorrectly applied to nominal variables?
 
-13. Why must categorical variables often be converted to numeric form before being used in machine learning models?
+13. Compare min–max scaling and z-score scaling. How do these transformations differ in their handling of outliers?
 
-14. What is the key difference between *ordinal* and *nominal* categorical variables, and how does this difference determine the appropriate encoding technique?
+14. Why is it important to apply feature scaling after data partitioning rather than before?
 
-15. Explain how *one-hot encoding* represents categorical variables and why this method avoids imposing artificial order on nominal features.
+15. What type of data leakage can occur if scaling is performed using both training and test sets simultaneously?
 
-16. What is the main drawback of one-hot encoding when applied to variables with many categories (high cardinality)?
+16.  If a dataset is highly imbalanced, why might a model trained on it fail to generalize well? Provide an example from a real-world domain where class imbalance is a serious issue.
 
-17. When is *ordinal encoding* preferred over one-hot encoding, and what risks arise if it is incorrectly applied to nominal variables?
+17.  Why should balancing techniques be applied only to the training dataset and not to the test dataset?
 
-18. Compare *min–max scaling* and *z-score scaling*. How do these transformations differ in their handling of outliers?
+18. Some machine learning algorithms are robust to class imbalance, while others require explicit handling of imbalance. Which types of models typically require class balancing, and which can handle imbalance naturally?
 
-19. Why is it important to apply feature scaling *after* data partitioning rather than before?
+19. When dealing with class imbalance, why is accuracy not always the best metric to evaluate model performance? Which alternative metrics should be considered?
 
-20. What type of data leakage can occur if scaling is performed using both training and test sets simultaneously?
+20. Suppose a dataset has a rare but critical class (e.g., fraud detection). What steps should be taken during the data partitioning and balancing phase to ensure effective model learning?
 
 #### Hands-On Practice {.unnumbered}
 
-The following exercises use the `churn_mlc`, *bank*, and *risk* datasets from the **liver** package. The `churn_mlc` and *bank* datasets were introduced earlier, while *risk* will be used again in Chapter [-@sec-ch9-bayes].
+The following exercises use the `churn_mlc`, `bank`, and `risk` datasets from the **liver** package. The `churn_mlc` and `bank` datasets were introduced earlier, while `risk` will be used again in Chapter [-@sec-ch9-bayes].
 
 ```{r}
 library(liver)
@@ -513,25 +511,25 @@ data(risk)
 
 21. Partition the `churn_mlc` dataset into 75% training and 25% testing. Set a reproducible seed for consistency.
 
-22. Perform a 90–10 split on the *bank* dataset. Report the number of observations in each subset.
+22. Perform a 90–10 split on the `bank` dataset. Report the number of observations in each subset.
 
 23. Use stratified sampling to ensure that the churn rate is consistent across both subsets of the `churn_mlc` dataset.
 
-24. Apply a 60–40 split to the *risk* dataset. Save the outputs as `train_risk` and `test_risk`.
+24. Apply a 60–40 split to the `risk` dataset. Save the outputs as `train_risk` and `test_risk`.
 
-25. Generate density plots to compare the distribution of `income` between the training and test sets in the *bank* dataset.
+25. Generate density plots to compare the distribution of `income` between the training and test sets in the `bank` dataset.
 
 ##### Validating the Partition {.unnumbered}
 
 26. Use a two-sample Z-test to assess whether the churn proportion differs significantly between the training and test sets.
 
-27. Apply a two-sample t-test to evaluate whether average `age` differs across subsets in the *bank* dataset.
+27. Apply a two-sample t-test to evaluate whether average `age` differs across subsets in the `bank` dataset.
 
-28. Conduct a Chi-square test to assess whether the distribution of `marital` status differs between subsets in the *bank* dataset.
+28. Conduct a Chi-square test to assess whether the distribution of `marital` status differs between subsets in the `bank` dataset.
 
 29. Suppose the churn proportion is 30% in training and 15% in testing. Identify an appropriate statistical test and propose a corrective strategy.
 
-30. Select three numerical variables in the *risk* dataset and assess whether their distributions differ between the two subsets.
+30. Select three numerical variables in the `risk` dataset and assess whether their distributions differ between the two subsets.
 
 ##### Balancing the Training Dataset {.unnumbered}
 
@@ -539,25 +537,25 @@ data(risk)
 
 32. Apply random oversampling to increase the churner class to 40% of the training data using the **ROSE** package.
 
-33. Use undersampling to equalize the `deposit = "yes"` and `deposit = "no"` classes in the training set of the *bank* dataset.
+33. Use undersampling to equalize the `deposit = "yes"` and `deposit = "no"` classes in the training set of the `bank` dataset.
 
 34. Create bar plots to compare the class distribution in the `churn_mlc` dataset before and after balancing.
 
 ##### Preparing Features for Modeling {.unnumbered}
 
-35. Identify two categorical variables in the *bank* dataset. Decide whether each should be encoded using *ordinal* or *one-hot encoding*, and justify your choice.
+35. Identify two categorical variables in the `bank` dataset. Decide whether each should be encoded using ordinal or one-hot encoding, and justify your choice.
 
-36. Apply one-hot encoding to the `marital` variable in the *bank* dataset using the `one.hot()` function from the **liver** package. Display the resulting column names.
+36. Apply one-hot encoding to the `marital` variable in the `bank` dataset using the `one.hot()` function from the **liver** package. Display the resulting column names.
 
-37. Perform ordinal encoding on the `education` variable in the *bank* dataset, ordering the levels from `primary` to `tertiary`. Confirm that the resulting values reflect the intended order.
+37. Perform ordinal encoding on the `education` variable in the `bank` dataset, ordering the levels from `primary` to `tertiary`. Confirm that the resulting values reflect the intended order.
 
 38. Compare the number of variables in the dataset before and after applying one-hot encoding. How might this expansion affect model complexity and training time?
 
-39. Apply min–max scaling to the numerical variables `age` and `balance` in the *bank* dataset using the `minmax()` function. Verify that all scaled values fall within the $[0, 1]$ range.
+39. Apply min–max scaling to the numerical variables `age` and `balance` in the `bank` dataset using the `minmax()` function. Verify that all scaled values fall within the $[0, 1]$ range.
 
 40. Use z-score scaling on the same variables with the `zscore()` function. Report the mean and standard deviation of each scaled variable and interpret the results.
 
-41. In your own words, explain how scaling before partitioning could cause *data leakage*. Suggest a correct workflow for avoiding this issue (see Section [-@sec-ch7-knn-proper-scaling]).
+41. In your own words, explain how scaling before partitioning could cause data leakage. Suggest a correct workflow for avoiding this issue (see Section [-@sec-ch7-knn-proper-scaling]).
 
 42. Compare the histograms of one variable before and after applying z-score scaling. What stays the same, and what changes in the distribution?
 
