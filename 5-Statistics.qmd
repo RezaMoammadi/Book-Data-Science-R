@@ -336,17 +336,18 @@ In this way, the choice of test reflects the structure of the variables involved
 
 ::: {#tbl-hypothesis-test .table}
 
-| Test                         | Null Hypothesis ($H_0$)          | Applied To                             |
-| ---------------------------- | -------------------------------- | -------------------------------------- |
-| One-sample t-test            | $H_0: \mu = \mu_0$               | Single numerical variable              |
-| Test for Proportion          | $H_0: \pi = \pi_0$               | Single categorical variable            |
-| Two-sample t-test            | $H_0: \mu_1 = \mu_2$             | Numerical outcome by binary group      |
-| Two-sample Z-test            | $H_0: \pi_1 = \pi_2$             | Two binary categorical variables       |
-| Chi-square Test              | $H_0: \pi_1 = \pi_2 = \pi_3$     | Two categorical variables              |
-| Analysis of Variance (ANOVA) | $H_0: \mu_1 = \mu_2 = \mu_3$     | Numerical outcome by multi-level group |
-| Correlation Test             | $H_0: \rho = 0$                  | Two numerical variables                |
+| Test                         | Null Hypothesis ($H_0$)       | Applied To                                  |
+|------------------------------|-------------------------------|----------------------------------------------|
+| One-sample t-test            | $H_0: \mu = \mu_0$            | Single numerical variable                    |
+| Test for Proportion          | $H_0: \pi = \pi_0$            | Single categorical variable                  |
+| Two-sample t-test            | $H_0: \mu_1 = \mu_2$          | Numerical outcome for two independent groups |
+| Paired t-test                | $H_0: \mu_d = 0$              | Numerical outcome for paired observations    |
+| Two-sample Z-test            | $H_0: \pi_1 = \pi_2$          | Two binary categorical variables             |
+| Chi-square Test              | $H_0: \pi_1 = \cdots = \pi_k$ | Two categorical variables                    |
+| Analysis of Variance (ANOVA) | $H_0: \mu_1 = \cdots = \mu_k$ | Numerical outcome by multi-level group       |
+| Correlation Test             | $H_0: \rho = 0$               | Two numerical variables                      |
 
-Common hypothesis tests and their applications.
+Common hypothesis tests, their corresponding null hypotheses, and the types of data to which they are typically applied.
 :::
 
 The remainder of this chapter applies these tests to concrete examples drawn from the `churn` dataset. Each example emphasizes not only the mechanics of implementation in R but also the interpretation of results in context. By linking statistical procedures to practical questions, we reinforce the central objective of inference: making principled conclusions from data while acknowledging uncertainty.
@@ -477,6 +478,100 @@ The two-sample t-test assumes independent groups and approximately normal distri
 From a business perspective, lower credit limits among churners may indicate financial constraints, lower engagement, or risk management decisions by the bank. This finding can support targeted strategies, such as credit line adjustments or personalized outreach. As always, assessing practical relevance is essential: even if a difference is statistically significant, its magnitude must be evaluated in context.
 
 The two-sample t-test is an effective way to evaluate patterns identified during exploratory analysis. It helps analysts move from visual impressions to statistical evidence, strengthening the foundation for downstream Modeling.
+
+When observations are measured on the same units under two conditions, however, the independence assumption no longer holds. In such cases, the paired $t$-test provides a more appropriate approach.
+
+## Paired t-test {#sec-ch5-paired-t-test}
+
+In many practical situations, observations occur in natural pairs. For example, we may measure the same individuals before and after a treatment, evaluate employee performance before and after training, or compare outcomes for the same customers under two conditions. Because each pair refers to the same unit of analysis, the observations are not independent. The paired $t$-test is designed for this type of data.
+
+Unlike the two-sample $t$-test, which compares the means of two *independent groups*, the paired $t$-test analyzes the *differences within each pair*. This structure arises when the same units are measured twice or when observations are naturally matched. Let $(x_{i,1}, x_{i,2})$ denote the two measurements for the $i$th unit. For each pair, we compute the difference
+$$
+d_i = x_{i,2} - x_{i,1}.
+$$
+
+The paired $t$-test then examines whether the mean difference $\mu_d$ equals zero. The hypotheses are
+$$
+\begin{cases}
+H_0: \mu_d = 0 \\
+H_a: \mu_d \neq 0
+\end{cases}
+$$
+for a two-sided test, although one-sided alternatives can also be used when a specific direction is of interest.
+
+By focusing on differences within pairs, the paired $t$-test removes variability between individuals and isolates the effect of the change or intervention. As a result, paired designs often provide more precise inference than analyses that treat the observations as independent.
+
+To illustrate the idea, suppose a bank launches a marketing campaign designed to encourage customers to increase their credit card usage. To evaluate the campaign, the bank records the total transaction amount for the same group of customers *before and after* the campaign. Because each observation corresponds to the same customer measured at two points in time, the data form natural pairs. It is therefore important to distinguish this situation from the two-sample $t$-test introduced earlier. The two-sample test compares the means of independent groups, such as the spending of different customers in two segments. In contrast, the paired $t$-test compares two measurements taken on the same units or on closely matched units. Applying a two-sample test in this setting would incorrectly treat the observations as independent and ignore the relationship between the paired measurements.
+
+Let $d = \text{after} - \text{before}$ denote the change in spending for each customer. The paired $t$-test evaluates whether the average change in spending differs from zero, indicating that the campaign may have affected customer behavior.
+
+The following example simulates transaction data for 50 customers and then performs a paired $t$-test.
+
+```{r}
+set.seed(123)
+
+n <- 50
+
+before <- rnorm(n, mean = 4000, sd = 800)
+after  <- before + rnorm(n, mean = 300, sd = 500)
+```
+
+Figure [-@fig-ch5-paired-t-test-plot] helps visualize the paired structure of the data. In the left panel, each line connects the spending values for a single customer before and after the campaign. If many lines trend upward from left to right, this suggests that spending increased following the campaign.
+
+The right panel shows the distribution of the differences ($\text{after} - \text{before}$). The dashed vertical line represents zero difference. If most values lie to the right of this line, the data suggest that many customers increased their spending. The paired $t$-test formally evaluates whether the *mean of these differences* is significantly different from zero.
+
+::: {#fig-ch5-paired-t-test-plot}
+
+```{r, echo = FALSE, out.width = "100%"}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+customer <- 1:n
+
+df <- data.frame(
+  customer = rep(customer, 2),
+  period = factor(rep(c("Before", "After"), each = n),
+                  levels = c("Before", "After")),
+  spending = c(before, after)
+)
+
+ggplot(df, aes(x = period, y = spending, group = customer)) +
+  geom_line(alpha = 0.4, color = "gray50") +
+  geom_point(size = 2, color = "#2C7FB8") +
+  labs(x = "Campaign Period", y = "Transaction Amount")
+
+diff_spending <- after - before
+
+df_diff <- data.frame(
+  customer = 1:n,
+  difference = diff_spending
+)
+
+ggplot(df_diff, aes(x = difference)) +
+  geom_histogram(bins = 12, fill = "#2C7FB8", color = "white", alpha = 0.8) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(x = "Difference in Transaction Amount",
+       y = "Number of Customers") +
+  theme_minimal()
+```
+
+Customer transaction amounts before and after a marketing campaign (left) and distribution of differences (right).
+:::
+
+We can perform the paired $t$-test in R using the `t.test()` function with the argument `paired = TRUE`:
+
+```{r}
+t.test(after, before, paired = TRUE)
+```
+
+The argument `paired = TRUE` instructs R to treat the observations as matched pairs. Internally, R computes the differences between the paired values and performs a one-sample $t$-test on those differences. The output reports the estimated mean difference, the $t$ statistic, the degrees of freedom, the $p$-value, and a confidence interval for the mean difference. In this simulated example, the $p$-value is very small, providing strong evidence against $H_0$. We therefore conclude that the marketing campaign significantly increased customer spending.
+
+Paired $t$-tests are widely used when the same units are measured under two conditions. Common applications include before–after experiments, repeated measurements on the same subjects, and evaluations of interventions or policy changes.
+
+Nonparametric alternatives are available when the assumptions of the $t$-test are questionable. In particular, if the data are highly skewed, contain strong outliers, or arise from small samples where normality cannot be reasonably assumed, rank-based methods provide a useful alternative. A commonly used option is the *Wilcoxon test*, implemented in R through the `wilcox.test()` function. This function can perform a one-sample test, a paired test, or a two-sample test (also known as the Wilcoxon rank-sum or Mann–Whitney test). Although these methods are less sensitive to deviations from normality, the $t$-test remains preferable when its assumptions are reasonably satisfied because it typically provides more efficient inference.
+
+> *Practice:* Conduct a one-sided paired $t$-test to evaluate whether the marketing campaign increased customer spending ($H_a: \mu_d > 0$). Use `alternative = "greater"` in `t.test()`. Compare the resulting $p$-value with the two-sided test above and explain why the values differ.
 
 ## Two-sample Z-test {#sec-ch5-two-sample-z-test}
 
