@@ -326,14 +326,20 @@ window.Quarto = {
    
   <ul>
 <li><a href="#what-this-chapter-covers" id="toc-what-this-chapter-covers" class="nav-link active" data-scroll-target="#what-this-chapter-covers">What This Chapter Covers</a></li>
-  <li><a href="#why-is-it-necessary-to-partition-the-data" id="toc-why-is-it-necessary-to-partition-the-data" class="nav-link" data-scroll-target="#why-is-it-necessary-to-partition-the-data"><span class="header-section-number">6.1</span> Why Is It Necessary to Partition the Data?</a></li>
+  <li><a href="#why-data-partitioning-is-necessary" id="toc-why-data-partitioning-is-necessary" class="nav-link" data-scroll-target="#why-data-partitioning-is-necessary"><span class="header-section-number">6.1</span> Why Data Partitioning Is Necessary</a></li>
   <li>
-<a href="#sec-train-test-split" id="toc-sec-train-test-split" class="nav-link" data-scroll-target="#sec-train-test-split"><span class="header-section-number">6.2</span> Partitioning Data: The Train–Test Split</a>
+<a href="#sec-ch6-cross-validation" id="toc-sec-ch6-cross-validation" class="nav-link" data-scroll-target="#sec-ch6-cross-validation"><span class="header-section-number">6.2</span> Cross-Validation for Robust Model Evaluation</a>
+  <ul class="collapse">
+<li><a href="#k-fold-cross-validation" id="toc-k-fold-cross-validation" class="nav-link" data-scroll-target="#k-fold-cross-validation">k-Fold Cross-Validation</a></li>
+  <li><a href="#cross-validation-within-the-training-set" id="toc-cross-validation-within-the-training-set" class="nav-link" data-scroll-target="#cross-validation-within-the-training-set">Cross-Validation Within the Training Set</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#sec-train-test-split" id="toc-sec-train-test-split" class="nav-link" data-scroll-target="#sec-train-test-split"><span class="header-section-number">6.3</span> Partitioning Data: The Train–Test Split</a>
   <ul class="collapse">
 <li><a href="#implementing-the-traintest-split-in-r" id="toc-implementing-the-traintest-split-in-r" class="nav-link" data-scroll-target="#implementing-the-traintest-split-in-r">Implementing the Train–Test Split in R</a></li>
   </ul>
 </li>
-  <li><a href="#sec-ch6-cross-validation" id="toc-sec-ch6-cross-validation" class="nav-link" data-scroll-target="#sec-ch6-cross-validation"><span class="header-section-number">6.3</span> Cross-Validation for Reliable Model Evaluation</a></li>
   <li>
 <a href="#sec-ch6-validate-partition" id="toc-sec-ch6-validate-partition" class="nav-link" data-scroll-target="#sec-ch6-validate-partition"><span class="header-section-number">6.4</span> Validating the Train–Test Split</a>
   <ul class="collapse">
@@ -388,14 +394,31 @@ window.Quarto = {
 <p>These questions are not merely technical. They reflect fundamental principles of modern data science, including fairness, reproducibility, and reliable generalization. By walking through partitioning, validation, balancing, and feature preparation, we lay the groundwork for building models that perform well and generalize reliably in real-world settings.</p>
 <section id="what-this-chapter-covers" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="what-this-chapter-covers">What This Chapter Covers</h3>
 <p>This chapter completes Step 4 of the Data Science Workflow: <em>Data Setup for Modeling</em>. We begin by partitioning the dataset into training and test subsets to simulate real-world deployment and support fair evaluation. We also introduce cross-validation as a more robust method for performance estimation and show how to assess whether the resulting split is statistically representative using the inferential tools presented in Chapter <a href="5-Statistics.html" class="quarto-xref"><span>5</span></a>.</p>
-<p>Next, we then examine data leakage as a cross-cutting risk in predictive modeling. We show how leakage can arise during partitioning, balancing, encoding, scaling, or imputation, and establish the guiding principle that all data-dependent transformations must be learned from the training set only and then applied unchanged to the test set.</p>
+<p>Next, we examine data leakage as a cross-cutting risk in predictive modeling. We show how leakage can arise during partitioning, balancing, encoding, scaling, or imputation, and establish the guiding principle that all data-dependent transformations must be learned from the training set only and then applied unchanged to the test set.</p>
 <p>We then prepare predictors for modeling by encoding categorical variables and scaling numerical features. We present ordinal and one-hot encoding techniques, along with min–max and z-score transformations, so that predictors are represented in a form suitable for common machine learning algorithms.</p>
 <p>Finally, we address class imbalance, a common challenge in classification tasks where one outcome dominates the dataset. We examine strategies such as oversampling, undersampling, and class weighting to ensure that minority classes are adequately represented during model training.</p>
 <p>Together, these components form the structural foundation required before building and evaluating predictive models in the chapters that follow.</p>
-</section><section id="why-is-it-necessary-to-partition-the-data" class="level2" data-number="6.1"><h2 data-number="6.1" class="anchored" data-anchor-id="why-is-it-necessary-to-partition-the-data">
-<span class="header-section-number">6.1</span> Why Is It Necessary to Partition the Data?</h2>
-<p>For supervised learning, the first step in data setup for modeling is to partition the dataset into training and testing subsets—a step often misunderstood by newcomers to data science. A common question is: <em>Why split the data before modeling?</em> The key reason is <em>generalization</em>, or the model’s ability to make accurate predictions on new, unseen data. This section explains why partitioning is essential for building models that perform well not only during training but also in real-world applications.</p>
-<p>As part of Step 4 in the Data Science Workflow, partitioning precedes validation and class balancing. Dividing the data into a <em>training set</em> for model development and a <em>test set</em> for evaluation simulates real-world deployment. This practice guards against two key modeling pitfalls: <em>overfitting</em> and <em>underfitting</em>. Their trade-off is illustrated in Figure <a href="#fig-model-complexity" class="quarto-xref"><span>6.1</span></a>.</p>
+</section><section id="why-data-partitioning-is-necessary" class="level2" data-number="6.1"><h2 data-number="6.1" class="anchored" data-anchor-id="why-data-partitioning-is-necessary">
+<span class="header-section-number">6.1</span> Why Data Partitioning Is Necessary</h2>
+<p>When building predictive models, a common question arises: <em>Why do we need to split the data before training a model?</em> At first glance, it may seem natural to train a model on all available data in order to maximize the information available for learning. However, doing so prevents us from evaluating how well the model will perform on new observations. The central challenge in predictive modeling is <em>generalization</em>: the ability of a model to make accurate predictions on data that were not used during training.</p>
+<p>In practice, a model that performs well on the data used to fit it does not necessarily perform well on unseen data. To approximate real-world prediction scenarios, the dataset is therefore divided into two parts: a <em>training set</em>, used to build the model, and a <em>test set</em>, reserved for evaluating its predictive performance. This separation allows us to assess whether the model has learned meaningful patterns or simply memorized the training data.</p>
+<p>Partitioning the data helps reveal two common modeling pitfalls: <em>underfitting</em> and <em>overfitting</em>. These problems arise when model complexity is either too low or too high relative to the structure of the data.</p>
+<p>To illustrate these ideas, consider a simple classification example. Suppose we have a two-dimensional dataset containing two classes of observations. The light-green square points belong to one class, while the soft-orange circle points belong to another class. The goal is to construct a decision boundary—a curve or straight line—that separates the two classes as accurately as possible.</p>
+<p>Figure <a href="#fig-ch6-overfitting-underfitting" class="quarto-xref"><span>6.1</span></a> illustrates three possible decision boundaries for this dataset. The left panel shows a simple straight line that attempts to separate the two classes. Because this boundary is too simple to capture the structure of the data, it fails to separate many observations correctly. This situation is known as <em>underfitting</em>. The middle panel shows a more flexible curve that captures the underlying pattern in the data more effectively, balancing flexibility and simplicity. The right panel shows a highly complex curve that perfectly classifies every training observation. Although this boundary appears ideal, it is actually problematic. By bending excessively to fit each point, the model captures noise and random fluctuations in the training data rather than meaningful patterns. This phenomenon is known as <em>overfitting</em>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch6-overfitting-underfitting" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch6-overfitting-underfitting-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch6_overfitting_underfitting.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch6-overfitting-underfitting-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.1: Illustration of underfitting, appropriate model complexity, and overfitting. The left panel shows an overly simple decision boundary, the middle panel shows a well-balanced model, and the right panel shows an overly complex boundary that fits noise in the training data.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>These examples illustrate how model flexibility influences predictive performance. A model that is too simple cannot capture important relationships in the data, while a model that is too complex may capture noise instead of meaningful patterns. The challenge in predictive modeling is therefore to find a balance between these two extremes.</p>
+<p>This relationship between model complexity and predictive performance can be illustrated more generally, as shown in Figure <a href="#fig-model-complexity" class="quarto-xref"><span>6.2</span></a>, which depicts how training and test accuracy typically change as model complexity increases.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div id="fig-model-complexity" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
@@ -403,24 +426,29 @@ window.Quarto = {
 <img src="images/ch6_model_complexity.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" data-fig-pos="H">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-model-complexity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;6.1: The trade-off between model complexity and accuracy on the training and test sets. Optimal performance is achieved at the point where test set accuracy is highest, before overfitting begins to dominate.
+Figure&nbsp;6.2: Relationship between model complexity and predictive performance on the training and test sets. Training accuracy typically increases with model complexity, while test accuracy first improves and then declines due to overfitting.
 </figcaption></figure>
 </div>
 </div>
 </div>
-<p>Overfitting occurs when a model captures noise and specific patterns in the training data rather than general trends. Such models perform well on training data but poorly on new observations. For instance, a churn model might rely on customer IDs rather than behavior, resulting in poor generalization.</p>
-<p>Underfitting arises when the model is too simplistic to capture meaningful structure, often due to limited complexity or overly aggressive preprocessing. An underfitted model may assign nearly identical predictions across all customers, failing to reflect relevant differences.</p>
-<p>Evaluating performance on a separate test set helps detect both issues. A large gap between high training accuracy and low test accuracy suggests overfitting, while low accuracy on both may indicate underfitting. In either case, model adjustments are needed to improve generalization.</p>
-<p>Another critical reason for partitioning is to prevent <em>data leakage</em>, the inadvertent use of information from the test set during training. Leakage can produce overly optimistic performance estimates and undermine trust in the model. Strict separation of the training and test sets ensures that evaluation reflects a model’s true predictive capability on unseen data.</p>
-<p>Figure <a href="#fig-modeling" class="quarto-xref"><span>6.2</span></a> summarizes the typical modeling process in supervised learning:</p>
+<p>As model complexity increases, performance on the training data generally improves because the model can fit the training observations more closely. Beyond a certain point, however, the model begins to overfit the training data, and its performance on unseen data declines. The optimal model therefore lies near the point where predictive performance on the test data is highest.</p>
+<p>Comparing performance on the training and test sets helps diagnose both underfitting and overfitting. A large gap between high training accuracy and low test accuracy often indicates overfitting, whereas low accuracy on both sets suggests underfitting. To obtain more reliable estimates of predictive performance, data scientists often use <em>cross-validation</em>. The next section introduces this approach.</p>
+</section><section id="sec-ch6-cross-validation" class="level2" data-number="6.2"><h2 data-number="6.2" class="anchored" data-anchor-id="sec-ch6-cross-validation">
+<span class="header-section-number">6.2</span> Cross-Validation for Robust Model Evaluation</h2>
+<p>As discussed in the previous section, evaluating a model on data not used during training is essential for assessing its ability to generalize. A common approach is the train–test split, where a portion of the dataset is reserved for evaluation. However, the performance estimate obtained from a single split can depend strongly on how the data happens to be divided. This variability becomes especially problematic for smaller datasets.</p>
+<p>To obtain more stable and reliable estimates of predictive performance, data scientists often use <em>cross-validation</em>. Cross-validation is a resampling strategy that repeatedly partitions the data and evaluates the model across multiple training and validation subsets. By averaging performance across several splits, cross-validation provides a more reliable estimate of how well a model is likely to perform on new data.</p>
+<p>Cross-validation typically takes place during the <em>evaluation stage</em> of the predictive modeling workflow. Throughout the modeling chapters of this book, we follow a simple and structured workflow:</p>
 <ol type="1">
 <li>
-<em>Partition</em> the dataset and validate the split.</li>
+<em>Partition</em> the dataset and validate the split.<br>
+</li>
 <li>
-<em>Train</em> models on the training data.</li>
+<em>Train</em> models on the training data.<br>
+</li>
 <li>
-<em>Evaluate</em> model performance on the test data.</li>
+<em>Evaluate</em> model performance on unseen data.</li>
 </ol>
+<p>To understand this workflow visually, see Figure <a href="#fig-modeling" class="quarto-xref"><span>6.3</span></a>.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div id="fig-modeling" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
@@ -428,17 +456,50 @@ Figure&nbsp;6.1: The trade-off between model complexity and accuracy on the trai
 <img src="images/ch6_partitioning.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:85.0%" data-fig-pos="H">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-modeling-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;6.2: A general supervised learning process for building and evaluating predictive models. The 80–20 split ratio is a common default but may be adjusted based on the problem and dataset size.
+Figure&nbsp;6.3: General supervised learning workflow. The dataset is partitioned into training and test sets. Models are trained using the training data and evaluated on the test data to assess their ability to generalize.
 </figcaption></figure>
 </div>
 </div>
 </div>
-<p>By following this structure, we develop models that are both accurate and reliable. The remainder of this chapter addresses how to carry out each step in practice, beginning with partitioning strategies, followed by validation techniques and class balancing methods.</p>
-</section><section id="sec-train-test-split" class="level2" data-number="6.2"><h2 data-number="6.2" class="anchored" data-anchor-id="sec-train-test-split">
-<span class="header-section-number">6.2</span> Partitioning Data: The Train–Test Split</h2>
-<p>Having established why partitioning is essential, we now turn to how it is implemented in practice. The most common method is the <em>train–test split</em>, also known as the <em>holdout method</em>. In this approach, the dataset is divided into two subsets: a <em>training set</em> used to develop the model and a <em>test set</em> reserved for evaluating its ability to generalize to new, unseen data.</p>
-<p>Typical split ratios include 70–30, 80–20, or 90–10, depending on dataset size and modeling objectives. Both subsets contain the same predictor variables and outcome variable. However, only the training set outcomes are used during model fitting, while the test set outcomes are reserved exclusively for evaluation. Keeping the test set untouched during training ensures an unbiased assessment of predictive performance.</p>
-<p>As a general rule, partitioning should occur <em>before</em> applying any data-dependent preprocessing steps such as scaling, encoding, or imputation. This order helps prevent data leakage and preserves the integrity of model evaluation.</p>
+<p>In practice, the evaluation stage often relies on cross-validation applied within the training data before the final model is assessed on the test set. The next subsection introduces the most common form of this strategy: <em>k</em>-fold cross-validation.</p>
+<section id="k-fold-cross-validation" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="k-fold-cross-validation">k-Fold Cross-Validation</h3>
+<p>The most widely used form of cross-validation is <em>k</em>-fold cross-validation. In this approach, the dataset is randomly partitioned into <em>k</em> non-overlapping subsets of approximately equal size, called <em>folds</em>. The model is then trained on <em>k − 1</em> folds and evaluated on the remaining fold, which serves as the validation set. This procedure is repeated <em>k</em> times so that each fold is used once for validation and <em>k − 1</em> times for training. The final performance estimate is obtained by averaging the results across all iterations. Common choices for <em>k</em> are 5 or 10, as illustrated in Figure <a href="#fig-cross-validation" class="quarto-xref"><span>6.4</span></a> for the case <span class="math inline">\(k = 5\)</span>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-cross-validation" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-cross-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch6_cross_validation.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cross-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.4: Illustration of k-fold cross-validation. The dataset is divided into k folds (k = 5 shown). In each iteration, the model is trained on k−1 folds (green) and evaluated on the remaining fold (yellow).
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The train–test split (holdout method) can be viewed as the simplest evaluation design: the model is trained once on the training set and evaluated once on the test set, as in Figure <a href="#fig-modeling" class="quarto-xref"><span>6.3</span></a>. By contrast, <em>k</em>-fold cross-validation repeats this train–validate cycle <em>k</em> times and averages the results. In this book, we often begin with the train–test split for clarity, and we use cross-validation when we need more stable estimates or when tuning hyperparameters.</p>
+<p>Because each observation is used once for validation and multiple times for training in <em>k</em>-fold cross-validation, the method makes efficient use of the available data and typically produces more stable performance estimates than a single train–test split.</p>
+</section><section id="cross-validation-within-the-training-set" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="cross-validation-within-the-training-set">Cross-Validation Within the Training Set</h3>
+<p>Although cross-validation improves the reliability of performance estimates, it must be used carefully to avoid data leakage. In particular, the test set should remain completely untouched during model development and should be used only once for final evaluation.</p>
+<p>A common workflow therefore proceeds in three stages. First, the dataset is partitioned into a training set and a test set. Second, cross-validation is applied within the training set to compare candidate models or tune hyperparameters. Finally, after a model has been selected, its performance is evaluated once on the untouched test set. This strategy is illustrated in Figure <a href="#fig-cross-validation-2" class="quarto-xref"><span>6.5</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-cross-validation-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-cross-validation-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch6_cross_validation_2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cross-validation-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.5: Cross-validation applied within the training set while the test set is reserved for final evaluation.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>By separating model development from final evaluation, this workflow provides a realistic estimate of predictive performance on unseen data. It also helps prevent data leakage, since the test set remains isolated from model training and tuning decisions. An example of the use of cross-validation for model selection appears in Chapter <a href="7-Classification-kNN.html#sec-ch7-knn-choose-k" class="quarto-xref"><span>7.6</span></a>, where the hyperparameter <em>k</em> in a k-Nearest Neighbors model is tuned using cross-validation within the training set. For further discussion of cross-validation and related evaluation methods, see Chapter 5 of <em>An Introduction to Statistical Learning</em> <span class="citation" data-cites="james2013introduction">(<a href="14-References.html#ref-james2013introduction" role="doc-biblioref">James et al. 2013</a>)</span>.</p>
+<p>Before cross-validation can be applied, however, the dataset must first be divided into subsets for model training and evaluation. The most common strategy is the <em>train–test split</em>, in which one portion of the data is used to train the model while the remaining portion is reserved for assessing its predictive performance. The next section explains how this partitioning is carried out in practice.</p>
+</section></section><section id="sec-train-test-split" class="level2" data-number="6.3"><h2 data-number="6.3" class="anchored" data-anchor-id="sec-train-test-split">
+<span class="header-section-number">6.3</span> Partitioning Data: The Train–Test Split</h2>
+<p>We now turn to the practical step of partitioning the dataset into separate subsets for model training and evaluation. The most common method is the <em>train–test split</em>, also known as the <em>holdout method</em>. In this approach, the dataset is divided into two subsets: a <em>training set</em> used to develop the model and a <em>test set</em> reserved for evaluating its ability to generalize to new, unseen data.</p>
+<p>Typical split ratios include 70–30, 80–20, or 90–10, depending on the size of the dataset and the modeling objective. Both subsets contain the same predictors and outcome variable. However, only the training set outcomes are used during model fitting, while the test set outcomes are reserved exclusively for evaluation. Keeping the test set untouched during model training ensures an unbiased assessment of predictive performance.</p>
+<p>As a general rule, partitioning should occur <em>before</em> applying any data-dependent preprocessing steps such as scaling, encoding, or imputation. If preprocessing decisions are based on the full dataset prior to partitioning, information from the test set may inadvertently influence the training process. Performing the split first helps prevent data leakage and preserves the integrity of model evaluation.</p>
 <section id="implementing-the-traintest-split-in-r" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="implementing-the-traintest-split-in-r">Implementing the Train–Test Split in R</h3>
 <p>We illustrate the train–test split using R and the <strong>liver</strong> package. We return to the <code>churn</code> dataset introduced in Chapter <a href="4-Exploratory-data-analysis.html#sec-ch4-EDA-churn" class="quarto-xref"><span>4.3</span></a>, where the goal is to predict customer churn using machine learning models (discussed in the next chapter). We load the dataset as follows:</p>
 <div class="cell" data-layout-align="center">
@@ -446,9 +507,9 @@ Figure&nbsp;6.2: A general supervised learning process for building and evaluati
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">churn</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Note that this dataset is relatively clean. A small number of entries in the <code>education</code>, <code>income</code>, and <code>marital</code> features are recorded as <code>"unknown"</code>. For simplicity in this section, we treat <code>"unknown"</code> as a valid category rather than converting it to a missing value. The focus here is solely on data partitioning; preprocessing steps will be addressed later in the chapter.</p>
-<p>There are several ways to perform a train–test split in R, including functions from packages such as <strong>rsample</strong> or <strong>caret</strong>, or by writing custom sampling code in base R. In this book, we use the <code><a href="https://rdrr.io/pkg/liver/man/partition.html">partition()</a></code> function from the <strong>liver</strong> package because it provides a simple and consistent interface used throughout the modeling chapters.</p>
-<p>The <code><a href="https://rdrr.io/pkg/liver/man/partition.html">partition()</a></code> function divides a dataset into subsets based on a specified ratio. Below, we split the dataset into 80 percent training and 20 percent test data:</p>
+<p>Note that the dataset is relatively clean. A small number of entries in the <code>education</code>, <code>income</code>, and <code>marital</code> features are recorded as <code>"unknown"</code>. For simplicity in this section, we treat <code>"unknown"</code> as a valid category rather than converting it to a missing value. The focus here is solely on data partitioning; preprocessing steps will be addressed later in the chapter.</p>
+<p>There are several ways to perform a train–test split in R, including functions from packages such as <strong>rsample</strong> or <strong>caret</strong>, or by writing custom sampling code in base R. In this book, we use the <code><a href="https://rdrr.io/pkg/liver/man/partition.html">partition()</a></code> function from the <strong>liver</strong> package because it provides a simple and consistent interface that is used throughout the modeling chapters.</p>
+<p>The <code><a href="https://rdrr.io/pkg/liver/man/partition.html">partition()</a></code> function divides a dataset into subsets according to a specified ratio. Below, we split the dataset into 80 percent training data and 20 percent test data:</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span></span>
@@ -463,43 +524,8 @@ Figure&nbsp;6.2: A general supervised learning process for building and evaluati
 <blockquote class="blockquote">
 <p><em>Practice:</em> Using the <code><a href="https://rdrr.io/pkg/liver/man/partition.html">partition()</a></code> function, repeat the train–test split with a 70–30 ratio. Compare the sizes of the training and test sets using <code>nrow(train_set)</code> and <code>nrow(test_set)</code>. Reflect on how the choice of split ratio may influence model performance and stability.</p>
 </blockquote>
-<p>While the train–test split is simple and widely used, performance estimates can vary depending on how the data is divided. A more robust alternative is cross-validation, introduced in the next section.</p>
-</section></section><section id="sec-ch6-cross-validation" class="level2" data-number="6.3"><h2 data-number="6.3" class="anchored" data-anchor-id="sec-ch6-cross-validation">
-<span class="header-section-number">6.3</span> Cross-Validation for Reliable Model Evaluation</h2>
-<p>While the train–test split is widely used for its simplicity, the resulting performance estimates can vary substantially depending on how the data is divided, especially when working with smaller datasets. To obtain more stable and reliable estimates of a model’s generalization performance, <em>cross-validation</em> provides an effective alternative.</p>
-<p>Cross-validation is a resampling method that offers a more comprehensive evaluation than a single train–test split. In <em>k</em>-fold cross-validation, the dataset is randomly partitioned into <em>k</em> non-overlapping subsets (folds) of approximately equal size. The model is trained on <em>k</em>–1 folds and evaluated on the remaining fold. This process is repeated <em>k</em> times, with each fold serving once as the validation set. The overall performance is then estimated by averaging the metrics across all <em>k</em> iterations. Common choices for <em>k</em> include 5 or 10, as illustrated in <a href="#fig-cross-validation" class="quarto-xref">Figure&nbsp;<span>6.3</span></a>.</p>
-<div class="cell" data-layout-align="center">
-<div class="cell-output-display">
-<div id="fig-cross-validation" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
-<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-cross-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="images/ch6_cross_validation.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" data-fig-pos="H">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cross-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;6.3: Illustration of k-fold cross-validation. The dataset is randomly split into k non-overlapping folds (k = 5 shown). In each iteration, the model is trained on k–1 folds (shown in green) and evaluated on the remaining fold (shown in yellow).
-</figcaption></figure>
-</div>
-</div>
-</div>
-<p>Cross-validation is particularly useful for comparing models or tuning hyperparameters. However, using the test set repeatedly during model development can lead to information leakage, resulting in overly optimistic performance estimates. To avoid this, it is best practice to reserve a separate <em>test set</em> for final evaluation and apply cross-validation exclusively within the <em>training set</em>. In this setup, model selection and tuning rely on cross-validated results from the training data, while the final model is evaluated only once on the untouched test set.</p>
-<p>This approach is depicted in <a href="#fig-cross-validation-2" class="quarto-xref">Figure&nbsp;<span>6.4</span></a>. It eliminates the need for a fixed validation subset and makes more efficient use of the training data, while still preserving an unbiased test set for final performance reporting.</p>
-<div class="cell" data-layout-align="center">
-<div class="cell-output-display">
-<div id="fig-cross-validation-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
-<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-cross-validation-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="images/ch6_cross_validation_2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%" data-fig-pos="H">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cross-validation-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;6.4: Cross-validation applied within the training set. The test set is held out for final evaluation only. This strategy eliminates the need for a separate validation set and maximizes the use of available data for both training and validation.
-</figcaption></figure>
-</div>
-</div>
-</div>
-<blockquote class="blockquote">
-<p><em>Practice:</em> Using the <code><a href="https://rdrr.io/pkg/liver/man/partition.html">partition()</a></code> function, create a three-way split of the data, for example with a 70–15–15 ratio for the training, validation, and test sets. Compare the sizes of the resulting subsets using the <code><a href="https://rdrr.io/r/base/nrow.html">nrow()</a></code> function. Reflect on how introducing a separate validation set changes the data available for model training and how different allocation choices may influence model stability and performance.</p>
-</blockquote>
-<p>Although more computationally intensive, k-fold cross-validation reduces the variance of performance estimates and is particularly advantageous when data is limited. It provides a clearer picture of a model’s ability to generalize, rather than its performance on a single data split. For further details and implementation examples, see Chapter 5 of <em>An Introduction to Statistical Learning</em> <span class="citation" data-cites="james2013introduction">(<a href="14-References.html#ref-james2013introduction" role="doc-biblioref">James et al. 2013</a>)</span>.</p>
-<p>Partitioning data is a foundational step in predictive modeling. Yet even with a carefully designed split, it is important to verify whether the resulting subsets are representative of the original dataset. The next section addresses how to evaluate the quality of the partition before training begins.</p>
-</section><section id="sec-ch6-validate-partition" class="level2" data-number="6.4"><h2 data-number="6.4" class="anchored" data-anchor-id="sec-ch6-validate-partition">
+<p>While the train–test split is simple and widely used, the resulting subsets should be examined to ensure that they remain representative of the original dataset. The next section therefore discusses how to validate the quality of the train–test split.</p>
+</section></section><section id="sec-ch6-validate-partition" class="level2" data-number="6.4"><h2 data-number="6.4" class="anchored" data-anchor-id="sec-ch6-validate-partition">
 <span class="header-section-number">6.4</span> Validating the Train–Test Split</h2>
 <p>After partitioning the data, it is important to verify that the training and test sets are representative of the original dataset. A well-balanced split ensures that the training set reflects the broader population and that the test set provides a realistic assessment of model performance. Without this validation step, the resulting model may learn from biased data or fail to generalize in practice.</p>
 <p>Validating a split involves comparing the distributions of key variables—especially the target and important predictors—across the training and testing sets. Because many datasets contain numerous features, it is common to focus on a subset of variables that play a central role in modeling. The choice of statistical test depends on the variable type, as summarized in <a href="#tbl-partition-test" class="quarto-xref">Table&nbsp;<span>6.1</span></a>.</p>
@@ -514,12 +540,12 @@ Table&nbsp;6.1: Suggested hypothesis tests (from <a href="5-Statistics.html" cla
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Binary</td>
-<td>Two-sample Z-test</td>
-</tr>
-<tr class="even">
 <td>Numerical</td>
 <td>Two-sample t-test</td>
+</tr>
+<tr class="even">
+<td>Binary</td>
+<td>Two-sample Z-test</td>
 </tr>
 <tr class="odd">
 <td>Categorical (with <span class="math inline">\(&gt; 2\)</span> categories)</td>
@@ -618,7 +644,7 @@ H_a:  \pi_{\text{churn, train}} \neq \pi_{\text{churn, test}}
 </section><section id="sec-ch6-one-hot-encoding" class="level2" data-number="6.8"><h2 data-number="6.8" class="anchored" data-anchor-id="sec-ch6-one-hot-encoding">
 <span class="header-section-number">6.8</span> One-Hot Encoding</h2>
 <p>How can we represent unordered categories, such as marital status, so that machine learning algorithms can use them effectively? <em>One-hot encoding</em> is a widely used solution. It transforms each unique category into a separate binary column, allowing algorithms to process categorical data without introducing an artificial order.</p>
-<p>This method is particularly useful for <em>nominal variables</em>, categorical features with no inherent ranking. For example, the variable <code>marital</code> in the <code>churn</code> dataset includes categories such as <code>married</code>, <code>single</code>, and <code>divorced</code>. One-hot encoding creates binary indicators for each category: <code>marital_married</code>, <code>marital_single</code>, <code>marital_divorced</code>. Each column indicates the presence (1) or absence (0) of a specific category. If there are <span class="math inline">\(m\)</span> levels, only <span class="math inline">\(m - 1\)</span> binary columns are required to avoid multicollinearity; the omitted category is implicitly represented when all others are zero.</p>
+<p>This method is particularly useful for <em>nominal variables</em>, categorical features with no inherent ranking. For example, the variable <code>marital</code> in the <code>churn</code> dataset includes categories such as <code>married</code>, <code>single</code>, and <code>divorced</code>. One-hot encoding creates binary indicators for each category: <code>marital_married</code>, <code>marital_single</code>, <code>marital_divorced</code>. Each column indicates the presence (1) or absence (0) of a specific category. If there are <span class="math inline">\(m\)</span> levels, one-hot encoding creates <span class="math inline">\(m\)</span> binary columns. For linear models, it is common to drop one dummy column to avoid perfect redundancy. For distance-based methods such as kNN, using the full set of indicator columns is often acceptable, provided the same encoding is applied consistently to both training and test sets.</p>
 <p>Let us take a quick look at the <code>marital</code> variable in the <code>churn</code> dataset:</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(churn<span class="sc">$</span>marital)</span>
@@ -675,11 +701,7 @@ H_a:  \pi_{\text{churn, train}} \neq \pi_{\text{churn, test}}
 <p>What happens when one variable, such as price in dollars, spans tens of thousands, while another, like carat weight, ranges only from 0 to 5? Without scaling, machine learning models that rely on distances or gradients may give disproportionate weight to features with larger numerical ranges, regardless of their actual importance.</p>
 <p><em>Feature scaling</em> addresses this imbalance by adjusting the range or distribution of numerical variables to make them comparable. It is particularly important for algorithms such as <em>k</em>-Nearest Neighbors (Chapter <a href="7-Classification-kNN.html" class="quarto-xref"><span>7</span></a>) and neural networks (Chapter <a href="12-Neural-networks.html" class="quarto-xref"><span>12</span></a>). Scaling can also improve optimization stability in models such as logistic regression and enhance the interpretability of coefficients.</p>
 <p>In the <code>churn</code> dataset, for example, <code>available_credit</code> ranges from 3 to 3.4516^{4}, while <code>utilization_ratio</code> spans from 0 to 0.999. Without scaling, features such as <code>available_credit</code> may dominate the learning process—not because they are more predictive, but simply because of their larger magnitude.</p>
-<p>This section introduces two widely used scaling techniques:</p>
-<ul>
-<li><p><em>Min–Max Scaling</em> rescales values to a fixed range, typically <span class="math inline">\([0, 1]\)</span>.</p></li>
-<li><p><em>Z-Score Scaling</em> centers values at zero with a standard deviation of one.</p></li>
-</ul>
+<p>This section introduces two widely used scaling techniques: <em>Min–Max Scaling</em> and <em>Z-Score Scaling</em>. Min–max scaling rescales values to a fixed range, typically <span class="math inline">\([0, 1]\)</span>. Z-score scaling standardizes features by centering them at zero and scaling them to unit variance.</p>
 <p>Choosing between these methods depends on the modeling approach and the data structure. Min–max scaling is preferred when a fixed input range is required, such as in neural networks, whereas z-score scaling is more suitable for algorithms that assume standardized input distributions or rely on variance-sensitive optimization.</p>
 <p>Scaling is not always necessary. Tree-based models, including decision trees and random forests, are <em>scale-invariant</em> and do not require rescaled inputs. However, for many other algorithms, scaling improves model performance, convergence speed, and fairness across features.</p>
 <p>One caution: scaling can obscure real-world interpretability or exaggerate the influence of outliers, particularly when using min–max scaling. The choice of method should always reflect your modeling objectives and the characteristics of the dataset.</p>
