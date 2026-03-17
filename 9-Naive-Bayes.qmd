@@ -21,303 +21,295 @@ The measure of belief is the measure of action.
 :::
 ::::
 :::::
+ 
+How can we make predictions quickly while still accounting for uncertainty in a principled way? Consider a bank that must decide whether to approve a loan application based on information such as education, employment status, income, credit score, and asset values. Decisions of this kind must often be made quickly and consistently, yet they also carry financial consequences. The Naive Bayes classifier provides a simple probabilistic framework for such decisions by estimating class probabilities from observed predictor values.
 
-How can we make fast and reasonably accurate predictions while keeping computation simple? Consider a bank that must decide, in real time, whether to approve a loan based on a customer’s income, age, and mortgage status. Decisions of this kind must be made quickly and consistently. The Naive Bayes classifier offers a simple probabilistic approach for such settings, using estimated class probabilities to support classification decisions.
+This chapter introduces Naive Bayes, a probabilistic classifier grounded in Bayes’ theorem. Rather than relying on similarity or distance to nearby observations, Naive Bayes predicts class membership by estimating the probability of each class given the observed predictor values. This probability-based perspective is especially useful when uncertainty must be quantified and when classification thresholds must be adjusted to reflect practical goals. In this sense, Naive Bayes provides a useful complement to the *k*-Nearest Neighbors (kNN) method introduced in Chapter [-@sec-ch7-classification-knn] and can be evaluated using the same tools discussed in Chapter [-@sec-ch8-evaluation], including confusion matrices, ROC curves, and AUC.
 
-In Chapter [-@sec-ch7-classification-knn], we introduced *k*-Nearest Neighbors (kNN), an instance-based method that classifies observations by similarity in feature space. In Chapter [-@sec-ch8-evaluation], we examined how to evaluate classifiers using confusion matrices, ROC curves, and related performance measures. In this chapter, we turn to Naive Bayes, a probabilistic classifier grounded in Bayes’ theorem. Unlike kNN, which predicts by comparing new observations to stored training cases, Naive Bayes learns class-conditional probability distributions from the data and returns explicit probability estimates. These probability outputs connect naturally to threshold-based decision-making and to the evaluation tools introduced earlier.
+A central feature of Naive Bayes is its simplifying assumption that predictors are conditionally independent given the class label. Although this assumption is rarely exactly true in practice, it makes the method computationally efficient and often surprisingly effective, especially in settings with many predictors. For this reason, Naive Bayes has remained a widely used method in applications such as spam filtering, document classification, and financial decision-making.
 
-Naive Bayes relies on a strong simplifying assumption: features are conditionally independent given the class label. Although this assumption rarely holds exactly, it makes the model computationally efficient and often competitive in practice, particularly in high-dimensional applications such as text classification. The same efficiency makes Naive Bayes attractive in time-sensitive tasks such as spam filtering and financial risk scoring.
-
-However, Naive Bayes also has limitations. Strong correlations among predictors can reduce performance, and continuous variables require an additional distributional assumption (often Gaussian) that may not accurately reflect the data. For problems involving complex feature interactions, more flexible models such as decision trees or ensemble methods may achieve higher predictive accuracy.
-
-Despite these trade-offs, Naive Bayes remains a useful baseline and a practical first model in many domains. Its probabilistic outputs are interpretable, its training is fast, and its implementation is straightforward, qualities that make it valuable both for early model development and for comparison with more complex classifiers.
+At the same time, Naive Bayes has important limitations. Strong dependence among predictors can reduce predictive performance, and continuous variables require additional distributional assumptions that may not always fit the data well. Even so, Naive Bayes remains a useful baseline and a practical first model in many classification problems. It is fast to train, straightforward to implement, and easy to interpret through its probability-based predictions. For these reasons, it remains valuable both as an initial modeling choice and as a benchmark against which more complex classifiers can be compared.
 
 ### What This Chapter Covers {.unnumbered .unlisted}
 
-This chapter introduces the Naive Bayes classifier as a probabilistic approach to classification that combines conceptual simplicity with practical effectiveness, particularly in high-dimensional and sparse settings. The chapter balances theoretical foundations with applied examples, emphasizing both interpretation and implementation.
+This chapter introduces the Naive Bayes classifier as a probabilistic approach to classification that combines conceptual simplicity with practical usefulness. Although the method is especially well known for high-dimensional applications such as text classification, it is also effective in many applied settings where fast, interpretable predictions are needed.
 
-We begin by revisiting the probabilistic foundations of Naive Bayes, with particular emphasis on Bayes’ theorem and its role in classification. We then show how class probabilities can be estimated from training data through worked examples, before introducing the main variants of Naive Bayes (Gaussian, Multinomial, and Bernoulli) and discussing the types of predictors for which each is appropriate. Along the way, we examine the conditional independence assumption that makes the method computationally efficient, and we discuss the practical strengths and limitations that follow from this simplification. The chapter concludes with an end-to-end implementation and evaluation of a Naive Bayes classifier in R using the `risk` dataset from the **liver** package.
+We begin with the probabilistic foundation of the method through Bayes’ theorem and show how probabilities can be updated when new evidence becomes available. We then explain how this idea leads to the Naive Bayes classifier, which predicts class membership by comparing posterior probabilities across classes. Next, we examine the conditional independence assumption that makes the method computationally efficient, discuss why this simplification is both useful and restrictive, and introduce the main variants of Naive Bayes, including Bernoulli, Multinomial, and Gaussian Naive Bayes.
 
-By the end of this chapter, readers will be able to explain how Naive Bayes operates, select an appropriate variant for a given problem, and apply the method effectively within a standard modeling workflow. We begin by revisiting the core principle underlying this classifier: Bayes’ theorem.
+We also consider the zero-frequency problem and show how Laplace smoothing helps make the classifier more stable when certain feature values are rare or absent in the training data. The chapter concludes with an end-to-end case study in R using the `loan` dataset from the **liver** package, where we train, evaluate, and interpret a Naive Bayes classifier within the Data Science Workflow introduced in Chapter [-@sec-ch2-intro-data-science] and illustrated in @fig-ch2_DSW.
 
 ## Bayes’ Theorem and Probabilistic Foundations
 
-The Naive Bayes classifier derives its power from Bayesian probability, specifically from Bayes’ theorem, introduced by the 18th-century statistician Thomas Bayes [@bayes1958essay]. Bayes’ theorem provides a principled framework for updating beliefs in light of new evidence by combining prior knowledge with observed data. This idea lies at the heart of many modern approaches to statistical learning and machine learning.
+Naive Bayes is grounded in Bayesian probability, specifically in Bayes’ theorem, which is commonly associated with the 18th-century statistician Thomas Bayes [@bayes1958essay]. Bayes’ theorem provides a formal rule for updating probabilities when new evidence becomes available. This idea lies at the heart of Bayesian inference and continues to play an important role in statistics and machine learning.
 
-How should we revise our beliefs when new information becomes available? Whether assessing financial risk, diagnosing medical conditions, or filtering spam, many real-world decisions must be made under uncertainty. Bayes’ theorem formalizes this process by describing how an initial belief about an event can be systematically updated as new evidence is observed. For example, when evaluating whether a loan applicant poses a financial risk, an institution may begin with general expectations based on population-level data and then refine that assessment after observing additional attributes such as mortgage status or outstanding debts.
+A central idea in Bayesian reasoning is that learning proceeds by combining prior beliefs with observed data. The prior represents what is believed before the data are observed, the likelihood describes how probable the observed data are under different values or hypotheses, and the posterior represents the updated belief after the data have been taken into account. Figure [-@fig-bayes-theorem] presents this relationship schematically.
 
-This perspective forms the basis of *Bayesian inference*, in which probability is interpreted not only as long-run frequency but as a measure of belief that can evolve with new data. Thomas Bayes’ contribution marked a shift toward this dynamic view of probability, allowing uncertainty to be modeled and updated in a coherent and mathematically consistent way.
-
-The conceptual roots of Bayesian reasoning emerged from earlier work on probability in the 17th century, motivated by problems in gambling, trade, and risk assessment. These early developments laid the foundation for modern probabilistic modeling. Bayes’ theorem unified these ideas into a general rule for learning from data, a principle that directly underpins the Naive Bayes classifier introduced in this chapter.
-
-### The Essence of Bayes’ Theorem {.unnumbered .unlisted}
-
-Bayes’ Theorem provides a systematic way to update probabilistic beliefs as new evidence becomes available and forms the theoretical foundation of Bayesian inference. It addresses a central question in probabilistic reasoning: *Given what is already known, how should our belief in a hypothesis change when new data are observed?*
-
-The theorem is mathematically expressed as:
-
-\begin{equation} 
-\label{eq-bayes-theorem}
-P(A|B) = \frac{P(A \cap B)}{P(B)}, 
-\end{equation}
-
-where:
-
--   $P(A|B)$ is the *posterior probability*, the probability of event $A$ (the hypothesis) given that event $B$ (the evidence) has occurred;
-
--   $P(A \cap B)$ is the *joint probability* that both events $A$ and $B$ occur;
-
--   $P(B)$ is the *marginal probability* (or evidence), representing the total probability of observing event $B$.
-
-To clarify these components, Figure [-@fig-venn-diagram] provides a visual interpretation using a Venn diagram. The overlapping region represents the joint probability $P(A \cap B)$, while the entire area of the octagon corresponding to event $B$ represents the marginal probability $P(B)$. The ratio of these two areas illustrates how the conditional probability $P(A|B)$ is obtained.
-
-```{r fig-venn-diagram, echo = FALSE, out.width = "80%", fig.cap = "A Venn diagram illustrating the joint and marginal probabilities involved in Bayes’ Theorem."}
-knitr::include_graphics("images/ch9_Venn-diagram_probabilities.png")
+```{r fig-bayes-theorem, echo = FALSE, out.width = "80%", fig.cap = "Conceptual illustration of Bayes’ theorem. Prior beliefs and observed data are combined through the likelihood to produce the posterior distribution."}
+knitr::include_graphics("images/ch9_bayes_theorem.png")
 ```
 
-The expression for Bayes’ Theorem can also be derived by applying the definition of conditional probability. Specifically, $P(A \cap B)$ can be written as $P(A) \times P(B|A)$, leading to an alternative form:
+How should we revise our beliefs when new information is observed? Many real-world decisions must be made under uncertainty, whether we are assessing financial risk, interpreting medical test results, or filtering spam emails. Bayes’ theorem formalizes this updating process by showing how an initial probability can be revised systematically in light of observed evidence. For example, when evaluating a loan application, a bank may begin with a general expectation based on historical data and then refine that assessment after observing information such as education, employment status, income, or credit score.
 
-\begin{equation} 
-\label{eq-bayes-theorem-2}
-P(A|B) = \frac{P(A \cap B)}{P(B)} = P(A) \times \frac{P(B|A)}{P(B)}.
-\end{equation}
-
-These equivalent expressions result from two ways of expressing the joint probability $P(A \cap B)$. This formulation highlights how a prior belief $P(A)$ is updated using the likelihood $P(B|A)$ and normalized by the marginal probability $P(B)$. Bayes’ Theorem thus provides a principled way to refine beliefs by incorporating new evidence. This principle underpins many probabilistic learning techniques, including the Naive Bayes classifier introduced in this chapter.
-
-To see how Bayes’ Theorem operates in practice, consider we want to estimate the probability that a customer has a good risk profile ($A$) given that they have a mortgage ($B$), using the `risk` dataset from the **liver** package. We begin by loading the dataset and inspecting the relevant data:
-
-```{r}
-library(liver)  
-
-data(risk)
-
-xtabs(~ risk + mortgage, data = risk)
-```
-
-To improve readability, we add row and column totals to the contingency table:
-
-```{r}
-addmargins(xtabs(~ risk + mortgage, data = risk))
-```
-
-```{r include = FALSE}
-t_risk_mor = addmargins(xtabs(~ risk + mortgage, data = risk))
-```
-
-Now, we define the relevant events: $A$ is the event that a customer has a *good risk* profile, and $B$ is the event that the customer has a mortgage (`mortgage = yes`). The prior probability of a customer having good risk is:
-
-$$
-P(A) = \frac{\text{Total Good Risk Cases}}{\text{Total Cases}} = \frac{`r t_risk_mor[1, 3]`}{`r t_risk_mor[3, 3]`} = `r round(t_risk_mor[1, 3] / t_risk_mor[3, 3], 3)`
-$$
-
-Using Bayes’ Theorem, we compute the probability of a customer being classified as good risk given that they have a mortgage:
-
-\begin{equation} 
-\label{eq1}
-\begin{split}
-P(\text{Good Risk} | \text{Mortgage = Yes}) & = \frac{P(\text{Good Risk} \cap \text{Mortgage = Yes})}{P(\text{Mortgage = Yes})} \\
- & = \frac{\text{Good Risk with Mortgage Cases}}{\text{Total Mortgage Cases}} \\
- & = \frac{`r t_risk_mor[1, 1]`}{`r t_risk_mor[3, 1]`} \\
- & = `r round(t_risk_mor[1, 1] / t_risk_mor[3, 1], 3)`
-\end{split}
-\end{equation}
-
-This result indicates that among customers with mortgages, the observed proportion of those with a good risk profile is lower than in the general population. Such insights help financial institutions refine credit risk models by incorporating new evidence systematically.
-
-> *Practice:* Using the same contingency table, compute the probability that a customer has a *good risk* profile given that they *do not* have a mortgage. How does this probability compare to the value obtained for customers with a mortgage? *Hint:* Identify the relevant counts in the table and apply Bayes’ theorem. You may verify your result using R.
+From this perspective, probability is interpreted not only as a long-run frequency but also as a measure of uncertainty that can be updated when new information becomes available. Bayes’ theorem therefore provides a coherent mathematical framework for learning from evidence. We begin by building intuition for this updating process and then turn to its mathematical form.
 
 ### How Does Bayes’ Theorem Work? {.unnumbered .unlisted}
 
-Imagine you are deciding whether to approve a loan application. You begin with a general expectation, perhaps most applicants with steady income and low debt are low risk. But what happens when you learn that the applicant has missed several past payments? Your belief shifts. This type of evidence-based reasoning is precisely what Bayes’ Theorem formalizes.
+Bayes’ theorem describes how we update an initial probability after observing new evidence. In many practical situations, we do not begin from complete uncertainty. Instead, we start with a general expectation based on what is already known and then revise that expectation when additional information becomes available.
 
-Bayes’ Theorem provides a structured method to refine our understanding of uncertainty as new information becomes available. In everyday decisions, whether assessing financial risk or evaluating the results of a medical test, we often begin with an initial belief and revise it in light of new evidence.
+Consider again the example of loan approval. Before examining the details of a specific applicant, a bank may already know the overall proportion of applications that are approved. This provides a starting point. Once further information is observed, such as education level, employment status, income, or credit score, that initial probability can be updated. If the new evidence is associated with a higher chance of approval, the updated probability increases. If it is associated with a lower chance of approval, the updated probability decreases.
 
-Bayesian reasoning plays a central role in many practical applications. In *financial risk assessment*, banks typically begin with prior expectations about borrower profiles, and then revise the risk estimate after considering additional information such as income, credit history, or mortgage status. In *medical diagnostics*, physicians assess the baseline probability of a condition and then update that estimate based on test results, incorporating both prevalence and diagnostic accuracy. In *spam detection*, email filters estimate the probability that a message is spam using features such as keywords, sender information, and formatting, and continually refine those estimates as new messages are processed.
+This same logic appears in many other settings. In medical testing, the probability that a patient has a condition is updated after a test result is observed. In spam filtering, the probability that an email is spam is revised after certain words or patterns are detected. In each case, the underlying principle is the same: we begin with an existing belief and refine it systematically in light of new evidence.
 
-Can you think of a situation where you made a decision based on initial expectations, but changed your mind after receiving new information? That shift in belief is the intuition behind Bayesian updating. Bayes’ Theorem turns this intuition into a formal rule. It offers a principled mechanism for learning from data, one that underpins many modern tools for prediction and classification.
+Bayes’ theorem therefore provides a general framework for learning from data under uncertainty. It allows us to move from a broad population-level expectation to a more specific probability for a subgroup or an individual case. In the next subsection, we express this updating process mathematically and examine how its components can be interpreted in probabilistic terms.
 
-### From Bayes’ Theorem to Naive Bayes {.unnumbered .unlisted}
+### The Essence of Bayes’ Theorem {.unnumbered .unlisted}
 
-Bayes’ Theorem provides a mathematical foundation for updating probabilities as new evidence emerges. However, directly applying Bayes’ Theorem to problems involving many features becomes impractical, as it requires estimating a large number of joint probabilities from data, many of which may be sparse or unavailable.
+The conceptual idea of Bayesian updating was introduced in Figure [-@fig-bayes-theorem]: we begin with prior beliefs, combine them with observed data through the likelihood, and obtain an updated posterior belief. We now express this same idea mathematically through Bayes’ theorem:
+\begin{equation}
+\label{eq-bayes-theorem}
+P(A \mid B) = \frac{P(A \cap B)}{P(B)}.
+\end{equation}
 
-The Naive Bayes classifier addresses this challenge by introducing a simplifying assumption: it treats all features as *conditionally independent* given the class label. While this assumption rarely holds exactly in real-world datasets, it dramatically simplifies the required probability calculations.
+This equation describes how the probability of event $A$ is updated after observing event $B$. In this expression, $P(A \mid B)$ denotes the conditional probability of event $A$ given event $B$, $P(A \cap B)$ denotes the joint probability that both events occur, and $P(B)$ denotes the marginal probability of event $B$.
 
-Despite its simplicity, Naive Bayes often delivers competitive results. For example, in financial risk prediction, a bank may evaluate a customer's creditworthiness using multiple variables such as income, loan history, and mortgage status. Although these variables are often correlated, the independence assumption enables the classifier to estimate probabilities efficiently by breaking the joint distribution into simpler, individual terms.
+To clarify these components, Figure [-@fig-venn-diagram] presents a visual interpretation using a Venn diagram. The overlapping region represents the joint probability $P(A \cap B)$, while the full area corresponding to event $B$ represents the marginal probability $P(B)$. The ratio of these two quantities gives the conditional probability $P(A \mid B)$.
 
-This efficiency is particularly advantageous in domains like text classification, spam detection, and sentiment analysis, where the number of features can be very large and independence is a reasonable approximation.
+```{r fig-venn-diagram, echo = FALSE, out.width = "75%", fig.cap = "A Venn diagram illustrating the joint and marginal probabilities involved in Bayes’ theorem."}
+knitr::include_graphics("images/ch9_Venn-diagram_probabilities.png")
+```
 
-Why does such a seemingly unrealistic assumption often work so well in practice? As we will see, this simplicity allows Naive Bayes to serve as a fast, interpretable, and surprisingly effective classifier, even in complex real-world settings.
+Bayes’ theorem can also be written in a form that is especially useful for classification. Since the joint probability can be expressed as $P(A \cap B) = P(B \mid A)P(A)$, we obtain:
+\begin{equation}
+\label{eq-bayes-theorem-2}
+P(A \mid B) = \frac{P(B \mid A)P(A)}{P(B)}.
+\end{equation}
+
+This form makes the logic of Bayesian updating more explicit. The term $P(A)$ represents the prior probability of event $A$, $P(B \mid A)$ measures how likely the observed evidence is if event $A$ is true, and $P(B)$ serves as a normalizing constant. In this interpretation, $P(A \mid B)$ is called the posterior probability because it represents the updated probability of event $A$ after observing event $B$.
+
+To see how Bayes’ theorem works in practice, consider the `loan` dataset from the **liver** package. Suppose we want to estimate the probability that a loan application is `approved` ($A$) given that the applicant has `education = graduate` ($B$). We begin by loading the dataset and constructing a contingency table:
+
+```{r}
+library(liver)
+
+data(loan)
+
+addmargins(xtabs(~ loan_status + education, data = loan))
+```
+
+```{r include = FALSE}
+table_l_e = addmargins(xtabs(~ loan_status + education, data = loan))
+```
+
+Let $A$ denote the event that a loan application is `approved`, and let $B$ denote the event that the applicant has `education = graduate`. The prior probability that a loan application is approved is:
+$$
+P(A) = P(\text{approved}) = \frac{\text{Total approved applications}}{\text{Total applications}}
+= \frac{`r table_l_e[1, 3]`}{`r table_l_e[3, 3]`}
+= `r round(table_l_e[1, 3] / table_l_e[3, 3], 3)`.
+$$
+
+Using Bayes’ theorem, the conditional probability that an application is approved given that the applicant is a graduate is:
+\begin{equation}
+\label{eq-bayes-loan-graduate}
+\begin{split}
+P(\text{approved} \mid \text{graduate})
+&= \frac{P(\text{approved} \cap \text{graduate})}{P(\text{graduate})} \\
+&= \frac{\text{Number of approved graduate applications}}{\text{Total number of graduate applications}} \\
+&= \frac{`r table_l_e[1, 1]`}{`r table_l_e[3, 1]`} \\
+&= `r round(table_l_e[1, 1] / table_l_e[3, 1], 3)`.
+\end{split}
+\end{equation}
+
+This result gives the observed proportion of approved applications among applicants with `education = graduate`. Because this conditional probability (`r round(table_l_e[1, 1] / table_l_e[3, 1], 3)`) is slightly higher than the overall approval probability of `r round(table_l_e[1, 3] / table_l_e[3, 3], 3)`, graduate applicants appear to have a somewhat higher approval rate than the applicant pool as a whole. This comparison remains associative rather than causal: it shows how probabilities differ across observed groups, not why those differences arise.
+
+This example illustrates the central idea of Bayes’ theorem: we begin with an overall probability and update it using additional information about the observed case. In the next section, we build on this probabilistic foundation to show how Bayes’ theorem can be turned into a practical classification algorithm.
+
+> *Practice:* Using the same contingency table, compute the probability that a loan application is `approved` given that the applicant has `education = not-graduate`. How does this probability compare with the value obtained for applicants with `education = graduate`? *Hint:* Identify the relevant counts in the table and apply Bayes’ theorem. You may verify your result in R.
+
+## The Naive Bayes Classifier
+
+Bayes’ theorem provides a general rule for updating probabilities when new evidence becomes available. In classification problems, this principle can be used to estimate the probability that an observation belongs to a particular class given its observed characteristics. The Naive Bayes classifier applies Bayes’ theorem in exactly this way.
+
+Suppose we observe a set of predictor variables $X_1, X_2, \dots, X_p$ describing an individual case. In the `loan` dataset, for example, these predictors may include variables such as `education`, `income_annum`, `loan_amount`, `loan_term`, and `cibil_score`. Our goal is to estimate the probability that the corresponding loan application belongs to a particular outcome class. In this chapter, the outcome variable is `loan_status`, which takes the values `approved` or `rejected`.
+
+Using Bayes’ theorem, the probability that an observation belongs to class $y$ given the observed predictors can be written as
+
+$$
+P(Y = y \mid X_1, \dots, X_p)
+=
+\frac{P(X_1, \dots, X_p \mid Y = y) P(Y = y)}
+{P(X_1, \dots, X_p)}.
+$$
+
+This expression combines two key components. The term $P(Y = y)$ represents the prior probability of class $y$, which reflects how common that outcome is in the population. The term $P(X_1, \dots, X_p \mid Y = y)$ represents the likelihood, which measures how probable the observed predictor values are if the observation truly belongs to class $y$. Together, these quantities determine the posterior probability $P(Y = y \mid X_1, \dots, X_p)$.
+
+In classification tasks, we typically compute this posterior probability for each possible class and then assign the observation to the class with the highest probability. This decision rule can be written as
+
+$$
+\hat{y}
+=
+\arg\max_{y}
+P(Y = y \mid X_1, \dots, X_p).
+$$
+
+In other words, the classifier predicts the class whose posterior probability is largest given the observed predictors.
+
+At first glance, applying Bayes’ theorem in this way may appear straightforward. However, a practical difficulty arises when the number of predictors is large. The likelihood term $P(X_1, \dots, X_p \mid Y = y)$ requires estimating a joint probability distribution over all predictors simultaneously. In many datasets, including the `loan` dataset used in this chapter, estimating such high-dimensional joint distributions directly is difficult because many combinations of predictor values occur rarely or may not appear in the training data at all.
+
+The Naive Bayes classifier addresses this challenge by introducing a simplifying assumption about the predictors. Instead of modeling their full joint distribution, the method assumes that predictors are conditionally independent given the class label. This assumption greatly simplifies the probability calculations and allows the classifier to scale efficiently to problems with many predictors. In the next section, we examine this assumption more closely and explain why it gives the method the name *Naive Bayes*.
 
 ## Why Is It Called “Naive”? {#sec-ch9-naive}
 
-When assessing a borrower’s financial risk using features such as income, mortgage status, and number of loans, it is reasonable to expect dependencies among them. For example, individuals with higher income may be more likely to have multiple loans or stable mortgage histories. However, Naive Bayes assumes that all features are conditionally independent given the class label (e.g., "good risk" or "bad risk").
+The label *naive* refers to the key simplifying assumption behind the classifier: it treats predictors as conditionally independent given the class label. This means that once the outcome is known, the model assumes that the predictors no longer provide information about one another. Although this assumption is rarely exactly true in real-world data, it makes the probability calculations much simpler and is the main reason the method is computationally efficient.
 
-This simplifying assumption is what gives the algorithm its name. While features in real-world data are often correlated, such as income and age, assuming independence significantly simplifies probability calculations, making the method both efficient and scalable.
+To see why this matters, consider again the `loan` dataset used later in the case study of this chapter (Section [-@sec-ch9-case-study]). It contains demographic and financial variables such as `education`, `self_employed`, `income_annum`, `loan_amount`, `loan_term`, `cibil_score`, and several asset-related measures. In practice, many of these predictors are likely to be related. Applicants with higher annual income may also hold more valuable assets, and credit score may be associated with loan amount or repayment capacity. Even so, Naive Bayes assumes that these predictors contribute separately to the classification once the outcome variable `loan_status` is known.
 
-To illustrate this, consider the `risk` dataset from the **liver** package:
-
-```{r}
-str(risk)
-```
-
-This dataset includes financial indicators such as age, income, marital status, mortgage, and number of loans. Naive Bayes assumes that, given a person’s risk classification, these features do not influence one another. Mathematically, the probability of a customer being in the `good risk` category given their attributes is expressed as:
-
+Suppose we want to estimate the probability that an application belongs to class $y_1$ given predictor values $X_1, \dots, X_{11}$. From Bayes’ theorem, we write
 $$
-P(Y = y_1 | X_1, \dots, X_5) = \frac{P(Y = y_1) \times P(X_1, \dots, X_5 | Y = y_1)}{P(X_1, \dots, X_5)}.
+P(Y = y_1 \mid X_1, \dots, X_{11})
+=
+\frac{P(Y = y_1) \times P(X_1, \dots, X_{11} \mid Y = y_1)}
+{P(X_1, \dots, X_{11})}.
 $$
 
-Mathematically, computing the full joint likelihood of all features given a class label is challenging. Directly computing $P(X_1, X_2, \dots, X_5 | Y = y_1)$ is computationally expensive, especially as the number of features grows. In datasets with hundreds or thousands of features, storing and calculating joint probabilities for all possible feature combinations becomes impractical.
+The main challenge lies in estimating the likelihood term $P(X_1, \dots, X_{11} \mid Y = y_1)$. When the number of predictors is large, directly estimating this full joint conditional distribution becomes difficult because many combinations of predictor values occur rarely or may not appear in the training data at all.
 
-The naive assumption of conditional independence simplifies this problem by expressing the joint probability as the product of individual probabilities:
-
+Naive Bayes simplifies this problem by assuming conditional independence, so that
 $$
-P(X_1, \dots, X_5 | Y = y_1) = P(X_1 | Y = y_1) \times \dots \times P(X_5 | Y = y_1).
-$$
-
-This transformation eliminates the need to compute complex joint probabilities, making the algorithm scalable even for high-dimensional data. Instead of handling an exponential number of feature combinations, Naive Bayes only requires computing simple conditional probabilities for each feature given the class label.
-
-In practice, the independence assumption is rarely true, as features often exhibit some degree of correlation. Nevertheless, Naive Bayes remains widely used in domains where feature dependencies are sufficiently weak to preserve classification accuracy, where interpretability and computational efficiency are prioritized over capturing complex relationships, and where minor violations of the independence assumption do not substantially degrade predictive performance.
-
-For example, in credit risk prediction, while income and mortgage status are likely correlated, treating them as independent still allows Naive Bayes to classify borrowers effectively. Similarly, in spam detection or text classification, where features (such as word occurrences) are often close to independent, the algorithm delivers fast and accurate predictions.
-
-By reducing complex joint probability estimation to simpler conditional calculations, Naive Bayes offers a scalable solution. In the next section, we address a key practical issue: how to handle zero-probability problems when certain feature values are absent in the training data.
-
-## The Laplace Smoothing Technique {#sec-ch9-laplace}
-
-One challenge in Naive Bayes classification is handling feature values that appear in the test data but are missing from the training data for a given class. For example, suppose no borrowers labeled as "bad risk" are married in the training data. If a married borrower later appears in the test set, Naive Bayes would assign a probability of zero to $P(\text{bad risk} | \text{married})$. Because the algorithm multiplies probabilities when making predictions, this single zero would eliminate the `bad risk` class from consideration, leading to a biased or incorrect prediction.
-
-This issue arises because Naive Bayes estimates conditional probabilities directly from frequency counts in the training set. If a category is absent for a class, its conditional probability becomes zero. To address this, *Laplace smoothing* (or *add-one smoothing*) is used. Named after Pierre-Simon Laplace, the technique assigns a small non-zero probability to every possible feature-class combination, even if some combinations do not appear in the data.
-
-To illustrate, consider the `marital` variable in the `risk` dataset. Suppose no customers labeled as `bad risk` are `married`. We can simulate this scenario:
-
-```{r, echo = FALSE}
-risk2 = risk[ (risk$marital != "married") | (risk$risk != "bad risk"), ]
-
-xtabs(~ marital + risk, data = risk2[c(1:10,100:190),])
-```
-
-Without smoothing, the conditional probability becomes:
-
-$$
-P(\text{bad risk} | \text{married}) = \frac{\text{count}(\text{bad risk} \cap \text{married})}{\text{count}(\text{married})} = \frac{0}{\text{count}(\text{married})} = 0.
+P(X_1, \dots, X_{11} \mid Y = y_1)
+=
+P(X_1 \mid Y = y_1) \times \cdots \times P(X_{11} \mid Y = y_1).
 $$
 
-This would cause every married borrower to be classified as `good risk`, regardless of other features.
+This factorization replaces one complex probability with a product of simpler conditional probabilities. As a result, the classifier becomes much easier to estimate and can be applied efficiently even when the number of predictors is large.
 
-Laplace smoothing resolves this by adjusting the count of each category. A small constant $k$ (typically $k = 1$) is added to each count, yielding: $$
-P(\text{bad risk} | \text{married}) = \frac{\text{count}(\text{bad risk} \cap \text{married}) + k}{\text{count}(\text{married}) + k \times \text{number of marital categories}}.
-$$
+Of course, this assumption is often unrealistic. In the `loan` dataset, variables such as `income_annum`, `residential_assets_value`, and `bank_asset_value` are likely to be related, even within the groups of approved and rejected applications. For this reason, the Naive Bayes model should not be understood as a perfect description of reality. Rather, it is a practical approximation that trades realism for simplicity and speed.
 
-This adjustment ensures that every possible feature-category pair has a non-zero probability, even if unobserved in the training set.
+Despite this simplification, Naive Bayes often performs surprisingly well in practice. When predictor dependencies are not too strong, or when a fast and interpretable baseline model is needed, the method can still provide useful predictions. This helps explain why Naive Bayes remains popular in applications such as text classification, spam detection, and credit-related decision-making.
 
-In R, you can apply Laplace smoothing using the `laplace` argument in the **naivebayes** package. By default, no smoothing is applied (`laplace = 0`). To apply smoothing, simply set `laplace = 1`:
-
-```{r}
-library(naivebayes)
-
-formula_nb = risk ~ age + income + marital + mortgage + nr_loans
-
-model <- naive_bayes(formula = formula_nb, data = risk, laplace = 1)
-```
-
-This adjustment improves model robustness, especially when working with limited or imbalanced data. Curious to see how the **naivebayes** package performs in practice? In the case study later in this chapter, we will walk through how to train and evaluate a Naive Bayes model using the `risk` dataset, complete with R code, predicted probabilities, and performance metrics.
-
-Laplace smoothing is a simple yet effective fix for the zero-probability problem in Naive Bayes. While $k = 1$ is a common default, the value can be tuned based on domain knowledge. By ensuring that all probabilities remain well-defined, Laplace smoothing makes Naive Bayes more reliable for real-world prediction tasks.
+The conditional independence assumption is therefore both the source of the method’s strength and its main limitation. It makes probabilistic classification manageable, but it may also reduce predictive accuracy when strong relationships among predictors are essential for distinguishing between classes. In the next section, we examine how this general framework is adapted to different types of predictors.
 
 ## Types of Naive Bayes Classifiers {#sec-ch9-types}
 
-What if your dataset includes text, binary flags, and numeric values? Can a single Naive Bayes model accommodate them all? Not exactly. Different types of features require different probabilistic assumptions, this is where distinct variants of the Naive Bayes classifier come into play. The choice of variant depends on the structure and distribution of the predictors in your data.
+Not all predictors behave in the same way. Some are binary, some are categorical with several levels, and others are continuous. As a result, applying Naive Bayes requires us to make distributional assumptions that match the nature of the predictors. This is why several variants of the Naive Bayes classifier have been developed. The three most common are Bernoulli Naive Bayes, Multinomial Naive Bayes, and Gaussian Naive Bayes.
 
-Each of the three most common types of Naive Bayes classifiers is suited to a specific kind of feature:
+*Bernoulli Naive Bayes* is designed for binary predictors that record the presence or absence of a characteristic. This variant is common in text classification when features indicate whether a word appears in a document, rather than how often it appears. In the `loan` dataset, a binary variable such as `self_employed` provides a simple example of the kind of predictor that fits this setting.
 
--   *Multinomial Naive Bayes* is designed for categorical or count-based features, such as word frequencies in text data. It models the probability of counts using a multinomial distribution. In the `risk` dataset, the `marital` variable, with levels such as `single`, `married`, and `other`, is an example where this variant is appropriate.
+*Multinomial Naive Bayes* is primarily used for count data, especially when predictors represent frequencies across categories. It is widely applied in text classification, where predictors record the number of times words appear in a document. This variant models the predictor vector using a multinomial distribution and is especially useful when counts, rather than simple presence or absence, carry meaningful information.
 
--   *Bernoulli Naive Bayes* is intended for binary features that capture the presence or absence of a characteristic. This approach is common in spam filtering, where features often indicate whether a particular word is present. In the `risk` dataset, the binary `mortgage` variable (`yes` or `no`) fits this model.
+*Gaussian Naive Bayes* is used for continuous predictors that are assumed to follow a normal distribution within each class. Instead of working with discrete counts or binary indicators, it models class-conditional feature values using Gaussian densities. In the `loan` dataset, variables such as `income_annum`, `loan_amount`, `cibil_score`, and the asset-related measures are examples of predictors that are naturally handled in this way.
 
--   *Gaussian Naive Bayes* is used for continuous features that are assumed to follow a normal distribution. It models feature likelihoods using Gaussian densities and is well suited for variables like `age` and `income` in the `risk` dataset.
+Choosing an appropriate variant helps align the probability model with the structure of the data. In practice, some software implementations can accommodate mixed predictor types by applying different assumptions to different variables within the same Naive Bayes framework. In this chapter, the **naivebayes** package allows us to work with the mix of categorical and continuous predictors in the `loan` dataset within a single modeling framework.
 
-Selecting the appropriate variant based on your feature types ensures that the underlying probability assumptions remain valid and that the model produces reliable predictions.
+The names *Bernoulli* and *Gaussian* refer to well-known probability distributions associated with Jacob Bernoulli and Carl Friedrich Gauss. These distributions provide the mathematical foundation for the corresponding Naive Bayes variants. In the next section, we examine a practical issue that can arise across Naive Bayes models: what happens when a predictor value is not observed in the training data for one of the classes.
 
-The names *Bernoulli* and *Gaussian* refer to foundational distributions introduced by two prominent mathematicians: *Jacob Bernoulli*, known for early work in probability theory, and *Carl Friedrich Gauss*, associated with the normal distribution. Their contributions form the statistical backbone of different Naive Bayes variants.
+## The Laplace Smoothing Technique {#sec-ch9-laplace}
 
-In the next section, we apply Naive Bayes to the `risk` dataset and explore how these variants operate in practice.
+A practical difficulty in Naive Bayes classification arises when a predictor value appears in the test data but was never observed in the training data for one of the classes. In that case, the estimated conditional probability of that predictor value within the class becomes zero. Because Naive Bayes multiplies conditional probabilities across predictors, a single zero is enough to force the entire product to zero, regardless of how strongly the remaining predictors support that class.
 
-## Case Study: Predicting Financial Risk with Naive Bayes
+This issue is known as the *zero-frequency problem*. It occurs because Naive Bayes often estimates conditional probabilities directly from observed counts in the training data. If a category is absent for a particular class, its estimated class-conditional probability is zero. To address this problem, we use *Laplace smoothing* (also called *add-one smoothing*). Named after Pierre-Simon Laplace, this technique assigns a small non-zero probability to every possible feature-class combination, even when some combinations are not observed in the training data.
 
-How can a bank determine whether a loan applicant is likely to repay a loan or default before making a lending decision? This question lies at the core of financial risk assessment, where each approval involves balancing potential profit against the risk of loss. Accurate predictions of creditworthiness support responsible lending, regulatory compliance, and effective risk management.
+To illustrate the idea, consider the variable `self_employed` in the `loan` dataset. Suppose that in a subset of the data, no rejected loan applications are associated with `self_employed = no`. For illustration, we can construct such a subset as follows:
 
-In this case study, we apply the *Data Science Workflow* introduced in Chapter [-@sec-ch2-intro-data-science] (@fig-ch2_DSW), moving systematically from problem formulation and data understanding to model training, evaluation, and interpretation. Using the `risk` dataset from the **liver** package in R, we build a Naive Bayes classifier to predict whether a customer should be classified as *good risk* or *bad risk*. By following the workflow step by step, this example illustrates how probabilistic classification models can inform credit decisions and support structured, data-driven risk assessment.
+```{r, echo = FALSE}
+subset_loan = loan[(loan$self_employed != "no") | (loan$loan_status != "rejected"), ]
+
+xtabs(~ loan_status + self_employed, data = subset_loan[c(1:10, 100:190), ])
+```
+
+Without smoothing, the estimated conditional probability is
+$$
+P(\text{no} \mid \text{rejected})
+= \frac{P(\text{no} \cap \text{rejected})}{P(\text{rejected})}
+= \frac{0}{35}
+= 0.
+$$
+Here, `no` refers to `self_employed = no`, and `rejected` refers to `loan_status = rejected`. If this zero enters the Naive Bayes calculation, the contribution of the `rejected` class becomes zero before the posterior probabilities are normalized. In effect, the model rules out the `rejected` class entirely for any observation with `self_employed = no`, even if the other predictor values strongly suggest rejection.
+
+Laplace smoothing avoids this problem by adding a small constant $k$ (typically $k = 1$) to each count. The smoothed estimate becomes
+$$
+P(\text{no} \mid \text{rejected})
+= \frac{\text{count}(\text{no} \cap \text{rejected}) + k}
+{\text{count}(\text{rejected}) + mk},
+$$
+where $m$ is the number of possible categories of `self_employed`. In this example, $m = 2$ because the variable has two categories: `yes` and `no`. This adjustment ensures that every feature value receives a non-zero probability within each class, even if it was not observed in the training data.
+
+In R, Laplace smoothing can be applied through the `laplace` argument in the **naivebayes** package, where `laplace = 1` corresponds to add-one smoothing. Although $k = 1$ is a common default, the smoothing value can be adjusted if needed. By preventing zero probabilities, Laplace smoothing makes the classifier more stable and reliable in practice, especially when some classes are small or certain predictor values are rare. With these building blocks in place, we are now ready to apply Naive Bayes to a complete classification problem using the `loan` dataset.
+
+## Case Study: Predicting Loan Approval with Naive Bayes {#sec-ch9-case-study}
+
+How can a bank decide whether to approve or reject a loan application before extending credit? This question lies at the core of financial risk assessment, where each lending decision involves balancing business opportunity against the risk of loss. Accurate predictions can support more consistent decision-making, responsible lending, and effective risk management.
+
+In this case study, we apply the Naive Bayes classifier to predict whether a loan application will be `approved` or `rejected` using the `loan` dataset from the **liver** package in R. The dataset contains financial and demographic variables commonly used in lending decisions, making it a suitable setting for illustrating probability-based classification in practice.
+
+We follow the *Data Science Workflow* introduced in Chapter [-@sec-ch2-intro-data-science] and illustrated in @fig-ch2_DSW. The analysis also builds on the data setup for modeling discussed in Chapter [-@sec-ch7-classification-knn] and the evaluation tools introduced in Chapter [-@sec-ch8-evaluation]. By moving step by step from problem understanding and data understanding to model training, evaluation, and interpretation, this case study shows how Naive Bayes can support systematic and data-driven loan approval decisions.
 
 ### Problem Understanding {.unnumbered .unlisted}
 
-How can financial institutions assess whether a loan applicant is likely to repay a loan or default before extending credit? This question lies at the core of financial risk assessment, where institutions must balance profitability with caution. Demographic and financial indicators are routinely used to estimate default risk and to support informed lending decisions.
+Loan approval is a high-stakes decision for financial institutions. Approving an application that later turns out to be risky can lead to financial loss, while rejecting an application that could have been safely approved may result in missed business opportunities and reduced access to credit for potentially reliable borrowers. For this reason, lending decisions must balance caution with fairness and consistency.
 
-This case study builds on earlier chapters. In Chapter [-@sec-ch7-classification-knn], we introduced classification using instance-based methods, and in Chapter [-@sec-ch8-evaluation], we examined how to assess classification performance. We now extend these foundations by applying a probabilistic classification approach, Naive Bayes, which estimates the likelihood of each risk category rather than producing only hard class labels.
+In practice, banks rely on information available at the time of application, such as education, employment status, income, credit score, loan amount, and asset values, to assess whether an application should be `approved` or `rejected`. This makes loan approval a natural binary classification problem, where the goal is to use observed applicant characteristics to predict the likely decision outcome.
 
-The analysis focuses on identifying which demographic and financial characteristics are associated with customer risk profiles and on determining how applicants can be classified as *good risk* or *bad risk* prior to a lending decision. By producing probability-based predictions, the model can support more effective and transparent lending strategies, allowing decision thresholds to be adjusted in line with institutional priorities and risk tolerance.
-
-Using the `risk` dataset, our objective is to develop a model that classifies customers according to their likelihood of default. The resulting probability estimates can inform data-driven credit scoring, support responsible lending practices, and help reduce non-performing loans.
+Our objective is to develop a Naive Bayes model that predicts whether a loan application will be `approved` or `rejected` using the variables available in the `loan` dataset. In addition to producing class labels, the model estimates the probability of each outcome. These probability-based predictions are especially valuable in lending because they allow decisions to be adjusted to institutional priorities, such as being more cautious in risky cases or more inclusive when uncertainty is lower.
 
 ### Data Understanding {.unnumbered .unlisted}
 
-Before training the Naive Bayes classifier, we briefly examine the dataset to understand the role of each variable and to verify that the data are suitable for modeling. At this stage, the focus is not on extensive exploratory analysis, but on confirming the structure, variable types, and basic data quality. As introduced earlier in Section [-@sec-ch9-naive], the `risk` dataset from the **liver** package contains financial and demographic information used to assess whether a customer should be classified as *good risk* or *bad risk*. The dataset includes `r nrow(risk)` observations and `r ncol(risk)` variables, comprising both predictors and a binary outcome. The variables used in this analysis are:
+Before training the Naive Bayes classifier, we briefly examine the data to understand its structure and confirm that it is suitable for modeling. At this stage, the goal is not to conduct a full exploratory analysis, but rather to identify the variables available for prediction, verify their types, and check for basic data-quality issues. The dataset contains `r nrow(loan)` observations and `r ncol(loan)` variables, including one outcome variable and multiple predictors.
 
--   `age`: customer age in years;
--   `marital`: marital status (`single`, `married`, `other`);
--   `income`: annual income;
--   `mortgage`: mortgage status (`yes`, `no`);
--   `nr_loans`: number of loans held by the customer;
--   `risk`: target variable indicating whether the customer is classified as *good risk* or *bad risk*.
-
-To obtain a concise overview of the data and to check for missing values or obvious anomalies, we examine the summary statistics:
+To inspect the structure of the dataset and the variable types, we begin with:
 
 ```{r}
-summary(risk)
+str(loan)
 ```
 
-The summary confirms that the dataset is clean and well structured, with no missing values or irregular entries. This allows us to proceed directly to data setup and model training without additional preprocessing steps.
+The `loan` dataset contains financial and demographic information relevant to loan approval decisions. Because it combines categorical and continuous predictors in a binary classification setting, it provides a useful example for illustrating how Naive Bayes can be applied to lending-related problems. The dataset also includes `loan_id`, which serves only as an identifier and is therefore excluded from the analysis.
+
+The predictors used in this analysis are `no_of_dependents` (number of dependents), `education` (education level), `self_employed` (whether the applicant is self-employed), `income_annum` (annual income), `loan_amount` (requested loan amount), `loan_term` (loan duration), `cibil_score` (credit score), `residential_assets_value` (value of residential assets), `commercial_assets_value` (value of commercial assets), `luxury_assets_value` (value of luxury assets), and `bank_asset_value` (value of bank-held assets). The outcome variable is `loan_status`, which indicates whether an application was `approved` or `rejected`.
+
+To obtain a concise numerical overview and check for missing values or obvious anomalies, we then examine the summary statistics:
+
+```{r} 
+summary(loan)
+```
+
+> *Practice:* Inspect the output of `summary(loan)` and identify which variables are categorical and which are numerical. Which predictors appear to have especially wide ranges, and how might that matter for other classification methods such as kNN?
+
+These outputs indicate that the dataset is well structured and suitable for modeling. No obvious missing-value problems or major irregularities are visible in the variables used here, so we proceed to data setup and model training without additional preprocessing.
 
 ### Data Setup for Modeling {.unnumbered .unlisted}
 
-Before training the Naive Bayes classifier, we partition the dataset into training and test sets in order to evaluate how well the model generalizes to unseen data. We use an 80/20 split, allocating 80% of the observations to training and 20% to testing. To remain consistent with earlier chapters, the partitioning is performed using the `partition()` function from the **liver** package:
+Before training the Naive Bayes classifier, we partition the dataset into training and test sets so that we can evaluate how well the model generalizes to unseen data. We use an 80/20 split, with 80% of the observations assigned to the training set and 20% to the test set. To remain consistent with earlier chapters, we use the `partition()` function from the **liver** package:
 
 ```{r}
-set.seed(5)
+set.seed(42)
 
-splits = partition(data = risk, ratio = c(0.8, 0.2))
+splits = partition(data = loan, ratio = c(0.8, 0.2))
 
 train_set = splits$part1
 test_set  = splits$part2
 
-test_labels = test_set$risk
+test_labels = test_set$loan_status
 ```
 
-Setting `set.seed(5)` ensures reproducibility so that the same partition is obtained each time the code is run. The training set is used to estimate the Naive Bayes model, while the test set serves as unseen data for evaluating predictive performance. The vector `test_labels` contains the true class labels for the test observations.
+Setting `set.seed(42)` ensures that the same random partition is obtained each time the code is run. The training set is used to estimate the Naive Bayes model, while the test set is reserved for evaluating predictive performance on unseen data. The vector `test_labels` stores the true class labels for the observations in the test set.
 
-As discussed in Section [-@sec-ch6-cross-validation], it is important to verify that the training and test sets are representative of the original data. Here, we illustrate this step by comparing the distribution of the predictor `marital` across the two sets. As an exercise, you are encouraged to perform the same validation using the target variable `risk`. To assess representativeness, we apply a chi-squared test to compare the distribution of marital statuses (`single`, `married`, `other`) in the training and test sets:
+As discussed in Section [-@sec-ch6-cross-validation], it is good practice to check whether the training and test sets remain reasonably comparable after partitioning, especially with respect to the outcome variable. In this chapter, we proceed directly to modeling, but this validation step is recommended in applied work.
 
-```{r}
-chisq.test(x = table(train_set$marital), y = table(test_set$marital))
-```
+> *Practice:* Verify whether the class distribution of `loan_status` remains similar across the training and test sets. You may do this by comparing the proportion of approved applications in the two sets using a two-sample proportion test.
 
-Since the resulting *p*-value exceeds $\alpha = 0.05$, we do not reject the null hypothesis that the distributions are equal. This indicates that the partition preserves the structure of the original dataset with respect to this predictor.
-
-> *Practice:* Repartition the `risk` dataset into a 70% training set and a 30% test set, following the approach used in this subsection. Validate the partition by checking that the class distribution of the target variable `risk` is preserved across both sets.
-
-Unlike distance-based methods such as k-nearest neighbors, the Naive Bayes classifier does not rely on geometric distance calculations. As a result, there is no need to scale numerical variables such as `age` or `income`, nor to encode categorical variables like `marital` as dummy variables. Naive Bayes models probability distributions directly, allowing it to handle mixed variable types without additional transformation. In contrast, applying kNN to this dataset (see Chapter [-@sec-ch7-classification-knn]) would require both feature scaling and categorical encoding. This comparison highlights how data preparation must be tailored to the assumptions of the chosen modeling technique.
+Unlike distance-based methods such as *k*-Nearest Neighbors, Naive Bayes does not rely on geometric distance calculations. As a result, there is no need to scale numerical variables such as `income_annum`, `loan_amount`, or `cibil_score`, nor is it necessary to convert categorical variables such as `education` and `self_employed` into dummy variables. Naive Bayes models class-conditional distributions directly and can therefore handle mixed predictor types without these additional transformations. This contrasts with methods such as kNN, for which scaling and encoding are essential parts of data preparation.
 
 ### Applying the Naive Bayes Classifier {.unnumbered .unlisted}
 
-With the dataset partitioned and validated, we now proceed to train and evaluate the Naive Bayes classifier. This model is well suited to credit risk assessment because it is computationally efficient, interpretable, and capable of handling a mix of numerical and categorical predictors.
+With the dataset partitioned, we now train the Naive Bayes classifier. This model is well suited to loan approval classification because it is computationally efficient, interpretable, and able to handle a mix of categorical and numerical predictors.
 
-Several R packages implement Naive Bayes, including **naivebayes** and **e1071**. In this case study, we use the **naivebayes** package, which provides a flexible implementation that automatically adapts to different predictor types. During training, the `naive_bayes()` function estimates class-conditional probability distributions and stores them in a model object.
+Several R packages implement Naive Bayes, including **naivebayes** and **e1071**. In this case study, we use the **naivebayes** package, which provides a flexible implementation for classification with mixed predictor types. During training, the `naive_bayes()` function estimates the class-conditional distributions required for prediction and stores the results in a model object.
 
-Unlike instance-based methods such as k-nearest neighbors (see Chapter [-@sec-ch7-classification-knn]), Naive Bayes involves an explicit training phase followed by a prediction phase. During training, the model estimates probability distributions for each predictor conditional on the class label. During prediction, these estimates are combined using Bayes’ theorem to compute posterior class probabilities for new observations.
+Unlike instance-based methods such as *k*-Nearest Neighbors (see Chapter [-@sec-ch7-classification-knn]), Naive Bayes has an explicit training stage followed by a prediction stage. During training, the model estimates the distribution of each predictor within each class. During prediction, these estimates are combined using Bayes’ theorem to compute posterior class probabilities for new observations.
 
-To train the model, we specify a formula in which `risk` is the target variable and the remaining variables serve as predictors:
+To train the model, we specify a formula in which `loan_status` is the outcome variable and the remaining variables serve as predictors:
 
 ```{r}
-formula = risk ~ age + income + mortgage + nr_loans + marital
+formula = loan_status ~ no_of_dependents + education + self_employed + income_annum + loan_amount + loan_term + cibil_score + residential_assets_value + commercial_assets_value + luxury_assets_value + bank_asset_value
 ```
 
 We then fit the model using the `naive_bayes()` function:
@@ -328,25 +320,23 @@ library(naivebayes)
 nb_model = naive_bayes(formula, data = train_set)
 ```
 
-The function automatically identifies the type of each predictor and estimates appropriate class-conditional distributions. Categorical variables such as `marital` and `mortgage` are modeled using class-conditional probabilities, while numerical variables such as `age`, `income`, and `nr_loans` are modeled using Gaussian distributions by default.
+The function automatically determines how to model each predictor based on its type. Categorical variables such as `education` and `self_employed` are represented through class-conditional probabilities, whereas numerical variables such as `income_annum`, `loan_amount`, `cibil_score`, and the asset-related variables are modeled using Gaussian distributions by default.
 
-To inspect the learned parameters, we can examine a summary of the fitted model:
+To inspect the fitted model, we can examine a summary of its estimated parameters:
 
 ```{r}
 summary(nb_model)
 ```
 
-This output reports the estimated means and standard deviations for numerical predictors, along with the conditional probabilities for categorical predictors. These quantities form the basis for the posterior probability calculations used in classification. For a more detailed view of the estimated distributions for each predictor, the full model object can be displayed using `print(nb_model)`. We do not reproduce this output here for brevity, as it can be quite extensive.
+This output reports the estimated means and standard deviations for numerical predictors, together with the conditional probabilities for categorical predictors. These estimates form the basis of the posterior probability calculations used for classification. For a more detailed view, we can print the full model object using `print(nb_model)`, although the resulting output can be quite extensive.
 
-Note that `nr_loans` is a count variable with values such as 0, 1, and 3. Although the default Gaussian assumption is often adequate, it may be informative to explore the alternative `usepoisson = TRUE` option and assess whether a Poisson distribution provides a better fit. As an exercise, you are encouraged to compare model performance under these two assumptions.
-
-> *Practice:* Using a 70%–30% train–test split, fit a Naive Bayes classifier by following the approach used in this subsection. Inspect the fitted model using the `print()` function and compare the estimated distributions with those obtained from the 80%–20% split. What differences, if any, do you observe?
+> *Practice:* Split the `loan` dataset into 70% training data and 30% test data, then fit a Naive Bayes classifier following the same steps as in this subsection. Inspect the fitted model using `print(nb_model)` and compare the estimated distributions with those obtained from the 80%–20% split. What differences, if any, do you observe?
 
 ### Prediction and Model Evaluation {.unnumbered .unlisted}
 
-With the Naive Bayes classifier trained, we now evaluate its performance by applying it to the test set, which contains previously unseen observations. The primary objective at this stage is to examine the model’s predicted class probabilities and compare them with the true outcomes stored in `test_labels`.
+With the Naive Bayes classifier trained, we now apply it to the test set and evaluate its predictive performance. We begin by examining the predicted class probabilities returned by the model and then assess classification quality using two complementary approaches: a confusion matrix at a fixed threshold and threshold-independent evaluation based on the ROC curve and AUC.
 
-To obtain posterior probabilities for each class, we use the `predict()` function from the **naivebayes** package, specifying `type = "prob"` so that the model returns probabilities rather than hard class assignments:
+To obtain posterior probabilities for each class, we use the `predict()` function from the **naivebayes** package and set `type = "prob"` so that the model returns probabilities rather than hard class assignments:
 
 ```{r}
 prob_naive_bayes = predict(nb_model, test_set, type = "prob")
@@ -358,37 +348,38 @@ To inspect the output, we display the first six rows and round the probabilities
 round(head(prob_naive_bayes, n = 6), 3)
 ```
 
-The resulting matrix contains one column per class. The first column reports the estimated probability that a customer belongs to the "`good risk`" class, while the second reports the probability of being classified as "`bad risk`". These probabilities quantify the model’s uncertainty and provide more information than a single class label. For example, a high predicted probability for "`bad risk`" indicates a greater estimated likelihood of default.
+The resulting matrix contains one column for each possible outcome. The first column reports the estimated probability of `approved`, and the second reports the probability of `rejected`. These probabilities provide more information than a single predicted label because they indicate how strongly the model favors one class over the other. For example, an application with a very high predicted probability of `rejected` is classified with greater confidence than one with probabilities close to 0.5.
 
-> *Practice:* Inspect the predicted probabilities in `prob_naive_bayes`. Identify one customer who is assigned a high probability of being classified as "`bad risk`" and one customer with a probability close to 0.5. How would your confidence in the classification differ in these two cases, and why?
+> *Practice:* Inspect the predicted probabilities in `prob_naive_bayes`. Identify one application that is assigned a high probability of `rejected` and one application with a predicted probability close to 0.5. How would your confidence in the classification differ in these two cases, and why?
 
-Importantly, Naive Bayes does not require a fixed decision threshold. Instead, posterior probabilities can be translated into class predictions using a threshold chosen to reflect specific business objectives, such as prioritizing the detection of high-risk customers. In the next subsection, we convert these probabilities into class labels and evaluate model performance using a confusion matrix and additional metrics introduced in Chapter [-@sec-ch8-evaluation].
+Importantly, Naive Bayes does not require a fixed decision threshold. Instead, posterior probabilities can be converted into class predictions using a threshold chosen to reflect specific practical goals, such as being more cautious when rejecting applications or more inclusive when approving them. In the next subsection, we translate these probabilities into class labels and evaluate model performance using a confusion matrix and additional metrics introduced in Chapter [-@sec-ch8-evaluation].
 
 #### Confusion Matrix {.unnumbered .unlisted}
 
 To evaluate the classification performance of the Naive Bayes model, we compute a confusion matrix using the `conf.mat()` and `conf.mat.plot()` functions from the **liver** package:
 
 ```{r, out.width = "30%"}
-# Extract probability of "good risk"
-prob_naive_bayes = prob_naive_bayes[, "good risk"] 
+# Extract probability of "approved"
+prob_naive_bayes = prob_naive_bayes[, "approved"] 
 
-conf.mat(prob_naive_bayes, test_labels, cutoff = 0.5, reference = "good risk")
+conf.mat(prob_naive_bayes, test_labels, cutoff = 0.5, reference = "approved")
 
-conf.mat.plot(prob_naive_bayes, test_labels, cutoff = 0.5, reference = "good risk")
+conf.mat.plot(prob_naive_bayes, test_labels, cutoff = 0.5, reference = "approved")
 ```
 
-Here, we apply a decision threshold of 0.5, classifying an observation as "`good risk`" if its predicted probability for that class exceeds 50%. This threshold is a modeling choice rather than a property of the algorithm itself. The reference class is set to "`good risk`", meaning that performance measures such as sensitivity and precision are computed with respect to correctly identifying customers in this category.
+Here, we use a decision threshold of 0.5, classifying an application as `approved` if its predicted probability of approval exceeds 50%. This threshold is a modeling choice rather than a fixed property of the algorithm. The reference class is set to `approved`, meaning that performance measures such as sensitivity and precision are computed with respect to correctly identifying approved applications.
 
-The confusion matrix summarizes the model’s predictions against the observed outcomes, distinguishing between correct classifications and different types of errors. For illustration, the matrix may show that a certain number of customers are correctly classified as "`good risk`" or "`bad risk`", while others are misclassified. Examining these patterns helps identify whether the model tends to make false approvals or false rejections, which is particularly important in credit risk applications.
+The confusion matrix compares the predicted class labels with the observed outcomes, separating correct classifications from different types of errors. In this setting, the matrix shows how often the model correctly identifies approved and rejected applications, as well as how often it makes false approvals or false rejections. These distinctions are important in lending, because the practical consequences of approving a risky application differ from those of rejecting an application that might otherwise have been accepted.
 
 > *Practice:* Explore how changing the classification threshold affects model performance. Repeat the analysis using cutoff values such as 0.4 and 0.6, and examine how sensitivity, specificity, and overall accuracy change. What trade-offs emerge as the threshold is adjusted?
 
 #### ROC Curve and AUC {.unnumbered .unlisted}
 
-To complement the confusion matrix, we evaluate the Naive Bayes classifier using the *Receiver Operating Characteristic (ROC) curve* and the *Area Under the Curve (AUC)*. Unlike the confusion matrix, which summarizes performance at a single decision threshold, ROC analysis assesses model performance across all possible thresholds and therefore provides a threshold-independent perspective.
+To complement the confusion matrix, we evaluate the Naive Bayes classifier using the *Receiver Operating Characteristic (ROC) curve* and the *Area Under the Curve (AUC)*. Unlike the confusion matrix, which summarizes performance at a single decision threshold, ROC analysis evaluates model performance across all possible thresholds and therefore provides a threshold-independent perspective.
 
 ```{r}
 library(pROC)
+library(ggplot2)
 
 roc_naive_bayes = roc(test_labels, prob_naive_bayes)
 
@@ -396,7 +387,7 @@ ggroc(roc_naive_bayes, size = 1) +
     ggtitle("ROC Curve for Naive Bayes")
 ```
 
-The ROC curve plots the *true positive rate* (sensitivity) against the *false positive rate* (1 − specificity) as the classification threshold varies. Curves that bend closer to the top-left corner indicate stronger discriminative ability, reflecting high sensitivity combined with a low false positive rate.
+The ROC curve plots the *true positive rate* (sensitivity) against the *false positive rate* ($1 -$ specificity) as the classification threshold varies. Curves that bend closer to the top-left corner indicate stronger discriminative ability, reflecting high sensitivity combined with a low false positive rate.
 
 To summarize this information in a single number, we compute the AUC:
 
@@ -404,21 +395,31 @@ To summarize this information in a single number, we compute the AUC:
 round(auc(roc_naive_bayes), 3)
 ```
 
-The AUC value, `r round(auc(roc_naive_bayes), 3)`, measures the model’s ability to distinguish between the two classes. It can be interpreted as the probability that a randomly selected "`good risk`" customer receives a higher predicted probability than a randomly selected "`bad risk`" customer. An AUC of 1 corresponds to perfect discrimination, whereas an AUC of 0.5 indicates performance no better than random guessing.
+The AUC value, `r round(auc(roc_naive_bayes), 3)`, measures the model’s ability to distinguish between approved and rejected applications. It can be interpreted as the probability that a randomly selected approved application receives a higher predicted probability of approval than a randomly selected rejected application. An AUC of 1 corresponds to perfect discrimination, whereas an AUC of 0.5 indicates performance no better than random guessing.
 
-Taken together, the ROC curve and AUC provide a concise and threshold-independent assessment of classification performance. In the final section of this case study, we reflect on the practical strengths and limitations of the Naive Bayes model in the context of credit risk assessment.
+Taken together, the ROC curve and AUC provide a concise and threshold-independent assessment of classification performance. They are especially useful when we want to compare classifiers or evaluate predictive quality without committing to a single cutoff value.
 
 > *Practice:* Using a 70%–30% train–test split, refit the Naive Bayes classifier and report the corresponding ROC curve and AUC value. How do these results compare with those obtained using the 80%–20% split? Briefly comment on any differences you observe.
 
-## Chapter Summary and Takeaways 
 
-This chapter introduced the Naive Bayes classifier as an efficient and interpretable approach to probabilistic classification. Grounded in Bayes’ theorem, the method estimates the probability that an observation belongs to a given class under the assumption of conditional independence among predictors. Although this assumption rarely holds exactly, Naive Bayes often performs well in practice, particularly in high-dimensional settings.
 
-We examined three common variants, multinomial, Bernoulli, and Gaussian, each tailored to different types of data. Through a case study using the `risk` dataset, we applied Naive Bayes in R, evaluated its performance using confusion matrices, ROC curves, and AUC, and interpreted predicted probabilities to support threshold-based decision-making.
 
-Overall, Naive Bayes frames classification as a probabilistic decision problem rather than a purely categorical one. Its conditional independence assumption represents a deliberate trade-off, sacrificing modeling flexibility in exchange for interpretability and computational efficiency. As the case study demonstrated, the practical usefulness of the model depends not only on predictive accuracy, but also on how probability thresholds are chosen to reflect domain-specific costs and decision objectives.
 
-While this chapter focused on a generative probabilistic classifier, the next chapter introduces *logistic regression*, a discriminative linear model that directly models the log-odds of class membership. Logistic regression provides a complementary perspective, particularly when understanding predictor effects and interpreting model coefficients are central to the analysis.
+
+
+
+
+## Chapter Summary and Takeaways
+
+This chapter introduced the Naive Bayes classifier as an efficient and interpretable approach to probabilistic classification. Grounded in Bayes’ theorem, the method estimates the probability that an observation belongs to a given class by combining prior information with observed predictor values. We first examined the probabilistic foundation of the method through Bayes’ theorem and then showed how this idea leads naturally to a practical classification rule based on posterior probabilities.
+
+We then explained the simplifying assumption that gives Naive Bayes its name: predictors are treated as conditionally independent given the outcome. Although this assumption rarely holds exactly in practice, it greatly reduces computational complexity and often yields useful predictive performance. We also examined three common variants of the method, Bernoulli, Multinomial, and Gaussian Naive Bayes, each suited to different types of predictors, and discussed how Laplace smoothing helps prevent zero probabilities when feature values are rare or absent in the training data.
+
+Through a case study using the `loan` dataset from the **liver** package, we applied Naive Bayes in R to predict whether a loan application would be `approved` or `rejected`. We trained the model, generated predicted probabilities, evaluated performance using confusion matrices, ROC curves, and AUC, and interpreted the results in the context of threshold-based decision-making.
+
+A key takeaway from this chapter is that Naive Bayes treats classification as a probabilistic decision problem rather than a purely categorical one. Its conditional independence assumption represents a deliberate trade-off: the model sacrifices flexibility in order to gain computational efficiency, simplicity, and interpretability. As the case study showed, the practical value of Naive Bayes depends not only on predictive performance, but also on how probability thresholds are chosen to reflect the goals and costs of the application domain.
+
+The next chapter introduces *logistic regression*, a discriminative model that approaches classification from a different perspective. Instead of modeling class probabilities through conditional distributions of the predictors, logistic regression models the log-odds of class membership directly. This provides a useful complement to Naive Bayes, particularly when the effects of individual predictors and the interpretation of model coefficients are of central interest.
 
 ## Exercises {#sec-ch9-exercises}
 
@@ -518,7 +519,7 @@ The `churn` dataset from the **liver** package contains 10,127 customer records 
 
 36. Inspect the structure and summary statistics. Identify the target variable (`churn`) and main predictors.
 
-37. Partition the data into 80% training and 20% test sets using `partition()` from **liver**. Use `set.seed(9)` for reproducibility.
+37. Partition the data into 80% training and 20% test sets using `partition()` from **liver**. 
 
 38. Verify that the class distribution of `churn` is consistent between the training and test sets.
 

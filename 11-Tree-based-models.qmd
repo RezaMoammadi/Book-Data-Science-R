@@ -28,17 +28,19 @@ Decision trees are used across diverse domains, including medical diagnosis, fra
 
 In Chapter [-@sec-ch10-regression], we focused on regression models for continuous outcomes. We now turn to *tree-based models*, which provide a unified framework for both *classification* and *regression*. Trees can predict categorical outcomes such as churn or default, as well as continuous outcomes such as house prices or sales revenue. Because they can capture nonlinear relationships and interactions without requiring an explicit functional form, tree-based models offer a flexible and widely used approach to supervised learning.
 
-Figure [-@fig-ch11-simple-tree] illustrates a classification tree trained on the `risk` dataset introduced in Chapter [-@sec-ch9-bayes]. The model predicts whether a customer is classified as a “good” or “bad” credit risk based on features such as `age` and `income`. Internal nodes represent splitting rules, and terminal nodes (leaves) provide the predicted class together with class probabilities.
+Figure [-@fig-ch11-simple-tree] illustrates a classification tree trained on the `loan` dataset introduced in Chapter [-@sec-ch9-bayes]. The model predicts whether a loan application would be `approved` or `rejected` based on features such as `cibil_score`, `loan_term`, `loan_amount`, and `income_annum`. Internal nodes represent splitting rules, and terminal nodes (leaves) provide the predicted class together with class probabilities.
 
 ```{r}
 #| label: fig-ch11-simple-tree
 #| echo: false
-#| out.width: "65%"
-#| fig-cap: A classification tree built using the CART algorithm on the risk dataset to predict credit risk based on age and income. Terminal nodes display predicted class and class probabilities, illustrating CART’s rule-based structure.
+#| out.width: "100%"
+#| fig-cap: A classification tree built using the CART algorithm on the loan dataset to predict whether a loan application would be approved or rejected based on features such as cibil_score, loan_term, loan_amount, and income_annum. Terminal nodes display predicted class and class probabilities, illustrating CART’s rule-based structure.
 
-data(risk)
-formula = risk ~ age + income + mortgage + nr_loans + marital
-tree.cart = rpart(formula, data = risk, method = "class")
+data(loan)
+
+formula = loan_status ~ no_of_dependents + education + self_employed + income_annum + loan_amount + loan_term + cibil_score + residential_assets_value + commercial_assets_value + luxury_assets_value + bank_asset_value
+
+tree.cart = rpart(formula, data = loan, method = "class")
 rpart.plot(tree.cart, type = 4, extra = 104)
 ```
 
@@ -149,26 +151,6 @@ H_S(T) = \sum_{i=1}^c \frac{|T_i|}{|T|} \times Entropy(T_i),
 $$ where $T$ denotes the original dataset and $T_1, \dots, T_c$ are the subsets created by split $S$. The information gain associated with the split is then given by $$
 gain(S) = H(T) - H_S(T).
 $$ C5.0 evaluates all candidate splits and selects the one that maximizes information gain, thereby producing child nodes that are more homogeneous than the parent node.
-
-### A Simple C5.0 Example {.unnumbered .unlisted}
-
-To demonstrate how C5.0 constructs decision trees, we apply the algorithm to the `risk` dataset, which classifies customer credit risk as good or bad based on predictors such as `age` and `income`. Figure [-@fig-ch11-tree-C50] displays the decision tree produced by the `C5.0()` function from the C50 package in R.
-
-```{r fig-ch11-tree-C50, echo = FALSE, out.width = "90%", fig.cap = "C5.0 decision tree trained on the `risk` dataset. Unlike CART, this tree allows multi-way splits and uses entropy-based splitting criteria to classify credit risk."}
-#| fig-width: 9
-#| fig-height: 12
-
-formula = risk ~ age + income
-
-C50_fit = C5.0(formula, data = risk)
-
-par(mar = c(0, 0, 0, 0))
-plot(C50_fit)
-```
-
-Compared with the CART tree shown in Figure [-@fig-ch11-simple-tree], this model illustrates several distinguishing features of C5.0. In particular, the use of multi-way splits allows categorical predictors to be partitioned more efficiently, often resulting in shallower tree structures. These more compact trees can improve interpretability while maintaining competitive predictive performance.
-
-> *Practice:* In Figure [-@fig-ch11-simple-tree], focus on the third terminal node from the right. Which decision rules define this leaf, and how should its predicted class and class probability be interpreted?
 
 ### Advantages and Limitations {.unnumbered .unlisted}
 
@@ -282,7 +264,7 @@ With the data cleaned and categorical variables simplified, we proceed to set up
 To assess how well the models generalize to new data, the dataset is partitioned into a training set (80%) and a test set (20%). The training set is used for model fitting, while the test set serves as an independent holdout sample for performance evaluation. As in earlier chapters, we perform this split using the `partition()` function from the **liver** package:
 
 ```{r}
-set.seed(6)
+set.seed(42)
 
 splits = partition(data = adult, ratio = c(0.8, 0.2))
 
