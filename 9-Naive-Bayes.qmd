@@ -21,7 +21,7 @@ The measure of belief is the measure of action.
 :::
 ::::
 :::::
- 
+
 How can we make predictions quickly while still accounting for uncertainty in a principled way? Consider a bank that must decide whether to approve a loan application based on information such as education, employment status, income, credit score, and asset values. Decisions of this kind must often be made quickly and consistently, yet they also carry financial consequences. The Naive Bayes classifier provides a simple probabilistic framework for such decisions by estimating class probabilities from observed predictor values.
 
 This chapter introduces Naive Bayes, a probabilistic classifier grounded in Bayes’ theorem. Rather than relying on similarity or distance to nearby observations, Naive Bayes predicts class membership by estimating the probability of each class given the observed predictor values. This probability-based perspective is especially useful when uncertainty must be quantified and when classification thresholds must be adjusted to reflect practical goals. In this sense, Naive Bayes provides a useful complement to the *k*-Nearest Neighbors (kNN) method introduced in Chapter [-@sec-ch7-classification-knn] and can be evaluated using the same tools discussed in Chapter [-@sec-ch8-evaluation], including confusion matrices, ROC curves, and AUC.
@@ -64,8 +64,7 @@ Bayes’ theorem therefore provides a general framework for learning from data u
 
 ### The Essence of Bayes’ Theorem {.unnumbered .unlisted}
 
-The conceptual idea of Bayesian updating was introduced in Figure [-@fig-bayes-theorem]: we begin with prior beliefs, combine them with observed data through the likelihood, and obtain an updated posterior belief. We now express this same idea mathematically through Bayes’ theorem:
-\begin{equation}
+The conceptual idea of Bayesian updating was introduced in Figure [-@fig-bayes-theorem]: we begin with prior beliefs, combine them with observed data through the likelihood, and obtain an updated posterior belief. We now express this same idea mathematically through Bayes’ theorem: \begin{equation}
 \label{eq-bayes-theorem}
 P(A \mid B) = \frac{P(A \cap B)}{P(B)}.
 \end{equation}
@@ -78,8 +77,7 @@ To clarify these components, Figure [-@fig-venn-diagram] presents a visual inter
 knitr::include_graphics("images/ch9_Venn-diagram_probabilities.png")
 ```
 
-Bayes’ theorem can also be written in a form that is especially useful for classification. Since the joint probability can be expressed as $P(A \cap B) = P(B \mid A)P(A)$, we obtain:
-\begin{equation}
+Bayes’ theorem can also be written in a form that is especially useful for classification. Since the joint probability can be expressed as $P(A \cap B) = P(B \mid A)P(A)$, we obtain: \begin{equation}
 \label{eq-bayes-theorem-2}
 P(A \mid B) = \frac{P(B \mid A)P(A)}{P(B)}.
 \end{equation}
@@ -100,15 +98,13 @@ addmargins(xtabs(~ loan_status + education, data = loan))
 table_l_e = addmargins(xtabs(~ loan_status + education, data = loan))
 ```
 
-Let $A$ denote the event that a loan application is `approved`, and let $B$ denote the event that the applicant has `education = graduate`. The prior probability that a loan application is approved is:
-$$
+Let $A$ denote the event that a loan application is `approved`, and let $B$ denote the event that the applicant has `education = graduate`. The prior probability that a loan application is approved is: $$
 P(A) = P(\text{approved}) = \frac{\text{Total approved applications}}{\text{Total applications}}
 = \frac{`r table_l_e[1, 3]`}{`r table_l_e[3, 3]`}
 = `r round(table_l_e[1, 3] / table_l_e[3, 3], 3)`.
 $$
 
-Using Bayes’ theorem, the conditional probability that an application is approved given that the applicant is a graduate is:
-\begin{equation}
+Using Bayes’ theorem, the conditional probability that an application is approved given that the applicant is a graduate is: \begin{equation}
 \label{eq-bayes-loan-graduate}
 \begin{split}
 P(\text{approved} \mid \text{graduate})
@@ -129,18 +125,18 @@ This example illustrates the central idea of Bayes’ theorem: we begin with an 
 
 Bayes’ theorem provides a general rule for updating probabilities when new evidence becomes available. In classification problems, this principle can be used to estimate the probability that an observation belongs to a particular class given its observed characteristics. The Naive Bayes classifier applies Bayes’ theorem in exactly this way.
 
-Suppose we observe a set of predictor variables $X_1, X_2, \dots, X_p$ describing an individual case. In the `loan` dataset, for example, these predictors may include variables such as `education`, `income_annum`, `loan_amount`, `loan_term`, and `cibil_score`. Our goal is to estimate the probability that the corresponding loan application belongs to a particular outcome class. In this chapter, the outcome variable is `loan_status`, which takes the values `approved` or `rejected`.
+Suppose we observe a set of predictor variables $X_1, X_2, \dots, X_m$ describing an individual case. In the `loan` dataset, for example, these predictors may include variables such as `education`, `income_annum`, `loan_amount`, `loan_term`, and `cibil_score`. Our goal is to estimate the probability that the corresponding loan application belongs to a particular outcome class. In this chapter, the outcome variable is `loan_status`, which takes the values `approved` or `rejected`.
 
 Using Bayes’ theorem, the probability that an observation belongs to class $y$ given the observed predictors can be written as
 
 $$
-P(Y = y \mid X_1, \dots, X_p)
+P(Y = y \mid X_1, \dots, X_m)
 =
-\frac{P(X_1, \dots, X_p \mid Y = y) P(Y = y)}
-{P(X_1, \dots, X_p)}.
+\frac{P(X_1, \dots, X_m \mid Y = y) P(Y = y)}
+{P(X_1, \dots, X_m)}.
 $$
 
-This expression combines two key components. The term $P(Y = y)$ represents the prior probability of class $y$, which reflects how common that outcome is in the population. The term $P(X_1, \dots, X_p \mid Y = y)$ represents the likelihood, which measures how probable the observed predictor values are if the observation truly belongs to class $y$. Together, these quantities determine the posterior probability $P(Y = y \mid X_1, \dots, X_p)$.
+This expression combines two key components. The term $P(Y = y)$ represents the prior probability of class $y$, which reflects how common that outcome is in the population. The term $P(X_1, \dots, X_m \mid Y = y)$ represents the likelihood, which measures how probable the observed predictor values are if the observation truly belongs to class $y$. Together, these quantities determine the posterior probability $P(Y = y \mid X_1, \dots, X_m)$.
 
 In classification tasks, we typically compute this posterior probability for each possible class and then assign the observation to the class with the highest probability. This decision rule can be written as
 
@@ -148,12 +144,12 @@ $$
 \hat{y}
 =
 \arg\max_{y}
-P(Y = y \mid X_1, \dots, X_p).
+P(Y = y \mid X_1, \dots, X_m).
 $$
 
 In other words, the classifier predicts the class whose posterior probability is largest given the observed predictors.
 
-At first glance, applying Bayes’ theorem in this way may appear straightforward. However, a practical difficulty arises when the number of predictors is large. The likelihood term $P(X_1, \dots, X_p \mid Y = y)$ requires estimating a joint probability distribution over all predictors simultaneously. In many datasets, including the `loan` dataset used in this chapter, estimating such high-dimensional joint distributions directly is difficult because many combinations of predictor values occur rarely or may not appear in the training data at all.
+At first glance, applying Bayes’ theorem in this way may appear straightforward. However, a practical difficulty arises when the number of predictors is large. The likelihood term $P(X_1, \dots, X_m \mid Y = y)$ requires estimating a joint probability distribution over all predictors simultaneously. In many datasets, including the `loan` dataset used in this chapter, estimating such high-dimensional joint distributions directly is difficult because many combinations of predictor values occur rarely or may not appear in the training data at all.
 
 The Naive Bayes classifier addresses this challenge by introducing a simplifying assumption about the predictors. Instead of modeling their full joint distribution, the method assumes that predictors are conditionally independent given the class label. This assumption greatly simplifies the probability calculations and allows the classifier to scale efficiently to problems with many predictors. In the next section, we examine this assumption more closely and explain why it gives the method the name *Naive Bayes*.
 
@@ -163,8 +159,7 @@ The label *naive* refers to the key simplifying assumption behind the classifier
 
 To see why this matters, consider again the `loan` dataset used later in the case study of this chapter (Section [-@sec-ch9-case-study]). It contains demographic and financial variables such as `education`, `self_employed`, `income_annum`, `loan_amount`, `loan_term`, `cibil_score`, and several asset-related measures. In practice, many of these predictors are likely to be related. Applicants with higher annual income may also hold more valuable assets, and credit score may be associated with loan amount or repayment capacity. Even so, Naive Bayes assumes that these predictors contribute separately to the classification once the outcome variable `loan_status` is known.
 
-Suppose we want to estimate the probability that an application belongs to class $y_1$ given predictor values $X_1, \dots, X_{11}$. From Bayes’ theorem, we write
-$$
+Suppose we want to estimate the probability that an application belongs to class $y_1$ given predictor values $X_1, \dots, X_{11}$. From Bayes’ theorem, we write $$
 P(Y = y_1 \mid X_1, \dots, X_{11})
 =
 \frac{P(Y = y_1) \times P(X_1, \dots, X_{11} \mid Y = y_1)}
@@ -173,8 +168,7 @@ $$
 
 The main challenge lies in estimating the likelihood term $P(X_1, \dots, X_{11} \mid Y = y_1)$. When the number of predictors is large, directly estimating this full joint conditional distribution becomes difficult because many combinations of predictor values occur rarely or may not appear in the training data at all.
 
-Naive Bayes simplifies this problem by assuming conditional independence, so that
-$$
+Naive Bayes simplifies this problem by assuming conditional independence, so that $$
 P(X_1, \dots, X_{11} \mid Y = y_1)
 =
 P(X_1 \mid Y = y_1) \times \cdots \times P(X_{11} \mid Y = y_1).
@@ -216,22 +210,18 @@ subset_loan = loan[(loan$self_employed != "no") | (loan$loan_status != "rejected
 xtabs(~ loan_status + self_employed, data = subset_loan[c(1:10, 100:190), ])
 ```
 
-Without smoothing, the estimated conditional probability is
-$$
+Without smoothing, the estimated conditional probability is $$
 P(\text{no} \mid \text{rejected})
 = \frac{P(\text{no} \cap \text{rejected})}{P(\text{rejected})}
 = \frac{0}{35}
 = 0.
-$$
-Here, `no` refers to `self_employed = no`, and `rejected` refers to `loan_status = rejected`. If this zero enters the Naive Bayes calculation, the contribution of the `rejected` class becomes zero before the posterior probabilities are normalized. In effect, the model rules out the `rejected` class entirely for any observation with `self_employed = no`, even if the other predictor values strongly suggest rejection.
+$$ Here, `no` refers to `self_employed = no`, and `rejected` refers to `loan_status = rejected`. If this zero enters the Naive Bayes calculation, the contribution of the `rejected` class becomes zero before the posterior probabilities are normalized. In effect, the model rules out the `rejected` class entirely for any observation with `self_employed = no`, even if the other predictor values strongly suggest rejection.
 
-Laplace smoothing avoids this problem by adding a small constant $k$ (typically $k = 1$) to each count. The smoothed estimate becomes
-$$
+Laplace smoothing avoids this problem by adding a small constant $k$ (typically $k = 1$) to each count. The smoothed estimate becomes $$
 P(\text{no} \mid \text{rejected})
 = \frac{\text{count}(\text{no} \cap \text{rejected}) + k}
 {\text{count}(\text{rejected}) + mk},
-$$
-where $m$ is the number of possible categories of `self_employed`. In this example, $m = 2$ because the variable has two categories: `yes` and `no`. This adjustment ensures that every feature value receives a non-zero probability within each class, even if it was not observed in the training data.
+$$ where $m$ is the number of possible categories of `self_employed`. In this example, $m = 2$ because the variable has two categories: `yes` and `no`. This adjustment ensures that every feature value receives a non-zero probability within each class, even if it was not observed in the training data.
 
 In R, Laplace smoothing can be applied through the `laplace` argument in the **naivebayes** package, where `laplace = 1` corresponds to add-one smoothing. Although $k = 1$ is a common default, the smoothing value can be adjusted if needed. By preventing zero probabilities, Laplace smoothing makes the classifier more stable and reliable in practice, especially when some classes are small or certain predictor values are rare. With these building blocks in place, we are now ready to apply Naive Bayes to a complete classification problem using the `loan` dataset.
 
@@ -267,7 +257,7 @@ The predictors used in this analysis are `no_of_dependents` (number of dependent
 
 To obtain a concise numerical overview and check for missing values or obvious anomalies, we then examine the summary statistics:
 
-```{r} 
+```{r}
 summary(loan)
 ```
 
@@ -401,14 +391,6 @@ Taken together, the ROC curve and AUC provide a concise and threshold-independen
 
 > *Practice:* Using a 70%–30% train–test split, refit the Naive Bayes classifier and report the corresponding ROC curve and AUC value. How do these results compare with those obtained using the 80%–20% split? Briefly comment on any differences you observe.
 
-
-
-
-
-
-
-
-
 ## Chapter Summary and Takeaways
 
 This chapter introduced the Naive Bayes classifier as an efficient and interpretable approach to probabilistic classification. Grounded in Bayes’ theorem, the method estimates the probability that an observation belongs to a given class by combining prior information with observed predictor values. We first examined the probabilistic foundation of the method through Bayes’ theorem and then showed how this idea leads naturally to a practical classification rule based on posterior probabilities.
@@ -519,7 +501,7 @@ The `churn` dataset from the **liver** package contains 10,127 customer records 
 
 36. Inspect the structure and summary statistics. Identify the target variable (`churn`) and main predictors.
 
-37. Partition the data into 80% training and 20% test sets using `partition()` from **liver**. 
+37. Partition the data into 80% training and 20% test sets using `partition()` from **liver**.
 
 38. Verify that the class distribution of `churn` is consistent between the training and test sets.
 

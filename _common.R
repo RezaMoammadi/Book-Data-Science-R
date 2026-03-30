@@ -31,6 +31,7 @@ inst_pkgs = load_pkgs = c(
   "plotly",    # for interactive plots in ch4
   "ggcorrplot", # for correlation plot in ch4
   "patchwork",  # for combining ggplots in ch10
+  "ggfortify",  # for autoplot in ch10
   
   "pROC", 
   "neuralnet",

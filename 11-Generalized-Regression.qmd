@@ -1,0 +1,659 @@
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+source("_common.R")
+```
+
+# Generalized Regression Models {#sec-ch11-generalized-regression}
+
+::: {.content-visible when-format="pdf"}
+\begin{chapterquote}
+The theory of probabilities is at bottom nothing but common sense reduced to calculation.
+
+\hfill — Pierre-Simon Laplace
+\end{chapterquote}
+:::
+
+::::: {.content-visible when-format="html"}
+:::: chapterquote
+The theory of probabilities is at bottom nothing but common sense reduced to calculation.
+
+::: author
+— Pierre-Simon Laplace
+:::
+::::
+:::::
+
+In Chapter [-@sec-ch10-regression], we developed regression models for continuous outcomes, focusing on situations where the response variable can take a wide range of numerical values, such as house prices, healthcare costs, or hourly bike rental demand. Those models provided a powerful framework for studying relationships between variables, making predictions, and assessing the contribution of individual predictors. Yet many important data science problems involve outcomes that do not fit this setting. In practice, we are often interested in questions such as whether a customer will churn, whether a patient has a disease, or how many service calls a customer is expected to make. These outcomes are not continuous: they are binary or count-based, and they require a different modeling approach.
+
+When the response variable is binary or a count, the assumptions of ordinary linear regression are no longer appropriate. A linear model can produce predicted values below 0 or above 1 when applied to probabilities, and it does not account naturally for the discrete structure of count data. More fundamentally, the variability of binary and count outcomes is tied to their mean in ways that differ from the constant-variance framework of linear regression. If we ignore these features and apply linear regression mechanically, the resulting model may be difficult to interpret and may lead to misleading conclusions.
+
+Generalized regression models extend the regression framework to address these limitations. They preserve the central idea that we relate an outcome to a set of predictors through a structured model, but they allow the form of that relationship to adapt to the type of response variable under study. This broader framework makes it possible to model probabilities for binary outcomes and expected event counts for count data while still retaining much of the interpretability that makes regression so useful. In this chapter, we focus on two of the most important examples: logistic regression for binary outcomes and Poisson regression for count data.
+
+This chapter also connects naturally to earlier parts of the book. In Chapter [-@sec-ch7-classification-knn], we introduced classification through k-Nearest Neighbors, and in Chapter [-@sec-ch9-bayes], we examined the Naive Bayes classifier as a probabilistic approach to prediction. Logistic regression provides another important perspective on binary classification, one that is grounded in the regression framework and supports direct interpretation of predictor effects. At the same time, Poisson regression extends regression modeling in a different direction by addressing outcomes that represent event frequencies rather than categories. Together, these models broaden the scope of regression analysis and show how a common modeling philosophy can be adapted to different kinds of data.
+
+As in earlier chapters, we work within the *Data Science Workflow* introduced in Chapter [-@sec-ch2-intro-data-science]. We begin by motivating the generalized linear model framework, then develop logistic regression and Poisson regression in turn, and finally apply these ideas in a case study on customer churn prediction. Along the way, we examine how these models are fitted in R, how their coefficients should be interpreted, and how their predictive performance can be assessed in practice. In this way, the chapter shows not only how generalized regression models are formulated, but also how they can support meaningful decisions in real data science problems.
+
+### What This Chapter Covers {.unnumbered .unlisted}
+
+In Chapter [-@sec-ch10-regression], we focused on regression models for continuous outcomes. In this chapter, we extend that framework to settings where the response variable is no longer continuous, but instead represents a binary outcome or a count. Such outcomes arise frequently in data science. A customer may churn or remain, a patient may respond to treatment or not, and the number of service calls or purchases may vary from one individual to another. These problems require models that respect the structure of the response variable while still allowing us to relate it systematically to a set of predictors.
+
+We begin by introducing the generalized linear model framework, which provides the foundation for the methods developed in this chapter. This framework extends ordinary linear regression by combining a probability distribution for the response, a linear predictor, and a link function that connects the two. This perspective helps explain why different types of outcomes require different regression models and how those models remain part of a common statistical family.
+
+We then turn to logistic regression, which is used when the response variable is binary. We explain why ordinary linear regression is not appropriate for such outcomes, introduce the concepts of odds and log-odds, and show how logistic regression models probabilities in a way that remains interpretable and statistically coherent. We also demonstrate how to fit logistic regression models in R, interpret coefficients and odds ratios, and convert predicted probabilities into class predictions when needed.
+
+Next, we introduce Poisson regression for modeling count data. Here, the focus shifts from probabilities to expected event counts. We show how the Poisson model uses a log link to ensure that predicted counts remain positive, and we discuss how its coefficients are interpreted in terms of multiplicative changes in the expected count. We also highlight an important practical issue, overdispersion, which reminds us that model assumptions must always be checked against the data.
+
+The chapter concludes with a case study on customer churn prediction using logistic regression, together with comparisons to k-Nearest Neighbors and Naive Bayes. This case study illustrates how generalized regression models fit naturally into the Data Science Workflow and how they can be evaluated alongside other predictive methods using ROC curves and the area under the curve. A shorter worked example for Poisson regression complements this analysis by showing how count outcomes can be modeled and interpreted in practice.
+
+By the end of this chapter, you will understand when generalized regression models are needed, how logistic and Poisson regression extend the ideas of Chapter [-@sec-ch10-regression], and how these models can be fitted, interpreted, and evaluated in R. More broadly, you will see how regression remains a flexible modeling framework even when the response variable is not continuous.
+
+## From Linear Regression to Generalized Linear Models {#sec-ch11-glm-foundations}
+
+In Chapter [-@sec-ch10-regression], we used linear regression to model continuous outcomes such as house prices and bike rental demand. That framework was powerful because it gave us a clear way to relate a response variable to one or more predictors, estimate coefficients, interpret their effects, and generate predictions. However, not every response variable is continuous. In many practical problems, the outcome may be binary, such as whether a customer churns, or it may be a count, such as the number of customer service calls. In such settings, the standard linear regression model is no longer well suited to the structure of the data.
+
+Generalized linear models provide a broader framework that extends the main ideas of regression while adapting them to different types of outcomes. Rather than treating binary and count data as awkward exceptions, generalized linear models incorporate them naturally by allowing the response distribution and the relationship between the mean response and the predictors to change according to the problem at hand. This makes the framework both flexible and unified: the details of the model may change, but the central regression idea remains the same.
+
+### Why Linear Regression Is Not Enough {.unnumbered .unlisted}
+
+To understand why a broader framework is needed, consider what happens if we apply ordinary linear regression to a binary outcome such as customer churn. A linear model could produce fitted values below 0 or above 1, even though probabilities must lie between 0 and 1. This is already a warning sign that the model does not respect the natural range of the response variable. In addition, the variability of a binary response is not constant across all predictor values. Instead, it depends on the underlying probability itself, which conflicts with the constant-variance assumption used in ordinary linear regression.
+
+A similar problem arises with count data. Suppose we wish to model the number of service calls made by a customer. Counts are non-negative integers, so values such as $-2.4$ or $3.7$ do not make sense as predictions. Yet a linear regression model treats the response as if any real-valued outcome were possible. Count data also tend to have a variance structure that depends on the mean, rather than remaining roughly constant. Once again, the assumptions of ordinary linear regression do not align well with the data-generating process.
+
+These examples show that the issue is not merely technical. It is not enough for a model to produce a line or a fitted equation. A good model should also respect the basic nature of the outcome being studied. When the response is binary, the model should produce probabilities in the interval $[0,1]$. When the response is a count, the model should produce non-negative expected counts. Generalized linear models are designed precisely for this purpose.
+
+### The Three Components of a Generalized Linear Model {.unnumbered .unlisted}
+
+A generalized linear model, often abbreviated as GLM, is built from three connected components. Together, these components determine how the response variable is modeled and how the predictors enter the model.
+
+The first component is the *random component*. This specifies the probability distribution of the response variable. In ordinary linear regression, we work with a continuous response and usually assume a normal distribution for the errors. In a generalized linear model, we instead choose a distribution appropriate for the type of response under study. For binary data, we use a binomial distribution. For count data, we often use a Poisson distribution.
+
+The second component is the *systematic component*. This is the familiar linear predictor,
+$$
+\eta = b_0 + b_1 x_1 + b_2 x_2 + \dots + b_m x_m,
+$$
+where $b_0, b_1, \dots, b_m$ are coefficients and $x_1, x_2, \dots, x_m$ are predictors. This part of the model looks much like the regression equations we used in Chapter [-@sec-ch10-regression]. It preserves the core regression idea that the predictors combine linearly on an appropriate scale.
+
+The third component is the *link function*. This function connects the expected value of the response variable to the linear predictor. If we let $\mu = \mathbb{E}(Y)$ denote the expected response, then a generalized linear model has the form
+$$
+g(\mu) = \eta,
+$$
+where $g(\cdot)$ is the link function. The role of the link function is crucial. It transforms the mean response to a scale on which a linear relationship with the predictors becomes appropriate.
+
+In ordinary linear regression, the link function is simply the identity link, so that
+$$
+\mu = \eta.
+$$
+This means that the expected response is modeled directly as a linear function of the predictors. In logistic regression, by contrast, the link function is the logit, which transforms a probability to the log-odds scale. In Poisson regression, the link function is the logarithm, which transforms a positive expected count to the real line.
+
+Taken together, these three components allow generalized linear models to preserve the interpretability of regression while adapting to the structure of different outcome types. We still build a model around predictors and coefficients, but we do so in a way that respects the distribution and range of the response variable.
+
+### Common Outcome Types and Link Functions {.unnumbered .unlisted}
+
+Different kinds of response variables call for different choices of distribution and link function. Table @tbl-ch11-glm-overview summarizes the most common cases relevant to this chapter.
+
+```{r echo=FALSE}
+#| label: tbl-ch11-glm-overview
+#| tbl-cap: "Common outcome types and corresponding generalized linear models."
+
+knitr::kable(
+  data.frame(
+    Outcome_Type = c("Continuous outcome", "Binary outcome", "Count outcome"),
+    Distribution = c("Normal", "Binomial", "Poisson"),
+    Link_Function = c("Identity", "Logit", "Log"),
+    Model = c("Linear regression", "Logistic regression", "Poisson regression")
+  ),
+  col.names = c("Outcome type", "Distribution", "Link function", "Model")
+)
+```
+
+For a continuous response, the normal distribution with the identity link gives us the ordinary linear regression model developed in Chapter [-@sec-ch10-regression]. For a binary response, the binomial distribution combined with the logit link gives logistic regression. For a count response, the Poisson distribution with the log link gives Poisson regression.
+
+This comparison is important because it shows that logistic and Poisson regression are not entirely new modeling ideas unrelated to linear regression. They are extensions of the same general framework. What changes is the distribution of the response and the function used to connect its expected value to the linear predictor. In this sense, generalized linear models provide a unified language for regression across different data types.
+
+This section provides the conceptual foundation for the rest of the chapter. We now turn to the first major example, logistic regression, which is used when the response variable records whether an event occurs or not.
+
+
+## Logistic Regression for Binary Outcomes {#sec-ch11-logistic-regression}
+
+Many important data science questions take the form of a yes-or-no outcome. Will a customer churn? Will a patient respond to treatment? Will a transaction be classified as fraudulent? In each of these cases, the response variable is *binary*, meaning that it takes one of two possible values. Problems of this kind were introduced earlier in the book through classification methods such as k-Nearest Neighbors in Chapter [-@sec-ch7-classification-knn] and the Naive Bayes classifier in Chapter [-@sec-ch9-bayes]. These methods emphasized prediction from a classification perspective. We now turn to a complementary model-based approach that places binary outcomes within the regression framework: logistic regression.
+
+Logistic regression is one of the most widely used generalized linear models. It extends the logic of regression to settings where the response variable represents whether an event occurs or not. Rather than modeling the response directly, logistic regression models the probability of the event through a transformation that ensures the fitted values remain between 0 and 1. This makes the model suitable for binary outcomes while preserving the interpretability and structure of regression analysis.
+
+### Why Not Use Linear Regression for a Binary Response? {.unnumbered .unlisted}
+
+At first glance, it may seem natural to apply ordinary linear regression to a binary outcome coded as 0 and 1. For example, we might code customer churn as 1 for "yes" and 0 for "no", then regress this outcome on a set of predictors. Although this idea is simple, it runs into immediate problems.
+
+First, a linear regression model can produce fitted values smaller than 0 or larger than 1, even though probabilities must lie in the interval $[0,1]$. Second, the variability of a binary response is not constant. When the probability of the event is near 0 or near 1, the response has less variability than when the probability is closer to 0.5. This violates the constant-variance assumption underlying ordinary linear regression. Third, the relationship between predictors and the probability of an event is often not naturally linear on the probability scale. A one-unit increase in a predictor may have a different effect when the probability is already near 0.9 than when it is near 0.2.
+
+For these reasons, binary outcomes require a model that respects both the range and the structure of the data. Logistic regression does this by modeling a transformed version of the probability rather than the probability itself.
+
+### Odds, Log-Odds, and the Logistic Model {.unnumbered .unlisted}
+
+To build the logistic regression model, we begin with the probability of the event of interest. Let $p$ denote the probability that the outcome equals 1. For example, in a churn application, $p$ may represent the probability that a customer leaves the service.
+
+Instead of modeling $p$ directly, logistic regression models the *odds* of the event,
+$$
+\text{odds} = \frac{p}{1-p}.
+$$
+The odds compare the probability that the event occurs to the probability that it does not occur. If $p = 0.8$, then the odds are $0.8/0.2 = 4$, meaning that the event is four times as likely to occur as not to occur.
+
+Because odds are always positive, we take their natural logarithm to obtain the *log-odds*, also called the *logit*:
+$$
+\text{logit}(p) = \log\left(\frac{p}{1-p}\right).
+$$
+This transformation maps probabilities in the interval $(0,1)$ to the entire real line, which allows us to model the transformed probability as a linear function of the predictors:
+$$
+\text{logit}(p) = b_0 + b_1 x_1 + b_2 x_2 + \dots + b_m x_m.
+$$
+
+This is the logistic regression model. It says that the predictors have a linear effect on the log-odds scale. Although the model is linear in the coefficients, the relationship between the predictors and the probability itself is nonlinear. Solving the equation above for $p$ gives the inverse-logit form:
+$$
+p = \frac{e^{b_0 + b_1 x_1 + \dots + b_m x_m}}{1 + e^{b_0 + b_1 x_1 + \dots + b_m x_m}}.
+$$
+
+This expression guarantees that predicted probabilities always lie between 0 and 1. That is the key reason logistic regression is appropriate for binary outcomes. It preserves the regression idea of linking a response to predictors, but it does so on a scale that matches the structure of the data.
+
+### Fitting a Logistic Regression Model in R {.unnumbered .unlisted}
+
+We now fit a logistic regression model in R using the `churn_mlc` dataset from the **liver** package. This dataset contains customer-level information such as account characteristics, usage behavior, and service interactions. Our goal is to model whether a customer has churned (`yes`) or not (`no`) based on a selected set of predictors.
+
+We begin by loading the dataset and inspecting its structure:
+
+```{r}
+library(liver)
+
+data(churn_mlc)
+
+str(churn_mlc)
+```
+
+The dataset contains `r nrow(churn_mlc)` observations and `r ncol(churn_mlc)` variables. The response variable is `churn`, and the remaining variables provide information that may help explain why some customers leave while others remain.
+
+To illustrate logistic regression, we use the following predictors:
+
+`account_length`, `voice_plan`, `voice_messages`, `intl_plan`, `intl_mins`, `day_mins`, `eve_mins`, `night_mins`, and `customer_calls`.
+
+We define the model formula as follows:
+
+```{r}
+formula_churn <- churn ~ account_length + voice_messages + day_mins +
+  eve_mins + night_mins + intl_mins + customer_calls +
+  intl_plan + voice_plan
+```
+
+To fit the logistic regression model, we use the `glm()` function. The argument `family = binomial` tells R to fit a generalized linear model for a binary response using the logit link:
+
+```{r}
+glm_churn <- glm(formula = formula_churn, data = churn_mlc, family = binomial)
+```
+
+We then inspect the fitted model with:
+
+```{r}
+summary(glm_churn)
+```
+
+The output reports the estimated coefficients, their standard errors, corresponding *z*-statistics, and *p*-values. As in linear regression, these values help us assess the direction and strength of the association between each predictor and the response. Here, however, the coefficients are interpreted on the log-odds scale rather than on the original response scale.
+
+At this stage, we fit the model using the full dataset because the main purpose of this section is to understand model specification and interpretation. Later in the chapter, we return to logistic regression in a predictive setting and evaluate its out-of-sample performance alongside other classification methods.
+
+It is also important to note that we did not manually create dummy variables for the binary predictors `intl_plan` and `voice_plan`. When factor variables are included in a model formula, R automatically creates the required indicator coding and uses one level as the reference category.
+
+> *Practice:* Remove one or more predictors with relatively large *p*-values, such as `account_length`, and refit the model. Compare the resulting coefficient estimates and significance levels with those of the original model. Which parts of the model remain stable, and which appear more sensitive to the choice of predictors?
+
+### Interpreting Coefficients, Odds Ratios, and Predicted Probabilities {.unnumbered .unlisted}
+
+The coefficients in a logistic regression model describe changes in the *log-odds* of the event. This is mathematically convenient, but it is not always the most intuitive scale for interpretation. A more interpretable quantity is the *odds ratio*, obtained by exponentiating the coefficient.
+
+For a numeric predictor $x_j$, the coefficient $b_j$ represents the change in log-odds associated with a one-unit increase in $x_j$, holding the other predictors fixed. Exponentiating this coefficient gives
+$$
+e^{b_j},
+$$
+which is the multiplicative change in the odds associated with a one-unit increase in that predictor.
+
+For example, if a coefficient equals 0.20, then
+$$
+e^{0.20} \approx 1.22.
+$$
+This means that a one-unit increase in the predictor multiplies the odds of churn by about 1.22, or increases the odds by about 22%, holding the other predictors constant. If a coefficient is negative, the odds ratio will be less than 1, indicating a decrease in the odds.
+
+We can compute the estimated odds ratios in R as follows:
+
+```{r}
+round(exp(coef(glm_churn)), 3)
+```
+
+For binary predictors such as `intl_plan` or `voice_plan`, the interpretation is relative to the reference category. The corresponding odds ratio compares the odds of churn for one category against the odds for the reference category, holding the other predictors fixed.
+
+Although odds ratios are useful, readers should be careful not to confuse them with probabilities. A change in odds is not the same as a change in probability, and the same odds ratio can correspond to different probability changes depending on the starting point. This is one reason logistic regression is often interpreted using both odds ratios and predicted probabilities.
+
+Predicted probabilities can be obtained using `predict()` with `type = "response"`:
+
+```{r}
+round(predict(glm_churn, newdata = churn_mlc[1:5, ], type = "response"), 3)
+```
+
+These values represent the model’s estimated probability of the event associated with the non-reference level of the response variable. In a binomial model fitted with a two-level factor response, R treats the second factor level as the event being modeled. It is therefore useful to inspect the factor levels directly:
+
+```{r}
+levels(churn_mlc$churn)
+```
+
+If needed, the reference level can be changed before fitting the model. For example, if we want `"yes"` to represent the modeled event explicitly, we can write:
+
+```{r eval = FALSE}
+churn_mlc$churn <- relevel(churn_mlc$churn, ref = "no")
+```
+
+This should be done before fitting the model. Changing the reference level affects the interpretation of the probabilities and coefficients, although it does not change the underlying information in the data.
+
+> *Practice:* Choose one predictor from the fitted model and interpret both its coefficient and its odds ratio. Then compute predicted probabilities for the first five observations and compare them with the observed `churn` values.
+
+### From Probabilities to Class Predictions {.unnumbered .unlisted}
+
+A logistic regression model naturally produces predicted probabilities. In some applications, however, we also need a class prediction such as `yes` or `no`. To make this transition, we choose a decision threshold. The most common choice is 0.5: if the predicted probability is at least 0.5, we classify the observation as the event; otherwise, we classify it as the non-event.
+
+For example, class predictions based on a 0.5 threshold can be obtained as follows:
+
+```{r}
+pred_prob <- predict(glm_churn, newdata = churn_mlc, type = "response")
+
+pred_class <- ifelse(pred_prob >= 0.5, "yes", "no")
+
+head(pred_class)
+```
+
+Although a threshold of 0.5 is common, it is not always the most appropriate choice. In churn prediction, for instance, a company may prefer to identify more at-risk customers even if this leads to more false positives. In that case, a lower threshold such as 0.3 may be more useful. In medical screening, the same logic often applies: missing a true positive case may be more costly than issuing an additional false alarm.
+
+This is why logistic regression is especially valuable as a probabilistic model. It separates the task of estimating risk from the task of making a classification decision. The model provides estimated probabilities, and the analyst chooses a threshold based on the goals of the application. In the case study later in this chapter, we compare logistic regression with Naive Bayes and k-Nearest Neighbors using ROC curves and the area under the curve, which allow us to evaluate models across all possible thresholds rather than relying on a single cutoff.
+
+Logistic regression therefore plays two roles at once. It is a regression model for binary outcomes, and it is also a classification tool that produces interpretable probabilities. This combination of interpretability, flexibility, and practical usefulness explains why logistic regression remains one of the most important methods for binary data analysis.
+
+## Poisson Regression for Count Outcomes {#sec-ch11-poisson-regression}
+
+Not all response variables describe whether an event occurs. In many applications, the outcome records *how many times* something happens within a fixed period or setting. Examples include the number of doctor visits, the number of insurance claims, the number of purchases made in a week, or the number of website visits in an hour. These outcomes are not continuous and are not simply binary. They are *counts*, and they require a model that respects their discrete and non-negative nature.
+
+Poisson regression is one of the most important generalized linear models for this setting. It extends the regression framework to responses that represent event frequencies, allowing us to relate expected counts to a set of predictors in a structured and interpretable way. Just as logistic regression adapts regression to binary outcomes, Poisson regression adapts it to count outcomes.
+
+### Why Count Data Require a Different Model {.unnumbered .unlisted}
+
+At first glance, one might try to apply ordinary linear regression to a count outcome such as the number of doctor visits. But this creates several problems.
+
+First, a linear regression model can produce fitted values that are negative, even though counts must be non-negative. Second, count data often have a variance that changes with the mean. In many settings, observations with larger expected counts also show greater variability. This conflicts with the constant-variance assumption of ordinary linear regression. Third, count outcomes are often right-skewed, especially when many observations take small values and a smaller number take larger values. This again makes the normal-error framework of linear regression less appropriate.
+
+These features reflect the fact that count data arise from a different type of data-generating process. A suitable model should recognize that event counts are discrete, non-negative, and often more variable at larger mean levels. Poisson regression provides such a model by linking the expected count to predictors through a structure tailored to count outcomes.
+
+### The Poisson Model and the Log Link {.unnumbered .unlisted}
+
+Poisson regression is built on the Poisson distribution, which is commonly used to model the number of times an event occurs within a fixed interval of time, space, or exposure. If $Y$ denotes a count outcome, the Poisson model assumes that
+$$
+Y \sim \text{Poisson}(\lambda),
+$$
+where $\lambda$ is the expected count. In a Poisson distribution, the mean and the variance are both equal to $\lambda$:
+$$
+\mathbb{E}(Y) = \lambda, \qquad \text{Var}(Y) = \lambda.
+$$
+
+To relate the expected count to predictors, Poisson regression uses the *log link*:
+$$
+\log(\lambda) = b_0 + b_1 x_1 + b_2 x_2 + \dots + b_m x_m.
+$$
+
+This is the Poisson regression model. It says that the logarithm of the expected count is a linear function of the predictors. Solving for $\lambda$ gives
+$$
+\lambda = e^{b_0 + b_1 x_1 + b_2 x_2 + \dots + b_m x_m}.
+$$
+
+This formulation guarantees that the expected count is always positive. It also means that predictors act *multiplicatively* on the original count scale, even though their effects are additive on the log scale.
+
+### Fitting a Poisson Regression Model in R {.unnumbered .unlisted}
+
+We now illustrate Poisson regression using the `doctor_visits` dataset from the **liver** package. This dataset contains cross-sectional data from the 1977–1978 Australian Health Survey and is a standard example for count-data modeling. It includes `visits`, the number of doctor visits in the past two weeks, together with predictors such as `gender`, `age`, `income`, `illness`, `reduced`, `health`, `private`, `freepoor`, `freerepat`, `nchronic`, and `lchronic`. :contentReference[oaicite:1]{index=1}
+
+We begin by loading the dataset and inspecting its structure:
+
+```{r}
+library(liver)
+
+data(doctor_visits)
+
+str(doctor_visits)
+```
+
+The response variable is `visits`, which records how many times an individual visited a doctor in the past two weeks. Because this response is a count, Poisson regression provides a natural starting point. Following the standard example in the **AER** documentation, we include all available predictors and add a quadratic term for age through `I(age^2)`. The quadratic term allows the relationship between age and doctor visits to be nonlinear. ([CRAN][1])
+
+```{r}
+dv_pois <- glm(visits ~ . + I(age^2), data = doctor_visits, family = poisson)
+```
+
+We inspect the fitted model using:
+
+```{r}
+summary(dv_pois)
+```
+
+The output reports coefficient estimates, standard errors, *z*-statistics, and *p*-values. Each coefficient describes how the corresponding predictor is associated with the *log of the expected number of doctor visits*, holding the other predictors fixed.
+
+### Interpreting Coefficients and Expected Counts {.unnumbered .unlisted}
+
+The coefficients in a Poisson regression model are interpreted on the log scale, which is not always the most intuitive scale for practical discussion. A more interpretable quantity is obtained by exponentiating the coefficient.
+
+For a numeric predictor $x_j$, the coefficient $b_j$ represents the change in $\log(\lambda)$ associated with a one-unit increase in $x_j$, holding the other predictors fixed. Exponentiating this coefficient gives
+$$
+e^{b_j},
+$$
+which is the multiplicative change in the expected count.
+
+For example, if a coefficient equals 0.3, then
+$$
+e^{0.3} \approx 1.35.
+$$
+This means that a one-unit increase in the predictor multiplies the expected number of doctor visits by about 1.35, or increases it by approximately 35%, holding the other predictors constant.
+
+If a coefficient is negative, the interpretation is similar but in the opposite direction. For example, if a coefficient equals $-0.2$, then
+$$
+e^{-0.2} \approx 0.82.
+$$
+This means that a one-unit increase in the predictor multiplies the expected count by about 0.82, corresponding to a decrease of roughly 18%.
+
+We can compute the exponentiated coefficients in R as follows:
+
+```{r}
+round(exp(coef(dv_pois)), 3)
+```
+
+For factor variables, the interpretation is relative to the reference category. The exponentiated coefficient compares the expected number of doctor visits in one category with the expected number in the reference category, holding the remaining predictors fixed.
+
+Predicted expected counts can be obtained with `predict()` using `type = "response"`:
+
+```{r}
+round(predict(dv_pois, newdata = doctor_visits[1:5, ], type = "response"), 3)
+```
+
+These values are the model’s estimated expected numbers of doctor visits for the specified observations. Because the model predicts expected counts, the fitted values do not need to be integers. They represent average expected frequencies rather than literal individual outcomes.
+
+> *Practice:* Suppose a predictor has an estimated coefficient of $-0.2$. Compute $e^{-0.2} - 1$ and interpret the result as a percentage change in the expected number of doctor visits. Then choose one coefficient from `dv_pois`, exponentiate it, and interpret it in context.
+
+### Overdispersion and Practical Limitations {.unnumbered .unlisted}
+
+A central assumption of the Poisson model is that the variance of the response equals its mean. In practice, however, count data often show more variability than the Poisson distribution allows. This phenomenon is called *overdispersion*. When overdispersion is present, the standard Poisson model tends to underestimate uncertainty, which can make standard errors too small and significance tests too optimistic. 
+
+A simple diagnostic is to compare the residual deviance with the residual degrees of freedom:
+
+```{r}
+c(
+  residual_deviance = deviance(dv_pois),
+  residual_df = df.residual(dv_pois),
+  ratio = deviance(dv_pois) / df.residual(dv_pois)
+)
+```
+
+A ratio noticeably larger than 1 suggests that overdispersion may be present. This is only a rough guide, but it is useful as an initial diagnostic.
+
+When overdispersion is substantial, alternatives such as *quasi-Poisson regression* or *negative binomial regression* are often more appropriate because they allow the variance to exceed the mean. We do not develop these models in detail here, but it is important to recognize that Poisson regression is a starting point rather than a universal solution for every count outcome.
+
+Poisson regression therefore extends the regression framework in a way that is natural for event counts. It allows us to model expected frequencies, interpret predictor effects multiplicatively, and remain within the broader generalized linear model framework. Later in the chapter, we return to Poisson regression in a short worked example that builds on this foundation.
+
+## Case Study: Customer Churn Prediction with Logistic Regression {#sec-ch11-case-study}
+
+Customer churn, defined as the event in which a customer discontinues a service, represents a major challenge in subscription-based industries such as telecommunications, banking, and online platforms. Accurately identifying customers who are at risk of churning enables proactive retention strategies and can substantially reduce revenue loss. This case study focuses on predicting customer churn using multiple classification models and comparing their performance in a realistic modeling setting.
+
+Throughout this chapter, we have introduced several classification approaches from different perspectives. In this case study, we bring these methods together and apply them to the same prediction task using a common dataset. Specifically, we compare three models introduced earlier in the book: logistic regression (Section [-@sec-ch11-logistic-regression]), k-Nearest Neighbors (Chapter [-@sec-ch7-classification-knn]), and the Naive Bayes classifier (Chapter [-@sec-ch9-bayes]). Each model reflects a different modeling philosophy, ranging from parametric and interpretable to instance-based and probabilistic.
+
+The analysis is based on the `churn_mlc` dataset from the **liver** package, which contains customer-level information on service usage, plan characteristics, and interactions with customer service. The target variable is `churn`, a binary indicator that records whether a customer has left the service (`yes`) or remained active (`no`). The dataset is provided in an analysis-ready format, allowing us to focus directly on modeling and evaluation within the Data Science Workflow introduced in Chapter [-@sec-ch2-intro-data-science]. We begin by loading the dataset and inspecting its structure:
+
+```{r}
+library(liver)
+
+data(churn_mlc)
+str(churn_mlc)
+```
+
+The dataset consists of `r nrow(churn_mlc)` observations and `r ncol(churn_mlc)` variables. The features describe customer usage patterns, subscription plans, and interactions with customer service. Rather than modeling all available variables, we select a subset of predictors that capture core aspects of customer behavior and are commonly used in churn analysis. Since the primary goal of this case study is to compare modeling approaches rather than to perform exploratory analysis, we keep EDA brief and move directly to data partitioning and model fitting.
+
+> *Practice:* Apply exploratory data analysis techniques to the `churn_mlc` dataset following the approach used in Chapter [-@sec-ch4-EDA]. Compare the patterns you observe with those from the `churn` dataset.
+
+To ensure a fair comparison across models, we use the same set of predictors and preprocessing steps for all three classification methods. Model performance is evaluated using ROC curves and the area under the ROC curve (AUC), as introduced in Chapter [-@sec-ch8-evaluation]. These metrics provide a threshold-independent assessment of classification performance and allow us to compare models on equal footing. The modeling formula used throughout this case study is:
+
+```{r}
+formula = churn ~ account_length + voice_plan + voice_messages + intl_plan + intl_mins + intl_calls + day_mins + day_calls + eve_mins + eve_calls + night_mins + night_calls + customer_calls
+```
+
+In the following sections, we fit each classification model using this common setup and compare their predictive performance, interpretability, and practical suitability for churn prediction.
+
+### Data Setup for Modeling {.unnumbered .unlisted}
+
+To evaluate how well our classification models generalize to unseen data, we partition the dataset into separate training and test sets. This separation ensures that model performance is assessed on observations that were not used during model fitting, providing an unbiased estimate of predictive accuracy.
+
+To maintain consistency across chapters and enable meaningful comparison with earlier results, we adopt the same data partitioning strategy used in Chapter [-@sec-ch7-knn-churn]. Specifically, we use the `partition()` function from the **liver** package to randomly split the data into non-overlapping subsets. Setting a random seed guarantees that the results are reproducible.
+
+```{r}
+set.seed(42)
+
+splits = partition(data = churn_mlc, ratio = c(0.8, 0.2))
+
+train_set = splits$part1
+test_set  = splits$part2
+
+test_labels = test_set$churn
+```
+
+This procedure assigns 80% of the observations to the training set and reserves the remaining 20% for model evaluation. The response variable from the test set is stored separately in `test_labels` and will be used to assess predictive performance using ROC curves and AUC.
+
+> *Practice:* Repartition the `churn_mlc` dataset into a 70% training set and a 30% test set using the same approach. Check whether the class distribution of the target variable `churn` is similar in both subsets, and reflect on why preserving this balance is important for fair model evaluation.
+
+In the following subsections, we train each classification model using the same formula and training data. We then generate predictions on the test set and compare model performance using ROC curves and the area under the curve (AUC).
+
+### Training the Logistic Regression Model {.unnumbered .unlisted}
+
+We begin with logistic regression, a widely used baseline model for binary classification. Logistic regression models the probability of customer churn as a function of the selected predictors, making it both interpretable and well suited for probabilistic evaluation.
+
+We fit the model using the `glm()` function, specifying the `binomial` family to indicate a binary response:
+
+```{r}
+logistic_model = glm(formula = formula, data = train_set, family = binomial)
+```
+
+Once the model is fitted, we generate predicted probabilities for the observations in the test set:
+
+```{r}
+logistic_probs = predict(logistic_model, newdata = test_set, type = "response")
+```
+
+In logistic regression, `predict(..., type = "response")` returns estimated probabilities rather than class labels. By default, these probabilities correspond to the *non-reference class* of the response variable. In the `churn_mlc` dataset, the response variable `churn` has two levels, `"yes"` and `"no"`. Since `"yes"` is the first factor level and therefore treated as the reference category, the predicted probabilities returned here represent the probability of `"no"` (i.e., *not churning*).
+
+If the goal is instead to obtain predicted probabilities for `"yes"` (customer churn), the reference level should be redefined *before* data partitioning and model fitting. For example:
+
+``` r
+churn_mlc$churn = relevel(churn_mlc$churn, ref = "no")
+```
+
+Refitting the model after this change would cause `predict()` to return probabilities of churn directly. Importantly, while the numerical probabilities change interpretation, the underlying fitted model remains equivalent.
+
+At this stage, we retain the probabilistic predictions rather than converting them to class labels. This allows us to evaluate model performance across all possible classification thresholds using ROC curves and AUC, as discussed in Chapter [-@sec-ch8-evaluation].
+
+> *Practice:* How would you convert the predicted probabilities into binary class labels? Try using thresholds of 0.5 and 0.3. How do the resulting classifications differ, and what are the implications for false positives and false negatives?
+
+### Training the Naive Bayes Model {.unnumbered .unlisted}
+
+We briefly introduced the Naive Bayes classifier and its probabilistic foundations in Chapter [-@sec-ch9-bayes]. Here, we apply the model to the same customer churn prediction task, using the same set of predictors as in the logistic regression and kNN models to ensure a fair comparison.
+
+Naive Bayes is a fast, probabilistic classifier that is particularly well suited to high-dimensional and mixed-type data. Its defining assumption is that predictors are conditionally independent given the class label. While this assumption is often violated in practice, Naive Bayes can still perform surprisingly well, especially as a baseline model.
+
+We fit the Naive Bayes classifier using the `naive_bayes()` function from the **naivebayes** package:
+
+```{r}
+library(naivebayes)
+
+bayes_model = naive_bayes(formula, data = train_set)
+```
+
+Once the model is trained, we generate predicted class probabilities for the test set:
+
+```{r}
+bayes_probs = predict(bayes_model, test_set, type = "prob")
+```
+
+The object `bayes_probs` is a matrix in which each row corresponds to a test observation and each column represents the estimated probability of belonging to one of the two classes (`no` or `yes`). As with logistic regression, we retain these probabilistic predictions rather than converting them to class labels, since they are required for threshold-independent evaluation using ROC curves and AUC.
+
+> *Practice:* How might the conditional independence assumption affect the performance of Naive Bayes on this dataset, where usage variables such as call minutes and call counts are likely correlated? Compare this to the assumptions underlying logistic regression.
+
+### Training the kNN Model {.unnumbered .unlisted}
+
+The k-Nearest Neighbors (kNN) algorithm is a non-parametric, instance-based classifier that assigns a class label to each test observation based on the majority class among its $k$ closest neighbors in the training set. Because kNN relies entirely on distance calculations, it is particularly sensitive to the scale and encoding of the input features.
+
+We train a kNN model using the `kNN()` function from the **liver** package, setting the number of neighbors to $k = 7$. This choice is informed by experimentation with different values of $k$ using the `kNN.plot()` function, as discussed in Chapter [-@sec-ch7-knn-choose-k]. To ensure that all predictors contribute appropriately to distance computations, we apply min–max scaling and binary encoding using the `scaler = "minmax"` option:
+
+```{r}
+knn_probs = kNN(
+  formula = formula,
+  train   = train_set,
+  test    = test_set,
+  k       = 7,
+  scaler  = "minmax",
+  type    = "prob"
+)
+```
+
+This preprocessing step scales all numeric predictors to the $[0, 1]$ range and encodes binary categorical variables in a format suitable for distance-based modeling. As with logistic regression and Naive Bayes, we retain predicted class probabilities rather than class labels, since these probabilities are required for threshold-independent evaluation using ROC curves and AUC.
+
+With predicted probabilities now available from all three models (logistic regression, Naive Bayes, and kNN), we are ready to compare their classification performance using ROC curves and the area under the curve.
+
+### Model Evaluation and Comparison {.unnumbered .unlisted}
+
+To evaluate and compare the performance of the three classification models across all possible classification thresholds, we use ROC curves and the Area Under the Curve (AUC) metric. As introduced in Chapter [-@sec-ch8-evaluation], the ROC curve plots the true positive rate against the false positive rate, while the AUC summarizes the overall discriminatory ability of a classifier: values closer to 1 indicate stronger separation between classes.
+
+ROC-based evaluation is particularly useful in churn prediction settings, where class imbalance is common and the choice of classification threshold may vary depending on business objectives. We compute ROC curves using the **pROC** package. Since ROC analysis requires class probabilities, we extract the predicted probabilities corresponding to the `"yes"` (churn) class for each model:
+
+```{r}
+library(pROC)
+
+roc_logistic = roc(test_labels, logistic_probs)
+roc_bayes    = roc(test_labels, bayes_probs[, "yes"])
+roc_knn      = roc(test_labels, knn_probs[, "yes"])
+```
+
+To facilitate comparison, we visualize all three ROC curves in a single plot:
+
+```{r out.width = "90%"}
+ggroc(list(roc_logistic, roc_bayes, roc_knn), size = 0.8) + 
+  scale_color_manual(values = c("#377EB8", "#E66101", "#4DAF4A"),
+           labels = c(
+             paste("Logistic (AUC =", round(auc(roc_logistic), 3), ")"),
+             paste("Naive Bayes (AUC =", round(auc(roc_bayes), 3), ")"),
+             paste("kNN (AUC =", round(auc(roc_knn), 3), ")")
+           )) +
+  ggtitle("ROC Curves with AUC for Three Models") + 
+  theme(legend.title = element_blank(), legend.position = c(.7, .3))
+```
+
+The ROC curves summarize the trade-off between sensitivity and specificity for each classifier. The corresponding AUC values are `r round(auc(roc_logistic), 3)` for logistic regression, `r round(auc(roc_bayes), 3)` for Naive Bayes, and `r round(auc(roc_knn), 3)` for kNN. Although kNN achieves the highest AUC, the differences among the three models are modest. This suggests that all three approaches provide comparable predictive performance on this dataset.
+
+From a practical perspective, these results highlight an important modeling trade-off. While kNN offers slightly stronger discrimination, logistic regression and Naive Bayes remain attractive alternatives due to their interpretability, simplicity, and lower computational cost. In many real-world applications, such considerations may outweigh small gains in predictive accuracy.
+
+> *Practice:* Repartition the `churn_mlc` dataset using a 70%–30% train–test split. Following the same workflow as in this section, fit a logistic regression model, a Naive Bayes classifier, and a kNN model, and report the corresponding ROC curves and AUC values. Compare these results with those obtained using the 80%–20% split. What do you observe about the stability of model evaluation across different data partitions?
+
+## Chapter Summary and Takeaways {#sec-ch11-summary}
+
+In this chapter, we extended the regression framework from continuous outcomes to two important non-continuous settings: binary responses and count outcomes. Building on the linear regression ideas developed in Chapter [-@sec-ch10-regression], we introduced generalized linear models as a broader modeling framework that combines an appropriate response distribution, a linear predictor, and a link function. This perspective showed that logistic regression and Poisson regression are not entirely separate techniques, but natural extensions of the same regression logic to different kinds of data.
+
+We first examined logistic regression for binary outcomes. This model is designed for situations in which the response records whether an event occurs, such as whether a customer churns or not. By modeling the log-odds of the event rather than the outcome directly, logistic regression ensures that predicted probabilities remain between 0 and 1. We also showed how its coefficients can be interpreted through odds ratios and how predicted probabilities can be translated into class predictions when a decision threshold is required.
+
+We then introduced Poisson regression for count outcomes. In this setting, the response variable records how many times an event occurs within a fixed interval, such as the number of doctor visits or service calls. Poisson regression links the expected count to the predictors through a log link, ensuring that fitted values remain positive and allowing predictor effects to be interpreted multiplicatively. At the same time, we emphasized that model assumptions still matter, particularly the assumption that the variance is tied to the mean, and we highlighted overdispersion as an important practical issue in count-data analysis.
+
+The case study on customer churn brought these ideas together in a predictive setting. There, logistic regression served as the main generalized regression model and was compared with Naive Bayes and k-Nearest Neighbors using ROC curves and the area under the curve. This comparison illustrated an important practical lesson: models with different assumptions and structures can produce similar predictive performance, so model choice should not be based on accuracy alone. Interpretability, robustness, computational cost, and the goals of the analysis are also central considerations.
+
+Taken together, this chapter reinforces a key message of the Data Science Workflow: effective modeling is not about choosing the most complicated method available, but about selecting a model that matches the structure of the response variable and the purpose of the analysis. Generalized regression models provide a flexible and interpretable way to extend regression beyond continuous outcomes while preserving a common modeling language. They allow us to reason about probabilities, expected counts, and uncertainty in a principled way, making them essential tools in modern data science.
+
+## Exercises {#sec-ch11-exercises}
+
+These exercises reinforce the main ideas of this chapter by combining conceptual understanding, interpretation of model output, and practical implementation in R. They focus on generalized linear models for binary and count outcomes, with particular attention to logistic regression, Poisson regression, and model comparison in applied settings. The datasets used in these exercises are available in the **liver** and **AER** packages.
+
+### Generalized Linear Models: Conceptual Questions {.unnumbered .unlisted}
+
+1. Explain why ordinary linear regression is not appropriate for a binary response variable.
+
+2. Explain why ordinary linear regression is not appropriate for count data.
+
+3. What are the three main components of a generalized linear model?
+
+4. What is the role of a link function in a generalized linear model?
+
+5. Why does logistic regression use the logit link rather than the identity link?
+
+6. Why does Poisson regression use the log link?
+
+7. What is an odds ratio, and how is it interpreted in logistic regression?
+
+8. In Poisson regression, what does $e^{b_j}$ represent for a predictor $x_j$?
+
+9. What is overdispersion in the context of Poisson regression, and why can it be problematic?
+
+10. Logistic regression and Poisson regression are both generalized linear models. What do they have in common, and how do they differ?
+
+### Hands-On Practice: Logistic Regression with the `bank` Dataset {.unnumbered .unlisted}
+
+```r
+data(bank, package = "liver")
+```
+
+11. Fit a logistic regression model predicting `y` using `age`, `balance`, and `duration`.
+
+12. Interpret the estimated coefficient for `duration`. What does it suggest about the relationship between call duration and the probability of subscription?
+
+13. Compute the odds ratios for the fitted model and interpret them.
+
+14. Add `campaign` and `previous` to the model. How do the coefficient estimates and their significance change?
+
+15. Estimate the predicted probability of subscription for a new customer with the following profile: `age = 40`, `balance = 1500`, `duration = 300`, `campaign = 1`, and `previous = 0`.
+
+16. Convert the predicted probabilities into class predictions using a threshold of 0.5. Then repeat the analysis using a threshold of 0.3. How do the results differ?
+
+17. Construct a confusion matrix for the model using one of the thresholds above. What does the confusion matrix reveal about the model’s strengths and weaknesses?
+
+18. Compute accuracy, precision, recall, and F1-score for the fitted model. Which of these measures seems most informative in this setting, and why?
+
+19. Plot the ROC curve and compute the AUC. What does the AUC value suggest about the model’s ability to distinguish between subscribers and non-subscribers?
+
+20. Apply stepwise regression to obtain a simpler logistic regression model. Compare the selected model with the original model in terms of interpretability and predictive performance.
+
+### Hands-On Practice: Poisson Regression with the `doctor_visits` Dataset {.unnumbered .unlisted}
+
+```r
+library(liver)
+
+data(doctor_visits)
+```
+
+21. Fit a Poisson regression model predicting `visits` using `age`, `income`, `illness`, `reduced`, and `health`.
+
+22. Interpret the estimated coefficient for `illness`. Then exponentiate the coefficient and interpret the result on the expected-count scale.
+
+23. Add a quadratic term for `age` by fitting a model that includes `I(age^2)`. Does this suggest a nonlinear relationship between age and the expected number of doctor visits?
+
+24. Compute the exponentiated coefficients for the fitted model. Choose two predictors and interpret their effects in context.
+
+25. Use the fitted model to estimate the expected number of doctor visits for three selected observations in the dataset.
+
+26. Compare observed and predicted counts for the first ten observations. Does the model appear to capture the variation in doctor visits reasonably well?
+
+27. Compute the residual deviance, residual degrees of freedom, and their ratio. Does this suggest possible overdispersion?
+
+28. If overdispersion appears to be present, explain why a quasi-Poisson or negative binomial model might be more appropriate.
+
+### Model Comparison and Interpretation {.unnumbered .unlisted}
+
+29. In the customer churn case study, logistic regression was compared with Naive Bayes and k-Nearest Neighbors. Why is it useful to compare models with different assumptions on the same prediction task?
+
+30. Suppose logistic regression and kNN achieve similar AUC values, but logistic regression is easier to interpret. In what kinds of applications might logistic regression be preferred?
+
+31. Why are ROC curves and AUC useful when comparing classification models across different thresholds?
+
+32. A model with the highest AUC is not always the best choice in practice. Explain why, using ideas such as interpretability, computational cost, and robustness.
+
+33. Logistic regression produces estimated probabilities, while kNN and Naive Bayes can also be used for classification. Why can predicted probabilities be especially useful in decision-making settings?
+
+### Self-Reflection {.unnumbered .unlisted}
+
+34. Think of a real-world problem involving a binary outcome, such as disease diagnosis, customer churn, or loan approval. Which predictors would you include in a logistic regression model, and why?
+
+35. Think of a real-world problem involving a count outcome, such as hospital visits, insurance claims, or website clicks. Would Poisson regression be a reasonable starting point? Explain your reasoning, including what model assumptions you would want to check.
