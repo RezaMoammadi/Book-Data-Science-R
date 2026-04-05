@@ -102,8 +102,8 @@ Before fitting the model, it is helpful to visualize the relationship between th
 
 ```{r fig-scatter-plot-simple-reg, echo = FALSE, out.width = "80%", fig.cap = "Scatter plot of house unit price versus number of nearby stores, with the fitted regression line showing the linear relationship."}
 ggplot(house, aes(x = stores_number, y = unit_price)) +
-  geom_point(color = "#377EB8", alpha = 0.7) +
-  geom_smooth(method = "lm", se = FALSE, color = "#E66101", linewidth = 0.8) +
+  geom_point(color = "#6BAED6", alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE, color = "#2F4B7C", linewidth = 0.8) +
   labs(
     title = "House Unit Price vs. Number of Nearby Stores",
     x = "Number of nearby stores",
@@ -147,7 +147,7 @@ summary(simple_reg)
 
 The fitted regression equation is
 $$
-\widehat{\text{unit price}} = `r round(simple_reg$coefficients[1], 2)` + `r round(simple_reg$coefficients[2], 2)` \times \text{stores number}.
+\widehat{\text{unit\_price}} = `r round(simple_reg$coefficients[1], 2)` + `r round(simple_reg$coefficients[2], 2)` \times \text{stores\_number}.
 $$
 
 The intercept ($b_0$) represents the estimated unit price for a house with zero nearby stores, while the slope ($b_1$) represents the expected change in unit price associated with one additional nearby store. In this model, the estimated slope indicates that each additional nearby store is associated with an average increase of approximately `r round(simple_reg$coefficients[2], 2)` in unit price.
@@ -164,7 +164,7 @@ One of the main uses of a fitted regression model is prediction. Once the relati
 
 Suppose we want to estimate the expected unit price for a house located near 5 stores. Using the fitted regression equation, we obtain
 $$
-\widehat{\text{unit price}}
+\widehat{\text{unit\_price}}
 = b_0 + b_1 \times 5
 = `r round(simple_reg$coefficients[1], 2)` + `r round(simple_reg$coefficients[2], 2)` \times 5
 = `r round(simple_reg$coefficients[1] + simple_reg$coefficients[2] * 5, 2)`.
@@ -257,8 +257,8 @@ sim_data <- data.frame(
 #| fig-cap: "Illustration of Simpson’s Paradox. The left plot ignores group structure, whereas the right plot shows separate fitted relationships within groups."
 
 p1 <- ggplot(sim_data, aes(x = x, y = y)) +
-  geom_point(alpha = 0.5, color = "gray55", size = 0.7) +
-  geom_smooth(method = "lm", se = FALSE, color = "#377EB8", linewidth = 0.8) +
+  geom_point(alpha = 0.6, color = "#6BAED6", size = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "#2F4B7C", linewidth = 0.8) +
   labs(title = "Ignoring Groups", x = "Predictor (X)", y = "Response (Y)") +
   theme_minimal(base_size = 8) +
   theme(
@@ -508,37 +508,21 @@ Ultimately, predictor selection should be guided by a combination of statistical
 
 ## Modeling Non-Linear Relationships
 
-Many real-world relationships are not well described by straight lines. Consider predicting house prices using the age of a property. Prices may decline as a house ages, but very old or historic homes can still command a premium. In such cases, the relationship shows curvature rather than a constant rate of change, whereas standard linear regression assumes that the response changes linearly with the predictor.
+Not all relationships between predictors and a response variable are well described by straight lines. In many applications, the effect of a predictor changes across its range, so that the relationship is curved rather than linear. When this happens, a standard linear regression model may miss important structure in the data and produce systematic errors.
 
-Linear regression remains a powerful and widely used modeling tool because of its simplicity and interpretability. When a relationship is approximately linear, it often performs well and is easy to interpret. However, when the underlying relationship is curved, a straight-line model may miss important structure in the data, leading to systematic errors and potentially misleading conclusions.
+Earlier in this chapter, we used stepwise regression (Section [-@sec-ch10-stepwise]) to decide which predictors to retain in the model. That approach helps refine model specification, but it does not address the form of the relationship between a predictor and the response. If the underlying pattern is curved, simply adding or removing predictors will not solve the problem.
 
-Earlier in this chapter, we used stepwise regression (Section [-@sec-ch10-stepwise]) to refine model specification by selecting a useful subset of predictors. That approach helps determine which variables to retain, but it does not address the form of the relationship between those variables and the response. If the underlying pattern is curved, simply adding or removing predictors will not solve the problem.
+To handle this situation while preserving the familiar regression framework, we turn to polynomial regression. This approach extends linear regression by allowing transformed versions of a predictor, such as squared terms, to enter the model. In this way, it can capture curvature while retaining the same basic tools for estimation, interpretation, and prediction.
 
-To model such relationships while retaining the familiar regression framework, we turn to *polynomial regression*. This approach extends linear regression by allowing predictors to enter the model in transformed form, so that curved patterns can be captured while preserving the basic tools and interpretation of regression analysis.
+### When a Straight Line Is Not Enough {.unnumbered .unlisted}
 
-### The Need for Non-Linear Regression {.unnumbered .unlisted}
+A useful way to see why non-linear terms may be needed is to examine the relationship between `house_age` and `unit_price` in the `house` dataset. Figure @fig-scatter-plot-non-reg shows a scatter plot of these two variables. The dashed gray line represents a simple linear regression fit, while the dark blue curve represents a quadratic fit.
 
-Linear regression assumes that the relationship between a predictor and the response follows a straight line, implying a constant rate of change. In practice, however, many real-world relationships are curved rather than strictly linear. The relationship between `house_age` and `unit_price` in the `house` dataset provides a useful example.
-
-Figure @fig-scatter-plot-non-reg shows a scatter plot of `unit_price` against `house_age`. The dashed orange line represents the fitted simple linear regression model. Although this straight-line fit captures the overall direction of the relationship, it does not reflect the visible curvature in the data particularly well.
-
-From the plot, we see that the linear model tends to underestimate `unit_price` for very new houses and overestimate it for older houses. These systematic deviations suggest that the linearity assumption is not fully appropriate in this setting and that a more flexible model may provide a better fit.
-
-One way to address this limitation is to introduce transformed versions of the predictor while retaining the regression framework. If the relationship is curved, a quadratic model may be appropriate: $$
-\widehat{\text{unit\_price}} = b_0 + b_1 \times \text{house\_age} + b_2 \times \text{house\_age}^2.
-$$
-
-This model includes both the original predictor and its squared term, allowing the fitted relationship to bend and better follow the observed pattern. Although the relationship between `house_age` and `unit_price` is now nonlinear, the model is still a *linear regression model* in the statistical sense because it remains linear in the parameters $b_0$, $b_1$, and $b_2$. As a result, the coefficients can still be estimated using ordinary least squares.
-
-The blue curve in Figure @fig-scatter-plot-non-reg shows the fitted quadratic regression model. Compared with the straight-line fit, it follows the data more closely and provides a more appropriate representation of the relationship between house age and unit price.
-
-```{r fig-scatter-plot-non-reg, echo = FALSE, out.width = "80%", fig.cap = "Scatter plot of `unit_price` versus `house_age` in the `house` dataset, with the fitted simple linear regression line shown as a dashed orange line and the quadratic regression curve shown in blue."}
-data(house)
-
+```{r fig-scatter-plot-non-reg, echo = FALSE, out.width = "80%", fig.cap = "Scatter plot of `unit_price` versus `house_age` in the `house` dataset, with a fitted linear regression line shown as a dashed gray line and a fitted quadratic curve shown in dark blue."}
 ggplot(data = house, aes(x = house_age, y = unit_price)) +
-  geom_point(color = "gray60", alpha = 0.6) +
-  geom_smooth(method = "lm", se = FALSE, linetype = "dashed", colour = "#E66101", linewidth = 0.9) +
-  stat_smooth(method = "lm", formula = y ~ x + I(x^2), se = FALSE, colour = "#377EB8", linewidth = 0.9) +
+  geom_point(color = "#6BAED6", alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, linetype = "dashed", colour = "gray40", linewidth = 0.9) +
+  stat_smooth(method = "lm", formula = y ~ x + I(x^2), se = FALSE, colour = "#1F3C88", linewidth = 0.9) +
   labs(
     title = "House Age vs Unit Price",
     x = "House Age (years)",
@@ -546,69 +530,70 @@ ggplot(data = house, aes(x = house_age, y = unit_price)) +
   )
 ```
 
-This example shows why adapting model structure is important when the linearity assumption does not hold. We now turn to polynomial regression in practice, where we fit such models in R and compare them with simpler linear alternatives.
+The figure suggests that the relationship is not fully captured by a straight line. The linear fit follows the overall direction of the data, but it does not reflect the visible curvature particularly well. In contrast, the quadratic curve follows the pattern more closely, suggesting that the effect of `house_age` on `unit_price` is not constant across the full range of the predictor.
+
+A quadratic regression model has the form
+$$
+\widehat{\text{unit\_price}} = b_0 + b_1 \times \text{house\_age} + b_2 \times \text{house\_age}^2.
+$$
+
+By including both `house_age` and its squared term, the fitted relationship is allowed to bend rather than remain straight. Although the relationship between the predictor and the response is now nonlinear, the model is still linear in the coefficients $b_0$, $b_1$, and $b_2$. For that reason, it is still estimated using ordinary least squares.
+
+This plot is intended to build intuition by isolating the relationship between `house_age` and `unit_price`. In the next section, we return to the multivariable regression setting and examine whether adding a quadratic term for `house_age` improves the earlier model selected from the `house` data.
 
 ## Polynomial Regression in Practice
 
-Polynomial regression extends linear regression by adding higher-degree terms of a predictor, such as squared ($x^2$) or cubic ($x^3$) terms. This added flexibility allows the model to capture curved relationships while remaining linear in the coefficients, so estimation can still be carried out using ordinary least squares. A polynomial regression model of degree $d$ takes the general form $$
-\hat{y} = b_0 + b_1 x + b_2 x^2 + \dots + b_d x^d.
-$$ Although higher-degree polynomials increase flexibility, choosing a degree that is too large can lead to overfitting, especially near the boundaries of the predictor range. In practice, low-degree polynomials are often sufficient to capture meaningful curvature.
+We now return to the `house` dataset and examine how polynomial regression can be used in a multivariable setting. In the previous section, we used the relationship between `house_age` and `unit_price` to build intuition for why a straight-line fit may be insufficient. We now extend that idea to the regression model selected earlier by the stepwise procedure.
 
-To illustrate polynomial regression in practice, we continue with the `house` dataset. In the previous section, stepwise regression selected a multiple regression model for `unit_price` that retained the predictors `house_age`, `distance_to_MRT`, `stores_number`, and `latitude`. We now extend that model by allowing the effect of `house_age` to be nonlinear.
+The stepwise model retained the predictors `house_age`, `distance_to_MRT`, `stores_number`, and `latitude`, but it treated the effect of `house_age` as linear. Because the earlier scatter plot suggested curvature in the relationship between `house_age` and `unit_price`, it is natural to ask whether the model improves when we allow this relationship to bend.
 
-The stepwise regression model treats the effect of `house_age` as linear. However, the earlier scatter plot suggested that the relationship between `house_age` and `unit_price` may be curved. To account for this, we fit a polynomial regression model that adds a quadratic term for `house_age` while retaining the other selected predictors: 
-
-
+To do so, we add a quadratic term for `house_age` while retaining the other predictors from the stepwise model. The resulting polynomial regression model is
 \begin{equation}
 \begin{split}
 \widehat{\text{unit\_price}} &=
 b_0 + b_1 \times \text{house\_age} +
-b_2 \times \text{house\_age}^2 + 
+b_2 \times \text{house\_age}^2 +
 b_3 \times \text{distance\_to\_MRT} + \\
-&+
-b_4 \times \text{stores\_number} +
+&\quad b_4 \times \text{stores\_number} +
 b_5 \times \text{latitude}.
 \end{split}
 \end{equation}
 
-In R, this model can be fitted as follows:
+This model remains linear in the coefficients, even though the relationship between `house_age` and `unit_price` is no longer restricted to a straight line. We can therefore fit it using the same `lm()` function as before.
 
 ```{r}
 poly_reg_house <- lm(
-  unit_price ~ house_age + I(house_age^2) + distance_to_MRT + stores_number + latitude,
+  unit_price ~ house_age + I(house_age^2) + distance_to_MRT +
+    stores_number + latitude,
   data = house
 )
 
 summary(poly_reg_house)
 ```
 
-We can now compare this polynomial model with the stepwise regression model from the previous section. If the quadratic term captures meaningful curvature, we would expect the polynomial model to show an improvement in model fit.
+In the summary output, we see two coefficients related to `house_age`: one for `house_age` and one for `I(house_age^2)`. This is because the model includes both the linear term and the squared term. Together, these two coefficients determine the curved relationship between `house_age` and `unit_price`. As a result, the effect of `house_age` can no longer be interpreted using a single slope alone.
 
-```{r}
-c(
-  adj_r2_stepwise = summary(stepwise_model)$adj.r.squared,
-  adj_r2_polynomial = summary(poly_reg_house)$adj.r.squared
-)
-```
+We now compare this polynomial model with the earlier stepwise linear model. If the quadratic term captures meaningful curvature, we would expect the polynomial model to improve the fit. For the stepwise linear model, the residual standard error is `r round(summary(stepwise_model)$sigma, 2)` and the adjusted $R^2$ is `r round(summary(stepwise_model)$adj.r.squared, 3)`. For the polynomial model, the residual standard error decreases to `r round(summary(poly_reg_house)$sigma, 2)`, while the adjusted $R^2$ increases to `r round(summary(poly_reg_house)$adj.r.squared, 3)`. The polynomial model therefore has a lower residual standard error and a higher adjusted $R^2$. This suggests that allowing curvature in `house_age` improves the model beyond the purely linear specification. In other words, the quadratic term appears to capture structure that the stepwise model leaves unexplained.
 
-```{r}
-c(
-  rse_stepwise = summary(stepwise_model)$sigma,
-  rse_polynomial = summary(poly_reg_house)$sigma
-)
-```
+Polynomial regression therefore provides a useful extension of multiple regression when one predictor appears to have a nonlinear relationship with the response. At the same time, polynomial terms should be added thoughtfully and only when they are supported by the data and improve the model in a meaningful way. In the next section, we examine whether this refinement is also supported by the diagnostic plots.
 
-If the polynomial model has a higher adjusted $R^2$ and a lower residual standard error, this suggests that allowing for curvature in `house_age` improves the model beyond the purely linear specification. In that case, the quadratic term captures structure that the stepwise model leaves unexplained.
+> *Practice:* Fit a cubic extension of the model by replacing `I(house_age^2)` with both `I(house_age^2)` and `I(house_age^3)`. Compare the cubic and quadratic models using the residual standard error, adjusted $R^2$, and the diagnostic plots. Does the added cubic term appear to improve the model enough to justify the extra complexity?
 
-Polynomial regression therefore provides a useful extension of multiple regression when one predictor appears to have a nonlinear relationship with the response. At the same time, polynomial terms should be added thoughtfully and only when they are supported by the data and improve the model in a meaningful way. In the next section, we examine how diagnostic tools help us determine whether such model refinements are justified and whether important problems remain.
+
+
+
+
+
+
+
 
 ## Diagnosing Common Problems in Regression Models
 
-A regression model may appear successful according to measures such as $R^2$, Adjusted $R^2$, or the residual standard error, yet still suffer from important weaknesses. Before we rely on a fitted model for interpretation or prediction, we therefore need to examine whether it shows signs of systematic problems. Diagnostic analysis helps us do this by revealing patterns in the residuals, highlighting unusual observations, and showing whether the fitted model captures the structure of the data adequately.
+A regression model may appear to perform well according to measures such as $R^2$, adjusted $R^2$, or the residual standard error, yet still suffer from important weaknesses. Before we rely on a fitted model for interpretation or prediction, we therefore need to examine whether it shows signs of systematic problems. Diagnostic analysis helps us do this by revealing patterns in the residuals, highlighting unusual observations, and showing whether the fitted model captures the structure of the data adequately.
 
 Linear regression is built on several familiar assumptions, including linearity, constant variance, approximate normality of residuals, and independence of observations. In practice, however, it is often more useful to approach diagnostics through the concrete problems that arise when these assumptions are not well satisfied. Rather than asking only whether an assumption holds in the abstract, we ask three practical questions: What can go wrong, how can we recognize it, and what might we do in response?
 
-To illustrate this process, we return to the `house` dataset and focus on the polynomial regression model introduced earlier. In that model, `unit_price` is explained using `house_age`, its squared term, `distance_to_MRT`, `stores_number`, and `latitude`. The standard diagnostic plots for this model are shown in @fig-ch10-model-diagnostics. Here we use the `autoplot()` function from **ggfortify** because it provides a clean and convenient display of the standard regression diagnostics. The same plots can also be obtained using the base `plot()` function in R. The bottom-right panel additionally displays Cook’s distance, which helps us identify observations that may have a relatively strong influence on the fitted model. We return to this idea later in the section when discussing influential observations. In the following subsections, we use these plots, together with comparisons to the earlier stepwise linear model, to examine common diagnostic issues such as non-linearity, non-constant variance, departures from normality, and influential observations.
+Even when a polynomial model improves numerical fit, it is still important to check whether the fitted model behaves reasonably. To illustrate this process, we return to the `house` dataset and focus on the polynomial regression model introduced earlier. In that model, `unit_price` is explained using `house_age`, its squared term, `distance_to_MRT`, `stores_number`, and `latitude`. The standard diagnostic plots for this model are shown in @fig-ch10-model-diagnostics. Here we use the `autoplot()` function from **ggfortify** because it provides a clean and convenient display of the standard regression diagnostics, although the same plots can also be obtained using the base `plot()` function in R. The lower-right panel additionally includes Cook’s distance contours, which help us identify cases that may have a relatively strong influence on the fitted model.
 
 ```{r out.width = "100%"}
 #| label: fig-ch10-model-diagnostics
@@ -619,17 +604,22 @@ library(ggfortify)
 autoplot(poly_reg_house, which = 1:4)
 ```
 
-These plots do not provide automatic yes-or-no answers. Instead, they support diagnostic judgment by helping us assess whether the fitted model behaves reasonably or whether its results should be interpreted with caution. For example, observation 271 in the `house` dataset stands out in the plots because it has a notably large residual, exceeding 60 in magnitude. This suggests that the observation deserves closer inspection. The Cook’s distance information helps us assess whether such an observation may also have an important influence on the fitted model.
+These four plots provide complementary perspectives on model adequacy. The Residuals vs Fitted plot (upper-left) helps us assess linearity and constant variance, the Normal Q-Q plot (upper-right) helps us assess whether the residuals are approximately normal, the Scale-Location plot (lower-left) provides another view of residual spread, and the Residuals vs Leverage plot (lower-right) helps us identify observations that may be influential. Taken together, these plots do not provide automatic yes-or-no answers, but they help us judge whether the fitted model behaves reasonably or whether some aspects require closer attention. In the following subsections, we examine these diagnostic perspectives in more detail.
+
+One important issue is not well captured by the four standard diagnostic plots: dependence among observations. Standard linear regression assumes that each observation contributes independent information, but this may be questionable in datasets with temporal, spatial, clustered, or repeated-measurement structure. When dependence is present, the fitted regression function may still appear reasonable, but the standard errors and inferential conclusions can become unreliable. For this reason, regression diagnostics require not only plot-based checks, but also careful attention to how the data were collected and structured.
+
+In this case, the plots do not suggest any severe violation of the main regression assumptions, although observation 271 stands out and deserves closer inspection. The Cook’s distance contours in the Residuals vs Leverage plot help us assess whether this case may also have an important influence on the fitted model.
 
 ### Non-Linearity of the Response-Predictor Relationship {.unnumbered .unlisted}
 
-One of the most common problems in regression analysis is non-linearity. A linear regression model assumes that the response changes linearly with the predictors included in the model, after accounting for the additive structure specified in the model. When this assumption is not appropriate, the fitted model may systematically underpredict in some regions of the data and overpredict in others.
+One of the most common problems in regression analysis is non-linearity. A linear regression model assumes that the response changes linearly with the predictors included in the model, given the structure specified by the model. When this assumption is not appropriate, the fitted model may systematically underpredict in some regions of the data and overpredict in others.
+
 
 A useful tool for detecting this problem is the Residuals vs Fitted plot. If the assumed functional form is adequate, the residuals should appear randomly scattered around zero with no clear structure. Curved patterns or other systematic departures suggest that the model is missing important non-linear structure.
 
-To illustrate this, @fig-ch10-linearity-comparison compares the Residuals vs Fitted plots for two models fitted to the `house` dataset: the earlier stepwise linear model `stepwise_model` and the polynomial regression model `poly_reg_house`. The stepwise model includes `house_age`, `distance_to_MRT`, `stores_number`, and `latitude`, but assumes a strictly linear effect of `house_age`. The polynomial model extends this specification by adding the squared term $house\_age^2$.
+To illustrate this, @fig-ch10-linearity-comparison compares the Residuals vs Fitted plots for two models fitted to the `house` dataset: the earlier stepwise linear model `stepwise_model` and the polynomial regression model `poly_reg_house`. This comparison is especially useful because it shows not only what non-linearity looks like in practice, but also how a model can be improved once that pattern is detected. The stepwise model includes `house_age`, `distance_to_MRT`, `stores_number`, and `latitude`, but assumes a linear effect of `house_age`. The polynomial model extends this specification by adding the squared term $house\_age^2$.
 
-In the stepwise linear model (left panel), the residuals show a noticeable curved pattern, suggesting that the model does not fully capture the relationship between the predictors and `unit_price`. In the polynomial model (right panel), this pattern is less pronounced, and the residuals appear more randomly scattered around zero. This suggests that allowing a curved effect for `house_age` provides a better representation of the underlying relationship.
+In the stepwise linear model (left panel), the residuals show a noticeable curved pattern, suggesting that the model does not fully capture the relationship between `house_age` and `unit_price`. In the polynomial model (right panel), this pattern is less pronounced, and the residuals appear more randomly scattered around zero. This suggests that allowing curvature in `house_age` provides a better representation of the underlying relationship.
 
 ::: {#fig-ch10-linearity-comparison}
 ```{r out.width = "100%"}
@@ -637,22 +627,25 @@ In the stepwise linear model (left panel), the residuals show a noticeable curve
 #| fig-width: 5
 #| fig-height: 4
 
-autoplot(stepwise_model, which = 1, ncol = 1)
-autoplot(poly_reg_house, which = 1, ncol = 1)
+autoplot(stepwise_model, which = 1, ncol = 1) +
+  ggtitle("Stepwise linear model")
+
+autoplot(poly_reg_house, which = 1, ncol = 1) +
+  ggtitle("Polynomial model")
 ```
 
 Residuals versus fitted values for the stepwise linear regression model and the polynomial regression model fitted to the `house` dataset.
 :::
 
-This comparison shows why diagnostic plots are useful not only for identifying problems but also for guiding model improvement. When non-linearity is present, possible responses include transforming a predictor, adding polynomial terms, or adopting a more flexible modeling approach. In this example, the residual plots support the modeling decision made earlier in the chapter: allowing curvature in `house_age` leads to a more appropriate fit.
+This comparison shows that diagnostic plots are useful not only for identifying problems but also for guiding model improvement. When non-linearity is present, possible responses include transforming a predictor, adding polynomial terms, or adopting a more flexible modeling approach. In this example, the residual plots support the earlier decision to include a quadratic term for `house_age`.
 
 ### Non-Constant Variance {.unnumbered .unlisted}
 
-A second common problem in regression analysis is non-constant variance, also known as heteroscedasticity. Linear regression assumes that the variability of the residuals remains roughly stable across the range of fitted values. When this assumption does not hold, the spread of residuals changes systematically as the fitted values increase or decrease. This can affect standard errors, confidence intervals, and hypothesis tests, even when the fitted mean trend appears reasonable.
+A second common problem in regression analysis is non-constant variance, also known as heteroscedasticity. Linear regression assumes that the variability of the residuals remains roughly stable across the range of fitted values. When this assumption does not hold, the residual spread changes systematically as the fitted values increase or decrease. This can affect standard errors, confidence intervals, and hypothesis tests, even when the fitted mean trend appears reasonable.
 
-One of the main tools for detecting this problem is the Residuals vs Fitted plot. If the constant-variance assumption is reasonable, the residuals should show a fairly even spread across the fitted values. A funnel shape, in which the spread widens or narrows as the fitted values change, suggests heteroscedasticity.
+Two useful diagnostic tools for this issue are the Residuals vs Fitted plot and the Scale-Location plot. If the constant-variance assumption is reasonable, the residuals should show a fairly even spread across the fitted values. A funnel shape, in which the spread widens or narrows as the fitted values change, suggests heteroscedasticity.
 
-In the `house` example, the Residuals vs Fitted and Scale-Location plots do not suggest severe heteroscedasticity, but it is still useful to see what this problem looks like more clearly. For that reason, @fig-ch10-hetero-comparison presents a simulated example in which the variance increases with the level of the response. In the left panel, the residuals from a regression model fitted to the original response `Y` display a pronounced funnel shape. In the right panel, the model is refitted using `log(Y)` as the response. The residual spread is much more even, showing how a transformation can sometimes stabilize variance.
+In the `house` example, the Residuals vs Fitted and Scale-Location plots do not suggest severe heteroscedasticity. Still, it is useful to see this problem in a clearer setting. For that reason, @fig-ch10-hetero-comparison presents a simulated example in which the variance increases with the level of the response. In the left panel, the residuals from a regression model fitted to the original response `y` show a pronounced funnel shape. In the right panel, the model is refitted using `log(y)` as the response. The residual spread is much more even, illustrating how a transformation can sometimes stabilize variance.
 
 ::: {#fig-ch10-hetero-comparison}
 ```{r out.width = "100%"}
@@ -667,13 +660,16 @@ n = 250
 x = runif(n, 0, 10)
 eps = rnorm(n, mean = 0, sd = 0.35)
 
-Y = exp(1 + 0.18 * x + eps)
+y = exp(1 + 0.18 * x + eps)
 
-mod_y = lm(Y ~ x)
-mod_logy = lm(log(Y) ~ x)
+mod_y = lm(y ~ x)
+mod_logy = lm(log(y) ~ x)
 
-autoplot(mod_y, which = 1, ncol = 1)
-autoplot(mod_logy, which = 1, ncol = 1)
+autoplot(mod_y, which = 1, ncol = 1) +
+  ggtitle("Model fitted to y")
+
+autoplot(mod_logy, which = 1, ncol = 1) +
+  ggtitle("Model fitted to log(y)")
 ```
 
 Residuals versus fitted values for a simulated example illustrating non-constant variance.
@@ -681,15 +677,15 @@ Residuals versus fitted values for a simulated example illustrating non-constant
 
 This example shows that heteroscedasticity is often easier to recognize visually than through a single summary statistic. It also illustrates one common response: transforming the response variable. In practice, however, transformations should be guided by the scientific context and by the scale on which interpretation remains meaningful.
 
-The Scale-Location plot in @fig-ch10-model-diagnostics provides another useful view of this issue by showing the spread of standardized residuals across the fitted values. Taken together, these plots help us judge whether the constant-variance assumption is reasonably satisfied or whether the model may need adjustment.
+The Scale-Location plot in @fig-ch10-model-diagnostics provides another useful view of this issue by showing how the spread of standardized residuals changes across the fitted values. Taken together, these plots help us judge whether the constant-variance assumption is reasonably satisfied or whether the model may need adjustment.
 
 ### Non-Normal Residuals {.unnumbered .unlisted}
 
-Another diagnostic concern is whether the residuals are approximately normally distributed. This issue is less important for estimating the regression function itself than for statistical inference, since the validity of confidence intervals and hypothesis tests depends in part on the residual distribution, especially when the sample size is small.
+Another diagnostic concern is whether the residuals are approximately normally distributed. This issue is less important for estimating the regression function itself than for inference, since the reliability of confidence intervals and hypothesis tests depends in part on the residual distribution, especially when the sample size is small.
 
-A standard tool for assessing this assumption is the Normal Q-Q plot. If the residuals are approximately normal, the points should lie close to the diagonal reference line. Systematic departures from the line, particularly in the tails, may suggest skewness, heavy tails, or other departures from normality.
+A standard tool for assessing this assumption is the Normal Q-Q plot. If the residuals are approximately normal, the points should lie close to the diagonal reference line. Systematic departures from that line, particularly in the tails, may suggest skewness, heavy tails, or other departures from normality.
 
-In the `house` example, the Q-Q plot for the polynomial regression model does not suggest a serious violation of normality. Still, it is helpful to compare this with a case where the assumption is clearly not satisfied. For this reason, @fig-ch10-qq-comparison shows two Q-Q plots. The left panel displays the residuals from `poly_reg_house`, which follow the reference line reasonably closely. The right panel shows a simulated example with clearly non-normal residuals. In that case, the pronounced departure from the line indicates that the normality assumption is not appropriate.
+As with non-constant variance, it is useful to compare the fitted `house` model with a clearer simulated example. In the `house` example, the Q-Q plot for the polynomial regression model does not suggest a serious violation of normality. Still, it is useful to compare this with a case where the assumption is clearly not satisfied. For this reason, @fig-ch10-qq-comparison shows two Q-Q plots. The left panel displays the residuals from `poly_reg_house`, which follow the reference line reasonably closely. The right panel shows a simulated example with clearly non-normal residuals. In that case, the pronounced deviation from the line indicates that the normality assumption is not appropriate.
 
 ::: {#fig-ch10-qq-comparison}
 ```{r out.width = "100%"}
@@ -706,44 +702,31 @@ eps.skew = rexp(n, rate = 1) - 1
 y.sim = 2 + 0.8 * x.sim + eps.skew
 bad_model = lm(y.sim ~ x.sim)
 
-autoplot(poly_reg_house, which = 2, ncol = 1)
-autoplot(bad_model, which = 2, ncol = 1)
+autoplot(poly_reg_house, which = 2, ncol = 1) +
+  ggtitle("Polynomial model")
+
+autoplot(bad_model, which = 2, ncol = 1) +
+  ggtitle("Simulated non-normal residuals")
 ```
 
 Normal Q-Q plots for the polynomial regression model fitted to the `house` dataset and for a simulated model with non-normal residuals.
 :::
 
-When residuals depart substantially from normality, inferential results should be interpreted more cautiously. Possible responses include transforming the response variable, reconsidering the model form, or using more robust methods when appropriate. As always, the goal is not to force perfect normality, but to judge whether the departure is mild enough to tolerate or substantial enough to affect the conclusions.
+When residuals depart substantially from normality, inferential results should be interpreted more cautiously. Possible responses include transforming the response variable, reconsidering the model form, or using more robust methods when appropriate. The goal is not to force perfect normality, but to judge whether the departure is mild enough to tolerate or substantial enough to affect the conclusions.
 
 ### Influential Observations {.unnumbered .unlisted}
 
-A regression model can also be affected by a small number of influential observations. These are cases that have the potential to exert disproportionate influence on the fitted model. In practice, influence is often greatest when an observation combines an unusual position in the predictor space with a relatively large residual.
+A regression model can also be affected by a small number of influential observations. These are cases that have the potential to exert disproportionate influence on the fitted model. In practice, influence is often greatest when a case combines an unusual position in the predictor space with a relatively large residual.
 
-The Residuals vs Leverage plot in the lower-right panel of @fig-ch10-model-diagnostics helps identify such cases. Observations with high leverage lie in unusual regions of the predictor space. If such observations also have large residuals, they may strongly affect the estimated coefficients and the fitted regression line. The Cook’s distance contours in this plot provide additional guidance by showing which observations may have relatively large influence on the overall fit.
+The Residuals vs Leverage plot in the lower-right panel of @fig-ch10-model-diagnostics helps identify such cases. Observations with high leverage lie in unusual regions of the predictor space. If such observations also have large residuals, they may strongly affect the estimated coefficients and the fitted regression line. The Cook’s distance contours in this plot provide additional guidance by indicating which cases may have relatively large influence on the overall fit.
 
-In the `house` example, observation 271 stands out because it has a large residual. This makes it a case worth examining more closely. However, a large residual alone does not automatically imply strong influence. To be influential, an observation typically must also have substantial leverage. The diagnostic plot suggests that no observation dominates the fitted model to an extreme degree, although some points deserve closer inspection.
+In the `house` example, observation 271 stands out because it has a relatively large residual. This makes it a useful case for closer inspection. However, a large residual alone does not automatically imply strong influence. To be influential, a case typically must also have substantial leverage. The diagnostic plot suggests that no single observation dominates the fitted model to an extreme degree, although some deserve additional attention. This distinction matters because unusual observations are not all equally important for the fitted model.
 
-When potentially influential observations are identified, they should not be removed automatically. Instead, we should first examine whether they reflect data entry errors, measurement problems, or unusual but valid cases. In some situations, an influential point reveals an important feature of the data rather than a defect. In others, it may suggest that the model form should be reconsidered.
+When potentially influential observations are identified, they should not be removed automatically. Instead, we should first examine whether they reflect data entry errors, measurement problems, or unusual but valid cases. In some situations, an influential observation reveals an important feature of the data rather than a defect. In others, it may suggest that the model form should be reconsidered.
 
 > *Practice:* In the Residuals vs Leverage plot, locate observation 271. Does it stand out mainly because of its residual size, its leverage, or both?
 
-### Dependence of Observations {.unnumbered .unlisted}
-
-The final issue is dependence among observations. Standard linear regression assumes that each observation contributes independent information. In many applications, however, this assumption may be questionable. Measurements collected over time, within clusters, or from related units may be correlated rather than independent.
-
-This issue is more difficult to diagnose from the standard four regression diagnostic plots alone. Unlike non-linearity, heteroscedasticity, or unusual residual behavior, dependence often cannot be identified reliably without additional information about how the data were collected. In some settings, it is useful to examine residuals in their natural order, such as over time or within groups. In others, specialized methods for correlated data may be more appropriate.
-
-For the `house` dataset, independence is usually treated as a working assumption. However, this assumption should not be accepted automatically in every application. In datasets involving repeated measurements, temporal sequences, spatial observations, or clustered units, dependence may be an important concern.
-
-When dependence is present, the fitted regression function may still appear reasonable, but the standard errors can be misleading and inferential conclusions may become unreliable. This reminds us that regression diagnostics are not only about reading plots. They also require us to think carefully about the structure of the data and the process by which the observations were generated.
-
-### Interpreting Diagnostics in Practice {.unnumbered .unlisted}
-
-Diagnostic analysis is not something we do only after fitting a regression model. It is part of the modeling process itself. A useful model should not only fit the data reasonably well, but also provide a sound basis for interpretation, inference, and prediction.
-
-In practice, we rarely expect a model to satisfy every assumption perfectly. The more important question is whether any violations are mild enough to tolerate or serious enough to affect the conclusions. Diagnostic plots therefore support judgment rather than provide automatic decisions. When they reveal important problems, we may revise the model by transforming variables, adding non-linear terms, reconsidering the choice of predictors, or using more robust methods when appropriate.
-
-Careful diagnostics help us distinguish between a model that fits the data only superficially and one that offers a more trustworthy representation of the underlying relationship. For this reason, regression analysis should include not only model fitting and comparison, but also thoughtful diagnostic checking. In this way, diagnostics help turn regression modeling from a purely mechanical procedure into a more thoughtful analytical process.
+Diagnostic analysis is not a separate step performed only after a model has been fitted. It is part of the modeling process itself. In practice, we rarely expect a model to satisfy every assumption perfectly. The more important question is whether any violations are mild enough to tolerate or serious enough to affect interpretation, inference, or prediction. For this reason, regression diagnostics help us move beyond mechanical model fitting toward a more careful and reliable analysis.
 
 ## Case Study: Predicting Hourly Bike Rental Demand {#sec-ch10-case-bike}
 
@@ -983,8 +966,8 @@ ggplot(
   data.frame(observed = test_bike$bike_count, predicted = pred_stepwise),
   aes(x = observed, y = predicted)
 ) +
-  geom_point(alpha = 0.4) +
-  geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = "gray40") +
   labs(x = "Observed bike rentals", y = "Predicted bike rentals")
 ```
 
@@ -996,170 +979,143 @@ This case study illustrates an important lesson about regression modeling. Predi
 
 ## Chapter Summary and Takeaways {#sec-ch10-summary}
 
-In this chapter, we examined regression analysis as a foundational tool for modeling relationships and making predictions when the response variable is continuous. We began with simple linear regression and then extended the framework to multiple regression, showing how additional predictors can improve a model’s ability to explain variation in the outcome. We also considered how regression can be used not only for prediction, but also for interpretation, hypothesis testing, and understanding the role of individual predictors.
+In this chapter, we introduced regression analysis as a core framework for modeling continuous outcomes. We began with simple linear regression and then extended the discussion to multiple regression, showing how additional predictors can improve our ability to explain variation in a response variable. Along the way, we emphasized that regression serves several purposes at once: it can be used for prediction, for interpretation, and for statistical inference about the role of individual predictors.
 
-Throughout the chapter, we emphasized the importance of evaluating regression models from several complementary perspectives. We introduced measures such as the residual standard error, $R^2$, and adjusted $R^2$ to assess model fit, and we discussed how hypothesis tests can help determine whether predictors contribute meaningfully to the model. We also examined stepwise regression as a practical method for comparing alternative specifications and selecting a more parsimonious set of predictors.
+We also examined how to evaluate regression models from several complementary perspectives. Measures such as the residual standard error, $R^2$, and adjusted $R^2$ help us assess model fit, while hypothesis tests help us judge whether predictors contribute information beyond what is explained by the others. At the same time, we saw that good numerical fit alone is not enough: a useful regression model should also be interpretable, appropriately specified, and well aligned with the structure of the data.
 
-We then moved beyond strictly linear relationships by considering nonlinear patterns in the data. Polynomial regression showed how the linear modeling framework can be extended to capture curved relationships while remaining interpretable. At the same time, we emphasized that good regression modeling does not depend only on choosing predictors, but also on checking whether the fitted model behaves reasonably. For that reason, we examined common diagnostic tools for identifying issues such as nonlinearity, non-constant variance, departures from normality, and influential observations.
+To move beyond strictly linear relationships, we introduced polynomial regression as a practical way to model curvature while remaining within the familiar linear modeling framework. We also examined stepwise regression as a tool for comparing alternative predictor sets and selecting a more parsimonious model. Throughout the chapter, we stressed that these modeling choices should be guided not only by summary statistics, but also by diagnostic checks that reveal whether important assumptions appear reasonable.
 
-The case study on hourly bike rental demand brought these ideas together in a realistic setting. There, we showed how response transformation, feature construction, time-aware data partitioning, model comparison, and diagnostic checking all contribute to effective regression modeling in practice. The case study also highlighted an important lesson: thoughtful model specification can matter as much as the choice between competing methods.
+The bike rental case study brought these ideas together in a realistic setting. There, we showed how response transformation, feature construction, time-aware data partitioning, model comparison, and diagnostic analysis all contribute to effective regression modeling in practice. The broader lesson is that successful modeling does not come from choosing the most complicated method available, but from choosing a model that is appropriate for the question, the data, and the intended use of the results.
 
-Taken together, this chapter reinforces a key message of the Data Science Workflow: effective modeling is not about applying the most complex method available, but about choosing models that are appropriate for the data, the problem, and the decision context. Regression models provide a structured way to quantify relationships, assess uncertainty, and generate interpretable predictions. In the next chapter, Generalized Regression Models, we extend these ideas to settings where the response variable is no longer continuous, focusing on binary and count outcomes.
+This chapter therefore reinforces an important principle of the Data Science Workflow: reliable modeling requires both statistical tools and careful judgment. Regression models provide a structured way to quantify relationships, assess uncertainty, and generate interpretable predictions when the response is continuous. In the next chapter, we extend these ideas to situations in which the response is no longer continuous, turning to generalized regression models for binary and count outcomes.
 
 ## Exercises {#sec-ch10-exercises}
 
-These exercises reinforce the main ideas of the chapter by combining conceptual understanding, interpretation of regression output, model comparison, diagnostic reasoning, and practical implementation in R. Unless otherwise stated, the datasets used in these exercises are included in the **liver** package.
+These exercises reinforce the main ideas of the chapter by combining conceptual understanding, interpretation of regression output, model comparison, diagnostic reasoning, and practical implementation in R. The hands-on sections use the `house`, `insurance`, and `bike_demand` datasets from the **liver** package.
 
 ### Conceptual Questions {.unnumbered .unlisted}
 
-1.  What is the difference between simple linear regression and multiple linear regression?
+1. In a simple linear regression model, how should we interpret the intercept and the slope?
 
-2.  In a simple linear regression model, how should we interpret the intercept and the slope?
+2. What does the $R^2$ value tell us about a regression model?
 
-3.  What does the $R^2$ value tell us about a regression model?
+3. Why is adjusted $R^2$ often more informative than $R^2$ when comparing models with different numbers of predictors?
 
-4.  Why is Adjusted $R^2$ often more informative than $R^2$ when comparing models with different numbers of predictors?
+4. What does the residual standard error measure, and how does it differ from $R^2$?
 
-5.  What does the residual standard error measure, and how does it differ from $R^2$?
+5. Why is it useful to distinguish between interpretation and prediction when evaluating a regression model?
 
-6.  Why is it useful to distinguish between interpretation and prediction when evaluating a regression model?
+6. What is multicollinearity, and why can it make regression coefficients harder to interpret?
 
-7.  What is multicollinearity, and why can it make regression coefficients harder to interpret?
+7. What is the purpose of stepwise regression, and what are its limitations?
 
-8.  What is the purpose of stepwise regression, and what are its limitations?
+8. Why is polynomial regression still considered a linear model?
 
-9.  Why is polynomial regression still considered a linear model?
+9. What kinds of patterns in a Residuals vs Fitted plot might suggest that a linear model is inadequate?
 
-10. What kinds of patterns in a Residuals vs Fitted plot might suggest that a linear model is inadequate?
+10. Why should regression diagnostics be viewed as part of model building rather than as a final checklist applied after fitting the model?
 
-11. Why does a large residual not automatically imply that an observation is highly influential?
+### Hands-On Practice: Regression Analysis with with `house` {.unnumbered .unlisted}
 
-12. Why should regression diagnostics be viewed as part of model building rather than as a final checklist applied after fitting the model?
-
-### Hands-On Practice: Simple and Multiple Regression with `house` {.unnumbered .unlisted}
-
-```{r}
+```{r eval = FALSE}
 data(house, package = "liver")
 ```
 
-13. Fit a simple linear regression model predicting `unit_price` from `stores_number`. Summarize the fitted model.
+11. Use the `partition()` function introduced earlier in the book to split the `house` data into training and test sets. Use 80% of the observations for training and 20% for testing, and store the results as `train_data` and `test_data`.
 
-14. Interpret the estimated intercept and slope in the model from Exercise 13.
+12. Fit the full regression model on the training data and store it as `full_model_train`:
 
-15. Use the fitted model from Exercise 13 to predict `unit_price` for houses with 2, 5, and 10 nearby stores.
-
-16. Create a scatter plot of `unit_price` versus `stores_number` and add the fitted regression line. Does the linear trend appear reasonable?
-
-17. Fit the multiple regression model below:
-
-```{r}
-full_model = lm(unit_price ~ ., data = house)
+```{r eval = FALSE} 
+full_model_train = lm(unit_price ~ ., data = train_data)
 ```
 
-Examine the model summary. Which predictors appear to be statistically significant?
+13. Apply stepwise regression to `full_model_train` and store the result as `stepwise_model`. Which predictor or predictors are removed?
 
-18. Compare the simple regression model from Exercise 13 with `full_model`. How do the residual standard error, $R^2$, and Adjusted $R^2$ change?
+14. Fit the polynomial regression model below using the training data:
 
-19. Interpret the coefficient of `distance_to_MRT` in `full_model`. What does this coefficient suggest, holding the other predictors fixed?
-
-20. Interpret the coefficients of `latitude` and `longitude`. Are these effects easy to interpret directly? Explain why or why not.
-
-21. Use `full_model` to predict `unit_price` for a new house with the following values: `house_age = 15`, `distance_to_MRT = 500`, `stores_number = 6`, `latitude = 24.97`, and `longitude = 121.54`.
-
-22. Fit a reduced multiple regression model that excludes `latitude` and `longitude`. Compare it with `full_model`. What is gained, and what is lost, by simplifying the model in this way?
-
-### Model Quality and Interpretation with `house` {.unnumbered .unlisted}
-
-23. Extract the residual standard error, $R^2$, and Adjusted $R^2$ from both the simple model and `full_model`. Summarize what each measure tells you.
-
-24. A model with a higher $R^2$ is often described as “better.” Why can this statement be misleading?
-
-25. Suppose two models have very similar predictive performance, but one is much simpler. Why might we prefer the simpler model?
-
-26. Choose two predictors from `full_model` and interpret their coefficients in practical terms. Which one seems easier to explain to a non-technical audience?
-
-27. Examine the p-values in `full_model`. Does statistical significance always imply practical importance? Explain your answer.
-
-28. Compute prediction intervals for at least two new houses using `full_model`. Why are prediction intervals wider than confidence intervals for the mean response?
-
-### Stepwise Regression with `house` {.unnumbered .unlisted}
-
-29. Starting from `full_model`, apply stepwise regression to select a simpler model.
-
-30. Which predictor is removed by the stepwise procedure?
-
-31. Store the selected model as `stepwise_model` and write out its fitted formula.
-
-32. Compare `stepwise_model` with `full_model` using the residual standard error, $R^2$, and Adjusted $R^2$. Does the simpler model perform very differently?
-
-33. Use `anova()` to compare `stepwise_model` and `full_model`. Does the larger model provide a clear improvement?
-
-34. Explain why stepwise regression may produce a model that is easier to communicate, even when its performance is only slightly different from that of the full model.
-
-35. Add an interaction term between `house_age` and `stores_number` to `stepwise_model`. Does this appear to improve the model meaningfully?
-
-### Non-Linear Regression and Diagnostics with `house` {.unnumbered .unlisted}
-
-36. Fit the following polynomial regression model and store it as `poly_reg_house`:
-
-```{r}
+```{r eval = FALSE} 
 poly_reg_house = lm(
   unit_price ~ house_age + I(house_age^2) + distance_to_MRT +
     stores_number + latitude,
-  data = house
+  data = train_data
 )
 ```
 
-37. Compare `poly_reg_house` with `stepwise_model`. How do the summary measures change?
+15. Compare `full_model_train`, `stepwise_model`, and `poly_reg_house` using the residual standard error and adjusted $R^2$ on the training data. What do these measures suggest, and what do they not tell you about performance on unseen data?
 
-38. Explain why the model in Exercise 36 is called a polynomial regression model, even though it is still estimated using linear regression.
+16. Use the three fitted models to predict `unit_price` for the test set. Compute the mean squared error (MSE) for each model. Which model performs best on unseen data?
 
-39. Create a plot that shows the relationship between `house_age` and `unit_price`. Add fitted curves from both a linear and a quadratic model based only on `house_age`. What does this comparison suggest?
+17. Compare the test-set MSE of `stepwise_model` and `poly_reg_house`. Does allowing curvature in `house_age` improve predictive performance enough to justify the added complexity?
 
-40. Compare the Residuals vs Fitted plots of `stepwise_model` and `poly_reg_house`. Which model shows less evidence of non-linearity?
+18. Create a plot showing the relationship between `house_age` and `unit_price`, and add fitted curves from both a linear and a quadratic model based only on `house_age`. What does this comparison suggest about the need for a nonlinear term?
 
-41. Examine the Scale-Location plot for `poly_reg_house`. Does it suggest severe non-constant variance?
+19. Compare the Residuals vs Fitted plots of `stepwise_model` and `poly_reg_house`. Which model shows less evidence of non-linearity?
 
-42. Examine the Normal Q-Q plot for `poly_reg_house`. Do the residuals appear approximately normal?
+20. Examine the Normal Q-Q, Scale-Location, and Residuals vs Leverage plots for `poly_reg_house`. Do the diagnostics suggest any serious problems?
 
-43. Inspect the Residuals vs Leverage plot for `poly_reg_house`. Does any observation stand out? What can you say about observation 271?
+21. Observation 271 was highlighted in the chapter. Does it still stand out in the diagnostic plots for `poly_reg_house` fitted on the training data? What can you say about its residual size, leverage, and possible influence?
 
-44. Based on the standard diagnostic plots, does `poly_reg_house` appear to be a reasonable working model for the `house` dataset? Give a short justification.
+22. Extend `poly_reg_house` by adding a cubic term, `I(house_age^3)`. Compare the cubic model with the quadratic model using both adjusted $R^2$ on the training data and MSE on the test data. Does the cubic term appear to improve the model enough to justify the extra complexity?
 
-45. Fit a cubic extension by adding `I(house_age^3)` to `poly_reg_house`. Does this seem to improve the model enough to justify the extra complexity?
+23. Based on your comparisons, which of the three models would you recommend if the goal is prediction, and which would you recommend if the goal is interpretation? Explain your reasoning.
 
-### Case Study Extension: Predicting Bike Rental Demand {.unnumbered .unlisted}
+### Hands-On Practice: Regression Analysis with `insurance` {.unnumbered .unlisted}
 
-```{r}
+```{r eval = FALSE}
+data(insurance, package = "liver")
+```
+
+24. Inspect the structure of the `insurance` dataset. Which variable would be a natural response for a regression analysis, and which variables seem like plausible predictors?
+
+25. Use the `partition()` function introduced earlier in the book to split the `insurance` data into training and test sets. Use 80% of the observations for training and 20% for testing. Why is a random split appropriate here, whereas a chronological split was more suitable for the `bike_demand` case study?
+
+26. Fit a simple linear regression model on the training data predicting `charges` from `age`. Store it as `simple_model_insurance`. Interpret the estimated intercept and slope.
+
+27. Create a scatter plot of `charges` versus `age` and add the fitted regression line. Does a straight-line relationship appear reasonable?
+
+28. Fit a multiple regression model on the training data predicting `charges` using `age`, `bmi`, `children`, and `smoker`. Store it as `full_model_insurance`.
+
+29. Extend `full_model_insurance` by adding `region` as an additional predictor. Does its inclusion appear to improve the model meaningfully?
+
+30. Apply stepwise regression to your full insurance model and store the result as `stepwise_model_insurance`. Which predictors are retained in the final specification?
+
+31. Starting from your main insurance model, add an interaction term between `age` and `bmi`. Does the interaction appear to improve the fit meaningfully?
+
+32. Starting from your main insurance model, add a quadratic term for `bmi`, that is, `I(bmi^2)`. Does this nonlinear term appear useful?
+
+33. Compare your main insurance models using the residual standard error and adjusted $R^2$ on the training data. What do these measures suggest?
+
+34. Use your fitted insurance models to predict `charges` for the test set. Compute the mean squared error (MSE) for each model. Which model performs best on unseen data?
+
+35. Compute prediction intervals for two new individuals of your choice using your preferred insurance model. Why are these intervals wider than confidence intervals for the mean response?
+
+36. Produce the standard diagnostic plots for your preferred insurance model. Do they suggest any serious problems with non-linearity, non-constant variance, non-normal residuals, or influential observations?
+
+37. Based on your results, which insurance model would you recommend if the goal is prediction, and which would you recommend if the goal is interpretation? Explain your reasoning.
+
+### Case Study Reflection: Predicting Bike Rental Demand {.unnumbered .unlisted}
+
+```{r eval = FALSE}
 data(bike_demand, package = "liver")
 ```
 
-46. Filter the data to keep only observations with `functioning_day == "yes"`.
+38. In the chapter, why was it important to restrict the analysis to observations with `functioning_day == "yes"` before fitting the regression models?
 
-47. Create two new variables: `weekday` and `month`, based on the date variable used in the chapter.
+39. Why was a chronological 80%-20% split more appropriate than a random split for the bike demand case study?
 
-48. Create the transformed response `sqrt_bike_count`. Why might this transformation be useful in this case?
+40. What was the motivation for modeling `sqrt_bike_count` instead of `bike_count` directly? In your answer, comment on both distributional shape and model stability.
 
-49. Split the data chronologically into a training set containing the first 80% of observations and a test set containing the final 20%.
+41. The stepwise model removed only `wind_speed`. What does this suggest about the relationship between model simplicity and predictive performance in this case study?
 
-50. Fit a full regression model for `sqrt_bike_count` using the predictors introduced in the chapter. Summarize the fitted model.
+42. The full and stepwise bike-demand models had very similar diagnostics and test-set performance. What broader lesson does this give about choosing between competing regression models?
 
-51. Apply stepwise regression to the full bike-demand model. Which predictor is removed?
-
-52. Compare the full and stepwise models on the test set using RMSE and $R^2$. Which model would you prefer for prediction?
-
-53. Why is a chronological split more appropriate here than a random split?
-
-54. Interpret the role of at least two important predictors in the bike-demand model. Are their estimated effects consistent with practical expectations?
-
-55. Produce diagnostic plots for the stepwise bike-demand model. Do they suggest any serious violations of the model assumptions?
-
-56. The diagnostics for the full and stepwise bike-demand models are very similar. Why does it make sense to present only the stepwise model diagnostics in the chapter?
-
-57. Compare model performance before and after using `sqrt_bike_count` as the response. What does this comparison suggest about the value of transformation?
-
-58. Suppose the goal were not only prediction but also explanation for city planners. Would you still choose the same final model? Explain your answer.
+43. Compare the goals of prediction and explanation in the bike demand case study. If the audience were city planners rather than modelers, would you still prefer the same final model? Explain your reasoning.
 
 ### Self-Reflection {.unnumbered .unlisted}
 
-59. Think of a real-world problem involving a continuous outcome, such as housing prices, demand forecasting, health measurements, or environmental exposure. Which regression approach from this chapter would you begin with: simple linear regression, multiple linear regression, or a model with non-linear terms? Explain your choice.
+44. Think of a real-world problem involving a continuous outcome, such as housing prices, medical costs, product demand, or environmental exposure. Which regression approach from this chapter would you begin with: simple linear regression, multiple linear regression, or a model with non-linear terms? Explain your choice.
+
+
+
+
+
