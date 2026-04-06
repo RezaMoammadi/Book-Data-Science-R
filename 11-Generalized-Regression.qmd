@@ -223,9 +223,9 @@ Logistic regression therefore serves two closely related purposes. It is a regre
 
 ## Poisson Regression for Count Outcomes {#sec-ch11-poisson-regression}
 
-Not all response variables describe whether an event occurs. In many applications, the outcome records *how many times* something happens within a fixed period or setting. Examples include the number of doctor visits, the number of insurance claims, the number of purchases made in a week, or the number of website visits in an hour. These outcomes are not continuous and are not simply binary. They are *counts*, and they require a model that respects their discrete, non-negative nature.
+Not all response variables describe whether an event occurs. In many applications, the outcome records *how many times* something happens within a fixed period or setting. Examples include the number of doctor visits, the number of insurance claims, the number of purchases made in a week, or the number of website visits in an hour. In Section [-@sec-ch10-case-bike], for example, we modeled hourly bike rental demand using the variable `bike_count`, which records the number of bikes rented in each hour. Outcomes of this kind are not continuous and are not simply binary. They are *counts*, and they require a model that respects their discrete, non-negative nature.
 
-Poisson regression is one of the most important generalized linear models for this setting. It extends the regression framework to responses that represent event frequencies, allowing us to relate expected counts to a set of predictors in a structured and interpretable way. Just as logistic regression adapts regression to binary outcomes, Poisson regression adapts it to count outcomes.
+Poisson regression is one of the most important generalized linear models for this setting. It extends the regression framework to responses that represent event frequencies, allowing us to relate expected counts to a set of predictors in a structured and interpretable way. Just as logistic regression adapts regression to binary outcomes, Poisson regression adapts it to count outcomes. Revisiting `bike_count` from Section [-@sec-ch10-case-bike] will therefore help us see how a generalized linear model can sometimes provide a more natural representation of a count response than ordinary linear regression.
 
 This matters because ordinary linear regression is not well suited to count data. A linear model can produce fitted values that are negative, even though counts must be non-negative. It also assumes a constant variance, whereas count outcomes often become more variable as their expected value increases. In addition, count data are often right-skewed, with many small values and fewer large ones. These features make the normal-error framework of linear regression less appropriate.
 
@@ -250,55 +250,151 @@ $$
 
 This formulation guarantees that the expected count is always positive. It also implies that predictors act multiplicatively on the original count scale, even though their effects are additive on the log scale. In this way, Poisson regression provides a statistically coherent and interpretable framework for modeling count outcomes.
 
-### Fitting and Interpreting a Poisson Regression Model in R {.unnumbered .unlisted}
+### Fitting and Interpreting a Poisson Regression Model for Bike Demand {.unnumbered .unlisted}
 
-We now fit a Poisson regression model in R using the `doctor_visits` dataset from the **liver** package. This dataset contains cross-sectional data from the 1977--1978 Australian Health Survey and is a standard example for count-data modeling. The response variable, `visits`, records the number of doctor visits in the past two weeks, while the remaining variables describe demographic, financial, and health-related characteristics that may help explain variation in healthcare use.
+In Section [-@sec-ch10-case-bike], we modeled hourly bike rental demand using linear regression, including nonlinear terms and a square-root transformation of the response. That analysis showed that linear regression can provide a useful approximation for this problem. At the same time, the response variable `bike_count` records the number of bike rentals in each hour, so it is fundamentally a count outcome. This makes Poisson regression a natural alternative to consider.
 
-We begin by loading the dataset:
+To make the comparison with Section [-@sec-ch10-case-bike] meaningful, we follow the same data preparation and partitioning steps introduced there. In particular, we derive `weekday` from `date`, retain only functioning days, order the observations chronologically, and use the same 80%--20% split into training and test sets. We also use the same set of predictors as in the linear regression analysis, but we now fit a Poisson regression model directly to the original response `bike_count` rather than to a transformed version of it.
 
-```{r}
-library(liver)
+```{r echo=FALSE}
+data(bike_demand)
 
-data(doctor_visits)
+bike_data <- bike_demand
+
+bike_data$date <- as.Date(bike_data$date, format = "%d/%m/%Y")
+
+bike_data$weekday <- factor(
+  lubridate::wday(bike_data$date, label = TRUE, abbr = TRUE, week_start = 1),
+  levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+)
+
+bike_data <- dplyr::filter(bike_data, functioning_day == "yes")
+
+bike_data <- dplyr::arrange(bike_data, date, hour)
+
+bike_data$hour <- factor(bike_data$hour, levels = 0:23)
+
+bike_data$sqrt_bike_count <- sqrt(bike_data$bike_count)
+
+# To split the data
+n_total <- nrow(bike_data)
+n_train <- floor(0.8 * n_total)
+
+train_bike <- bike_data[1:n_train, ]
+test_bike  <- bike_data[(n_train + 1):n_total, ]
+
+# To fit the full regression & stepwise 
+full_reg <- lm(
+  sqrt_bike_count ~ temperature + I(temperature^2) + humidity +
+    wind_speed + visibility + dew_point_temperature +
+    solar_radiation + rainfall + snowfall +
+    season + holiday + hour + weekday,
+  data = train_bike
+)
+
+stepwise_reg <- step(full_reg, direction = "both", trace = FALSE)
 ```
 
-The dataset contains `r nrow(doctor_visits)` observations and `r ncol(doctor_visits)` variables. Because `visits` is a count outcome, Poisson regression provides a natural starting point for modeling its expected value. To keep the example broad, we include all available predictors and add a quadratic term for age through `I(age^2)`. This allows the relationship between age and the expected number of doctor visits to be nonlinear.
+We begin by fitting a full Poisson regression model to the training data:
 
 ```{r}
-dv_pois <- glm(visits ~ . + I(age^2), data = doctor_visits, family = poisson)
+full_reg_glm <- glm(
+  bike_count ~ temperature + I(temperature^2) + humidity +
+    wind_speed + visibility + dew_point_temperature +
+    solar_radiation + rainfall + snowfall +
+    season + holiday + hour + weekday,
+  data = train_bike,
+  family = poisson
+)
 ```
-
-To inspect the fitted model, we use:
+We use the same predictor set as in the linear regression analysis, but now fit the model with `glm()` and `family = poisson`, so that `bike_count` is modeled directly as a count outcome. This tells R to use the Poisson distribution for the response and the log link function to relate the expected count to the predictors. As in Chapter [-@sec-ch10-regression], we can also use stepwise regression to obtain a more parsimonious model:
 
 ```{r}
-summary(dv_pois)
+stepwise_reg_glm <- step(full_reg_glm, direction = "both", trace = FALSE)
 ```
 
-The output reports the estimated coefficients, their standard errors, the corresponding *z*-statistics, and *p*-values. In a Poisson regression model, each coefficient describes how the corresponding predictor is associated with the log of the expected number of doctor visits, holding the other predictors fixed.
+The fitted model can be examined in R using `summary(stepwise_reg_glm)`, which reports the estimated coefficients, their standard errors, the corresponding *z*-statistics, and *p*-values. Because the full output is lengthy, we do not reproduce it here. Instead, we focus on interpreting the main types of coefficients that arise in the model.
 
-Each coefficient can be interpreted on two closely related scales. On the model scale, it describes the change in the log of the expected count associated with a one-unit increase in the predictor. After exponentiation, the coefficient can be interpreted as a multiplicative effect on the expected count. For a numeric predictor $x_j$, exponentiating the coefficient $b_j$ gives
-$$
-e^{b_j},
-$$
-which represents the factor by which the expected number of doctor visits changes when $x_j$ increases by one unit, holding the other predictors fixed.
+For example, the fitted coefficient of `temperature` is positive (0.061), indicating that warmer conditions are associated with a higher expected number of hourly bike rentals, holding the remaining predictors fixed. Exponentiating this coefficient gives $e^{0.061} \approx 1.06$, which means that a one-unit increase in temperature is associated with about a 6% increase in the expected number of bike rentals. Similarly, the coefficient for `holidayno` is interpreted relative to the reference category `holidayyes`. It therefore describes how the expected number of bike rentals on non-holidays differs from that on holidays, holding the other predictors fixed.
 
-For example, according to the `summary(dv_pois)` output, the coefficient of `illness` is 0.187. Exponentiating this value gives $e^{0.187} \approx 1.21$, which indicates that a one-unit increase in `illness` is associated with about a 21% increase in the expected number of doctor visits, holding the other predictors fixed. By contrast, the coefficient of `freepooryes` is -0.44. Exponentiating this value gives $e^{-0.44} \approx 0.64$, indicating that individuals in this category are expected to have about 36% fewer doctor visits than those in the reference category, all else being equal. These examples illustrate why Poisson regression coefficients are most naturally interpreted in multiplicative rather than additive terms.
+Each coefficient can be interpreted on two closely related scales. On the model scale, it describes the change in the log of the expected count associated with a one-unit increase in the predictor. After exponentiation, the coefficient can be interpreted as a multiplicative effect on the expected count. For a numeric predictor $x_j$, exponentiating the coefficient $b_j$ gives $e^{b_j}$, which represents the factor by which the expected number of bike rentals changes when $x_j$ increases by one unit, holding the other predictors fixed.
 
-For categorical predictors, the interpretation is relative to the reference category. In that case, the exponentiated coefficient compares the expected number of doctor visits in one category with the expected number in the reference category, holding the remaining predictors fixed. As in logistic regression, R automatically creates the required indicator coding when factor variables are included in the model formula.
-
-Predicted expected counts can be obtained with `predict()` using `type = "response"`:
+We then generate predicted expected counts for the test set using `predict()` with `type = "response"`:
 
 ```{r}
-round(predict(dv_pois, newdata = doctor_visits[1:5, ], type = "response"), 3)
+pred_stepwise_glm <- predict(stepwise_reg_glm, newdata = test_bike, type = "response")
 ```
 
-These values are the model’s estimated expected numbers of doctor visits for the selected observations. Because Poisson regression predicts expected counts, the fitted values do not need to be integers. They represent average expected frequencies rather than literal individual outcomes.
+These values are the model’s estimated expected numbers of bike rentals for the test observations. Because Poisson regression predicts expected counts, the fitted values do not need to be integers. They represent average expected demand rather than literal realized outcomes.
 
-At this stage, we fit the model using the full dataset because the main goal is to understand model specification and coefficient interpretation. In practice, however, fitting a Poisson regression model is only part of the analysis. We also need to assess whether the model provides a reasonable description of the data. For example, the AIC can be used to compare alternative Poisson models fitted to the same data, with smaller values generally indicating a better trade-off between fit and complexity. It is also useful to compare the residual deviance with the residual degrees of freedom, since a ratio noticeably larger than 1 may indicate overdispersion. Poisson regression is therefore often a useful starting point for count data, but its assumptions should still be checked against the observed data.
+We can now compare the Poisson regression model with the earlier linear regression model from Section [-@sec-ch10-case-bike] on the original `bike_count` scale. To compare the Poisson model with the earlier linear regression analysis, we summarize predictive performance on the original `bike_count` scale using RMSE and predictive $R^2$: 
 
-> *Practice:* Choose one numeric predictor and one categorical predictor from the `summary(dv_pois)` output. For each, explain how its coefficient should be interpreted on both the log scale and the expected-count scale. Then compute predicted expected counts for a few selected observations and explain what those values represent in context.
+```{r echo=FALSE}
+pred_stepwise_sqrt <- predict(stepwise_reg, newdata = test_bike)
+pred_stepwise <- pmax(pred_stepwise_sqrt, 0)^2
 
-> *Practice:* As an extension, revisit the `bike_demand` dataset from Chapter [-@sec-ch10-regression] and fit a Poisson regression model for hourly bike rentals. Compare its interpretation with the linear regression models from Chapter [-@sec-ch10-regression]. How does modeling the response as a count change the way predictor effects are interpreted?
+reg_metrics <- function(actual, predicted, model) {
+  data.frame(
+    Model = model,
+    RMSE = sqrt(mean((actual - predicted)^2)),
+    R2 = 1 - sum((actual - predicted)^2) / sum((actual - mean(actual))^2)
+  )
+}
+
+rbind(
+  reg_metrics(test_bike$bike_count, pred_stepwise, "Stepwise linear model"),
+  reg_metrics(test_bike$bike_count, pred_stepwise_glm, "Stepwise Poisson model")
+)
+```
+
+In this setting, the stepwise Poisson model achieves a lower predictive RMSE and a higher predictive $R^2$ than the stepwise linear model from Chapter [-@sec-ch10-regression]. In particular, the predictive RMSE decreases from about 333.8 to about 289.1, while the predictive $R^2$ increases from about 0.69 to about 0.77. This suggests that modeling `bike_count` directly as a count outcome provides a more appropriate and more effective starting point for this problem. A likely reason is that `bike_count` is non-negative and right-skewed, and its variability tends to increase with its mean. These are characteristics for which Poisson regression is often better suited than ordinary linear regression.
+
+Figure [-@fig-ch11-bike-poisson-vs-linear] compares observed and predicted bike rentals for the stepwise linear model from Chapter [-@sec-ch10-case-bike] and the stepwise Poisson model. The Poisson model produces predictions that track the diagonal reference line more closely, which is consistent with its improved predictive performance on the test set. At the same time, Poisson regression should still be viewed as a starting point rather than a final answer for every count-data problem. Hourly demand data may exhibit overdispersion, meaning that the variability in the response exceeds what the Poisson model assumes. It is therefore important to check model adequacy in practice, even when Poisson regression performs better than ordinary linear regression.
+
+::: {#fig-ch11-bike-poisson-vs-linear}
+```{r echo=FALSE}
+#| layout-ncol: 2
+#| fig-width: 4
+#| fig-height: 4
+
+ggplot(
+  data.frame(observed = test_bike$bike_count, predicted = pred_stepwise),
+  aes(x = observed, y = predicted)
+) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = "firebrick3") +
+  labs(
+    x = "Observed bike rentals",
+    y = "Predicted bike rentals",
+    title = "Stepwise Linear Model"
+  )
+
+ggplot(
+  data.frame(observed = test_bike$bike_count, predicted = pred_stepwise_glm),
+  aes(x = observed, y = predicted)
+) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = "firebrick3") +
+  labs(
+    x = "Observed bike rentals",
+    y = "Predicted bike rentals",
+    title = "Stepwise Poisson Model"
+  )
+```
+
+Observed versus predicted bike rentals for the stepwise linear regression model and the stepwise Poisson regression model.
+:::
+
+> *Practice:* Revisit the `bike_demand` analysis from Section [-@sec-ch10-case-bike] and compare the stepwise linear regression model with the stepwise Poisson regression model. Choose one numeric predictor and one categorical predictor from the Poisson model output, and interpret their coefficients on both the log scale and the expected-count scale. Then explain how modeling `bike_count` as a count outcome changes the interpretation of predictor effects relative to the linear regression analysis in Chapter [-@sec-ch10-regression].
+
+
+
+
+
+
+
+
+
 
 ## Case Study: Customer Churn Prediction with Logistic Regression {#sec-ch11-case-study}
 
@@ -465,7 +561,7 @@ In this chapter, we extended the regression framework from continuous outcomes t
 
 We first examined logistic regression for binary outcomes. This model is designed for situations in which the response records whether an event occurs, such as whether a customer churns or whether a loan application is approved. By modeling the log-odds of the event rather than the outcome directly, logistic regression ensures that predicted probabilities remain between 0 and 1. We also showed how its coefficients can be interpreted through odds ratios, and how estimated probabilities can be translated into classification decisions when a threshold is required.
 
-We then turned to Poisson regression for count outcomes. In this setting, the response records how many times an event occurs within a fixed interval, such as the number of doctor visits or service calls. Poisson regression links the expected count to the predictors through a log link, ensuring that fitted values remain positive and allowing predictor effects to be interpreted multiplicatively. At the same time, we emphasized that model assumptions still matter, especially the assumption that the variance is tied to the mean, and we highlighted overdispersion as an important practical issue in count-data analysis.
+We then turned to Poisson regression for count outcomes. Here, we revisited the `bike_demand` data from Chapter [-@sec-ch10-regression] and considered how hourly bike rentals can be modeled more naturally as a count response. Poisson regression links the expected count to the predictors through a log link, ensuring that fitted values remain positive and allowing predictor effects to be interpreted multiplicatively. Comparing the Poisson model with the earlier linear regression models illustrated an important lesson: when the response is non-negative, right-skewed, and count-based, a generalized linear model may provide a more appropriate starting point than ordinary linear regression. At the same time, we emphasized that model assumptions still matter, especially the assumption that the variance is tied to the mean, and we highlighted overdispersion as an important practical issue in count-data analysis.
 
 The case study on customer churn brought these ideas together in a predictive setting. There, logistic regression served as the main generalized regression model and was compared with Naive Bayes and k-Nearest Neighbors using ROC curves and the area under the curve. This comparison illustrated an important practical lesson: models with different assumptions and structures may achieve similar predictive performance, so model choice should not be based on accuracy alone. Interpretability, robustness, computational cost, and the purpose of the analysis are also central considerations.
 

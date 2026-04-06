@@ -606,9 +606,9 @@ P(\text{no} \mid \text{rejected})
 <p>With the dataset partitioned, we now train the Naive Bayes classifier. This model is well suited to loan approval classification because it is computationally efficient, interpretable, and able to handle a mix of categorical and numerical predictors.</p>
 <p>Several R packages implement Naive Bayes, including <strong>naivebayes</strong> and <strong>e1071</strong>. In this case study, we use the <strong>naivebayes</strong> package, which provides a flexible implementation for classification with mixed predictor types. During training, the <code><a href="https://majkamichal.github.io/naivebayes/reference/naive_bayes.html">naive_bayes()</a></code> function estimates the class-conditional distributions required for prediction and stores the results in a model object.</p>
 <p>Unlike instance-based methods such as <em>k</em>-Nearest Neighbors (see Chapter <a href="7-Classification-kNN.html" class="quarto-xref"><span>7</span></a>), Naive Bayes has an explicit training stage followed by a prediction stage. During training, the model estimates the distribution of each predictor within each class. During prediction, these estimates are combined using Bayes’ theorem to compute posterior class probabilities for new observations.</p>
-<p>To train the model, we specify a formula in which <code>loan_status</code> is the outcome variable and the remaining variables serve as predictors:</p>
+<p>To train the model, we specify a formula in which <code>loan_status</code> is the outcome variable and all remaining variables, except <code>loan_id</code>, are used as predictors:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">formula</span> <span class="op">=</span> <span class="va">loan_status</span> <span class="op">~</span> <span class="va">no_of_dependents</span> <span class="op">+</span> <span class="va">education</span> <span class="op">+</span> <span class="va">self_employed</span> <span class="op">+</span> <span class="va">income_annum</span> <span class="op">+</span> <span class="va">loan_amount</span> <span class="op">+</span> <span class="va">loan_term</span> <span class="op">+</span> <span class="va">cibil_score</span> <span class="op">+</span> <span class="va">residential_assets_value</span> <span class="op">+</span> <span class="va">commercial_assets_value</span> <span class="op">+</span> <span class="va">luxury_assets_value</span> <span class="op">+</span> <span class="va">bank_asset_value</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">formula</span> <span class="op">&lt;-</span> <span class="va">loan_status</span> <span class="op">~</span> <span class="va">.</span> <span class="op">-</span> <span class="va">loan_id</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We then fit the model using the <code><a href="https://majkamichal.github.io/naivebayes/reference/naive_bayes.html">naive_bayes()</a></code> function:</p>
 <div class="cell" data-layout-align="center">
@@ -627,10 +627,10 @@ P(\text{no} \mid \text{rejected})
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>   <span class="sc">-</span> Laplace<span class="sc">:</span> <span class="dv">0</span> </span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>   <span class="sc">-</span> Classes<span class="sc">:</span> <span class="dv">2</span> </span>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>   <span class="sc">-</span> Samples<span class="sc">:</span> <span class="dv">3415</span> </span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>   <span class="sc">-</span> Features<span class="sc">:</span> <span class="dv">11</span> </span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>   <span class="sc">-</span> Features<span class="sc">:</span> <span class="dv">12</span> </span>
 <span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>   <span class="sc">-</span> Conditional distributions<span class="sc">:</span> </span>
 <span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>       <span class="sc">-</span> Bernoulli<span class="sc">:</span> <span class="dv">2</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>       <span class="sc">-</span> Gaussian<span class="sc">:</span> <span class="dv">9</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>       <span class="sc">-</span> Gaussian<span class="sc">:</span> <span class="dv">10</span></span>
 <span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>   <span class="sc">-</span> Prior probabilities<span class="sc">:</span> </span>
 <span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>       <span class="sc">-</span> approved<span class="sc">:</span> <span class="fl">0.6214</span></span>
 <span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>       <span class="sc">-</span> rejected<span class="sc">:</span> <span class="fl">0.3786</span></span>
@@ -651,12 +651,12 @@ P(\text{no} \mid \text{rejected})
 <div class="cell" data-layout-align="center">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">head</span>(prob_naive_bayes, <span class="at">n =</span> <span class="dv">6</span>), <span class="dv">3</span>)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>        approved rejected</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">1</span>,]    <span class="fl">0.039</span>    <span class="fl">0.961</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">2</span>,]    <span class="fl">0.022</span>    <span class="fl">0.978</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">3</span>,]    <span class="fl">0.702</span>    <span class="fl">0.298</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">1</span>,]    <span class="fl">0.037</span>    <span class="fl">0.963</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">2</span>,]    <span class="fl">0.021</span>    <span class="fl">0.979</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">3</span>,]    <span class="fl">0.689</span>    <span class="fl">0.311</span></span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">4</span>,]    <span class="fl">1.000</span>    <span class="fl">0.000</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">5</span>,]    <span class="fl">0.030</span>    <span class="fl">0.970</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">6</span>,]    <span class="fl">0.991</span>    <span class="fl">0.009</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">5</span>,]    <span class="fl">0.029</span>    <span class="fl">0.971</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">6</span>,]    <span class="fl">0.990</span>    <span class="fl">0.010</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The resulting matrix contains one column for each possible outcome. The first column reports the estimated probability of <code>approved</code>, and the second reports the probability of <code>rejected</code>. These probabilities provide more information than a single predicted label because they indicate how strongly the model favors one class over the other. For example, an application with a very high predicted probability of <code>rejected</code> is classified with greater confidence than one with probabilities close to 0.5.</p>
 <blockquote class="blockquote">
@@ -672,7 +672,7 @@ P(\text{no} \mid \text{rejected})
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">conf.mat</span>(prob_naive_bayes, test_labels, <span class="at">cutoff =</span> <span class="fl">0.5</span>, <span class="at">reference =</span> <span class="st">"approved"</span>)</span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>             Predict</span>
 <span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>   Actual     approved rejected</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>     approved      <span class="dv">507</span>       <span class="dv">27</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>     approved      <span class="dv">508</span>       <span class="dv">26</span></span>
 <span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>     rejected       <span class="dv">39</span>      <span class="dv">281</span></span>
 <span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="fu">conf.mat.plot</span>(prob_naive_bayes, test_labels, <span class="at">cutoff =</span> <span class="fl">0.5</span>, <span class="at">reference =</span> <span class="st">"approved"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
