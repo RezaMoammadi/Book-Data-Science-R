@@ -2,7 +2,6 @@
 source("_common.R")
 ```
 
-
 # Regression Analysis: Linear and Nonlinear Models {#sec-ch10-regression}
 
 ::: {.content-visible when-format="pdf"}
@@ -46,17 +45,6 @@ Many real-world relationships are not strictly linear. To address this, we intro
 Throughout the chapter, we use the real-world `house` dataset to illustrate how regression models are built, interpreted, compared, and diagnosed in practice. In the final section, we bring these ideas together in a case study on hourly bike rental demand using the `bike_demand` dataset.
 
 By the end of this chapter, you will be able to fit, interpret, compare, and critically evaluate regression models in R, judge whether linear assumptions are reasonable, and extend regression models to capture more complex relationships when needed. We begin with simple linear regression, which provides the foundation for the rest of the chapter.
-
-
-
-
-
-
-
-
-
-
-
 
 ## Simple Linear Regression {#sec-ch10-simple-regression}
 
@@ -113,11 +101,9 @@ ggplot(house, aes(x = stores_number, y = unit_price)) +
 
 Figure @fig-scatter-plot-simple-reg suggests a positive association: houses with more nearby stores tend to have higher unit prices. The overall pattern appears roughly linear, which motivates fitting a simple linear regression model.
 
-We represent this relationship as
-$$
+We represent this relationship as $$
 \hat{y} = b_0 + b_1 x,
-$$
-where $\hat{y}$ is the predicted value of the response variable (`unit_price`), $x$ is the predictor (`stores_number`), $b_0$ is the intercept, and $b_1$ is the slope. The slope $b_1$ represents the expected change in unit price associated with a one-unit increase in the number of nearby stores.
+$$ where $\hat{y}$ is the predicted value of the response variable (`unit_price`), $x$ is the predictor (`stores_number`), $b_0$ is the intercept, and $b_1$ is the slope. The slope $b_1$ represents the expected change in unit price associated with a one-unit increase in the number of nearby stores.
 
 To build intuition, @fig-simple-regression gives a conceptual illustration of the model. The fitted regression line summarizes the overall linear pattern in the data, while the vertical distance between an observed value $y_i$ and its predicted value $\hat{y}_i = b_0 + b_1 x_i$ is called a residual. Residuals represent the part of the response that is not explained by the model.
 
@@ -145,8 +131,7 @@ We can inspect the fitted model using `summary()`:
 summary(simple_reg)
 ```
 
-The fitted regression equation is
-$$
+The fitted regression equation is $$
 \widehat{\text{unit\_price}} = `r round(simple_reg$coefficients[1], 2)` + `r round(simple_reg$coefficients[2], 2)` \times \text{stores\_number}.
 $$
 
@@ -162,8 +147,7 @@ Taken together, the results suggest that `stores_number` is a useful predictor o
 
 One of the main uses of a fitted regression model is prediction. Once the relationship between the number of nearby stores and house unit price has been estimated, the regression line can be used to predict the expected unit price for a given number of stores.
 
-Suppose we want to estimate the expected unit price for a house located near 5 stores. Using the fitted regression equation, we obtain
-$$
+Suppose we want to estimate the expected unit price for a house located near 5 stores. Using the fitted regression equation, we obtain $$
 \widehat{\text{unit\_price}}
 = b_0 + b_1 \times 5
 = `r round(simple_reg$coefficients[1], 2)` + `r round(simple_reg$coefficients[2], 2)` \times 5
@@ -196,11 +180,9 @@ We now extend simple linear regression to settings with more than one predictor.
 
 In the `house` dataset, house price is likely influenced by more than just the number of nearby stores. Age, distance to public transport, and location may all matter as well. Multiple regression allows us to examine how each predictor is associated with `unit_price` while accounting for the others. This is one of its main advantages: it helps us move from isolated pairwise relationships to a model that reflects several relevant factors at once.
 
-The general form of a multiple regression model with $m$ predictors is
-$$
+The general form of a multiple regression model with $m$ predictors is $$
 \hat{y} = b_0 + b_1 x_1 + b_2 x_2 + \dots + b_m x_m,
-$$
-where $b_0$ is the intercept and $b_1, b_2, \dots, b_m$ are the estimated coefficients. Each coefficient represents the expected change in the response associated with a one-unit increase in the corresponding predictor, while holding the other predictors fixed. This conditional interpretation is what distinguishes multiple regression from simple regression, where the effect of a predictor is considered on its own.
+$$ where $b_0$ is the intercept and $b_1, b_2, \dots, b_m$ are the estimated coefficients. Each coefficient represents the expected change in the response associated with a one-unit increase in the corresponding predictor, while holding the other predictors fixed. This conditional interpretation is what distinguishes multiple regression from simple regression, where the effect of a predictor is considered on its own.
 
 ### Fitting and Interpreting a Multiple Regression Model in R {.unnumbered .unlisted}
 
@@ -303,24 +285,19 @@ To address this question, we use summary measures of model fit. In this section,
 
 ### Residual Standard Error {.unnumbered .unlisted}
 
-To understand model fit, we begin with the idea of a residual. A residual is the difference between an observed response value and the corresponding value predicted by the model. For observation $i$, the residual is
-$$
+To understand model fit, we begin with the idea of a residual. A residual is the difference between an observed response value and the corresponding value predicted by the model. For observation $i$, the residual is $$
 e_i = y_i - \hat{y}_i,
-$$
-where $y_i$ is the observed value and $\hat{y}_i$ is the fitted value from the regression model. Residuals therefore represent the part of the response that remains unexplained after the model is fitted.
+$$ where $y_i$ is the observed value and $\hat{y}_i$ is the fitted value from the regression model. Residuals therefore represent the part of the response that remains unexplained after the model is fitted.
 
-The regression line or regression surface is estimated by choosing the coefficients that make the residuals as small as possible overall. More precisely, least squares estimation minimizes the sum of squared residuals, also called the sum of squared errors:
-$$
+The regression line or regression surface is estimated by choosing the coefficients that make the residuals as small as possible overall. More precisely, least squares estimation minimizes the sum of squared residuals, also called the sum of squared errors: $$
 \text{SSE} = \sum_{i=1}^{n} (y_i - \hat{y}_i)^2.
 $$ {#eq-sse}
 
 A smaller SSE indicates that the fitted values lie closer to the observed values. However, because SSE depends on the number of observations and the scale of the response, it is not always easy to interpret directly. For this reason, we often use the residual standard error (RSE), which summarizes the typical size of the residuals on the scale of the response variable.
 
-The RSE is defined as
-$$
+The RSE is defined as $$
 RSE = \sqrt{\frac{SSE}{n - m - 1}},
-$$
-where $n$ is the number of observations and $m$ is the number of predictors. The denominator $n - m - 1$ reflects the model’s degrees of freedom. In simple linear regression, where $m = 1$, this becomes $n - 2$ because both the intercept and slope are estimated from the data.
+$$ where $n$ is the number of observations and $m$ is the number of predictors. The denominator $n - m - 1$ reflects the model’s degrees of freedom. In simple linear regression, where $m = 1$, this becomes $n - 2$ because both the intercept and slope are estimated from the data.
 
 A smaller RSE indicates that, on average, the fitted values lie closer to the observed values. For the simple and multiple regression models fitted to the `house` dataset, the RSE values can be computed directly as follows:
 
@@ -341,11 +318,9 @@ Because RSE is expressed in the same units as the response variable, its interpr
 
 The coefficient of determination, $R^2$, measures the proportion of variability in the response variable that is explained by the regression model. It summarizes how well the fitted model captures the overall variation in the data.
 
-Formally, $R^2$ is defined as
-$$
+Formally, $R^2$ is defined as $$
 R^2 = 1 - \frac{SSE}{SST},
-$$
-where $SSE$ is the sum of squared errors defined in @eq-sse and $SST$ is the total sum of squares, representing the total variation in the response. The value of $R^2$ ranges between 0 and 1. A value of 1 means that the model explains all observed variation, whereas a value of 0 means that it explains none.
+$$ where $SSE$ is the sum of squared errors defined in @eq-sse and $SST$ is the total sum of squares, representing the total variation in the response. The value of $R^2$ ranges between 0 and 1. A value of 1 means that the model explains all observed variation, whereas a value of 0 means that it explains none.
 
 For the simple regression model predicting `unit_price` from `stores_number`, the value of $R^2$ is
 
@@ -353,11 +328,9 @@ For the simple regression model predicting `unit_price` from `stores_number`, th
 round(summary(simple_reg)$r.squared, 3)
 ```
 
-This means that approximately `r round(summary(simple_reg)$r.squared * 100, 1)`% of the variation in `unit_price` is explained by the regression model using `stores_number` as the predictor. In simple linear regression, $R^2$ is directly related to the Pearson correlation coefficient introduced in Section [-@sec-ch5-correlation-test], since
-$$
+This means that approximately `r round(summary(simple_reg)$r.squared * 100, 1)`% of the variation in `unit_price` is explained by the regression model using `stores_number` as the predictor. In simple linear regression, $R^2$ is directly related to the Pearson correlation coefficient introduced in Section [-@sec-ch5-correlation-test], since $$
 R^2 = r^2,
-$$
-where $r$ is the correlation between the predictor and the response. In the `house` dataset, we can verify this directly:
+$$ where $r$ is the correlation between the predictor and the response. In the `house` dataset, we can verify this directly:
 
 ```{r}
 round(cor(house$stores_number, house$unit_price)^2, 3)
@@ -367,11 +340,9 @@ This gives the same value as the reported $R^2$, reinforcing that in simple line
 
 However, $R^2$ has an important limitation: it never decreases when predictors are added, even if the additional variables contribute little useful information. For this reason, $R^2$ alone can be misleading when comparing models of different complexity. Adjusted $R^2$ addresses this limitation by accounting for the number of predictors in the model.
 
-Adjusted $R^2$ is defined as
-$$
+Adjusted $R^2$ is defined as $$
 \text{Adjusted } R^2 = 1 - \left(1 - R^2\right)\times\frac{n - 1}{n - m - 1},
-$$
-where $n$ is the number of observations and $m$ is the number of predictors. Unlike $R^2$, adjusted $R^2$ may increase or decrease when a new predictor is added, depending on whether the improvement in fit is large enough to justify the added complexity.
+$$ where $n$ is the number of observations and $m$ is the number of predictors. Unlike $R^2$, adjusted $R^2$ may increase or decrease when a new predictor is added, depending on whether the improvement in fit is large enough to justify the added complexity.
 
 For the simple regression model, adjusted $R^2$ is
 
@@ -401,30 +372,24 @@ This comparison naturally leads to a broader modeling question: should all avail
 
 Measures such as RSE, $R^2$, and adjusted $R^2$ help us assess how well a regression model fits the observed data, but they do not tell us whether individual regression coefficients are statistically distinguishable from zero. To answer that question, we turn to hypothesis testing.
 
-We begin with the simplest setting: simple linear regression. In this case, inference focuses on the slope coefficient. Specifically, we ask whether the estimated slope $b_1$ provides evidence of a linear association in the population, where the corresponding population parameter is denoted by $\beta_1$. The population regression model is
-$$
+We begin with the simplest setting: simple linear regression. In this case, inference focuses on the slope coefficient. Specifically, we ask whether the estimated slope $b_1$ provides evidence of a linear association in the population, where the corresponding population parameter is denoted by $\beta_1$. The population regression model is $$
 y = \beta_0 + \beta_1 x + \epsilon,
-$$
-where $\beta_0$ is the population intercept, $\beta_1$ is the population slope, and $\epsilon$ represents random variation not explained by the model.
+$$ where $\beta_0$ is the population intercept, $\beta_1$ is the population slope, and $\epsilon$ represents random variation not explained by the model.
 
-The key inferential question is whether $\beta_1$ differs from zero. If $\beta_1 = 0$, then the predictor $x$ has no linear association with the response in the population, and the model simplifies to
-$$
+The key inferential question is whether $\beta_1$ differs from zero. If $\beta_1 = 0$, then the predictor $x$ has no linear association with the response in the population, and the model simplifies to $$
 y = \beta_0 + \epsilon.
 $$
 
-We formalize this question through the hypotheses
-$$
+We formalize this question through the hypotheses $$
 \begin{cases}
 H_0: \beta_1 = 0 & \text{(no linear relationship between $x$ and $y$)}, \\
 H_a: \beta_1 \neq 0 & \text{(a linear relationship exists)}.
 \end{cases}
 $$
 
-To test these hypotheses, we compute the t-statistic
-$$
+To test these hypotheses, we compute the t-statistic $$
 t = \frac{b_1}{SE(b_1)},
-$$
-where $SE(b_1)$ is the standard error of the slope estimate. Under the null hypothesis, this statistic follows a t-distribution with $n - 2$ degrees of freedom, reflecting the estimation of two parameters in simple linear regression. The associated *p*-value measures how unusual it would be to observe a slope estimate as extreme as $b_1$ if $H_0$ were true.
+$$ where $SE(b_1)$ is the standard error of the slope estimate. Under the null hypothesis, this statistic follows a t-distribution with $n - 2$ degrees of freedom, reflecting the estimation of two parameters in simple linear regression. The associated *p*-value measures how unusual it would be to observe a slope estimate as extreme as $b_1$ if $H_0$ were true.
 
 We now return to the summary output of the simple regression model introduced in Section [-@sec-ch10-simple-regression], focusing on the inferential quantities associated with the slope coefficient. From this output, the estimated slope is $b_1 =$ `r round(simple_reg$coefficients[2], 2)`, with a corresponding t-statistic of `r round(summary(simple_reg)$coefficients[2, "t value"], 2)` and a *p*-value of `r format.pval(summary(simple_reg)$coefficients[2, "Pr(>|t|)"], digits = 3)`. Because this *p*-value is very small, we reject the null hypothesis.
 
@@ -452,11 +417,9 @@ This idea connects naturally to earlier parts of the data science workflow. Expl
 
 When comparing competing regression models, we need a principled way to decide whether a simpler model is preferable to a more complex one. Model selection criteria address this problem by balancing goodness of fit against model complexity, so that additional predictors are retained only when they improve the model enough to justify their inclusion.
 
-One widely used criterion is the Akaike Information Criterion (AIC). AIC combines a measure of model fit with a penalty for complexity, with lower values indicating a better trade-off. For linear regression, AIC can be expressed, up to an additive constant, as
-$$
+One widely used criterion is the Akaike Information Criterion (AIC). AIC combines a measure of model fit with a penalty for complexity, with lower values indicating a better trade-off. For linear regression, AIC can be expressed, up to an additive constant, as $$
 AIC = 2m + n \log\left(\frac{SSE}{n}\right),
-$$
-where $m$ denotes the number of estimated parameters in the model, $n$ is the number of observations, and $SSE$ is the sum of squared errors introduced in @eq-sse.
+$$ where $m$ denotes the number of estimated parameters in the model, $n$ is the number of observations, and $SSE$ is the sum of squared errors introduced in @eq-sse.
 
 Unlike $R^2$, which never decreases when predictors are added, AIC explicitly penalizes model complexity. As a result, a predictor is retained only if the improvement in fit is large enough to justify the added complexity. AIC is therefore a relative measure: it is meaningful only when comparing models fitted to the same dataset and response variable, and among the candidate models, the one with the smaller AIC is preferred.
 
@@ -532,8 +495,7 @@ ggplot(data = house, aes(x = house_age, y = unit_price)) +
 
 The figure suggests that the relationship is not fully captured by a straight line. The linear fit follows the overall direction of the data, but it does not reflect the visible curvature particularly well. In contrast, the quadratic curve follows the pattern more closely, suggesting that the effect of `house_age` on `unit_price` is not constant across the full range of the predictor.
 
-A quadratic regression model has the form
-$$
+A quadratic regression model has the form $$
 \widehat{\text{unit\_price}} = b_0 + b_1 \times \text{house\_age} + b_2 \times \text{house\_age}^2.
 $$
 
@@ -547,8 +509,7 @@ We now return to the `house` dataset and examine how polynomial regression can b
 
 The stepwise model retained the predictors `house_age`, `distance_to_MRT`, `stores_number`, and `latitude`, but it treated the effect of `house_age` as linear. Because the earlier scatter plot suggested curvature in the relationship between `house_age` and `unit_price`, it is natural to ask whether the model improves when we allow this relationship to bend.
 
-To do so, we add a quadratic term for `house_age` while retaining the other predictors from the stepwise model. The resulting polynomial regression model is
-\begin{equation}
+To do so, we add a quadratic term for `house_age` while retaining the other predictors from the stepwise model. The resulting polynomial regression model is \begin{equation}
 \begin{split}
 \widehat{\text{unit\_price}} &=
 b_0 + b_1 \times \text{house\_age} +
@@ -579,14 +540,6 @@ Polynomial regression therefore provides a useful extension of multiple regressi
 
 > *Practice:* Fit a cubic extension of the model by replacing `I(house_age^2)` with both `I(house_age^2)` and `I(house_age^3)`. Compare the cubic and quadratic models using the residual standard error, adjusted $R^2$, and the diagnostic plots. Does the added cubic term appear to improve the model enough to justify the extra complexity?
 
-
-
-
-
-
-
-
-
 ## Diagnosing Common Problems in Regression Models
 
 A regression model may appear to perform well according to measures such as $R^2$, adjusted $R^2$, or the residual standard error, yet still suffer from important weaknesses. Before we rely on a fitted model for interpretation or prediction, we therefore need to examine whether it shows signs of systematic problems. Diagnostic analysis helps us do this by revealing patterns in the residuals, highlighting unusual observations, and showing whether the fitted model captures the structure of the data adequately.
@@ -613,7 +566,6 @@ In this case, the plots do not suggest any severe violation of the main regressi
 ### Non-Linearity of the Response-Predictor Relationship {.unnumbered .unlisted}
 
 One of the most common problems in regression analysis is non-linearity. A linear regression model assumes that the response changes linearly with the predictors included in the model, given the structure specified by the model. When this assumption is not appropriate, the fitted model may systematically underpredict in some regions of the data and overpredict in others.
-
 
 A useful tool for detecting this problem is the Residuals vs Fitted plot. If the assumed functional form is adequate, the residuals should appear randomly scattered around zero with no clear structure. Curved patterns or other systematic departures suggest that the model is missing important non-linear structure.
 
@@ -995,23 +947,23 @@ These exercises reinforce the main ideas of the chapter by combining conceptual 
 
 ### Conceptual Questions {.unnumbered .unlisted}
 
-1. In a simple linear regression model, how should we interpret the intercept and the slope?
+1.  In a simple linear regression model, how should we interpret the intercept and the slope?
 
-2. What does the $R^2$ value tell us about a regression model?
+2.  What does the $R^2$ value tell us about a regression model?
 
-3. Why is adjusted $R^2$ often more informative than $R^2$ when comparing models with different numbers of predictors?
+3.  Why is adjusted $R^2$ often more informative than $R^2$ when comparing models with different numbers of predictors?
 
-4. What does the residual standard error measure, and how does it differ from $R^2$?
+4.  What does the residual standard error measure, and how does it differ from $R^2$?
 
-5. Why is it useful to distinguish between interpretation and prediction when evaluating a regression model?
+5.  Why is it useful to distinguish between interpretation and prediction when evaluating a regression model?
 
-6. What is multicollinearity, and why can it make regression coefficients harder to interpret?
+6.  What is multicollinearity, and why can it make regression coefficients harder to interpret?
 
-7. What is the purpose of stepwise regression, and what are its limitations?
+7.  What is the purpose of stepwise regression, and what are its limitations?
 
-8. Why is polynomial regression still considered a linear model?
+8.  Why is polynomial regression still considered a linear model?
 
-9. What kinds of patterns in a Residuals vs Fitted plot might suggest that a linear model is inadequate?
+9.  What kinds of patterns in a Residuals vs Fitted plot might suggest that a linear model is inadequate?
 
 10. Why should regression diagnostics be viewed as part of model building rather than as a final checklist applied after fitting the model?
 
@@ -1025,7 +977,7 @@ data(house, package = "liver")
 
 12. Fit the full regression model on the training data and store it as `full_model_train`:
 
-```{r eval = FALSE} 
+```{r eval = FALSE}
 full_model_train = lm(unit_price ~ ., data = train_data)
 ```
 
@@ -1033,7 +985,7 @@ full_model_train = lm(unit_price ~ ., data = train_data)
 
 14. Fit the polynomial regression model below using the training data:
 
-```{r eval = FALSE} 
+```{r eval = FALSE}
 poly_reg_house = lm(
   unit_price ~ house_age + I(house_age^2) + distance_to_MRT +
     stores_number + latitude,
@@ -1114,8 +1066,3 @@ data(bike_demand, package = "liver")
 ### Self-Reflection {.unnumbered .unlisted}
 
 44. Think of a real-world problem involving a continuous outcome, such as housing prices, medical costs, product demand, or environmental exposure. Which regression approach from this chapter would you begin with: simple linear regression, multiple linear regression, or a model with non-linear terms? Explain your choice.
-
-
-
-
-
