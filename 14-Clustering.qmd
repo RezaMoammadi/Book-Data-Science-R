@@ -60,8 +60,7 @@ These considerations lead naturally to a central question: how do clustering alg
 
 At the core of clustering lies a fundamental question: *how similar are two observations?* Clustering algorithms address this question through *similarity measures* or *distance measures*, which quantify how closely observations resemble one another. The choice of similarity measure is not merely a technical detail. It is a modeling decision that directly shapes the cluster structure an algorithm can detect.
 
-For numerical data, the most commonly used measure is *Euclidean distance*, which represents the straight-line distance between two observations in feature space. This measure was introduced earlier in the context of the k-Nearest Neighbors algorithm (Section [-@sec-ch7-knn-distance-metrics]). In clustering, Euclidean distance plays a similar role by determining which observations are close enough to be grouped together. Formally, the Euclidean distance between two observations $x = (x_1, x_2, \ldots, x_n)$ and $y = (y_1, y_2, \ldots, y_n)$ with $n$ features is defined as
-$$
+For numerical data, the most commonly used measure is *Euclidean distance*, which represents the straight-line distance between two observations in feature space. This measure was introduced earlier in the context of the k-Nearest Neighbors algorithm (Section [-@sec-ch7-knn-distance-metrics]). In clustering, Euclidean distance plays a similar role by determining which observations are close enough to be grouped together. Formally, the Euclidean distance between two observations $x = (x_1, x_2, \ldots, x_n)$ and $y = (y_1, y_2, \ldots, y_n)$ with $n$ features is defined as $$
 \text{dist}(x, y) = \sqrt{\sum_{i=1}^n (x_i - y_i)^2}.
 $$
 
@@ -77,11 +76,9 @@ These considerations are especially important for K-means clustering. K-means re
 
 How does an algorithm decide which observations belong together? K-means clustering addresses this question by representing each cluster through a *centroid* and assigning observations to the nearest centroid based on distance. By alternating between assignment and update steps, the algorithm gradually refines both the cluster memberships and their representative centers, partitioning the observations into $k$ clusters.
 
-More formally, K-means seeks a partition that minimizes the *within-cluster sum of squares*:
-$$
+More formally, K-means seeks a partition that minimizes the *within-cluster sum of squares*: $$
 \sum_{r=1}^{k}\sum_{i \in C_r} \lVert x_i - \mu_r \rVert^2,
-$$
-where $C_r$ denotes the set of observations assigned to cluster $r$, and $\mu_r$ is the centroid of that cluster. In other words, the algorithm aims to form clusters in which observations lie as close as possible to their assigned centroids. Because each centroid is defined as a mean, K-means is naturally suited to numerical data. The assignment and update steps of the algorithm can therefore be understood as an iterative procedure for reducing this objective function.
+$$ where $C_r$ denotes the set of observations assigned to cluster $r$, and $\mu_r$ is the centroid of that cluster. In other words, the algorithm aims to form clusters in which observations lie as close as possible to their assigned centroids. Because each centroid is defined as a mean, K-means is naturally suited to numerical data. The assignment and update steps of the algorithm can therefore be understood as an iterative procedure for reducing this objective function.
 
 The K-means algorithm requires the number of clusters, $k$, to be specified in advance. Given a choice of $k$, the algorithm proceeds as follows:
 
@@ -223,7 +220,6 @@ customers_subset <- wholesale_customers[, selected_variables]
 A further issue is that customer spending variables are typically highly right-skewed: many customers spend relatively modest amounts, whereas a smaller number spend much more. This pattern is illustrated for the `grocery` variable in @fig-ch14-before-after-log1p. If we cluster the raw values directly, a few very large observations may dominate the distance calculations and strongly influence the centroids. To reduce this skewness and make differences in purchasing patterns more comparable across customers, we apply a log transformation using `log1p()`, which computes $log(1 + x)$ and is well suited to nonnegative data because it handles zeros naturally. As @fig-ch14-before-after-log1p shows, the transformation compresses the long right tail and reduces the influence of very large values. This allows K-means to focus more on relative differences in spending patterns than on a small number of unusually large purchases.
 
 ::: {#fig-ch14-before-after-log1p}
-
 ```{r out.width = "100%"}
 #| layout-ncol: 2
 #| fig-width: 4
@@ -249,7 +245,7 @@ customers_log <- log1p(customers_subset)
 
 The log transformation reduces the influence of extremely large spending values, but it does not make K-means fully robust to extreme observations. If severe outliers are present, they may still affect the resulting clusters and should be examined separately.
 
-After reducing skewness, we apply min-max scaling using the `minmax()` function from the **liver** package so that all variables lie on a common scale. As discussed in Section [-@sec-ch6-minmax], scaling is essential for distance-based methods because variables with larger numerical ranges would otherwise exert disproportionate influence on the distance calculations. We use min-max scaling here because it preserves relative differences while placing all spending variables on the same $[0,1]$ scale. Other choices, such as z-score standardization, are also possible, and the resulting clustering may differ depending on whether one uses raw values, log-transformed values, min-max scaling, or standardization.
+After reducing skewness, we apply min-max scaling using the `minmax()` function from the **liver** package so that all variables lie on a common scale. As discussed in Section [-@sec-ch6-feature-scaling], scaling is essential for distance-based methods because variables with larger numerical ranges would otherwise exert disproportionate influence on the distance calculations. We use min-max scaling here because it preserves relative differences while placing all spending variables on the same $[0,1]$ scale. Other choices, such as z-score standardization, are also possible, and the resulting clustering may differ depending on whether one uses raw values, log-transformed values, min-max scaling, or standardization.
 
 ```{r}
 customers_mm <- minmax(customers_log, col = "all")
@@ -448,7 +444,7 @@ The `red_wines` dataset contains chemical measurements for red wines together wi
 
 17. Load the `red_wines` dataset from the **liver** package and inspect its structure.
 
-```r
+``` r
 library(liver)
 
 data(red_wines)
@@ -469,7 +465,7 @@ str(red_wines)
 
 24. Use the elbow method to examine plausible values of $k$.
 
-```r
+``` r
 library(factoextra)
 
 fviz_nbclust(red_wines, kmeans, method = "wss", k.max = 10)
@@ -508,5 +504,3 @@ fviz_nbclust(red_wines, kmeans, method = "wss", k.max = 10)
 39. (Optional) Apply a clustering method other than K-means, such as hierarchical clustering, to the same dataset. How does the resulting grouping compare with the K-means solution?
 
 40. Reflect on your analysis of the `red_wines` dataset. What were the most important modeling decisions, and how did those decisions affect the final clustering and its interpretation? If this were a real-world project, what additional checks or external information would you want before acting on the results?
-
-

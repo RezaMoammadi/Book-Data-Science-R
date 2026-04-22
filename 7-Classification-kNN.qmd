@@ -262,11 +262,11 @@ To make this idea concrete, imagine working with patient data that includes *age
 
 In most tabular datasets (such as the `churn` and `bank` datasets introduced earlier), features include a mix of categorical and numerical variables. A recommended approach is to first *encode* the categorical features into numeric format and then *scale* all numerical features. This sequence ensures that distance calculations occur on a unified numerical scale without introducing artificial distortions.
 
-The appropriate encoding strategy depends on whether a variable is *binary*, *nominal*, or *ordinal*. These techniques were detailed in Chapter [-@sec-ch6-setup-data]: general guidance in Section [-@sec-ch6-encoding], ordinal handling in Section [-@sec-ch6-ordinal-encoding], and one-hot encoding in Section [-@sec-ch6-one-hot-encoding].
+The appropriate encoding strategy depends on whether a variable is *binary*, *nominal*, or *ordinal*. These techniques were detailed in Section [-@sec-ch6-encoding].
 
 Once categorical variables have been encoded, all numerical features—both original and derived—should be scaled so that they contribute fairly to similarity calculations. Even after encoding, features can differ widely in range. For example, *age* might vary from 20 to 70, while *income* could range from 20,000 to 150,000. Without proper scaling, features with larger magnitudes may dominate the distance computation, leading to biased neighbor selection.
 
-Two widely used scaling methods address this issue: *min–max scaling* (introduced in Section [-@sec-ch6-minmax]) and *z-score scaling* (introduced in Section [-@sec-ch6-zscore]). Min–max scaling rescales values to a fixed range, typically $[0, 1]$, ensuring that all features contribute on the same numerical scale. Z-score scaling centers features at zero and scales them by their standard deviation, making it preferable when features have different units or contain outliers.
+Two widely used scaling methods address this issue: *min–max scaling* and *z-score scaling* (introduced in Section [-@sec-ch6-feature-scaling]). Min–max scaling rescales values to a fixed range, typically $[0, 1]$, ensuring that all features contribute on the same numerical scale. Z-score scaling centers features at zero and scales them by their standard deviation, making it preferable when features have different units or contain outliers.
 
 Min–max scaling is generally suitable when feature values are bounded and preserving relative distances is important. Z-score scaling is better when features are measured in different units or affected by outliers, as it reduces the influence of extreme values.
 
@@ -437,7 +437,7 @@ test_set  = droplevels(test_set)
 
 Because the kNN algorithm computes distances between observations in feature space, all predictors must be numeric and meaningfully represented. Categorical features therefore require transformation into numerical form. In the `churn` dataset, the variables `gender`, `education`, `marital`, `income`, and `card_category` are categorical and must be encoded before applying kNN.
 
-Since the `income` feature is ordinal, we follow the guidance in Section [-@sec-ch6-ordinal-encoding] and assign representative numeric values that approximate the economic magnitude of each income range. Specifically, we encode `"<40K"` = 20, `"40K-60K"` = 50, `"60K-80K"` = 70, `"80K-120K"` = 100, and `">120K"` = 140, for both the training and test sets:
+Since the `income` feature is ordinal, we follow the guidance in Section [-@sec-ch6-encoding] and assign representative numeric values that approximate the economic magnitude of each income range. Specifically, we encode `"<40K"` = 20, `"40K-60K"` = 50, `"60K-80K"` = 70, `"80K-120K"` = 100, and `">120K"` = 140, for both the training and test sets:
 
 ```{r}
 train_set$income_rank <- as.numeric(factor(train_set$income, 
@@ -619,15 +619,9 @@ The following tasks apply the kNN algorithm to the `bank` dataset from the **liv
 
 11. Load the `bank` dataset and display its structure. Identify the target variable and the predictor variables.
 
-12. Perform an initial EDA:
+12. Perform an initial EDA: What are the distributions of key numeric variables such as `age`, `balance`, and `duration`? Are there any unusually high or low values that might influence distance calculations in kNN?
 
-    -   What are the distributions of key numeric variables like `age`, `balance`, and `duration`?
-    -   Are there any unusually high or low values that might influence distance calculations in kNN?
-
-13. Explore potential associations:
-
-    -   Are there noticeable differences in numeric features (e.g., `balance`, `duration`) between customers who subscribed to a deposit versus those who did not?
-    -   Are there categorical features (e.g., `job`, `marital`) that seem associated with the outcome?
+13. Explore potential associations: Are there noticeable differences in numeric features, such as `balance` and `duration`, between customers who subscribed to a deposit and those who did not? Are there categorical features, such as `job` and `marital`, that appear to be associated with the outcome?
 
 14. Count the number of instances where a customer subscribed to a term deposit (`deposit = "yes"`) versus those who did not (`deposit = "no"`). What does this tell you about class imbalance?
 

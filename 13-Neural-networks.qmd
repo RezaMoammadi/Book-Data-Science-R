@@ -66,11 +66,9 @@ This analogy should be understood as a source of intuition rather than a literal
 
 ## How Neural Networks Work {#sec-ch13-how-nn-work}
 
-Neural networks build directly on ideas introduced earlier in regression modeling, but they extend them in a way that allows much richer relationships between predictors and outcomes to be represented. In Chapter [-@sec-ch10-regression], we saw that a linear regression model predicts an outcome as a weighted sum of input features:
-$$
+Neural networks build directly on ideas introduced earlier in regression modeling, but they extend them in a way that allows much richer relationships between predictors and outcomes to be represented. In Chapter [-@sec-ch10-regression], we saw that a linear regression model predicts an outcome as a weighted sum of input features: $$
 \hat{y} = b_0 + b_1 x_1 + b_2 x_2 + \dots + b_m x_m,
-$$
-where $m$ denotes the number of predictors, $b_0$ is the intercept, and $b_1, \dots, b_m$ are regression coefficients. This formulation can be viewed as a simple computational network in which the input features are connected directly to the output through weighted connections, as illustrated in @fig-ch13-net-reg.
+$$ where $m$ denotes the number of predictors, $b_0$ is the intercept, and $b_1, \dots, b_m$ are regression coefficients. This formulation can be viewed as a simple computational network in which the input features are connected directly to the output through weighted connections, as illustrated in @fig-ch13-net-reg.
 
 ```{r fig-ch13-net-reg, echo = FALSE, out.width = "38%", fig.cap = "A graphical representation of a linear regression model, where input features are connected directly to the output through weighted connections."}
 knitr::include_graphics("images/ch13_neural_network_reg.png")
@@ -86,17 +84,13 @@ knitr::include_graphics("images/ch13_neural_network_large.png")
 
 A feed-forward neural network consists of three types of layers. The input layer receives the predictor variables, one or more hidden layers transform these inputs through weighted connections and activation functions, and the output layer produces the final prediction. Information flows in one direction, from the input layer through the hidden layer or layers to the output layer.
 
-To see this more clearly, consider a neural network with one hidden layer. Each hidden neuron first computes a weighted sum of the inputs and then applies an activation function. If we let $h_j$ denote the output of hidden neuron $j$, then
-$$
+To see this more clearly, consider a neural network with one hidden layer. Each hidden neuron first computes a weighted sum of the inputs and then applies an activation function. If we let $h_j$ denote the output of hidden neuron $j$, then $$
 h_j = g\left( w_{j0} + \sum_{i=1}^{m} w_{ji} x_i \right), \qquad j = 1, \dots, H,
-$$
-where $x_1, \dots, x_m$ are the input features, $w_{ji}$ are weights, $w_{j0}$ is a bias term, $g(\cdot)$ is the hidden-layer activation function, and $H$ is the number of hidden neurons.
+$$ where $x_1, \dots, x_m$ are the input features, $w_{ji}$ are weights, $w_{j0}$ is a bias term, $g(\cdot)$ is the hidden-layer activation function, and $H$ is the number of hidden neurons.
 
-In the second stage, the output layer combines these hidden activations to produce the final prediction. For a network with a single output node, this can be written as
-$$
+In the second stage, the output layer combines these hidden activations to produce the final prediction. For a network with a single output node, this can be written as $$
 \hat{y} = f\left( v_0 + \sum_{j=1}^{H} v_j h_j \right),
-$$
-where $v_j$ are output-layer weights, $v_0$ is an output-layer bias term, and $f(\cdot)$ is the activation function used at the output layer. In other settings, the output layer may contain more than one node, for example in multi-class classification or multi-output prediction problems.
+$$ where $v_j$ are output-layer weights, $v_0$ is an output-layer bias term, and $f(\cdot)$ is the activation function used at the output layer. In other settings, the output layer may contain more than one node, for example in multi-class classification or multi-output prediction problems.
 
 This two-stage structure shows what makes neural networks more flexible than linear regression. The hidden layer creates intermediate representations of the predictors, and the output layer then combines these learned representations to form the final prediction. When nonlinear activation functions are used, the network can represent relationships that are not available to a purely linear model.
 
@@ -114,15 +108,13 @@ Activation functions differ in properties such as output range, smoothness, and 
 
 ### From Threshold to Sigmoid {.unnumbered .unlisted}
 
-One of the earliest activation functions is the threshold function, inspired by the all-or-nothing firing behavior of biological neurons. It produces a binary output:
-$$
+One of the earliest activation functions is the threshold function, inspired by the all-or-nothing firing behavior of biological neurons. It produces a binary output: $$
 f(x) =
 \begin{cases}
 1 & \text{if } x \geq 0, \\
 0 & \text{if } x < 0.
 \end{cases}
-$$
-This step-like behavior is illustrated in @fig-ch13-active-fun. The threshold function played an important historical role in early neural models such as the perceptron, but it is not used in modern neural networks.
+$$ This step-like behavior is illustrated in @fig-ch13-active-fun. The threshold function played an important historical role in early neural models such as the perceptron, but it is not used in modern neural networks.
 
 ```{r fig-ch13-active-fun, echo = FALSE, fig.cap = "Visualization of the threshold activation function (unit step)."}
 x_values <- seq(-10, 10, by = 0.1)
@@ -139,11 +131,9 @@ ggplot(data, aes(x = x, y = y)) +
 
 The main limitation of the threshold function is that it does not work well with gradient-based learning. Its derivative is undefined at the threshold and zero everywhere else, so it does not provide the gradient information needed for backpropagation. In addition, its binary output is too rigid to represent gradual changes in activation.
 
-A smooth alternative is the sigmoid activation function, also called the logistic function. Instead of switching abruptly from 0 to 1, it changes gradually and maps any real-valued input to the interval $(0, 1)$:
-$$
+A smooth alternative is the sigmoid activation function, also called the logistic function. Instead of switching abruptly from 0 to 1, it changes gradually and maps any real-valued input to the interval $(0, 1)$: $$
 f(x) = \frac{1}{1 + e^{-x}}.
-$$
-Its S-shaped curve is shown in @fig-ch13-active-fun-sigmoid.
+$$ Its S-shaped curve is shown in @fig-ch13-active-fun-sigmoid.
 
 ```{r fig-ch13-active-fun-sigmoid, echo = FALSE, fig.cap = "Visualization of the sigmoid activation function."}
 x_values <- seq(-10, 10, by = 0.01)
@@ -168,21 +158,17 @@ Although threshold and sigmoid functions are historically important, modern neur
 
 The hyperbolic tangent, or tanh, maps inputs to the interval $(-1, 1)$. Like sigmoid, it is smooth and differentiable, but unlike sigmoid it is zero-centered, which can support more stable optimization in hidden layers. Its main limitation is that it can still saturate when inputs become very large in magnitude, leading to small gradients.
 
-The Rectified Linear Unit, or ReLU, is defined as
-$$
+The Rectified Linear Unit, or ReLU, is defined as $$
 f(x) = \max(0, x).
-$$
-It is computationally simple and has a constant gradient for positive inputs. These properties help reduce the vanishing-gradient problem and explain why ReLU became a standard choice in many neural network architectures. Its main weakness is that a neuron can become inactive if its input remains negative, producing zero output and zero gradient.
+$$ It is computationally simple and has a constant gradient for positive inputs. These properties help reduce the vanishing-gradient problem and explain why ReLU became a standard choice in many neural network architectures. Its main weakness is that a neuron can become inactive if its input remains negative, producing zero output and zero gradient.
 
-Leaky ReLU modifies ReLU by allowing a small nonzero slope when the input is negative:
-$$
+Leaky ReLU modifies ReLU by allowing a small nonzero slope when the input is negative: $$
 f(x) =
 \begin{cases}
 x & \text{if } x \geq 0, \\
 \alpha x & \text{if } x < 0,
 \end{cases}
-$$
-where $\alpha$ is a small positive constant, often chosen as 0.01. This adjustment reduces the risk of permanently inactive neurons while preserving the simplicity and efficiency that make ReLU attractive.
+$$ where $\alpha$ is a small positive constant, often chosen as 0.01. This adjustment reduces the risk of permanently inactive neurons while preserving the simplicity and efficiency that make ReLU attractive.
 
 Figure [-@fig-ch13-active-fun-comparison] compares the shapes of the sigmoid, tanh, ReLU, and Leaky ReLU activation functions.
 
@@ -238,7 +224,6 @@ This section has focused on fully connected multilayer perceptrons, which form t
 
 Within the Data Science Workflow, architecture selection is part of the modeling stage. Choosing an appropriate network structure determines the model’s capacity and sets the conditions under which learning can proceed effectively.
 
-
 ## How Neural Networks Learn
 
 How does a neural network improve its predictions over time? At the start of training, the network has not yet learned how its parameters should be set to produce accurate predictions. Learning takes place by using prediction error as feedback: the network compares its outputs with observed outcomes and then adjusts its weights and bias terms so that future predictions better match the data.
@@ -249,11 +234,9 @@ This process is iterative. Over repeated passes through the data, the network pr
 
 A neural network learns by using prediction error as feedback. For a given training observation, the inputs are passed through the network, layer by layer, until an output is produced. This step is called the forward pass. The predicted output is then compared with the observed target value using a loss function, which quantifies the discrepancy between the prediction and the observed outcome.
 
-The choice of loss function depends on the task. In regression, a common example is squared error,
-$$
+The choice of loss function depends on the task. In regression, a common example is squared error, $$
 L = (y - \hat{y})^2,
-$$
-which measures how far the prediction $\hat{y}$ is from the observed value $y$ for a single observation. Across an entire dataset, these squared errors are added together to form the sum of squared errors. In binary classification, cross-entropy is often more appropriate. In either setting, the loss function converts prediction error into a numerical quantity that training seeks to minimize: poor predictions produce larger loss values, whereas accurate predictions produce smaller ones.
+$$ which measures how far the prediction $\hat{y}$ is from the observed value $y$ for a single observation. Across an entire dataset, these squared errors are added together to form the sum of squared errors. In binary classification, cross-entropy is often more appropriate. In either setting, the loss function converts prediction error into a numerical quantity that training seeks to minimize: poor predictions produce larger loss values, whereas accurate predictions produce smaller ones.
 
 Once this error has been quantified, the next challenge is to determine how each weight and bias term contributed to the loss and how these parameters should be adjusted to improve future predictions. This transition from error measurement to parameter updating is the central idea behind gradient-based optimization.
 
@@ -261,11 +244,9 @@ Once this error has been quantified, the next challenge is to determine how each
 
 Once a loss function has been defined, the next question is how to reduce it. Gradient descent is the basic optimization method used for this purpose. The gradient of the loss with respect to a parameter tells us how the loss changes when that parameter is adjusted by a small amount. Because the gradient points in the direction of steepest increase, we reduce the loss by moving in the opposite direction.
 
-If $w$ denotes a weight and $L$ denotes the loss function, a basic gradient descent update can be written as
-$$
+If $w$ denotes a weight and $L$ denotes the loss function, a basic gradient descent update can be written as $$
 w^{(t+1)} = w^{(t)} - \eta \frac{\partial L}{\partial w},
-$$
-where $\eta$ is the learning rate and $t$ indexes the update step. This expression says that the new value of the weight is obtained by taking the current value and subtracting a correction based on the gradient. The term $\frac{\partial L}{\partial w}$ measures how strongly the loss depends on the weight $w$, while the learning rate determines how large the update should be.
+$$ where $\eta$ is the learning rate and $t$ indexes the update step. This expression says that the new value of the weight is obtained by taking the current value and subtracting a correction based on the gradient. The term $\frac{\partial L}{\partial w}$ measures how strongly the loss depends on the weight $w$, while the learning rate determines how large the update should be.
 
 To build intuition, Figure [-@fig-ch13-gradient-descent] shows gradient descent in a one-dimensional optimization problem. The horizontal axis represents a single parameter value, and the vertical axis represents the corresponding loss. Starting from an initial parameter value, gradient descent updates the parameter iteratively in the direction that reduces the loss. The arrows indicate the direction of the update at different points along the curve, guiding the parameter toward a minimum of the loss function. Although real neural networks are trained in a high-dimensional parameter space, this simplified example illustrates the basic idea behind gradient-based optimization.
 
@@ -281,18 +262,13 @@ Gradient descent tells us how to update the weights once the gradients are known
 
 The basic idea is simple: the prediction error is first observed at the output layer, and then that error is propagated backward through the network. This is done using the chain rule of calculus, which traces how a change in one parameter affects the final loss through a sequence of intermediate steps.
 
-To illustrate the idea, consider a network with one hidden layer and a single output node. For hidden neuron $j$, let
-$$
+To illustrate the idea, consider a network with one hidden layer and a single output node. For hidden neuron $j$, let $$
 a_j = w_{j0} + \sum_{i=1}^{m} w_{ji} x_i, \qquad h_j = g(a_j),
-$$
-and let the final prediction be
-$$
+$$ and let the final prediction be $$
 z = v_0 + \sum_{j=1}^{H} v_j h_j, \qquad \hat{y} = f(z).
-$$
-Here, $w_{ji}$ is the weight from input $x_i$ to hidden neuron $j$, $v_j$ is the weight from hidden neuron $j$ to the output, $g(\cdot)$ is the hidden-layer activation function, and $f(\cdot)$ is the output-layer activation function.
+$$ Here, $w_{ji}$ is the weight from input $x_i$ to hidden neuron $j$, $v_j$ is the weight from hidden neuron $j$ to the output, $g(\cdot)$ is the hidden-layer activation function, and $f(\cdot)$ is the output-layer activation function.
 
-Backpropagation works by tracing how the loss depends on each parameter through these intermediate quantities. For a hidden-layer weight $w_{ji}$, the chain rule gives
-$$
+Backpropagation works by tracing how the loss depends on each parameter through these intermediate quantities. For a hidden-layer weight $w_{ji}$, the chain rule gives $$
 \frac{\partial L}{\partial w_{ji}}
 =
 \frac{\partial L}{\partial \hat{y}}
@@ -303,8 +279,7 @@ v_j
 \cdot
 g'(a_j)
 \cdot x_i.
-$$
-Although this expression may look technical, its interpretation is straightforward. The gradient depends on five linked components: how the loss changes with the prediction, how the prediction changes with the output-layer input, how strongly hidden unit $j$ influences the output, how the hidden activation changes with its own input, and how strongly input $x_i$ contributes to that hidden unit. In other words, the final prediction error is passed backward through the network, and each step scales the contribution of the weight under consideration.
+$$ Although this expression may look technical, its interpretation is straightforward. The gradient depends on five linked components: how the loss changes with the prediction, how the prediction changes with the output-layer input, how strongly hidden unit $j$ influences the output, how the hidden activation changes with its own input, and how strongly input $x_i$ contributes to that hidden unit. In other words, the final prediction error is passed backward through the network, and each step scales the contribution of the weight under consideration.
 
 This is the central idea of backpropagation. The algorithm does not guess which weights should change. Instead, it uses the chain rule to determine how strongly each parameter contributed to the loss, allowing the network to update its weights efficiently. The goal here is not to memorize the formula, but to understand what it shows: backpropagation makes gradient-based learning feasible in multilayer neural networks.
 
@@ -430,7 +405,7 @@ With categorical predictors encoded, we now turn to feature scaling. This step i
 
 #### Feature Scaling for Numerical Predictors {.unnumbered .unlisted}
 
-Neural networks are sensitive to the scale of input features because learning relies on gradient-based optimization. When predictors vary widely in magnitude, variables with larger numerical ranges can dominate the updating process and make training slower or less stable. To mitigate this issue, we apply min-max scaling (as introduced in Section [-@sec-ch6-minmax]) to the numerical predictors, mapping their values to the interval $[0, 1]$. When inputs are placed on a common scale, the resulting gradients are typically better balanced across predictors, which helps the network train more efficiently. Other scaling methods are also possible, but min-max scaling is a convenient choice here because it places all numerical predictors on a common scale and keeps the preprocessing pipeline simple and transparent for illustrating neural network modeling.
+Neural networks are sensitive to the scale of input features because learning relies on gradient-based optimization. When predictors vary widely in magnitude, variables with larger numerical ranges can dominate the updating process and make training slower or less stable. To mitigate this issue, we apply min-max scaling (as introduced in Section [-@sec-ch6-feature-scaling]) to the numerical predictors, mapping their values to the interval $[0, 1]$. When inputs are placed on a common scale, the resulting gradients are typically better balanced across predictors, which helps the network train more efficiently. Other scaling methods are also possible, but min-max scaling is a convenient choice here because it places all numerical predictors on a common scale and keeps the preprocessing pipeline simple and transparent for illustrating neural network modeling.
 
 To avoid data leakage, the scaling parameters must be estimated using only the training data and then applied unchanged to the test set. This ensures that information from the test data does not influence model training and preserves the validity of subsequent evaluation. A visual illustration of the consequences of improper scaling is provided in @fig-ch7-ex-proper-scaling (Section [-@sec-ch7-knn-prep]).
 
@@ -686,4 +661,3 @@ These exercises extend the chapter from classification to regression. The `insur
 45. Reflect on how model complexity, interpretability, and predictive performance differed across the models you explored in this chapter, including neural networks, logistic regression, and tree-based methods. Under what circumstances does the additional flexibility of a neural network appear worthwhile, and when might a simpler model be preferable?
 
 46. Looking across both the classification and regression exercises, which parts of the modeling pipeline did you find most challenging or most insightful: data preparation, architecture choice, tuning, evaluation, or interpretation? How would these experiences influence the way you approach a new dataset in the future?
-
