@@ -33,7 +33,8 @@ inst_pkgs = load_pkgs = c(
   "patchwork",  # for combining ggplots in ch10
   "ggfortify",  # for autoplot in ch10
   
-  "pROC", 
+  "pROC",
+  "PRROC",      # for precision-recall curves in ch8 
   "neuralnet",
   "psych", 
   "rpart", 

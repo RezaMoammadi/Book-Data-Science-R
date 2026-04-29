@@ -2,7 +2,7 @@
 source("_common.R")
 ```
 
-# Data Setup for Modeling {#sec-ch6-setup-data}
+# Data Setup for Modeling {#sec-ch6-data-setup}
 
 ::: {.content-visible when-format="pdf"}
 \begin{chapterquote}
@@ -80,9 +80,9 @@ For this reason, supervised learning typically begins by partitioning the data i
 
 Throughout the modeling chapters of this book, we follow a three-step workflow:
 
-1. *Partition* the dataset and validate the split.
-2. *Prepare, train, and tune* models using the training data.
-3. *Assess* predictive performance on the test data.
+1.  *Partition* the dataset and validate the split.
+2.  *Prepare, train, and tune* models using the training data.
+3.  *Assess* predictive performance on the test data.
 
 This structure preserves the distinction between model development and final evaluation and provides a more realistic basis for judging how well a model is likely to generalize.
 
@@ -123,7 +123,7 @@ train_set = splits$part1
 test_set  = splits$part2
 ```
 
-The command `set.seed(42)` ensures that the same random split is obtained each time the code is run, which supports reproducibility. The value 42 is arbitrary, although it is a familiar choice in programming examples. 
+The command `set.seed(42)` ensures that the same random split is obtained each time the code is run, which supports reproducibility. The value 42 is arbitrary, although it is a familiar choice in programming examples.
 
 > *Practice:* Using the `partition()` function, repeat the train-test split with a 70--30 ratio. Compare the sizes of the training and test sets using `nrow(train_set)` and `nrow(test_set)`. Reflect on how the choice of split ratio may influence both model learning and evaluation stability.
 
@@ -147,8 +147,7 @@ Suggested hypothesis tests (from @sec-ch5-statistics) for validating partitions,
 
 These tests should be viewed as diagnostic tools rather than formal proof that the two subsets are equivalent. In large samples, even minor differences may become statistically significant, whereas in smaller samples meaningful differences may go undetected. For this reason, validation should be interpreted as a practical check on whether the split is suitable for fair model assessment.
 
-To illustrate the process, consider again the `churn` dataset. We begin by examining whether the proportion of churners is similar in the training and test sets. Since the target variable `churn` is binary, a two-sample Z-test is appropriate. The hypotheses are
-$$
+To illustrate the process, consider again the `churn` dataset. We begin by examining whether the proportion of churners is similar in the training and test sets. Since the target variable `churn` is binary, a two-sample Z-test is appropriate. The hypotheses are $$
 \begin{cases}
 H_0: \pi_{\text{churn, train}} = \pi_{\text{churn, test}} \\
 H_a: \pi_{\text{churn, train}} \neq \pi_{\text{churn, test}}
@@ -170,7 +169,7 @@ test_churn
 
 Here, $x_1$ and $x_2$ are the numbers of churners in the training and test sets, and $n_1$ and $n_2$ are the corresponding sample sizes. The `prop.test()` function compares the two proportions and returns a $p$-value for assessing whether the observed difference is larger than expected from random variation alone.
 
-The resulting $p$-value is `r round(test_churn$p.value, 3)`. Since this value exceeds $\alpha = 0.05$, we do not reject $H_0`. This suggests that the churn rates in the training and test sets do not differ substantially, so the partition appears reasonably balanced with respect to the outcome variable.
+The resulting $p$-value is `r round(test_churn$p.value, 3)`. Since this value exceeds $\alpha = 0.05$, we do not reject \$H_0\`. This suggests that the churn rates in the training and test sets do not differ substantially, so the partition appears reasonably balanced with respect to the outcome variable.
 
 Beyond the outcome variable, it is also useful to compare a few influential predictors. For example, numerical variables such as `age` or `available_credit` can be examined using two-sample $t$-tests, while categorical variables such as `education` can be compared using Chi-square tests. Although it is rarely feasible to test every predictor, examining a carefully chosen subset provides a useful check on whether the partition is suitable for model development and evaluation.
 
@@ -206,10 +205,10 @@ Although cross-validation provides a more stable basis for model assessment than
 
 For this reason, cross-validation is typically applied *within the training set*, not on the full dataset. A common workflow is illustrated in Figure [-@fig-cross-validation-2] and proceeds as follows:
 
-1. Partition the data into training and test sets.
-2. Use cross-validation within the training set to compare models or tune hyperparameters.
-3. Select the preferred model based on the cross-validation results.
-4. Evaluate the final model once on the untouched test set.
+1.  Partition the data into training and test sets.
+2.  Use cross-validation within the training set to compare models or tune hyperparameters.
+3.  Select the preferred model based on the cross-validation results.
+4.  Evaluate the final model once on the untouched test set.
 
 ```{r fig-cross-validation-2, echo = FALSE, out.width = "80%", fig.cap = "Cross-validation applied within the training set while the test set is reserved for final evaluation."}
 knitr::include_graphics("images/ch6_cross_validation_2.png")
@@ -281,7 +280,6 @@ In a predictive modeling workflow, the set of dummy columns should be defined us
 
 This representation is especially useful for algorithms that require numerical inputs but should not treat categories as ordered, including methods such as kNN, neural networks, and linear models. In linear and logistic regression, one indicator column is often omitted to avoid perfect redundancy, whereas in other modeling contexts the full set of binary columns may be retained.
 
-
 To illustrate the mechanics of one-hot encoding, we apply it to the `marital` variable in the training set created in Section [-@sec-ch6-cross-validation]. The goal here is to inspect the dummy-column structure that will later need to be preserved when the transformation is applied to other data subsets. We use the `one.hot()` function from the **liver** package:
 
 ```{r}
@@ -289,6 +287,7 @@ train_encoded <- one.hot(train_set, cols = c("marital"), dropCols = FALSE)
 
 names(train_encoded)
 ```
+
 The `cols` argument specifies the variable to encode. Setting `dropCols = FALSE` retains the original categorical variable alongside the new binary columns, whereas setting it to `TRUE` removes the original variable after encoding. The same indicator-column structure must then be applied consistently to validation or test data. If a category is absent from one subset, the encoding structure should still follow the columns defined from the training data.
 
 One-hot encoding is simple and widely used, but it can substantially increase the number of predictors when applied to variables with many categories. For high-cardinality features such as zip codes or product identifiers, this increase in dimensionality may create practical and modeling challenges. In such cases, analysts often group levels, combine rare categories, or consider alternative representation strategies.
@@ -296,9 +295,6 @@ One-hot encoding is simple and widely used, but it can substantially increase th
 > *Practice:* Apply `one.hot()` to `card_category` in the training set, and inspect the resulting structure. How many additional columns are created, and how might this expansion affect model complexity? Then reflect on why the same indicator columns must also be preserved when the transformation is applied to the test set.
 
 Once categorical predictors have been encoded appropriately, attention turns to numerical predictors, whose scales may also influence how models learn from the data.
-
-
-
 
 ## Feature Scaling {#sec-ch6-feature-scaling}
 
@@ -314,11 +310,9 @@ In this section, we consider two common scaling methods. *Min-max scaling* resca
 
 Min-max scaling rescales a numerical feature to a fixed range, typically $[0, 1]$. It is especially useful for algorithms whose behavior depends on distances or gradient updates, such as *k*-Nearest Neighbors and neural networks. Without scaling, predictors with larger numerical ranges may exert disproportionate influence simply because of their magnitude.
 
-The transformation is defined by
-$$
+The transformation is defined by $$
 x_{\text{scaled}} = \frac{x - x_{\min}}{x_{\max} - x_{\min}},
-$$
-where $x_{\min}$ and $x_{\max}$ are the minimum and maximum values used for scaling. After transformation, the smallest observed value becomes 0 and the largest becomes 1.
+$$ where $x_{\min}$ and $x_{\max}$ are the minimum and maximum values used for scaling. After transformation, the smallest observed value becomes 0 and the largest becomes 1.
 
 In a predictive modeling workflow, these scaling parameters must be estimated from the training data only. If the minimum and maximum are computed from the full dataset before partitioning, information from the test set enters the transformation and compromises the validity of model assessment.
 
@@ -347,6 +341,7 @@ ggplot(data = train_set) +
   geom_histogram(aes(x = age_minmax), bins = 15) +
   ggtitle("After Min-Max Scaling")
 ```
+
 The plots show that min-max scaling changes the range of the training variable to $[0,1]$ while preserving its overall distributional shape. This is useful for models that are sensitive to numerical magnitude.
 
 Min–max scaling is simple and often effective, but it is sensitive to outliers. If the training data contain extreme values, most observations may be compressed into a narrow range after scaling. For this reason, min–max scaling is most useful when a bounded scale is desirable and the data are not dominated by extreme observations.
@@ -357,11 +352,9 @@ We next consider *z-score scaling*, which standardizes variables around zero and
 
 While min-max scaling rescales values to a fixed range, *z-score scaling* (or *standardization*) centers a numerical feature at zero and rescales it to have unit variance. This is especially useful when model behavior depends on the relative scale of predictors, for example in methods that rely on gradient-based optimization or on coefficient estimation across variables measured in different units.
 
-The transformation is defined by
-$$
+The transformation is defined by $$
 x_{\text{scaled}} = \frac{x - \mu}{\sigma},
-$$
-where $\mu$ and $\sigma$ denote the mean and standard deviation used for scaling. After transformation, each value is expressed in standard deviation units relative to the mean.
+$$ where $\mu$ and $\sigma$ denote the mean and standard deviation used for scaling. After transformation, each value is expressed in standard deviation units relative to the mean.
 
 Unlike min-max scaling, z-score scaling does not place a variable in a fixed bounded range. It also does not make a variable normally distributed. Instead, it changes the location and scale of the variable while preserving its overall distributional shape. If a variable is skewed before standardization, it remains skewed afterward.
 
@@ -377,7 +370,7 @@ train_set$age_z <- zscore(train_set$age, mean = age_mean, sd = age_sd)
 test_set$age_z  <- zscore(test_set$age,  mean = age_mean, sd = age_sd)
 ```
 
-This procedure ensures that the standardization rule is learned from the training data and then applied unchanged to the test data. As a result, the training variable is centered around zero and expressed in standard deviation units, while the test variable is transformed using the same rule without allowing information from the test set to influence model development. The plots below illustrate the effect of the transformation for the training set:  
+This procedure ensures that the standardization rule is learned from the training data and then applied unchanged to the test data. As a result, the training variable is centered around zero and expressed in standard deviation units, while the test variable is transformed using the same rule without allowing information from the test set to influence model development. The plots below illustrate the effect of the transformation for the training set:
 
 ```{r}
 #| layout-ncol: 2
@@ -468,23 +461,23 @@ These exercises reinforce the main ideas of this chapter: generalization, partit
 
 ### Conceptual Questions {.unnumbered .unlisted}
 
-1. Why must a useful predictive model generalize beyond the data on which it was trained?
+1.  Why must a useful predictive model generalize beyond the data on which it was trained?
 
-2. Explain the difference between underfitting and overfitting. Why are both problematic for prediction?
+2.  Explain the difference between underfitting and overfitting. Why are both problematic for prediction?
 
-3. Why is it not sufficient to evaluate a model on the same data used to fit it?
+3.  Why is it not sufficient to evaluate a model on the same data used to fit it?
 
-4. Describe the roles of the training set, validation data, and test set in supervised learning.
+4.  Describe the roles of the training set, validation data, and test set in supervised learning.
 
-5. Why should a train-test split be validated rather than accepted automatically? In your answer, explain why split validation should be treated as a practical diagnostic step rather than as formal proof that the training and test sets are equivalent.
+5.  Why should a train-test split be validated rather than accepted automatically? In your answer, explain why split validation should be treated as a practical diagnostic step rather than as formal proof that the training and test sets are equivalent.
 
-6. Define *data leakage* in your own words. Then distinguish between *feature leakage* and *procedural leakage*.
+6.  Define *data leakage* in your own words. Then distinguish between *feature leakage* and *procedural leakage*.
 
-7. Give one example of feature leakage and one example of procedural leakage.
+7.  Give one example of feature leakage and one example of procedural leakage.
 
-8. Why should data-dependent transformations such as imputation, scaling, encoding, or balancing be learned from the training data only?
+8.  Why should data-dependent transformations such as imputation, scaling, encoding, or balancing be learned from the training data only?
 
-9. Explain why cross-validation should usually be applied within the training set rather than on the full dataset.
+9.  Explain why cross-validation should usually be applied within the training set rather than on the full dataset.
 
 10. Why are encoding and scaling discussed in this chapter as model-oriented transformations rather than as general data cleaning steps?
 
@@ -556,11 +549,3 @@ data(creditcard_fraud)
 36. Which part of this chapter currently feels most intuitive to you: partitioning, validation, encoding, scaling, or balancing? Which part still feels least natural, and why?
 
 37. Looking across the whole chapter, what do you now see as the most important principle of data setup for modeling?
-
-
-
-
-
-
-
-
