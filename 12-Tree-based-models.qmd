@@ -120,17 +120,13 @@ The choice between pre-pruning and post-pruning depends on the dataset, the mode
 
 A defining feature of CART is that it constructs *binary trees*: each internal node splits the data into exactly two child nodes. As in the general decision-tree framework introduced earlier, tree construction proceeds recursively by selecting, at each node, the feature and split point that yield the greatest immediate improvement according to a chosen objective function. The goal is to produce child nodes that are better separated with respect to the response than the parent node.
 
-For classification tasks, CART typically measures node impurity using the *Gini index*, defined as
-$$
+For classification tasks, CART typically measures node impurity using the *Gini index*, defined as $$
 Gini = 1 - \sum_{i=1}^k p_i^2,
-$$
-where $p_i$ denotes the proportion of observations in the node belonging to class $i$, and $k$ is the number of classes. The Gini index is small when most observations in a node belong to the same class and equals zero when the node is perfectly pure. CART therefore selects the split that produces the largest reduction in impurity, yielding child nodes with more concentrated class membership.
+$$ where $p_i$ denotes the proportion of observations in the node belonging to class $i$, and $k$ is the number of classes. The Gini index is small when most observations in a node belong to the same class and equals zero when the node is perfectly pure. CART therefore selects the split that produces the largest reduction in impurity, yielding child nodes with more concentrated class membership.
 
-For regression tasks, CART uses the same recursive binary-splitting structure, but the response variable is continuous rather than categorical. In this setting, candidate splits are evaluated according to how much they reduce variation in the response within the resulting child nodes. A common criterion is the residual sum of squares (RSS),
-$$
+For regression tasks, CART uses the same recursive binary-splitting structure, but the response variable is continuous rather than categorical. In this setting, candidate splits are evaluated according to how much they reduce variation in the response within the resulting child nodes. A common criterion is the residual sum of squares (RSS), $$
 RSS = \sum_{i \in R_1} (y_i - \bar{y}_{R_1})^2 + \sum_{i \in R_2} (y_i - \bar{y}_{R_2})^2,
-$$
-where $R_1$ and $R_2$ denote the two child nodes created by a candidate split, and $\bar{y}_{R_1}$ and $\bar{y}_{R_2}$ are the mean response values within those nodes. CART selects the split that minimizes this quantity, thereby grouping together observations with more similar outcome values. The prediction at a terminal leaf is then the mean response of the training observations assigned to that node.
+$$ where $R_1$ and $R_2$ denote the two child nodes created by a candidate split, and $\bar{y}_{R_1}$ and $\bar{y}_{R_2}$ are the mean response values within those nodes. CART selects the split that minimizes this quantity, thereby grouping together observations with more similar outcome values. The prediction at a terminal leaf is then the mean response of the training observations assigned to that node.
 
 Because CART applies this splitting process recursively and greedily, it can generate very large trees that fit the training data extremely well. While this often reduces training error, it also increases the risk of overfitting. To address this problem, CART commonly uses *cost-complexity pruning*: a large tree is first grown and then simplified by removing branches that add little predictive value. This process balances model fit against tree size, often producing a smaller tree that is easier to interpret and better able to generalize to new data.
 
@@ -146,21 +142,15 @@ C5.0, developed by J. Ross Quinlan, extends earlier decision tree algorithms suc
 
 One important distinction between C5.0 and CART lies in the structure of the resulting trees. Whereas CART restricts all splits to be binary, C5.0 can allow multi-way splits, especially for categorical predictors. This added flexibility can lead to shallower trees when a predictor has many levels, although a more compact tree is not always simpler to interpret in practice.
 
-A second key difference concerns the criterion used to evaluate candidate splits in classification problems. Instead of the Gini index used by CART, C5.0 relies on entropy and information gain, concepts rooted in information theory. Entropy measures the degree of uncertainty in the class labels: it is high when several classes are mixed together and low when one class dominates. For a node containing $k$ classes, entropy is defined as
-$$
+A second key difference concerns the criterion used to evaluate candidate splits in classification problems. Instead of the Gini index used by CART, C5.0 relies on entropy and information gain, concepts rooted in information theory. Entropy measures the degree of uncertainty in the class labels: it is high when several classes are mixed together and low when one class dominates. For a node containing $k$ classes, entropy is defined as $$
 Entropy(T) = - \sum_{i=1}^k p_i \log_2(p_i),
-$$
-where $p_i$ denotes the proportion of observations in the node belonging to class $i$.
+$$ where $p_i$ denotes the proportion of observations in the node belonging to class $i$.
 
-When the data are partitioned by a candidate split $S$, the entropy of the resulting subsets is combined as a weighted average,
-$$
+When the data are partitioned by a candidate split $S$, the entropy of the resulting subsets is combined as a weighted average, $$
 H_S(T) = \sum_{i=1}^c \frac{|T_i|}{|T|} \times Entropy(T_i),
-$$
-where $T$ denotes the original node and $T_1, \dots, T_c$ are the subsets created by split $S$. The information gain associated with the split is then
-$$
+$$ where $T$ denotes the original node and $T_1, \dots, T_c$ are the subsets created by split $S$. The information gain associated with the split is then $$
 gain(S) = Entropy(T) - H_S(T).
-$$
-C5.0 selects the split that maximizes information gain, thereby favoring partitions that reduce class uncertainty most strongly.
+$$ C5.0 selects the split that maximizes information gain, thereby favoring partitions that reduce class uncertainty most strongly.
 
 These features make C5.0 an attractive alternative to CART in many classification settings. It is computationally efficient and well suited to large datasets and high-dimensional feature spaces. Its ability to use multi-way splits can be especially useful for categorical predictors with many levels, and it includes built-in pruning procedures that help reduce overfitting. In addition, C5.0 supports mechanisms such as feature weighting, which can help the model focus more strongly on informative predictors.
 
