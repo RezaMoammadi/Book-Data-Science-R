@@ -369,7 +369,7 @@ window.Quarto = {
 <p>How can housing prices be predicted from a home’s age, location, and nearby amenities? How can a bike-sharing system estimate hourly rental demand from weather conditions and time-related patterns? Questions such as these lie at the heart of regression analysis, one of the most widely used tools in data science. Regression models help us describe how a numerical outcome changes in relation to one or more predictors, quantify the strength of those relationships, and generate predictions based on observed data.</p>
 <p>The roots of regression analysis go back to the late nineteenth century, when Francis Galton introduced the term <em>regression</em> in the study of heredity. Its mathematical foundations were later formalized through the method of least squares, which remains central to linear regression today. Over time, regression developed into a core framework for statistical modeling, supporting both explanation and prediction across fields such as economics, medicine, engineering, and business analytics.</p>
 <p>Regression is powerful precisely because it serves more than one goal. In some applications, we want to explain how predictors are associated with an outcome and assess whether those associations are statistically meaningful. In others, the main goal is prediction: given a set of predictor values, how accurately can we estimate a future or unseen response? In practice, good regression modeling often requires balancing these two aims while also checking whether the fitted model is appropriate for the data.</p>
-<p>In this chapter, we build on the <em>Data Science Workflow</em> introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a> and illustrated in <a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>. Earlier chapters focused on data preparation, exploratory analysis, and classification methods such as k-Nearest Neighbors (Chapter <a href="7-Classification-kNN.html" class="quarto-xref"><span>7</span></a>) and Naive Bayes (Chapter <a href="9-Naive-Bayes.html" class="quarto-xref"><span>9</span></a>), together with tools for evaluating predictive performance (Chapter <a href="8-Model-evaluation.html" class="quarto-xref"><span>8</span></a>). Regression extends this workflow to supervised learning problems in which the response variable is continuous, allowing us to study both prediction and interpretation within a common modeling framework.</p>
+<p>In this chapter, we build on the <em>Data Science Workflow</em> introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a> and illustrated in <a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.1</span></a>. Earlier chapters focused on data preparation, exploratory analysis, and classification methods such as k-Nearest Neighbors (Chapter <a href="7-Classification-kNN.html" class="quarto-xref"><span>7</span></a>) and Naive Bayes (Chapter <a href="9-Naive-Bayes.html" class="quarto-xref"><span>9</span></a>), together with tools for evaluating predictive performance (Chapter <a href="8-Model-evaluation.html" class="quarto-xref"><span>8</span></a>). Regression extends this workflow to supervised learning problems in which the response variable is continuous, allowing us to study both prediction and interpretation within a common modeling framework.</p>
 <p>This chapter also connects directly to the statistical foundations developed in Chapter <a href="5-Statistics.html" class="quarto-xref"><span>5</span></a>, particularly the discussion of correlation and inference in Section <a href="5-Statistics.html#sec-ch5-correlation-test" class="quarto-xref"><span>5.12</span></a>. Regression builds on these ideas by modeling relationships explicitly, allowing multiple predictors to be considered simultaneously, and providing a framework for testing whether individual predictors contribute meaningfully once the others are taken into account.</p>
 <section id="what-this-chapter-covers" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="what-this-chapter-covers">What This Chapter Covers</h3>
 <p>This chapter introduces regression analysis as a core modeling framework within the data science workflow. While earlier chapters focused mainly on classification problems, regression addresses tasks in which the outcome variable is numeric and continuous, such as price, cost, demand, or revenue.</p>
@@ -401,7 +401,7 @@ window.Quarto = {
 <p>Before fitting a regression model, it is useful to examine how the response variable relates to the available predictors. This helps us identify promising candidate predictors, assess whether a linear relationship seems plausible, and detect unusual patterns that may matter for modeling. Figure <a href="#fig-house-relationships" class="quarto-xref"><span>10.1</span></a> presents a matrix of pairwise relationships among the numeric variables in the <code>house</code> dataset using the <code>pairs.panels()</code> function from the <strong>psych</strong> package. The upper triangle shows correlation coefficients, the lower triangle shows scatter plots, and the diagonal displays histograms.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-house-relationships" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-house-relationships" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-house-relationships-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="10-Regression_files/figure-html/fig-house-relationships-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H">
 </div>
@@ -417,7 +417,7 @@ Figure&nbsp;10.1: Pairwise relationships among the numeric variables in the <cod
 <p>Before fitting the model, it is helpful to visualize the relationship between the predictor and the response. A scatter plot with a fitted regression line provides a first indication of whether a linear model offers a reasonable description of the data.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-scatter-plot-simple-reg" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-scatter-plot-simple-reg" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-scatter-plot-simple-reg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="10-Regression_files/figure-html/fig-scatter-plot-simple-reg-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%" data-fig-pos="H">
 </div>
@@ -434,7 +434,7 @@ Figure&nbsp;10.2: Scatter plot of house unit price versus number of nearby store
 <p>To build intuition, <a href="#fig-simple-regression" class="quarto-xref">Figure&nbsp;<span>10.3</span></a> gives a conceptual illustration of the model. The fitted regression line summarizes the overall linear pattern in the data, while the vertical distance between an observed value <span class="math inline">\(y_i\)</span> and its predicted value <span class="math inline">\(\hat{y}_i = b_0 + b_1 x_i\)</span> is called a residual. Residuals represent the part of the response that is not explained by the model.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-simple-regression" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-simple-regression" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-simple-regression-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch10_simple-regression.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%" data-fig-pos="H">
 </div>
@@ -557,7 +557,7 @@ Figure&nbsp;10.3: Conceptual view of a simple regression model: the red line sho
 <p>Figure <a href="#fig-ch10-Simpson-Paradox" class="quarto-xref">Figure&nbsp;<span>10.4</span></a> illustrates this idea. The left panel shows a regression line fitted to the full dataset, ignoring group structure. The right panel shows separate fitted lines within groups. Although the overall trend appears negative in the aggregated data, the within-group relationships are positive.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch10-Simpson-Paradox" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-ch10-Simpson-Paradox" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch10-Simpson-Paradox-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="10-Regression_files/figure-html/fig-ch10-Simpson-Paradox-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H">
 </div>
@@ -731,7 +731,7 @@ AIC = 2m + n \log\left(\frac{SSE}{n}\right),
 <p>A useful way to see why non-linear terms may be needed is to examine the relationship between <code>house_age</code> and <code>unit_price</code> in the <code>house</code> dataset. Figure <a href="#fig-scatter-plot-non-reg" class="quarto-xref">Figure&nbsp;<span>10.5</span></a> shows a scatter plot of these two variables. The dashed gray line represents a simple linear regression fit, while the dark blue curve represents a quadratic fit.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-scatter-plot-non-reg" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-scatter-plot-non-reg" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-scatter-plot-non-reg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="10-Regression_files/figure-html/fig-scatter-plot-non-reg-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%" data-fig-pos="H">
 </div>
@@ -810,7 +810,7 @@ b_5 \times \text{latitude}.
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html">autoplot</a></span><span class="op">(</span><span class="va">poly_reg_house</span>, which <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<div id="fig-ch10-model-diagnostics" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-ch10-model-diagnostics" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch10-model-diagnostics-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="10-Regression_files/figure-html/fig-ch10-model-diagnostics-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H">
 </div>
@@ -835,7 +835,7 @@ Figure&nbsp;10.6: Diagnostic plots for assessing common problems in the fitted p
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html">autoplot</a></span><span class="op">(</span><span class="va">poly_reg_house</span>, which <span class="op">=</span> <span class="fl">1</span>, ncol <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">ggtitle</a></span><span class="op">(</span><span class="st">"Polynomial model"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell quarto-layout-panel" data-layout-align="center" data-layout-ncol="2">
+<div class="cell quarto-layout-panel" data-layout-ncol="2" data-layout-align="center">
 <div class="quarto-layout-row">
 <div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
 <div class="quarto-figure quarto-figure-center">
@@ -866,7 +866,7 @@ Figure&nbsp;10.7: Residuals versus fitted values for the stepwise linear regress
 <div>
 
 </div>
-<div class="cell quarto-layout-panel" data-layout-align="center" data-layout-ncol="2">
+<div class="cell quarto-layout-panel" data-layout-ncol="2" data-layout-align="center">
 <div class="quarto-layout-row">
 <div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
 <div class="quarto-figure quarto-figure-center">
@@ -898,7 +898,7 @@ Figure&nbsp;10.8: Residuals versus fitted values for a simulated example illustr
 <div>
 
 </div>
-<div class="cell quarto-layout-panel" data-layout-align="center" data-layout-ncol="2">
+<div class="cell quarto-layout-panel" data-layout-ncol="2" data-layout-align="center">
 <div class="quarto-layout-row">
 <div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
 <div class="quarto-figure quarto-figure-center">
@@ -933,7 +933,7 @@ Figure&nbsp;10.9: Normal Q-Q plots for the polynomial regression model fitted to
 <span class="header-section-number">10.9</span> Case Study: Predicting Hourly Bike Rental Demand</h2>
 <p>How can we predict how many bikes will be rented in the next hour? For a bike-sharing system, this is an important practical question. Accurate short-term predictions can help operators distribute bicycles more efficiently across stations, anticipate peak demand, and improve service availability throughout the day.</p>
 <p>In this case study, we use regression to model hourly bike rental demand using weather conditions and time-related information. The analysis is based on a real-world bike-sharing dataset from Seoul, available in the <strong>liver</strong> package. Because the response variable is numerical, regression provides a natural starting point. At the same time, the dataset presents several realistic challenges: demand changes sharply across hours of the day, differs between weekdays and weekends, varies across seasons, and does not respond linearly to all weather variables. This makes the dataset a useful setting for showing how regression models can be strengthened through careful feature construction, response transformation, and model specification.</p>
-<p>We follow the <em>Data Science Workflow</em> introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a> and illustrated in <a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>. The analysis also builds on the exploratory data analysis strategies from Chapter <a href="4-Exploratory-data-analysis.html" class="quarto-xref"><span>4</span></a> and the data setup principles from Chapter <a href="6-Setup-data.html" class="quarto-xref"><span>6</span></a>. By moving step by step from understanding the problem and the data to model fitting, diagnostic checking, evaluation, and interpretation, this case study shows how regression can support informed prediction of hourly bike rental demand.</p>
+<p>We follow the <em>Data Science Workflow</em> introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a> and illustrated in <a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.1</span></a>. The analysis also builds on the exploratory data analysis strategies from Chapter <a href="4-Exploratory-data-analysis.html" class="quarto-xref"><span>4</span></a> and the data setup principles from Chapter <a href="6-Setup-data.html" class="quarto-xref"><span>6</span></a>. By moving step by step from understanding the problem and the data to model fitting, diagnostic checking, evaluation, and interpretation, this case study shows how regression can support informed prediction of hourly bike rental demand.</p>
 <p>In this setting, hourly demand is shaped by both environmental conditions and regular daily patterns. For example, demand may increase during commuting hours, decline late at night, and respond differently under mild, rainy, or very cold weather conditions. These patterns suggest that effective prediction will require us to account for both time-related structure and weather-related effects.</p>
 <p>To carry out this case study, we use several R packages. The <strong>liver</strong> package provides the dataset, <strong>dplyr</strong> is used for data preparation, <strong>ggplot2</strong> for visualization, <strong>lubridate</strong> for working with dates, and <strong>ggfortify</strong> for regression diagnostics.</p>
 <div class="cell" data-layout-align="center">
@@ -1005,7 +1005,7 @@ Figure&nbsp;10.9: Normal Q-Q plots for the polynomial regression model fitted to
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="va">bike_data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">bike_count</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html">geom_histogram</a></span><span class="op">(</span>bins <span class="op">=</span> <span class="fl">30</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Square-root transformed rentals"</span>, y <span class="op">=</span> <span class="st">"Frequency"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell quarto-layout-panel" data-layout-align="center" data-layout-ncol="2">
+<div class="cell quarto-layout-panel" data-layout-ncol="2" data-layout-align="center">
 <div class="quarto-layout-row">
 <div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
 <div class="quarto-figure quarto-figure-center">
@@ -1040,7 +1040,7 @@ Figure&nbsp;10.10: Distribution of hourly bike rentals before (left) and after t
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/stat_summary.html">stat_summary</a></span><span class="op">(</span>fun <span class="op">=</span> <span class="va">mean</span>, geom <span class="op">=</span> <span class="st">"point"</span>, size <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Hour of day"</span>, y <span class="op">=</span> <span class="st">"Average bike rentals"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<div id="fig-ch10-bike-hourly-demand" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
+<div id="fig-ch10-bike-hourly-demand" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch10-bike-hourly-demand-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="10-Regression_files/figure-html/fig-ch10-bike-hourly-demand-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:75.0%" data-fig-pos="H">
 </div>

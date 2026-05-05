@@ -364,9 +364,9 @@ window.Quarto = {
 </div>
 </div>
 <p>Suppose a churn prediction model reports 95% accuracy, yet consistently fails to identify customers who actually churn. In such cases, the problem often lies not in the algorithm itself, but in how the data were prepared for modeling and evaluation. Before machine learning models can be trained and compared meaningfully, the data must be organized in a way that supports generalization to new observations.</p>
-<p>This chapter focuses on the fourth stage of the Data Science Workflow shown in <a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>: <em>Data Setup for Modeling</em>. Unlike the earlier stages, which emphasized cleaning, transforming, and exploring the data, this stage is concerned with preparing the dataset specifically for model development. The goal is to create a modeling workflow that supports fair comparison, reliable assessment, and reproducible results.</p>
+<p>This chapter focuses on the fourth stage of the Data Science Workflow shown in <a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.1</span></a>: <em>Data Setup for Modeling</em>. Unlike the earlier stages, which emphasized cleaning, transforming, and exploring the data, this stage is concerned with preparing the dataset specifically for model development. The goal is to create a modeling workflow that supports fair comparison, reliable assessment, and reproducible results.</p>
 <p>A dataset may therefore be clean and well understood, yet still be poorly prepared for predictive modeling. Problems often arise when the data are partitioned carelessly, when preprocessing steps are informed by the full dataset, or when class imbalance is ignored. In such cases, model performance may appear stronger during development than it will be in practice. Data setup for modeling therefore involves more than a technical rearrangement of the dataset: it requires decisions that affect how models learn, how they are compared, and how their performance is judged. In this chapter, we examine how to structure the data so that model development remains aligned with the central goal of supervised learning: strong performance on new data rather than only on the observed sample.</p>
-<p>The previous chapters laid the foundation for this stage. In <a href="2-Intro-data-science.html#sec-ch2-Problem-Understanding" class="quarto-xref"><span>Section 2.4</span></a>, we defined the modeling objective. In <a href="3-Data-preparation.html" class="quarto-xref"><span>Chapter 3</span></a> and Chapter <a href="4-Exploratory-data-analysis.html" class="quarto-xref"><span>4</span></a>, we cleaned and explored the data. Chapter <a href="5-Statistics.html" class="quarto-xref"><span>5</span></a> introduced inferential tools that will help us assess whether training and test sets are reasonably comparable.</p>
+<p>The previous chapters laid the foundation for this stage. In <a href="2-Intro-data-science.html#sec-ch2-Problem-Understanding" class="quarto-xref"><span>Section 2.3</span></a>, we defined the modeling objective. In <a href="3-Data-preparation.html" class="quarto-xref"><span>Chapter 3</span></a> and Chapter <a href="4-Exploratory-data-analysis.html" class="quarto-xref"><span>4</span></a>, we cleaned and explored the data. Chapter <a href="5-Statistics.html" class="quarto-xref"><span>5</span></a> introduced inferential tools that will help us assess whether training and test sets are reasonably comparable.</p>
 <section id="what-this-chapter-covers" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="what-this-chapter-covers">What This Chapter Covers</h3>
 <p>We begin by introducing model fit and generalization, including the ideas of underfitting and overfitting, to clarify why predictive modeling requires more than fitting the observed data closely. We then examine how to partition the data into training and test sets, how to validate whether a split is reasonably representative, and how cross-validation can provide a more stable basis for model development.</p>
 <p>Next, we discuss data leakage as a central risk in predictive modeling and establish the guiding principle that all data-dependent transformations must be learned from the training data only. We then turn to model-specific feature preparation, focusing on encoding categorical variables and scaling numerical predictors for algorithms that require numerical or comparable inputs. Finally, we address class imbalance and show how balancing strategies can improve model training while preserving fair evaluation.</p>
@@ -381,7 +381,7 @@ window.Quarto = {
 <p>Figure <a href="#fig-ch6-overfitting-underfitting" class="quarto-xref"><span>6.1</span></a> shows three possible decision boundaries. The left panel is too simple and misclassifies many observations, illustrating <em>underfitting</em>. The middle panel captures the main structure of the data without unnecessary complexity. The right panel is highly irregular and perfectly classifies the observed points, illustrating <em>overfitting</em> because the boundary has adapted too closely to the sample.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch6-overfitting-underfitting" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<div id="fig-ch6-overfitting-underfitting" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch6-overfitting-underfitting-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch6_overfitting_underfitting.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H">
 </div>
@@ -395,7 +395,7 @@ Figure&nbsp;6.1: Illustration of underfitting, appropriate model complexity, and
 <p>The same idea appears more generally in the relationship between model complexity and predictive performance. Figure <a href="#fig-model-complexity" class="quarto-xref"><span>6.2</span></a> shows the typical pattern: as model complexity increases, performance on the observed data usually improves, while performance on new data improves only up to a point and may then decline.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-model-complexity" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<div id="fig-model-complexity" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-model-complexity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch6_model_complexity.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" data-fig-pos="H">
 </div>
@@ -426,7 +426,7 @@ Figure&nbsp;6.2: Relationship between model complexity and predictive performanc
 <p>Importantly, model-oriented data setup takes place only after the train-test split has been created. Transformations such as encoding, scaling, balancing, and resampling must be learned from the training data and then applied unchanged to validation or test data so that information from those data does not leak into model development. Figure <a href="#fig-modeling" class="quarto-xref"><span>6.3</span></a> summarizes this workflow.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-modeling" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<div id="fig-modeling" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-modeling-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch6_partitioning_new.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:85.0%" data-fig-pos="H">
 </div>
@@ -536,7 +536,7 @@ H_a: \pi_{\text{churn, train}} \neq \pi_{\text{churn, test}}
 <p>In <em>k</em>-fold cross-validation, the dataset is divided into <em>k</em> non-overlapping subsets of approximately equal size, called <em>folds</em>. In each iteration, the model is trained on <em>k - 1</em> folds and evaluated on the remaining fold, which serves as the validation set. This process is repeated <em>k</em> times so that each fold is used once for validation and <em>k - 1</em> times for training. The resulting performance values are then averaged to produce an overall estimate. Common choices for <span class="math inline">\(k\)</span> are 5 or 10, as illustrated in Figure <a href="#fig-cross-validation" class="quarto-xref"><span>6.4</span></a> for the case <span class="math inline">\(k = 5\)</span>.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-cross-validation" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<div id="fig-cross-validation" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-cross-validation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch6_cross_validation.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" data-fig-pos="H">
 </div>
@@ -560,7 +560,7 @@ Figure&nbsp;6.4: Illustration of k-fold cross-validation. The dataset is divided
 </ol>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-cross-validation-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<div id="fig-cross-validation-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-cross-validation-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch6_cross_validation_2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%" data-fig-pos="H">
 </div>
