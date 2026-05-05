@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Reza Mohammadi">
+<title>11&nbsp; Generalized Linear Models for Binary and Count Outcomes – &lt;span style='color:#0056B3'&gt;Data Science Foundations and Machine Learning with R: From Data to Decisions&lt;/span&gt;</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./12-Tree-based-models.html" rel="next">
+<link href="./10-Regression.html" rel="prev">
+<link href="./images/logo.png" rel="icon" type="image/png">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-5c395c020fa0215c66c8d962dcba7617.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script><script defer="" data-domain="r4ds.hadley.nz" src="https://plausible.io/js/plausible.js"></script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+</head>
+<body class="nav-sidebar docked">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./11-Generalized-Regression.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Generalized Linear Models for Binary and Count Outcomes</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./"><span style="color:#0056B3">Data Science Foundations and Machine Learning with R: From Data to Decisions</span></a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/RezaMoammadi/Book-Data-Science-R" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Download" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Download"><i class="bi bi-download"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+<li>
+            <a class="dropdown-item sidebar-tools-main-item" href="./-span-style=-color--0056B3--Data-Science-Foundations-and-Machine-Learning-with-R--From-Data-to-Decisions--span-.pdf">
+              <i class="bi bi-file-pdf pe-1"></i>
+            Download PDF
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="./-span-style=-color--0056B3--Data-Science-Foundations-and-Machine-Learning-with-R--From-Data-to-Decisions--span-.epub">
+              <i class="bi bi-journal pe-1"></i>
+            Download ePub
+            </a>
+          </li>
+      </ul>
+</div>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-1" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-1">
+<li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.facebook.com/sharer/sharer.php?u=|url|">
+              <i class="bi bi-facebook pe-1"></i>
+            Facebook
+            </a>
+          </li>
+      </ul>
+</div>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./0-preface.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./1-Intro-R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">R Foundations for Data Science</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2-Intro-data-science.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">The Data Science Workflow and the Role of Machine Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3-Data-preparation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data Preparation in Practice: From Raw Data to Insight</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4-Exploratory-data-analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Exploratory Data Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./5-Statistics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Statistical Inference and Hypothesis Testing</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6-Setup-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Data Setup for Modeling</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./7-Classification-kNN.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Classification Using k-Nearest Neighbors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./8-Model-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Model Evaluation and Performance Assessment</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./9-Naive-Bayes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Naive Bayes Classifier</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Regression Analysis: Linear and Nonlinear Models</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-Generalized-Regression.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Generalized Linear Models for Binary and Count Outcomes</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-Tree-based-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Decision Trees and Random Forests</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-Neural-networks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Neural Networks for Supervised Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-Clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Clustering for Insight: Segmenting Data Without Labels</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-References.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li><a href="#sec-ch11-glm-foundations" id="toc-sec-ch11-glm-foundations" class="nav-link active" data-scroll-target="#sec-ch11-glm-foundations"><span class="header-section-number">11.1</span> From Linear Regression to Generalized Linear Models</a></li>
+  <li><a href="#sec-ch11-logistic-regression" id="toc-sec-ch11-logistic-regression" class="nav-link" data-scroll-target="#sec-ch11-logistic-regression"><span class="header-section-number">11.2</span> Logistic Regression for Binary Outcomes</a></li>
+  <li><a href="#sec-ch11-poisson-regression" id="toc-sec-ch11-poisson-regression" class="nav-link" data-scroll-target="#sec-ch11-poisson-regression"><span class="header-section-number">11.3</span> Poisson Regression for Count Outcomes</a></li>
+  <li><a href="#sec-ch11-case-study" id="toc-sec-ch11-case-study" class="nav-link" data-scroll-target="#sec-ch11-case-study"><span class="header-section-number">11.4</span> Case Study: Predicting Online Purchase Intention with Logistic Regression</a></li>
+  <li><a href="#sec-ch11-summary" id="toc-sec-ch11-summary" class="nav-link" data-scroll-target="#sec-ch11-summary"><span class="header-section-number">11.5</span> Chapter Summary and Takeaways</a></li>
+  <li><a href="#sec-ch11-exercises" id="toc-sec-ch11-exercises" class="nav-link" data-scroll-target="#sec-ch11-exercises"><span class="header-section-number">11.6</span> Exercises</a></li>
+  </ul><div class="toc-actions"><ul><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/edit/main/11-Generalized-Regression.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title"><span id="sec-ch11-generalized-regression" class="quarto-section-identifier"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Generalized Linear Models for Binary and Count Outcomes</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header><div class="chapterquote">
+<p>The theory of probabilities is at bottom nothing but common sense reduced to calculation.</p>
+<div class="author">
+<p>— Pierre-Simon Laplace</p>
+</div>
+</div>
+<p>Many data science problems ask not only <em>how much</em> we expect, but whether an event will occur or how many times it will occur. Will a loan application be approved? Will a patient have a disease? How many service calls will a customer make within a given period? These questions involve binary or count-based outcomes rather than continuous responses, and they require a broader regression framework.</p>
+<p>In Chapter <a href="10-Regression.html" class="quarto-xref"><span>10</span></a>, we developed regression models for continuous outcomes such as house prices, healthcare costs, and hourly bike rental demand. These models allowed us to relate a numerical response variable to a set of predictors, interpret coefficient estimates, and generate predictions. However, when the response variable represents the probability of an event or the number of events, ordinary linear regression no longer matches the structure of the data.</p>
+<p>When used for binary responses, ordinary linear regression can produce fitted values below 0 or above 1, even though probabilities must lie between 0 and 1. When used for count responses, it does not naturally respect the discrete and non-negative structure of the data. In both cases, the variability of the response is linked to its mean in ways that differ from the constant-variance setting of ordinary linear regression. Applying a linear regression model mechanically can therefore lead to predictions and interpretations that are difficult to justify.</p>
+<p>Generalized linear models address these limitations while preserving the central idea of regression: relating an outcome to a set of predictors in an interpretable way. In this chapter, we first introduce the general structure of generalized linear models, then study logistic regression for binary outcomes and Poisson regression for count outcomes. We then apply these ideas in a case study on predicting online purchase intention, following the <em>Data Science Workflow</em> introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a>. Together, these sections show how regression methods can support interpretation, prediction, and decision-making beyond the setting of continuous outcomes.</p>
+<section id="what-this-chapter-covers" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="what-this-chapter-covers">What This Chapter Covers</h3>
+<p>This chapter introduces generalized linear models as an extension of ordinary linear regression for response variables that are not continuous. We begin by examining why ordinary linear regression is unsuitable for binary and count outcomes, and then introduce the three components of a generalized linear model: the response distribution, the linear predictor, and the link function.</p>
+<p>We then study two important members of the GLM family. Logistic regression is used for binary outcomes and allows us to model event probabilities, interpret coefficients through odds ratios, and convert predicted probabilities into class predictions when a decision threshold is required. Poisson regression is used for count outcomes and allows us to model expected counts, interpret multiplicative predictor effects, and assess practical issues such as overdispersion.</p>
+<p>Finally, we apply logistic regression in a case study on predicting online purchase intention. The case study emphasizes probability-based prediction and compares classification models using ROC curves and the area under the curve, introduced in Chapter <a href="8-Model-evaluation.html" class="quarto-xref"><span>8</span></a>. By the end of the chapter, you will be able to recognize when generalized linear models are needed, fit and interpret logistic and Poisson regression models in R, and evaluate probability-based classifiers in an applied data science workflow.</p>
+</section><section id="sec-ch11-glm-foundations" class="level2" data-number="11.1"><h2 data-number="11.1" class="anchored" data-anchor-id="sec-ch11-glm-foundations">
+<span class="header-section-number">11.1</span> From Linear Regression to Generalized Linear Models</h2>
+<p>Ordinary linear regression provides the starting point for much of regression modeling, but its assumptions are most appropriate for continuous responses. To extend regression to binary and count outcomes, we need models that match the structure of the response and relate predictors to the expected outcome on an appropriate scale. This section introduces that extension by first explaining why ordinary linear regression is not enough for these settings and then presenting the three components of a generalized linear model.</p>
+<section id="why-linear-regression-is-not-enough" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="why-linear-regression-is-not-enough">Why Linear Regression Is Not Enough</h3>
+<p>Linear regression is a powerful starting point because it gives us a clear way to relate a response variable to a set of predictors. However, its assumptions are closely tied to continuous outcomes. When the response is binary or count-based, a standard linear regression model may no longer respect the basic structure of the outcome.</p>
+<p>For a binary response, the quantity of interest is usually a probability. A model for such an outcome should therefore produce fitted values between 0 and 1. Linear regression does not guarantee this. It can return fitted values below 0 or above 1, which cannot be interpreted as probabilities. In addition, the variability of a binary response depends on the probability of the event. If the event probability is <span class="math inline">\(p\)</span>, then the variance is <span class="math inline">\(p(1-p)\)</span>, so the variability is smaller when <span class="math inline">\(p\)</span> is close to 0 or 1 and larger when <span class="math inline">\(p\)</span> is close to 0.5. This differs from the constant-variance assumption used in ordinary linear regression.</p>
+<p>For count data, the response records how many times an event occurs. Counts are non-negative integers, so a model for their expected value should not produce negative fitted values. Linear regression does not impose this restriction. Count outcomes also often become more variable as their expected value increases. For example, the number of service calls made by customers is likely to vary more among customers with high expected usage than among customers with very low expected usage.</p>
+<p>These limitations suggest that regression models should be adapted to the type of response variable being analyzed. For binary outcomes, we need a model for event probabilities. For count outcomes, we need a model for non-negative expected counts. Generalized linear models provide a unified framework for making these adaptations while preserving the central regression idea of relating an outcome to a set of predictors.</p>
+<p>Rather than treating binary and count outcomes as cases outside regression, generalized linear models extend regression by combining a suitable response distribution, a linear predictor, and a link function. The next subsection introduces these three components more formally.</p>
+</section><section id="the-three-components-of-a-generalized-linear-model" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="the-three-components-of-a-generalized-linear-model">The Three Components of a Generalized Linear Model</h3>
+<p>A generalized linear model, often abbreviated as GLM, is defined by three connected components. Together, these components specify how the response is distributed, how the predictors enter the model, and how the expected response is linked to those predictors.</p>
+<p>The first component is the <em>random component</em>. This specifies the probability distribution of the response, conditional on the predictors. In ordinary linear regression, the response is continuous and is typically modeled using a normal distribution around its conditional mean. In a generalized linear model, by contrast, we choose a distribution that matches the type of outcome being analyzed. For individual binary responses, the Bernoulli distribution is the relevant special case of the binomial distribution. For count data, the Poisson distribution is often used as a starting point.</p>
+<p>The second component is the <em>systematic component</em>. This is the linear predictor, <span class="math display">\[
+\eta = \beta_0 + \beta_1 x_1 + \cdots + \beta_p x_p.
+\]</span></p>
+<p>Here, <span class="math inline">\(\beta_0, \beta_1, \dots, \beta_p\)</span> are coefficients and <span class="math inline">\(x_1, x_2, \dots, x_p\)</span> are predictors. This part of the model closely resembles the regression equations introduced in Chapter <a href="10-Regression.html" class="quarto-xref"><span>10</span></a>. It preserves the central regression idea that predictors combine linearly, although not necessarily on the original scale of the response.</p>
+<p>The third component is the <em>link function</em>. This function connects the conditional mean of the response to the linear predictor. If we let <span class="math inline">\(\mu = \mathbb{E}(Y \mid x_1, \dots, x_p)\)</span> denote the expected response for a given set of predictor values, then a generalized linear model has the form <span class="math display">\[
+g(\mu) = \eta.
+\]</span></p>
+<p>Here, <span class="math inline">\(g(\cdot)\)</span> is the link function. Its role is to transform the mean response to a scale on which a linear relationship with the predictors is appropriate.</p>
+<p>In ordinary linear regression, the link function is the identity link, so that <span class="math display">\[
+\mu = \eta.
+\]</span></p>
+<p>This means that the expected response is modeled directly as a linear function of the predictors. In logistic regression, the link function is the logit, which maps a probability to the log-odds scale. In Poisson regression, the link function is the logarithm, which maps a positive expected count to the real line.</p>
+<p>Taken together, these three components show that generalized linear models do not replace regression, but extend it. Ordinary linear regression can itself be viewed as a special case of the GLM framework, with a normal response distribution and the identity link. Logistic and Poisson regression follow the same general structure while adapting it to binary and count outcomes.</p>
+</section><section id="common-glms-for-different-outcome-types" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="common-glms-for-different-outcome-types">Common GLMs for Different Outcome Types</h3>
+<p>The three GLM components come together differently depending on the type of response variable being modeled. In practice, this means choosing a response distribution that matches the outcome and a link function that connects the conditional mean of the response to the linear predictor. Table <a href="#tbl-ch11-glm-overview" class="quarto-xref">Table&nbsp;<span>11.1</span></a> summarizes the main cases considered in this chapter.</p>
+<div class="cell" data-layout-align="center">
+<div id="tbl-ch11-glm-overview" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-layout-align="center">
+<figure class="quarto-float quarto-float-tbl figure"><figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-ch11-glm-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;11.1: Relationship between outcome type, response distribution, link function, and the corresponding generalized linear model.
+</figcaption><div aria-describedby="tbl-ch11-glm-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="do-not-create-environment cell caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 29%">
+<col style="width: 18%">
+<col style="width: 26%">
+</colgroup>
+<thead><tr class="header">
+<th style="text-align: left;">Outcome type</th>
+<th style="text-align: left;">Response distribution</th>
+<th style="text-align: left;">Link function</th>
+<th style="text-align: left;">Model</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Continuous outcome</td>
+<td style="text-align: left;">Normal</td>
+<td style="text-align: left;">Identity</td>
+<td style="text-align: left;">Linear regression</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Binary outcome</td>
+<td style="text-align: left;">Bernoulli/binomial</td>
+<td style="text-align: left;">Logit</td>
+<td style="text-align: left;">Logistic regression</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Count outcome</td>
+<td style="text-align: left;">Poisson</td>
+<td style="text-align: left;">Log</td>
+<td style="text-align: left;">Poisson regression</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>For a continuous response, the normal distribution together with the identity link gives the ordinary linear regression model developed in Chapter <a href="10-Regression.html" class="quarto-xref"><span>10</span></a>. For a binary response, the Bernoulli distribution for individual outcomes, or more generally the binomial distribution, combined with the logit link gives logistic regression. For a count response, the Poisson distribution combined with the log link gives Poisson regression.</p>
+<p>This comparison highlights an important point: logistic and Poisson regression are not isolated methods unrelated to linear regression. They belong to the same general framework. What changes across these models is the response distribution and the link function used to connect the conditional mean of the response to the predictors. In this way, generalized linear models provide a unified language for regression across different types of outcomes.</p>
+<p>This framework guides the rest of the chapter. We begin with logistic regression, which applies these ideas to binary outcomes and shows how regression can be used to model event probabilities in a principled and interpretable way.</p>
+</section></section><section id="sec-ch11-logistic-regression" class="level2" data-number="11.2"><h2 data-number="11.2" class="anchored" data-anchor-id="sec-ch11-logistic-regression">
+<span class="header-section-number">11.2</span> Logistic Regression for Binary Outcomes</h2>
+<p>Many important data science questions involve a binary outcome. Will a loan application be accepted? Will a patient respond to treatment? Will a transaction be classified as fraudulent? In each case, the response takes one of two possible values. Earlier in the book, we approached such problems from a classification perspective through methods such as k-Nearest Neighbors in Chapter <a href="7-Classification-kNN.html" class="quarto-xref"><span>7</span></a> and the Naive Bayes classifier in Chapter <a href="9-Naive-Bayes.html" class="quarto-xref"><span>9</span></a>. We now turn to a complementary model-based approach that places binary outcomes within the regression framework: logistic regression.</p>
+<p>Logistic regression is one of the most widely used generalized linear models. Rather than modeling the binary response directly as a numerical value, it models the probability of an event. The model does this through a transformation that keeps fitted probabilities between 0 and 1, avoiding key problems of ordinary linear regression for binary data such as fitted values outside <span class="math inline">\([0,1]\)</span> and an inappropriate linear relationship on the probability scale.</p>
+<p>Let <span class="math inline">\(Y = 1\)</span> denote the event of interest and let <span class="math inline">\(p = P(Y = 1)\)</span> denote the probability that this event occurs. In a loan application setting, for example, the event of interest might be that a loan application is approved. In a medical setting, it might be that a patient responds to treatment. The specific event changes from one application to another, but the modeling idea remains the same: logistic regression models the probability of the event of interest.</p>
+<p>Instead of modeling <span class="math inline">\(p\)</span> directly as a linear function of the predictors, logistic regression first considers the <em>odds</em> of the event, <span class="math display">\[
+\text{odds} = \frac{p}{1-p}.
+\]</span></p>
+<p>The odds compare the probability that the event occurs with the probability that it does not occur. If <span class="math inline">\(p = 0.8\)</span>, then the odds are <span class="math inline">\(0.8/0.2 = 4\)</span>, meaning that the event is four times as likely to occur as not to occur.</p>
+<p>Because odds are always positive, we take their natural logarithm to obtain the <em>log-odds</em>, also called the <em>logit</em>: <span class="math display">\[
+\text{logit}(p) = \log\left(\frac{p}{1-p}\right).
+\]</span></p>
+<p>This transformation maps probabilities in the interval <span class="math inline">\((0,1)\)</span> to the entire real line. Logistic regression then models the transformed probability as a linear function of the predictors: <span class="math display">\[
+\text{logit}(p) = \beta_0 + \beta_1 x_1 + \cdots + \beta_p x_p.
+\]</span></p>
+<p>This is the logistic regression model. It states that the predictors have a linear effect on the log-odds scale. Although the model is linear in the coefficients, the relationship between the predictors and the probability itself is nonlinear. Solving the equation above for <span class="math inline">\(p\)</span> gives the inverse-logit form: <span class="math display">\[
+p =
+\frac{
+e^{\beta_0 + \beta_1 x_1 + \cdots + \beta_p x_p}
+}{
+1 + e^{\beta_0 + \beta_1 x_1 + \cdots + \beta_p x_p}
+}.
+\]</span></p>
+<p>This expression guarantees that predicted probabilities always lie between 0 and 1. That is the key reason logistic regression is appropriate for binary outcomes. It preserves the central regression idea of relating an outcome to predictors, but does so on a scale that matches the structure of binary data. In this way, logistic regression provides a statistically coherent and interpretable framework for modeling event probabilities.</p>
+<section id="fitting-and-interpreting-a-logistic-regression-model-in-r" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="fitting-and-interpreting-a-logistic-regression-model-in-r">Fitting and Interpreting a Logistic Regression Model in R</h3>
+<p>We now fit a logistic regression model in R using the <code>loan</code> dataset from the <strong>liver</strong> package. This dataset was introduced earlier in Chapter <a href="9-Naive-Bayes.html" class="quarto-xref"><span>9</span></a>, where we used it to illustrate the Naive Bayes classifier. Here, we return to the same binary prediction problem from a regression perspective. Our goal is to model the loan outcome <code>loan_status</code> using applicant characteristics and financial indicators.</p>
+<p>We begin by loading the dataset:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://book-data-science-r.netlify.app">liver</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">loan</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The dataset contains 4269 observations and 13 variables. The response variable is <code>loan_status</code>, while the remaining variables describe aspects of the applicant’s financial profile, asset values, and background.</p>
+<p>Before fitting the model, it is useful to inspect the levels of the response variable. In logistic regression with a two-level factor response, R treats the second factor level as the modeled event by default. We therefore define the event of interest explicitly. Since we want to model the probability that a loan is approved, we set <code>"rejected"</code> as the reference category:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(loan<span class="sc">$</span>loan_status)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">1</span>] <span class="st">"approved"</span> <span class="st">"rejected"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>loan<span class="sc">$</span>loan_status <span class="ot">&lt;-</span> <span class="fu">relevel</span>(loan<span class="sc">$</span>loan_status, <span class="at">ref =</span> <span class="st">"rejected"</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(loan<span class="sc">$</span>loan_status)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">1</span>] <span class="st">"rejected"</span> <span class="st">"approved"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Because <code>"rejected"</code> is the reference level, the model estimates the probability that <code>loan_status = "approved"</code>. All coefficient interpretations in this example therefore refer to the odds of loan approval.</p>
+<p>To keep the example concise, we include all available predictors except <code>loan_id</code>, which serves only as an identifier and does not carry predictive meaning. This allows us to focus on model fitting and interpretation without listing each predictor individually. We first define the model formula:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">formula_loan</span> <span class="op">&lt;-</span> <span class="va">loan_status</span> <span class="op">~</span> <span class="va">.</span> <span class="op">-</span> <span class="va">loan_id</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We then fit the logistic regression model using the <code><a href="https://rdrr.io/r/stats/glm.html">glm()</a></code> function. The argument <code>family = binomial</code> tells R to fit a generalized linear model for a binary response using the logit link:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">glm_loan</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">formula_loan</span>, data <span class="op">=</span> <span class="va">loan</span>, family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To inspect the fitted model, we use:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(glm_loan)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>   Call<span class="sc">:</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">glm</span>(<span class="at">formula =</span> formula_loan, <span class="at">family =</span> binomial, <span class="at">data =</span> loan)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>   Coefficients<span class="sc">:</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                              Estimate Std. Error z value <span class="fu">Pr</span>(<span class="sc">&gt;</span><span class="er">|</span>z<span class="sc">|</span>)    </span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>   (Intercept)              <span class="sc">-</span><span class="fl">1.131e+01</span>  <span class="fl">4.377e-01</span> <span class="sc">-</span><span class="fl">25.833</span>  <span class="sc">&lt;</span> <span class="fl">2e-16</span> <span class="sc">**</span><span class="er">*</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>   no_of_dependents         <span class="sc">-</span><span class="fl">1.780e-02</span>  <span class="fl">3.487e-02</span>  <span class="sc">-</span><span class="fl">0.510</span>   <span class="fl">0.6097</span>    </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>   educationnot<span class="sc">-</span>graduate    <span class="sc">-</span><span class="fl">1.153e-01</span>  <span class="fl">1.183e-01</span>  <span class="sc">-</span><span class="fl">0.975</span>   <span class="fl">0.3298</span>    </span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>   self_employedyes          <span class="fl">6.739e-02</span>  <span class="fl">1.181e-01</span>   <span class="fl">0.570</span>   <span class="fl">0.5684</span>    </span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>   income_annum             <span class="sc">-</span><span class="fl">6.137e-07</span>  <span class="fl">9.081e-08</span>  <span class="sc">-</span><span class="fl">6.758</span>  <span class="fl">1.4e-11</span> <span class="sc">**</span><span class="er">*</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>   loan_amount               <span class="fl">1.447e-07</span>  <span class="fl">1.812e-08</span>   <span class="fl">7.986</span>  <span class="fl">1.4e-15</span> <span class="sc">**</span><span class="er">*</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>   loan_term                <span class="sc">-</span><span class="fl">1.516e-01</span>  <span class="fl">1.144e-02</span> <span class="sc">-</span><span class="fl">13.253</span>  <span class="sc">&lt;</span> <span class="fl">2e-16</span> <span class="sc">**</span><span class="er">*</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>   cibil_score               <span class="fl">2.483e-02</span>  <span class="fl">8.385e-04</span>  <span class="fl">29.612</span>  <span class="sc">&lt;</span> <span class="fl">2e-16</span> <span class="sc">**</span><span class="er">*</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>   residential_assets_value  <span class="fl">2.923e-09</span>  <span class="fl">1.187e-08</span>   <span class="fl">0.246</span>   <span class="fl">0.8055</span>    </span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>   commercial_assets_value   <span class="fl">1.903e-08</span>  <span class="fl">1.729e-08</span>   <span class="fl">1.101</span>   <span class="fl">0.2711</span>    </span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>   luxury_assets_value       <span class="fl">3.130e-08</span>  <span class="fl">1.749e-08</span>   <span class="fl">1.789</span>   <span class="fl">0.0735</span> .  </span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>   bank_asset_value          <span class="fl">5.076e-08</span>  <span class="fl">3.342e-08</span>   <span class="fl">1.519</span>   <span class="fl">0.1287</span>    </span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>   <span class="sc">---</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>   Signif. codes<span class="sc">:</span>  <span class="dv">0</span> <span class="st">'***'</span> <span class="fl">0.001</span> <span class="st">'**'</span> <span class="fl">0.01</span> <span class="st">'*'</span> <span class="fl">0.05</span> <span class="st">'.'</span> <span class="fl">0.1</span> <span class="st">' '</span> <span class="dv">1</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>   (Dispersion parameter <span class="cf">for</span> binomial family taken to be <span class="dv">1</span>)</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>       Null deviance<span class="sc">:</span> <span class="fl">5660.7</span>  on <span class="dv">4268</span>  degrees of freedom</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>   Residual deviance<span class="sc">:</span> <span class="fl">1877.7</span>  on <span class="dv">4257</span>  degrees of freedom</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>   AIC<span class="sc">:</span> <span class="fl">1901.7</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>   Number of Fisher Scoring iterations<span class="sc">:</span> <span class="dv">7</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The output reports the estimated coefficients, their standard errors, the corresponding <em>z</em>-statistics, and <em>p</em>-values. As in linear regression, these quantities help us assess the direction and strength of the relationship between each predictor and the response. In logistic regression, however, the coefficients are interpreted on the log-odds scale rather than on the original response scale.</p>
+<p>Each coefficient in a logistic regression model can be interpreted on two closely related scales. On the model scale, it describes the change in the log-odds of loan approval associated with a one-unit increase in the predictor, holding the other predictors fixed. After exponentiation, the coefficient can be interpreted as an <em>odds ratio</em>. For a numeric predictor <span class="math inline">\(x_j\)</span>, exponentiating the coefficient <span class="math inline">\(\beta_j\)</span> gives <span class="math display">\[
+e^{\beta_j},
+\]</span> which represents the multiplicative change in the odds of loan approval associated with a one-unit increase in <span class="math inline">\(x_j\)</span>.</p>
+<p>For example, according to the fitted model, the coefficient of <code>loan_term</code> is -0.152. The corresponding odds ratio is <span class="math inline">\(e^{-0.152}\)</span> = 0.859. This means that a one-unit increase in <code>loan_term</code> multiplies the odds of loan approval by about 0.859, holding all other predictors fixed. If the odds ratio is greater than 1, the predictor increases the odds of approval; if it is less than 1, the predictor decreases the odds of approval.</p>
+<p>For categorical predictors such as <code>education</code> or <code>self_employed</code>, the interpretation is relative to the reference category. In that case, the exponentiated coefficient compares the odds of loan approval in one category with the odds of loan approval in the reference category, holding the other predictors fixed. More generally, when factor variables are included in a model formula, R automatically creates the required indicator variables and uses one level as the reference category.</p>
+<p>At this stage, we fit the model using the full dataset because our main goal is to understand model specification and coefficient interpretation. Later in this chapter, we return to logistic regression in a predictive setting and evaluate its out-of-sample performance in a fuller case study on predicting online purchase intention.</p>
+<p>Taken together, these results show how logistic regression combines model estimation with interpretable coefficient analysis, allowing us to examine how individual predictors relate to the odds of loan approval.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Apply stepwise regression, as introduced in Section <a href="10-Regression.html#sec-ch10-stepwise" class="quarto-xref"><span>10.5</span></a>, to the logistic regression model as an exploratory model simplification exercise. Compare the selected model with the full model in terms of retained predictors, coefficient patterns, and overall interpretability. What does the reduced model suggest about the main factors related to loan approval?</p>
+</blockquote>
+</section><section id="from-estimated-probabilities-to-classification-decisions" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="from-estimated-probabilities-to-classification-decisions">From Estimated Probabilities to Classification Decisions</h3>
+<p>A logistic regression model produces predicted probabilities rather than class labels directly. These probabilities describe the estimated chance that each observation belongs to the modeled event category. In many applications, this probabilistic output is already useful, since it allows us to rank observations by estimated risk or likelihood.</p>
+<p>Predicted probabilities can be obtained using <code><a href="https://rdrr.io/r/stats/predict.html">predict()</a></code> with <code>type = "response"</code>:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">predict</span>(glm_loan, <span class="at">newdata =</span> loan[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, ], <span class="at">type =</span> <span class="st">"response"</span>), <span class="dv">3</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>       <span class="dv">1</span>     <span class="dv">2</span>     <span class="dv">3</span>     <span class="dv">4</span>     <span class="dv">5</span> </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>   <span class="fl">0.998</span> <span class="fl">0.078</span> <span class="fl">0.211</span> <span class="fl">0.420</span> <span class="fl">0.002</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>These values represent the model’s estimated probabilities for the event corresponding to the second level of <code>loan_status</code>, which here is approved. Since we set <code>"rejected"</code> as the reference category in the previous subsection, the modeled event is loan approval. In other words, these values give the estimated probability that each selected loan application will be approved. For example, for the first application in the <code>loan</code> dataset, the estimated probability of approval is 0.998.</p>
+<p>In some situations, predicted probabilities are the final quantity of interest. In others, however, we need a class prediction such as <code>approved</code> or <code>rejected</code>. To move from probabilities to class labels, we choose a decision threshold. The most common choice is 0.5: if the predicted probability of approval is at least 0.5, we classify the application as <code>approved</code>; otherwise, we classify it as <code>rejected</code>.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>loan_probs <span class="ot">&lt;-</span> <span class="fu">predict</span>(glm_loan, <span class="at">newdata =</span> loan, <span class="at">type =</span> <span class="st">"response"</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>loan_pred_05 <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(loan_probs <span class="sc">&gt;=</span> <span class="fl">0.5</span>, <span class="st">"approved"</span>, <span class="st">"rejected"</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>loan_pred_05 <span class="ot">&lt;-</span> <span class="fu">factor</span>(loan_pred_05, <span class="at">levels =</span> <span class="fu">levels</span>(loan<span class="sc">$</span>loan_status))</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(loan_pred_05)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>   loan_pred_05</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>   rejected approved </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>       <span class="dv">1611</span>     <span class="dv">2658</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The threshold is applied to the probability of the modeled event. In this example, the modeled event is loan approval, so lowering the threshold makes it easier for an application to be classified as <code>approved</code>, while raising the threshold makes the classification rule more selective.</p>
+<p>Although a threshold of 0.5 is common, it is not always the most appropriate choice. The preferred threshold depends on the goals of the application and the relative consequences of different types of errors. In loan approval, for example, a lender may choose a higher threshold for approval if the cost of approving a risky application is especially high. Conversely, a lower threshold may be preferred if the cost of rejecting applicants who would in fact repay the loan is considered greater. The threshold should therefore reflect the practical balance between caution and opportunity in the decision process.</p>
+<p>This highlights one of the main strengths of logistic regression. It separates the task of estimating probabilities from the task of making decisions. The model provides estimated probabilities, and the analyst selects a threshold that reflects the practical context. In the case study later in this chapter, we evaluate probability-based classifiers using ROC curves and the area under the curve, which allow us to assess classification performance across all possible thresholds rather than relying on a single cutoff.</p>
+<p>Logistic regression therefore serves two closely related purposes. It is a regression model for binary outcomes, and it is also a classification tool that yields interpretable probabilities. This combination of interpretability, flexibility, and practical usefulness explains why logistic regression remains one of the most important methods for binary data analysis.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Use the fitted logistic regression model to generate predicted probabilities for the <code>loan</code> dataset, then convert them into class predictions using thresholds of 0.5 and 0.3. Compare the resulting decisions. How does lowering the threshold change the number of approved applications, and what does this suggest about the trade-off between approving risky applicants and rejecting applicants who might in fact repay the loan?</p>
+</blockquote>
+</section></section><section id="sec-ch11-poisson-regression" class="level2" data-number="11.3"><h2 data-number="11.3" class="anchored" data-anchor-id="sec-ch11-poisson-regression">
+<span class="header-section-number">11.3</span> Poisson Regression for Count Outcomes</h2>
+<p>Not all response variables describe whether an event occurs. In many applications, the outcome records <em>how many times</em> something happens within a fixed period or setting. Examples include the number of doctor visits, the number of insurance claims, the number of purchases made in a week, or the number of website visits in an hour. In Section <a href="10-Regression.html#sec-ch10-case-bike" class="quarto-xref"><span>10.9</span></a>, for example, we modeled hourly bike rental demand using the variable <code>bike_count</code>, which records the number of bikes rented in each hour. Outcomes of this kind are not continuous and are not simply binary. They are <em>counts</em>, and they require a model that respects their discrete, non-negative nature.</p>
+<p>Poisson regression is one of the most important generalized linear models for this setting. It extends the regression framework to responses that represent event frequencies, allowing us to relate expected counts to a set of predictors in a structured and interpretable way. Just as logistic regression adapts regression to binary outcomes, Poisson regression adapts it to count outcomes. Revisiting <code>bike_count</code> from Section <a href="10-Regression.html#sec-ch10-case-bike" class="quarto-xref"><span>10.9</span></a> will therefore help us see how a generalized linear model can sometimes provide a more natural representation of a count response than ordinary linear regression.</p>
+<p>This matters because ordinary linear regression is not well suited to count data. A linear model can produce fitted values that are negative, even though counts must be non-negative. It also assumes a constant variance, whereas count outcomes often become more variable as their expected value increases. In addition, count data are often right-skewed, with many small values and fewer large ones. These features make the normal-error framework of linear regression less appropriate.</p>
+<p>Poisson regression addresses these limitations by modeling the expected count through a distribution and link function designed for count outcomes. It is based on the Poisson distribution, named after the French mathematician Siméon Denis Poisson (1781–1840), who studied models for the number of events occurring within a fixed interval. If <span class="math inline">\(Y\)</span> follows a Poisson distribution with parameter <span class="math inline">\(\lambda &gt; 0\)</span>, then its probability mass function is <span class="math display">\[
+P(Y = y) = \frac{e^{-\lambda}\lambda^y}{y!}, \qquad y = 0,1,2,\dots
+\]</span> where <span class="math inline">\(\lambda\)</span> is the expected count. A key feature of the Poisson distribution is that its mean and variance are both equal to <span class="math inline">\(\lambda\)</span>: <span class="math display">\[
+\mathbb{E}(Y) = \lambda, \qquad \text{Var}(Y) = \lambda.
+\]</span></p>
+<p>To relate the expected count to predictors, Poisson regression uses the <em>log link</em>: <span class="math display">\[
+\log(\lambda) = b_0 + b_1 x_1 + b_2 x_2 + \dots + b_m x_m.
+\]</span></p>
+<p>This is the Poisson regression model. It states that the logarithm of the expected count is a linear function of the predictors. Solving for <span class="math inline">\(\lambda\)</span> gives <span class="math display">\[
+\lambda = e^{b_0 + b_1 x_1 + b_2 x_2 + \dots + b_m x_m}.
+\]</span></p>
+<p>This formulation guarantees that the expected count is always positive. It also implies that predictors act multiplicatively on the original count scale, even though their effects are additive on the log scale. In this way, Poisson regression provides a statistically coherent and interpretable framework for modeling count outcomes.</p>
+<section id="fitting-and-interpreting-a-poisson-regression-model-for-bike-demand" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="fitting-and-interpreting-a-poisson-regression-model-for-bike-demand">Fitting and Interpreting a Poisson Regression Model for Bike Demand</h3>
+<p>In Section <a href="10-Regression.html#sec-ch10-case-bike" class="quarto-xref"><span>10.9</span></a>, we modeled hourly bike rental demand using linear regression, including nonlinear terms and a square-root transformation of the response. That analysis showed that linear regression can provide a useful approximation for this problem. At the same time, the response variable <code>bike_count</code> records the number of bike rentals in each hour, so it is fundamentally a count outcome. This makes Poisson regression a natural alternative to consider.</p>
+<p>To make the comparison with Section <a href="10-Regression.html#sec-ch10-case-bike" class="quarto-xref"><span>10.9</span></a> meaningful, we follow the same data preparation and partitioning steps introduced there. In particular, we derive <code>weekday</code> from <code>date</code>, retain only functioning days, order the observations chronologically, and use the same 80%–20% split into training and test sets. We also use the same set of predictors as in the linear regression analysis, but we now fit a Poisson regression model directly to the original response <code>bike_count</code> rather than to a transformed version of it.</p>
+<p>We begin by fitting a full Poisson regression model to the training data:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">full_reg_glm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span></span>
+<span>  <span class="va">bike_count</span> <span class="op">~</span> <span class="va">temperature</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html">I</a></span><span class="op">(</span><span class="va">temperature</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">+</span> <span class="va">humidity</span> <span class="op">+</span></span>
+<span>    <span class="va">wind_speed</span> <span class="op">+</span> <span class="va">visibility</span> <span class="op">+</span> <span class="va">dew_point_temperature</span> <span class="op">+</span></span>
+<span>    <span class="va">solar_radiation</span> <span class="op">+</span> <span class="va">rainfall</span> <span class="op">+</span> <span class="va">snowfall</span> <span class="op">+</span></span>
+<span>    <span class="va">season</span> <span class="op">+</span> <span class="va">holiday</span> <span class="op">+</span> <span class="va">hour</span> <span class="op">+</span> <span class="va">weekday</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">train_bike</span>,</span>
+<span>  family <span class="op">=</span> <span class="va">poisson</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We use the same predictor set as in the linear regression analysis, but now fit the model with <code><a href="https://rdrr.io/r/stats/glm.html">glm()</a></code> and <code>family = poisson</code>, so that <code>bike_count</code> is modeled directly as a count outcome. This tells R to use the Poisson distribution for the response and the log link function to relate the expected count to the predictors. As in Chapter <a href="10-Regression.html" class="quarto-xref"><span>10</span></a>, we can also use stepwise regression to obtain a more parsimonious model:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">stepwise_reg_glm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/step.html">step</a></span><span class="op">(</span><span class="va">full_reg_glm</span>, direction <span class="op">=</span> <span class="st">"both"</span>, trace <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The fitted model can be examined in R using <code>summary(stepwise_reg_glm)</code>, which reports the estimated coefficients, their standard errors, the corresponding <em>z</em>-statistics, and <em>p</em>-values. Because the full output is lengthy, we do not reproduce it here. Instead, we focus on interpreting the main types of coefficients that arise in the model.</p>
+<p>For example, the fitted coefficient of <code>temperature</code> is positive (0.061), indicating that warmer conditions are associated with a higher expected number of hourly bike rentals, holding the remaining predictors fixed. Exponentiating this coefficient gives <span class="math inline">\(e^{0.061} \approx 1.06\)</span>, which means that a one-unit increase in temperature is associated with about a 6% increase in the expected number of bike rentals. Similarly, the coefficient for <code>holidayno</code> is interpreted relative to the reference category <code>holidayyes</code>. It therefore describes how the expected number of bike rentals on non-holidays differs from that on holidays, holding the other predictors fixed.</p>
+<p>Each coefficient can be interpreted on two closely related scales. On the model scale, it describes the change in the log of the expected count associated with a one-unit increase in the predictor. After exponentiation, the coefficient can be interpreted as a multiplicative effect on the expected count. For a numeric predictor <span class="math inline">\(x_j\)</span>, exponentiating the coefficient <span class="math inline">\(b_j\)</span> gives <span class="math inline">\(e^{b_j}\)</span>, which represents the factor by which the expected number of bike rentals changes when <span class="math inline">\(x_j\)</span> increases by one unit, holding the other predictors fixed.</p>
+<p>We then generate predicted expected counts for the test set using <code><a href="https://rdrr.io/r/stats/predict.html">predict()</a></code> with <code>type = "response"</code>:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pred_stepwise_glm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">stepwise_reg_glm</span>, newdata <span class="op">=</span> <span class="va">test_bike</span>, type <span class="op">=</span> <span class="st">"response"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>These values are the model’s estimated expected numbers of bike rentals for the test observations. Because Poisson regression predicts expected counts, the fitted values do not need to be integers. They represent average expected demand rather than literal realized outcomes.</p>
+<p>We can now compare the Poisson regression model with the earlier linear regression model from Section <a href="10-Regression.html#sec-ch10-case-bike" class="quarto-xref"><span>10.9</span></a> on the original <code>bike_count</code> scale. To compare the Poisson model with the earlier linear regression analysis, we summarize predictive performance on the original <code>bike_count</code> scale using RMSE and predictive <span class="math inline">\(R^2\)</span>:</p>
+<div class="cell" data-layout-align="center">
+<pre><code>                      Model     RMSE        R2
+   1  Stepwise linear model 333.8172 0.6897669
+   2 Stepwise Poisson model 289.1020 0.7673125</code></pre>
+</div>
+<p>In this setting, the stepwise Poisson model achieves a lower predictive RMSE and a higher predictive <span class="math inline">\(R^2\)</span> than the stepwise linear model from Chapter <a href="10-Regression.html" class="quarto-xref"><span>10</span></a>. In particular, the predictive RMSE decreases from about 333.8 to about 289.1, while the predictive <span class="math inline">\(R^2\)</span> increases from about 0.69 to about 0.77. This suggests that modeling <code>bike_count</code> directly as a count outcome provides a more appropriate and more effective starting point for this problem. A likely reason is that <code>bike_count</code> is non-negative and right-skewed, and its variability tends to increase with its mean. These are characteristics for which Poisson regression is often better suited than ordinary linear regression.</p>
+<p>Figure <a href="#fig-ch11-bike-poisson-vs-linear" class="quarto-xref"><span>11.1</span></a> compares observed and predicted bike rentals for the stepwise linear model from Chapter <a href="10-Regression.html#sec-ch10-case-bike" class="quarto-xref"><span>10.9</span></a> and the stepwise Poisson model. The Poisson model produces predictions that track the diagonal reference line more closely, which is consistent with its improved predictive performance on the test set. At the same time, Poisson regression should still be viewed as a starting point rather than a final answer for every count-data problem. Hourly demand data may exhibit overdispersion, meaning that the variability in the response exceeds what the Poisson model assumes. It is therefore important to check model adequacy in practice, even when Poisson regression performs better than ordinary linear regression.</p>
+<div id="fig-ch11-bike-poisson-vs-linear" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch11-bike-poisson-vs-linear-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+
+</div>
+<div class="cell quarto-layout-panel" data-layout-align="center" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="11-Generalized-Regression_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" data-fig-pos="H"></p>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: center;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="11-Generalized-Regression_files/figure-html/unnamed-chunk-14-2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" data-fig-pos="H"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch11-bike-poisson-vs-linear-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11.1: Observed versus predicted bike rentals for the stepwise linear regression model and the stepwise Poisson regression model.
+</figcaption></figure>
+</div>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Revisit the <code>bike_demand</code> analysis from Section <a href="10-Regression.html#sec-ch10-case-bike" class="quarto-xref"><span>10.9</span></a> and compare the stepwise linear regression model with the stepwise Poisson regression model. Choose one numeric predictor and one categorical predictor from the Poisson model output, and interpret their coefficients on both the log scale and the expected-count scale. Then explain how modeling <code>bike_count</code> as a count outcome changes the interpretation of predictor effects relative to the linear regression analysis in Chapter <a href="10-Regression.html" class="quarto-xref"><span>10</span></a>.</p>
+</blockquote>
+</section></section><section id="sec-ch11-case-study" class="level2" data-number="11.4"><h2 data-number="11.4" class="anchored" data-anchor-id="sec-ch11-case-study">
+<span class="header-section-number">11.4</span> Case Study: Predicting Online Purchase Intention with Logistic Regression</h2>
+<p>Predicting whether an online browsing session will end in a purchase is a common classification problem in e-commerce. Accurate probability estimates can help businesses identify sessions with high conversion potential, target promotions more effectively, and better understand the factors related to customer purchasing behavior. In this case study, we ask a focused question: can an interpretable logistic regression model provide competitive probability-based predictions for online purchase intention?</p>
+<p>The <code>purchase_intention</code> dataset comes from the UC Irvine Machine Learning Repository and is distributed with the liver package. It was described by <span class="citation" data-cites="sakar2019real">(<a href="15-References.html#ref-sakar2019real" role="doc-biblioref"><strong>sakar2019real?</strong></a>)</span> in the context of predicting online purchasing behavior. The response variable, <code>revenue</code>, records whether a session resulted in a completed transaction, while the predictors describe browsing behavior, session-level characteristics, and visitor-related features. This makes the dataset well suited for illustrating logistic regression in a realistic binary classification setting.</p>
+<p>Following the Data Science Workflow introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a> and illustrated in <a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>, this case study moves from problem understanding and data overview to model fitting, evaluation, and interpretation. We first fit a baseline logistic regression model using all available predictors. We then fit a stepwise logistic regression model. Finally, we include the Naive Bayes classifier from Chapter <a href="9-Naive-Bayes.html" class="quarto-xref"><span>9</span></a> as a benchmark based on a different modeling principle. The comparison emphasizes not only predictive performance, but also interpretability, parsimony, and the practical value of probability-based predictions.</p>
+<section id="problem-understanding" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="problem-understanding">Problem Understanding</h3>
+<p>Online retailers routinely seek to understand which browsing sessions are most likely to end in a purchase. Identifying sessions with a high probability of conversion can help businesses target promotions more effectively, improve recommendation strategies, allocate marketing resources, and refine website design. This makes purchase intention a natural prediction problem in e-commerce: given information recorded during a browsing session, can we estimate whether that session will generate revenue?</p>
+<p>From a modeling perspective, this is a binary classification problem. The outcome variable <code>revenue</code> records whether a session ended in a purchase (<code>yes</code>) or not (<code>no</code>). The predictors include behavioral variables, such as the number of pages visited and the time spent on different types of pages, together with session-level and visitor-level characteristics such as <code>month</code>, <code>visitor_type</code>, <code>traffic_type</code>, and <code>weekend</code>. Our aim is to estimate the probability of purchase for each session while also considering the trade-off between predictive performance and interpretability. For this reason, we begin with logistic regression, then consider a stepwise logistic regression model, and finally compare these models with Naive Bayes as an external benchmark.</p>
+</section><section id="overview-of-the-dataset" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="overview-of-the-dataset">Overview of the Dataset</h3>
+<p>The <code>purchase_intention</code> dataset contains session-level information from an online shopping website. Each observation corresponds to a single browsing session, and the modeling objective is to predict whether that session ended in a purchase (<code>revenue = "yes"</code> or <code>"no"</code>). The dataset combines behavioral measures with session-level and visitor-related characteristics, making it well suited for supervised classification in an e-commerce setting.</p>
+<p>We begin by loading the dataset into R and inspecting its structure to understand the variables available for modeling:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(liver)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(purchase_intention)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(purchase_intention)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>   <span class="st">'data.frame'</span><span class="sc">:</span>    <span class="dv">12330</span> obs. of  <span class="dv">18</span> variables<span class="sc">:</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="er">$</span> administrative          <span class="sc">:</span> int  <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">0</span> ...</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> administrative_duration <span class="sc">:</span> num  <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> ...</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> informational           <span class="sc">:</span> int  <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> ...</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> informational_duration  <span class="sc">:</span> num  <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> ...</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> product_related         <span class="sc">:</span> int  <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">10</span> <span class="dv">19</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">2</span> <span class="dv">3</span> ...</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> product_related_duration<span class="sc">:</span> num  <span class="dv">0</span> <span class="dv">64</span> <span class="dv">0</span> <span class="fl">2.67</span> <span class="fl">627.5</span> ...</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> bounce_rates            <span class="sc">:</span> num  <span class="fl">0.2</span> <span class="dv">0</span> <span class="fl">0.2</span> <span class="fl">0.05</span> <span class="fl">0.02</span> ...</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> exit_rates              <span class="sc">:</span> num  <span class="fl">0.2</span> <span class="fl">0.1</span> <span class="fl">0.2</span> <span class="fl">0.14</span> <span class="fl">0.05</span> ...</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> page_values             <span class="sc">:</span> num  <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> ...</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> special_day             <span class="sc">:</span> num  <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="fl">0.4</span> <span class="dv">0</span> <span class="fl">0.8</span> <span class="fl">0.4</span> ...</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> month                   <span class="sc">:</span> Ord.factor w<span class="sc">/</span> <span class="dv">10</span> levels <span class="st">"Feb"</span><span class="sc">&lt;</span><span class="st">"Mar"</span><span class="sc">&lt;</span><span class="st">"May"</span><span class="sc">&lt;</span>..<span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> ...</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> operating_systems       <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">8</span> levels <span class="st">"1"</span>,<span class="st">"2"</span>,<span class="st">"3"</span>,<span class="st">"4"</span>,..<span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> ...</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> browser                 <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">13</span> levels <span class="st">"1"</span>,<span class="st">"2"</span>,<span class="st">"3"</span>,<span class="st">"4"</span>,..<span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">4</span> ...</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> region                  <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">9</span> levels <span class="st">"1"</span>,<span class="st">"2"</span>,<span class="st">"3"</span>,<span class="st">"4"</span>,..<span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">9</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> ...</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> traffic_type            <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">20</span> levels <span class="st">"1"</span>,<span class="st">"2"</span>,<span class="st">"3"</span>,<span class="st">"4"</span>,..<span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">5</span> <span class="dv">3</span> <span class="dv">2</span> ...</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> visitor_type            <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">3</span> levels <span class="st">"New_Visitor"</span>,..<span class="sc">:</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">3</span> ...</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> weekend                 <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"no"</span>,<span class="st">"yes"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">1</span> ...</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> revenue                 <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"no"</span>,<span class="st">"yes"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The dataset consists of 12330 observations and 18 variables. The response variable, <code>revenue</code>, is binary and indicates whether the session resulted in a completed transaction. The predictors describe several aspects of the browsing session. Some variables summarize browsing behavior, including the number of administrative, informational, and product-related pages visited and the time spent on each type of page. Others capture session quality and commercial relevance, such as <code>bounce_rates</code>, <code>exit_rates</code>, <code>page_values</code>, and <code>special_day</code>. Additional variables describe session and visitor characteristics, including <code>month</code>, <code>weekend</code>, <code>visitor_type</code>, <code>traffic_type</code>, <code>region</code>, <code>browser</code>, and <code>operating_systems</code>.</p>
+<p>Taken together, these predictors provide a rich description of online shopping sessions and the conditions under which purchases occur. For this case study, the dataset is already stored in an analysis-ready format, with categorical variables represented as factors and the binary outcome clearly defined. As a result, we can proceed directly to data setup for modeling, focusing on how the data will be partitioned for training and evaluation rather than on additional cleaning steps.</p>
+</section><section id="data-setup-for-modeling" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="data-setup-for-modeling">Data Setup for Modeling</h3>
+<p>To evaluate how well our models generalize to new data, we divide the <code>purchase_intention</code> dataset into separate training and test sets. We use the training set to fit the models and reserve the test set for out-of-sample evaluation. This separation is essential because it allows us to assess predictive performance on observations that were not used during model fitting.</p>
+<p>Following the approach used elsewhere in the book, we use the <code><a href="https://rdrr.io/pkg/liver/man/partition.html">partition()</a></code> function from the <strong>liver</strong> package to create an 80% training set and a 20% test set. We also set a random seed to ensure that the results are reproducible:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">splits</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/liver/man/partition.html">partition</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">purchase_intention</span>, ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.8</span>, <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">train_set</span> <span class="op">=</span> <span class="va">splits</span><span class="op">$</span><span class="va">part1</span></span>
+<span><span class="va">test_set</span>  <span class="op">=</span> <span class="va">splits</span><span class="op">$</span><span class="va">part2</span></span>
+<span></span>
+<span><span class="va">test_labels</span> <span class="op">=</span> <span class="va">test_set</span><span class="op">$</span><span class="va">revenue</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The split assigns most observations to the training set while leaving a substantial subset for model evaluation. The vector <code>test_labels</code> stores the true class labels for later comparison with predicted probabilities and class predictions.</p>
+<p>Because <code>revenue</code> is the response variable, it is useful to check whether its class proportions are similar in the training and test sets. Large differences in class balance could make the evaluation less representative of the original data. Following Section <a href="6-Setup-data.html#sec-ch6-cross-validation" class="quarto-xref"><span>6.2</span></a>, this can be assessed descriptively by comparing class proportions, or more formally with a two-sample Z-test for equality of proportions. In this case study, we use the descriptive check:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">prop.table</span>(<span class="fu">table</span>(train_set<span class="sc">$</span>revenue))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>          no       yes </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>   <span class="fl">0.8437753</span> <span class="fl">0.1562247</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">prop.table</span>(<span class="fu">table</span>(test_set<span class="sc">$</span>revenue))</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>         no      yes </span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>   <span class="fl">0.851176</span> <span class="fl">0.148824</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>These proportions indicate that, in this split, the class distribution is similar across the training and test sets. The test set therefore provides a reasonable basis for comparing model performance. This descriptive check is more appropriate here than a formal hypothesis test, since the goal is not to test whether the two subsets come from different populations, but to ensure that the split has not produced an obviously unbalanced evaluation set.</p>
+<p>No additional preprocessing is required at this stage for the baseline logistic regression and Naive Bayes models. The dataset is already stored in an analysis-ready format, with categorical predictors represented as factors and numerical predictors ready for direct use. We can now proceed to model fitting.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Repeat the analysis using a 70% training set and a 30% test set. Compare the class distribution of <code>revenue</code> across the resulting subsets. If desired, use a two-sample Z-test to assess whether the difference in class proportions is statistically significant. How much do the evaluation results change when the partitioning ratio is altered?</p>
+</blockquote>
+</section><section id="fitting-the-baseline-logistic-regression-model" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="fitting-the-baseline-logistic-regression-model">Fitting the Baseline Logistic Regression Model</h3>
+<p>We begin with logistic regression, which serves as the main modeling approach in this case study. Logistic regression is a natural choice because the response variable is binary and the goal is to estimate the probability that an online browsing session ends in a purchase.</p>
+<p>We fit a baseline logistic regression model using all available predictors in the training set. In <code><a href="https://rdrr.io/r/stats/glm.html">glm()</a></code>, the argument <code>family = binomial</code> specifies a logistic regression model for a binary response:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">baseline_logit</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">revenue</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">train_set</span>, family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Once the model has been fitted, we generate predicted probabilities for the observations in the test set:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">baseline_probs</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">baseline_logit</span>, newdata <span class="op">=</span> <span class="va">test_set</span>, type <span class="op">=</span> <span class="st">"response"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In logistic regression, <code>predict(..., type = "response")</code> returns estimated probabilities rather than class labels. In this dataset, <code>revenue</code> is coded with levels <code>"no"</code> and <code>"yes"</code>, so these values represent the estimated probability that a session ends in a purchase, that is, the probability of <code>revenue = "yes"</code>.</p>
+<p>At this stage, we retain the predicted probabilities rather than converting them immediately into class labels. Probability-based predictions allow us to evaluate the model across different classification thresholds. In particular, they are required for ROC curves and AUC, which we use later in this case study and which were introduced in Chapter <a href="8-Model-evaluation.html" class="quarto-xref"><span>8</span></a>. By contrast, fixing a single threshold too early would reduce the analysis to one specific decision rule and could hide important differences in model performance across settings.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Convert the predicted probabilities in <code>baseline_probs</code> into class labels using thresholds of 0.5 and 0.3. How do the resulting classifications differ? Which types of prediction errors become more common when the threshold is lowered?</p>
+</blockquote>
+</section><section id="fitting-the-stepwise-logistic-regression-model" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="fitting-the-stepwise-logistic-regression-model">Fitting the Stepwise Logistic Regression Model</h3>
+<p>The baseline logistic regression model includes all available predictors. While this provides a natural starting point, in practice we often ask whether a simpler model can achieve similar predictive performance. A more parsimonious model may be easier to interpret, easier to communicate, and more practical to use.</p>
+<p>To investigate this question, we apply stepwise selection to the baseline logistic regression model. Stepwise selection compares a sequence of candidate models by adding or removing predictors and evaluating them using the Akaike Information Criterion (AIC). As discussed in Section <a href="10-Regression.html#sec-ch10-stepwise" class="quarto-xref"><span>10.5</span></a>, smaller AIC values indicate a better balance between model fit and model complexity. Here, we use bidirectional stepwise selection, which allows predictors to be both added and removed during the search.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">stepwise_logit</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/step.html">step</a></span><span class="op">(</span><span class="va">baseline_logit</span>, direction <span class="op">=</span> <span class="st">"both"</span>, trace <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The resulting model is a reduced version of the baseline logistic regression model. Once it has been fitted, we generate predicted probabilities for the observations in the test set:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">stepwise_probs</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">stepwise_logit</span>, newdata <span class="op">=</span> <span class="va">test_set</span>, type <span class="op">=</span> <span class="st">"response"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>As before, these values represent estimated probabilities of purchase. We retain them in probabilistic form so that we can compare the stepwise model with the baseline logistic regression model and with Naive Bayes using ROC curves and AUC.</p>
+<p>Stepwise selection should be interpreted cautiously. It is a data-driven search procedure, so the selected model can be sensitive to small changes in the data, and the usual coefficient summaries should not be interpreted as if the model had been specified in advance. In this case study, we use stepwise selection mainly as an exploratory tool for model simplification, not as a guarantee of better predictive performance or as a definitive procedure for identifying the true set of relevant predictors.</p>
+<p>If the stepwise model performs similarly to the full logistic model, this suggests that a more compact specification may be sufficient for discrimination in this dataset. The comparison should therefore be understood in practical terms: does the reduced model preserve most of the predictive performance while being easier to interpret and communicate?</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Inspect the final stepwise model using <code>formula(stepwise_logit)</code> or <code>summary(stepwise_logit)</code>. Which predictors were retained? Compare them with those in the baseline logistic regression model and reflect on why some variables may have been removed. Why should the selected model be interpreted cautiously?</p>
+</blockquote>
+</section><section id="fitting-the-naive-bayes-model" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="fitting-the-naive-bayes-model">Fitting the Naive Bayes Model</h3>
+<p>To broaden the comparison beyond logistic regression, we also fit a Naive Bayes classifier. This model was introduced in Chapter <a href="9-Naive-Bayes.html" class="quarto-xref"><span>9</span></a> and provides a useful external benchmark because it is based on a different modeling principle. Whereas logistic regression models the probability of the outcome through the log-odds, Naive Bayes combines Bayes’ rule with a simplifying assumption about the predictors.</p>
+<p>The defining assumption of Naive Bayes is that the predictors are conditionally independent given the class label. In practice, this assumption is often unrealistic, especially in a dataset such as <code>purchase_intention</code>, where behavioral variables such as page counts, browsing durations, and engagement measures are likely to be related. Even so, Naive Bayes often performs surprisingly well and is widely used as a simple and computationally efficient benchmark in classification problems.</p>
+<p>We fit the model using the <code><a href="https://majkamichal.github.io/naivebayes/reference/naive_bayes.html">naive_bayes()</a></code> function from the <strong>naivebayes</strong> package. As in the logistic regression models, we use <code>revenue</code> as the response variable and include all available predictors:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/majkamichal/naivebayes">naivebayes</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">bayes_model</span> <span class="op">=</span> <span class="fu"><a href="https://majkamichal.github.io/naivebayes/reference/naive_bayes.html">naive_bayes</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">revenue</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">train_set</span>, laplace <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The argument <code>laplace = 1</code> applies Laplace smoothing, which helps avoid zero estimated probabilities when some predictor values occur rarely within a class. After fitting the model, we generate predicted probabilities for the observations in the test set:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">bayes_probs</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">bayes_model</span>, newdata <span class="op">=</span> <span class="va">test_set</span>, type <span class="op">=</span> <span class="st">"prob"</span><span class="op">)</span><span class="op">[</span>, <span class="st">"yes"</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The object returned by <code>predict(..., type = "prob")</code> contains one predicted probability for each outcome class. By selecting the column <code>"yes"</code>, we extract the estimated probability that each session ends in a purchase. As in the previous subsections, we retain these probability-based predictions rather than converting them immediately into class labels. This allows us to compare Naive Bayes fairly with the baseline and stepwise logistic regression models using ROC curves and AUC in the next subsection.</p>
+<p>Naive Bayes is interpretable in a different sense from logistic regression: it summarizes how predictor distributions differ by class. However, it does not provide coefficient-based effect estimates or odds ratios. In this case study, its main role is to serve as a simple and computationally efficient benchmark based on assumptions that differ from those of logistic regression.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Many predictors in <code>purchase_intention</code>, such as page counts and browsing durations, are likely to be correlated. Why does this create tension with the conditional independence assumption of Naive Bayes? Compare this with the assumptions made by logistic regression.</p>
+</blockquote>
+</section><section id="model-evaluation-and-comparison" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="model-evaluation-and-comparison">Model Evaluation and Comparison</h3>
+<p>We now compare the three fitted models on the test set using ROC curves and the area under the curve (AUC). Because all three models produce predicted probabilities, ROC-based evaluation provides a natural and threshold-independent way to assess how well they distinguish sessions that end in a purchase from those that do not.</p>
+<p>As introduced in Chapter <a href="8-Model-evaluation.html" class="quarto-xref"><span>8</span></a>, the ROC curve plots the true positive rate against the false positive rate as the classification threshold varies. The AUC summarizes this curve into a single measure of discriminatory performance: values closer to 1 indicate stronger separation between the two outcome classes.</p>
+<p>We compute the ROC curves using the <strong>pROC</strong> package:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://xrobin.github.io/pROC/">pROC</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">roc_logistic</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/pROC/man/roc.html">roc</a></span><span class="op">(</span>response <span class="op">=</span> <span class="va">test_labels</span>, predictor <span class="op">=</span> <span class="va">baseline_probs</span><span class="op">)</span></span>
+<span><span class="va">roc_stepwise</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/pROC/man/roc.html">roc</a></span><span class="op">(</span>response <span class="op">=</span> <span class="va">test_labels</span>, predictor <span class="op">=</span> <span class="va">stepwise_probs</span><span class="op">)</span></span>
+<span><span class="va">roc_bayes</span>    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/pROC/man/roc.html">roc</a></span><span class="op">(</span>response <span class="op">=</span> <span class="va">test_labels</span>, predictor <span class="op">=</span> <span class="va">bayes_probs</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To compare the models visually, we plot all three ROC curves in a single figure:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/pROC/man/ggroc.html">ggroc</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">roc_logistic</span>, <span class="va">roc_stepwise</span>, <span class="va">roc_bayes</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">scale_color_manual</span><span class="op">(</span></span>
+<span>    values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"#377EB8"</span>, <span class="st">"#4DAF4A"</span>, <span class="st">"#E66101"</span><span class="op">)</span>,</span>
+<span>    labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span><span class="st">"Logistic (AUC ="</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/pROC/man/auc.html">auc</a></span><span class="op">(</span><span class="va">roc_logistic</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">")"</span><span class="op">)</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span><span class="st">"Stepwise (AUC ="</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/pROC/man/auc.html">auc</a></span><span class="op">(</span><span class="va">roc_stepwise</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">")"</span><span class="op">)</span>,</span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span><span class="st">"Naive Bayes (AUC ="</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/pROC/man/auc.html">auc</a></span><span class="op">(</span><span class="va">roc_bayes</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span>, <span class="st">")"</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"ROC Curves for Three Classification Models"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">theme</span><span class="op">(</span>legend.title <span class="op">=</span> <span class="fu">element_blank</span><span class="op">(</span><span class="op">)</span>, legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">.72</span>, <span class="fl">.3</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="11-Generalized-Regression_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%" data-fig-pos="H"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The ROC curves allow us to compare the models across a range of thresholds rather than at a single cutoff. In this case, the baseline logistic regression model and the stepwise logistic regression model achieve very similar AUC values, suggesting that the reduced model preserves most of the discriminatory information contained in the full model. This is a practically useful result, since a simpler model may offer nearly the same predictive performance while being easier to interpret and communicate.</p>
+<p>Naive Bayes provides a useful external benchmark. Its performance shows whether a simpler probabilistic classifier based on conditional independence remains competitive on this dataset. Even when its assumptions are strong, it can still contribute meaningfully to model comparison.</p>
+<p>Taken together, the results illustrate a common applied trade-off. The baseline logistic regression model provides an interpretable reference point, the stepwise model examines whether a more parsimonious specification is sufficient, and Naive Bayes offers a contrasting benchmark. Comparing all three helps us evaluate not only predictive performance, but also the balance among interpretability, parsimony, and practical usefulness.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Compare the AUC values of the three models and interpret the differences. If two models achieve very similar AUC values, what considerations other than predictive performance might guide the choice between them?</p>
+</blockquote>
+</section></section><section id="sec-ch11-summary" class="level2" data-number="11.5"><h2 data-number="11.5" class="anchored" data-anchor-id="sec-ch11-summary">
+<span class="header-section-number">11.5</span> Chapter Summary and Takeaways</h2>
+<p>In this chapter, we extended the regression framework beyond continuous outcomes by introducing generalized linear models. The central idea is to match the model to the structure of the response variable. A GLM combines a response distribution, a linear predictor, and a link function, allowing regression methods to be adapted to outcomes such as binary responses and counts.</p>
+<p>For binary outcomes, we studied logistic regression. This model uses the logit link to relate predictors to the log-odds of an event, while ensuring that predicted probabilities remain between 0 and 1. Logistic regression is therefore useful both as an interpretable regression model and as a classification tool. Its coefficients can be interpreted through odds ratios, and its predicted probabilities can be converted into class predictions when a decision threshold is needed.</p>
+<p>For count outcomes, we studied Poisson regression. This model uses the log link to relate predictors to the expected count, ensuring that fitted values remain positive and allowing predictor effects to be interpreted multiplicatively. At the same time, Poisson regression relies on assumptions that should be checked in practice, especially the relationship between the mean and variance. Overdispersion is an important warning sign that a quasi-Poisson or negative binomial model may be more appropriate.</p>
+<p>The case study on online purchase intention illustrated how logistic regression can be used in a predictive setting. By comparing the baseline logistic regression model, the stepwise logistic regression model, and Naive Bayes using ROC curves and AUC, we emphasized that model choice should not depend on predictive performance alone. Interpretability, parsimony, computational simplicity, and the decision context all play important roles in selecting a useful model. This reinforces a broader message of the Data Science Workflow: effective modeling requires matching the method not only to the data structure, but also to the purpose of the analysis.</p>
+</section><section id="sec-ch11-exercises" class="level2" data-number="11.6"><h2 data-number="11.6" class="anchored" data-anchor-id="sec-ch11-exercises">
+<span class="header-section-number">11.6</span> Exercises</h2>
+<p>These exercises reinforce the main ideas of this chapter by combining conceptual understanding, interpretation of model output, and practical implementation in R. They focus on generalized linear models for binary and count outcomes, with particular attention to logistic regression, Poisson regression, and model comparison using probability-based predictions. The datasets used in these exercises are available in the <strong>liver</strong> package.</p>
+<section id="conceptual-understanding" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="conceptual-understanding">Conceptual Understanding</h4>
+<ol type="1">
+<li><p>Explain why ordinary linear regression is not appropriate for a binary response variable.</p></li>
+<li><p>Explain why ordinary linear regression is not appropriate for count data.</p></li>
+<li><p>What are the three main components of a generalized linear model?</p></li>
+<li><p>What is the role of a link function in a generalized linear model?</p></li>
+<li><p>Why does logistic regression use the logit link rather than the identity link?</p></li>
+<li><p>Why does Poisson regression use the log link rather than the identity link?</p></li>
+<li><p>What is an odds ratio, and how is it interpreted in logistic regression?</p></li>
+<li><p>In Poisson regression, what does <span class="math inline">\(e^{\beta_j}\)</span> represent for a predictor <span class="math inline">\(x_j\)</span>?</p></li>
+<li><p>What is overdispersion in the context of Poisson regression, and why can it be problematic?</p></li>
+<li><p>Logistic regression and Poisson regression are both generalized linear models. What do they have in common, and how do they differ?</p></li>
+</ol></section><section id="hands-on-practice-logistic-regression-with-the-loan-dataset" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="hands-on-practice-logistic-regression-with-the-loan-dataset">Hands-On Practice: Logistic Regression with the <code>loan</code> Dataset</h4>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">loan</span>, package <span class="op">=</span> <span class="st">"liver"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ol start="11" type="1">
+<li><p>Inspect the structure of the <code>loan</code> dataset. Which variable is the response, and which variables appear to be plausible predictors for a logistic regression model?</p></li>
+<li><p>In this exercise block, define loan approval as the modeled event. Relevel <code>loan_status</code> so that <code>"rejected"</code> is the reference category, and then fit a logistic regression model predicting <code>loan_status</code> using <code>income_annum</code>, <code>loan_amount</code>, and <code>cibil_score</code>.</p></li>
+<li><p>Inspect the fitted model using <code><a href="https://rdrr.io/r/base/summary.html">summary()</a></code>. Interpret the estimated coefficient for <code>cibil_score</code> in terms of the log-odds of loan approval.</p></li>
+<li><p>Exponentiate the coefficients of the fitted model. Interpret the odds ratio for <code>cibil_score</code> in the context of loan approval.</p></li>
+<li><p>Extend the model by adding <code>education</code> and <code>self_employed</code>. How do the coefficient estimates and their statistical significance change after adding these predictors?</p></li>
+<li><p>Use the extended model to estimate the predicted probability of approval for a new applicant with the following profile: <code>income_annum = 5000000</code>, <code>loan_amount = 12000000</code>, <code>cibil_score = 750</code>, <code>education = "Graduate"</code>, and <code>self_employed = "No"</code>.</p></li>
+<li><p>Convert the predicted probabilities from the extended model into class predictions using a threshold of 0.5. Then repeat the classification using a threshold of 0.3. How do the resulting approval decisions differ?</p></li>
+<li><p>Construct a confusion matrix for one of the thresholds used in the previous exercise. What does the confusion matrix reveal about the model’s strengths and weaknesses?</p></li>
+<li><p>Compute accuracy, precision, recall, and F1-score for the fitted model using one chosen threshold. Which of these measures seems most informative in this setting, and why?</p></li>
+<li><p>Apply stepwise regression to obtain a simpler logistic regression model. Compare the selected model with the original model in terms of retained predictors, interpretability, and predictive performance. Why should the selected model be interpreted cautiously?</p></li>
+</ol></section><section id="hands-on-practice-poisson-regression-with-the-doctor_visits-dataset" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="hands-on-practice-poisson-regression-with-the-doctor_visits-dataset">Hands-On Practice: Poisson Regression with the <code>doctor_visits</code> Dataset</h4>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">doctor_visits</span>, package <span class="op">=</span> <span class="st">"liver"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ol start="21" type="1">
+<li><p>Inspect the structure of the <code>doctor_visits</code> dataset. Which variable is the response, and why is it suitable for Poisson regression?</p></li>
+<li><p>Fit a Poisson regression model predicting <code>visits</code> using <code>age</code>, <code>income</code>, <code>illness</code>, <code>reduced</code>, and <code>health</code>.</p></li>
+<li><p>Inspect the fitted model using <code><a href="https://rdrr.io/r/base/summary.html">summary()</a></code>. Choose one numerical predictor and interpret its coefficient on the log scale.</p></li>
+<li><p>Exponentiate the coefficients of the fitted model. Choose two predictors and interpret their effects on the expected number of doctor visits.</p></li>
+<li><p>Add a quadratic term for <code>age</code> by fitting a model that includes both <code>age</code> and <code>I(age^2)</code>. Does this suggest a nonlinear relationship between age and the expected number of doctor visits?</p></li>
+<li><p>Use the fitted Poisson model to estimate the expected number of doctor visits for three selected observations in the dataset. Compare these expected counts with the observed values.</p></li>
+<li><p>Compare the first ten observed values of <code>visits</code> with their corresponding fitted values. Does the model appear to capture the variation in doctor visits reasonably well?</p></li>
+<li><p>Compute the residual deviance, residual degrees of freedom, and their ratio using <code>deviance(model) / df.residual(model)</code>. Does this suggest possible overdispersion?</p></li>
+<li><p>If overdispersion appears to be present, explain why a quasi-Poisson or negative binomial model might be more appropriate than a standard Poisson regression model.</p></li>
+</ol></section><section id="hands-on-practice-model-comparison-with-purchase_intention" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="hands-on-practice-model-comparison-with-purchase_intention">Hands-On Practice: Model Comparison with <code>purchase_intention</code>
+</h4>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">purchase_intention</span>, package <span class="op">=</span> <span class="st">"liver"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ol start="30" type="1">
+<li><p>Reproduce the 80%–20% training-test split used in the case study. Compare the class proportions of <code>revenue</code> in the training and test sets. Does the split appear suitable for model evaluation?</p></li>
+<li><p>Fit a baseline logistic regression model predicting <code>revenue</code> using all available predictors in the training set. Generate predicted probabilities for the test set.</p></li>
+<li><p>Fit a stepwise logistic regression model based on the baseline model. Which predictors are retained, and how does the selected model differ from the full logistic regression model?</p></li>
+<li><p>Fit a Naive Bayes classifier using the same training set and generate predicted probabilities for <code>revenue = "yes"</code> on the test set.</p></li>
+<li><p>Use ROC curves and AUC to compare the baseline logistic regression model, the stepwise logistic regression model, and the Naive Bayes classifier. Which model performs best in terms of AUC, and are the differences large enough to matter in practice?</p></li>
+</ol></section><section id="reflection-and-extension" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="reflection-and-extension">Reflection and Extension</h3>
+<ol start="35" type="1">
+<li>Think of a real-world problem involving either a binary outcome or a count outcome. Describe the response variable, identify plausible predictors, and explain whether logistic regression or Poisson regression would be a reasonable starting point. What assumptions would you want to check before relying on the fitted model?</li>
+</ol>
+
+
+</section></section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/book-data-science-r\.netlify\.app");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./10-Regression.html" class="pagination-link" aria-label="Regression Analysis: Linear and Nonlinear Models">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Regression Analysis: Linear and Nonlinear Models</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./12-Tree-based-models.html" class="pagination-link" aria-label="Decision Trees and Random Forests">
+        <span class="nav-page-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Decision Trees and Random Forests</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Data Science Foundations and Machine Learning with R was written by <a href="https://www.uva.nl/profile/a.mohammadi"><span style="color:#0056B3">Reza Mohammadi</span></a>.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/edit/main/11-Generalized-Regression.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>This book was built with <a href="https://quarto.org/">Quarto</a>.</p>
+</div>
+  </div>
+</footer>
+
+
+</body></html>

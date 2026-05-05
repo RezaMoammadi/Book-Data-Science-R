@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Reza Mohammadi">
+<title>13&nbsp; Neural Networks for Supervised Learning – &lt;span style='color:#0056B3'&gt;Data Science Foundations and Machine Learning with R: From Data to Decisions&lt;/span&gt;</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./14-Clustering.html" rel="next">
+<link href="./12-Tree-based-models.html" rel="prev">
+<link href="./images/logo.png" rel="icon" type="image/png">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-5c395c020fa0215c66c8d962dcba7617.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script><script defer="" data-domain="r4ds.hadley.nz" src="https://plausible.io/js/plausible.js"></script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+</head>
+<body class="nav-sidebar docked">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./13-Neural-networks.html"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Neural Networks for Supervised Learning</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./"><span style="color:#0056B3">Data Science Foundations and Machine Learning with R: From Data to Decisions</span></a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/RezaMoammadi/Book-Data-Science-R" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Download" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Download"><i class="bi bi-download"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+<li>
+            <a class="dropdown-item sidebar-tools-main-item" href="./-span-style=-color--0056B3--Data-Science-Foundations-and-Machine-Learning-with-R--From-Data-to-Decisions--span-.pdf">
+              <i class="bi bi-file-pdf pe-1"></i>
+            Download PDF
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="./-span-style=-color--0056B3--Data-Science-Foundations-and-Machine-Learning-with-R--From-Data-to-Decisions--span-.epub">
+              <i class="bi bi-journal pe-1"></i>
+            Download ePub
+            </a>
+          </li>
+      </ul>
+</div>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-1" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-1">
+<li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.facebook.com/sharer/sharer.php?u=|url|">
+              <i class="bi bi-facebook pe-1"></i>
+            Facebook
+            </a>
+          </li>
+      </ul>
+</div>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./0-preface.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./1-Intro-R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">R Foundations for Data Science</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2-Intro-data-science.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">The Data Science Workflow and the Role of Machine Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3-Data-preparation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data Preparation in Practice: From Raw Data to Insight</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4-Exploratory-data-analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Exploratory Data Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./5-Statistics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Statistical Inference and Hypothesis Testing</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6-Setup-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Data Setup for Modeling</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./7-Classification-kNN.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Classification Using k-Nearest Neighbors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./8-Model-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Model Evaluation and Performance Assessment</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./9-Naive-Bayes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Naive Bayes Classifier</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Regression Analysis: Linear and Nonlinear Models</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-Generalized-Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Generalized Linear Models for Binary and Count Outcomes</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-Tree-based-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Decision Trees and Random Forests</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-Neural-networks.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Neural Networks for Supervised Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-Clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Clustering for Insight: Segmenting Data Without Labels</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-References.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li><a href="#sec-ch13-bio-inspiration" id="toc-sec-ch13-bio-inspiration" class="nav-link active" data-scroll-target="#sec-ch13-bio-inspiration"><span class="header-section-number">13.1</span> The Biological Inspiration Behind Neural Networks</a></li>
+  <li><a href="#sec-ch13-how-nn-work" id="toc-sec-ch13-how-nn-work" class="nav-link" data-scroll-target="#sec-ch13-how-nn-work"><span class="header-section-number">13.2</span> How Neural Networks Work</a></li>
+  <li><a href="#activation-functions" id="toc-activation-functions" class="nav-link" data-scroll-target="#activation-functions"><span class="header-section-number">13.3</span> Activation Functions</a></li>
+  <li><a href="#network-architecture-layers-capacity-and-design-choices" id="toc-network-architecture-layers-capacity-and-design-choices" class="nav-link" data-scroll-target="#network-architecture-layers-capacity-and-design-choices"><span class="header-section-number">13.4</span> Network Architecture: Layers, Capacity, and Design Choices</a></li>
+  <li><a href="#how-neural-networks-learn" id="toc-how-neural-networks-learn" class="nav-link" data-scroll-target="#how-neural-networks-learn"><span class="header-section-number">13.5</span> How Neural Networks Learn</a></li>
+  <li><a href="#sec-ch13-case-study" id="toc-sec-ch13-case-study" class="nav-link" data-scroll-target="#sec-ch13-case-study"><span class="header-section-number">13.6</span> Case Study: Predicting Term Deposit Subscriptions</a></li>
+  <li><a href="#chapter-summary-and-takeaways" id="toc-chapter-summary-and-takeaways" class="nav-link" data-scroll-target="#chapter-summary-and-takeaways"><span class="header-section-number">13.7</span> Chapter Summary and Takeaways</a></li>
+  <li><a href="#sec-ch13-exercises" id="toc-sec-ch13-exercises" class="nav-link" data-scroll-target="#sec-ch13-exercises"><span class="header-section-number">13.8</span> Exercises</a></li>
+  </ul><div class="toc-actions"><ul><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/edit/main/13-Neural-networks.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title"><span id="sec-ch13-neural-networks" class="quarto-section-identifier"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Neural Networks for Supervised Learning</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header><div class="chapterquote">
+<p>The Brain — is wider than the Sky —</p>
+<div class="author">
+<p>— Emily Dickinson</p>
+</div>
+</div>
+<p>Can a model learn patterns that are too complex for linear regression or other simpler methods to capture well? Neural networks provide one answer to this question. By combining weighted connections, hidden layers, and nonlinear activation functions, they can learn flexible relationships between predictors and outcomes from data.</p>
+<p>In this chapter, we focus on feed-forward neural networks, also called multilayer perceptrons (MLPs). These models are among the most accessible neural network architectures and provide a practical introduction to how neural networks operate. They are especially useful when relationships in tabular data are nonlinear or involve interactions that are difficult to specify in advance.</p>
+<p>Our goal is not to survey artificial intelligence broadly or to cover advanced deep learning architectures in detail. Instead, we introduce the main ideas behind MLPs and show how they can be applied in R for supervised learning problems. This narrower focus allows us to develop both conceptual understanding and practical modeling skills without losing sight of the broader data science process.</p>
+<p>Neural networks are powerful because they can learn nonlinear relationships through a sequence of layered transformations. Rather than relying on a single weighted combination of the inputs, they pass information through hidden layers that allow more complex patterns to be represented. This flexibility makes them useful in many settings, including tabular prediction problems in which predictors interact in ways that are difficult to model explicitly.</p>
+<p>At the same time, this flexibility comes with trade-offs. Neural networks are typically less interpretable than models such as linear regression or decision trees, and they often require more careful preprocessing, tuning, and evaluation. Despite these challenges, multilayer perceptrons provide an important extension of the supervised learning methods developed earlier in this book. In the sections that follow, we examine how these models are structured, how they learn from data, and how they can be applied in practice using R.</p>
+<p>We continue our progression through the Data Science Workflow introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a>. Earlier chapters examined data preparation and exploration, supervised learning methods for classification and regression (Chapters <a href="7-Classification-kNN.html" class="quarto-xref"><span>7</span></a>, <a href="9-Naive-Bayes.html" class="quarto-xref"><span>9</span></a>, and <a href="10-Regression.html" class="quarto-xref"><span>10</span></a>), tree-based models (Chapter <a href="12-Tree-based-models.html" class="quarto-xref"><span>12</span></a>), and model evaluation (Chapter <a href="8-Model-evaluation.html" class="quarto-xref"><span>8</span></a>). Neural networks now extend this toolkit by offering a flexible modeling approach for both classification and regression when simpler models are not expressive enough.</p>
+<section id="what-this-chapter-covers" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="what-this-chapter-covers">What This Chapter Covers</h3>
+<p>This chapter introduces multilayer perceptrons as a supervised learning approach for tabular data in R. The emphasis is on understanding how these models are structured, how they learn from data, and how they can be trained and evaluated in an applied setting.</p>
+<p>By the end of this chapter, you should understand the basic structure of a neural network, including input, hidden, and output layers, and how weights, bias terms, and activation functions work together to produce nonlinear predictions. You should also understand how neural networks learn through gradient-based optimization, backpropagation, and related training choices such as the learning rate, and how a simple neural network model can be trained and evaluated in R for a supervised learning task. More broadly, the chapter shows how neural network modeling fits within the Data Science Workflow developed throughout this book.</p>
+<p>The chapter begins with the biological motivation for neural networks and then examines the structure of artificial neurons, activation functions, network architecture, and learning. It concludes with a case study based on the real-world <code>bank</code> dataset, illustrating how a multilayer perceptron can be prepared, trained, and evaluated in practice. A set of exercises at the end of the chapter provides opportunities to reinforce the main ideas and explore extensions of the methods introduced here.</p>
+</section><section id="sec-ch13-bio-inspiration" class="level2" data-number="13.1"><h2 data-number="13.1" class="anchored" data-anchor-id="sec-ch13-bio-inspiration">
+<span class="header-section-number">13.1</span> The Biological Inspiration Behind Neural Networks</h2>
+<p>How can a computational model learn from data without being explicitly programmed with a long set of decision rules? One influential answer comes from neural networks, which were originally inspired by biological information processing, especially the way neurons interact within the brain.</p>
+<p>Biological neurons are the basic information-processing units of the nervous system. Each neuron receives signals from other neurons, combines them, and may transmit an output signal if its level of activation is sufficiently strong. Learning and cognition do not arise from a single neuron acting in isolation, but from the collective behavior of many interconnected neurons. The human brain contains on the order of <span class="math inline">\(10^{11}\)</span> neurons linked through synapses, forming an extraordinarily rich system for processing information.</p>
+<p>Figure <a href="#fig-ch13-net-brain" class="quarto-xref"><span>13.1</span></a> illustrates the basic structure of a biological neuron. Signals are received through dendrites, combined in the cell body, and transmitted along the axon when activation exceeds a threshold.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-net-brain" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-net-brain-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch13_neural_network_brain.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-net-brain-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.1: Visualization of a biological neuron, which receives signals through dendrites and transmits output through the axon.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>Artificial neural networks are simplified computational models that borrow a few core ideas from this biological picture. They do not attempt to reproduce the full complexity of the brain. Instead, they abstract three central ideas: information is processed through interconnected units, connections can vary in strength, and signals can be transformed in a nonlinear way. These abstractions make neural networks flexible enough to learn complex relationships from data while remaining mathematically and computationally manageable.</p>
+<p>This abstraction leads to the artificial neuron shown in <a href="#fig-ch13-net-1" class="quarto-xref">Figure&nbsp;<span>13.2</span></a>. In its simplest form, an artificial neuron receives input features (<span class="math inline">\(x_i\)</span>), multiplies them by adjustable weights (<span class="math inline">\(w_i\)</span>), adds a bias term, and then applies an activation function <span class="math inline">\(f(\cdot)\)</span> to produce an output (<span class="math inline">\(\hat{y}\)</span>).</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-net-1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-net-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch13_neural_network.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-net-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.2: Illustration of an artificial neuron, which abstracts the biological neuron into a simple computational unit.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>This analogy should be understood as a source of intuition rather than a literal description of how modern neural networks operate. Its value lies in showing how complex behavior can emerge from many simple units connected in a network. In the next section, we move from this biological motivation to a more formal description of how neural networks are structured and how they produce predictions.</p>
+</section><section id="sec-ch13-how-nn-work" class="level2" data-number="13.2"><h2 data-number="13.2" class="anchored" data-anchor-id="sec-ch13-how-nn-work">
+<span class="header-section-number">13.2</span> How Neural Networks Work</h2>
+<p>Neural networks build directly on ideas introduced earlier in regression modeling, but they extend them in a way that allows much richer relationships between predictors and outcomes to be represented. In Chapter <a href="10-Regression.html" class="quarto-xref"><span>10</span></a>, we saw that a linear regression model predicts an outcome as a weighted sum of input features: <span class="math display">\[
+\hat{y} = b_0 + b_1 x_1 + b_2 x_2 + \dots + b_m x_m,
+\]</span> where <span class="math inline">\(m\)</span> denotes the number of predictors, <span class="math inline">\(b_0\)</span> is the intercept, and <span class="math inline">\(b_1, \dots, b_m\)</span> are regression coefficients. This formulation can be viewed as a simple computational network in which the input features are connected directly to the output through weighted connections, as illustrated in <a href="#fig-ch13-net-reg" class="quarto-xref">Figure&nbsp;<span>13.3</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-net-reg" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-net-reg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch13_neural_network_reg.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:38.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-net-reg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.3: A graphical representation of a linear regression model, where input features are connected directly to the output through weighted connections.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>This representation highlights both the strength and the limitation of linear models. They are interpretable and efficient, but they assume that predictors contribute to the outcome through a single linear combination. As a result, they do not naturally capture complex nonlinear relationships or interactions unless these are introduced explicitly by the analyst.</p>
+<p>Neural networks generalize this idea by inserting one or more layers of artificial neurons between the input and output. Instead of mapping predictors directly to the final response, the model first transforms the inputs into intermediate features and then combines those features to produce a prediction. A typical multilayer network is shown in <a href="#fig-ch13-net-large" class="quarto-xref">Figure&nbsp;<span>13.4</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-net-large" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-net-large-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch13_neural_network_large.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-net-large-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.4: Visualization of a feed-forward neural network with two hidden layers.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>A feed-forward neural network consists of three types of layers. The input layer receives the predictor variables, one or more hidden layers transform these inputs through weighted connections and activation functions, and the output layer produces the final prediction. Information flows in one direction, from the input layer through the hidden layer or layers to the output layer.</p>
+<p>To see this more clearly, consider a neural network with one hidden layer. Each hidden neuron first computes a weighted sum of the inputs and then applies an activation function. If we let <span class="math inline">\(h_j\)</span> denote the output of hidden neuron <span class="math inline">\(j\)</span>, then <span class="math display">\[
+h_j = g\left( w_{j0} + \sum_{i=1}^{m} w_{ji} x_i \right), \qquad j = 1, \dots, H,
+\]</span> where <span class="math inline">\(x_1, \dots, x_m\)</span> are the input features, <span class="math inline">\(w_{ji}\)</span> are weights, <span class="math inline">\(w_{j0}\)</span> is a bias term, <span class="math inline">\(g(\cdot)\)</span> is the hidden-layer activation function, and <span class="math inline">\(H\)</span> is the number of hidden neurons.</p>
+<p>In the second stage, the output layer combines these hidden activations to produce the final prediction. For a network with a single output node, this can be written as <span class="math display">\[
+\hat{y} = f\left( v_0 + \sum_{j=1}^{H} v_j h_j \right),
+\]</span> where <span class="math inline">\(v_j\)</span> are output-layer weights, <span class="math inline">\(v_0\)</span> is an output-layer bias term, and <span class="math inline">\(f(\cdot)\)</span> is the activation function used at the output layer. In other settings, the output layer may contain more than one node, for example in multi-class classification or multi-output prediction problems.</p>
+<p>This two-stage structure shows what makes neural networks more flexible than linear regression. The hidden layer creates intermediate representations of the predictors, and the output layer then combines these learned representations to form the final prediction. When nonlinear activation functions are used, the network can represent relationships that are not available to a purely linear model.</p>
+<p>This perspective also clarifies the connection with logistic regression. Logistic regression can be viewed as a neural network with no hidden layer and a single sigmoid output unit. In that case, the model still computes a weighted sum of the input features, but the final output is passed through the sigmoid function so that it can be interpreted as a probability.</p>
+<p>Although neural network architectures can vary widely, three ideas are central to how they work. First, activation functions allow the model to introduce nonlinear transformations rather than relying only on linear combinations of the predictors. Second, the architecture of the network, including the number of hidden layers and neurons, determines how much complexity the model can represent. Third, the network learns by adjusting its weights and bias terms so that its predictions better match the observed data.</p>
+<p>Taken together, these ideas explain why neural networks can model complex patterns while still building on the same basic logic as regression: inputs are combined through weights to produce predictions, but the introduction of hidden layers and nonlinear transformations greatly increases the range of relationships that can be learned. In the following sections, we examine these components in more detail, beginning with activation functions and their role in enabling nonlinear modeling.</p>
+</section><section id="activation-functions" class="level2" data-number="13.3"><h2 data-number="13.3" class="anchored" data-anchor-id="activation-functions">
+<span class="header-section-number">13.3</span> Activation Functions</h2>
+<p>Activation functions determine how signals are transformed as they pass from one layer of a neural network to the next. Their main purpose is to introduce nonlinearity. Without this step, even a deep network would reduce to a sequence of linear transformations, and adding layers would not meaningfully increase the complexity of the relationships the model could represent.</p>
+<p>Activation functions differ in properties such as output range, smoothness, and gradient behavior, and these differences influence both training and predictive performance. Some activation functions are now mainly of historical interest, whereas others play a central role in modern neural networks. In this section, we examine the most important examples and highlight the practical considerations that guide their use.</p>
+<section id="from-threshold-to-sigmoid" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="from-threshold-to-sigmoid">From Threshold to Sigmoid</h3>
+<p>One of the earliest activation functions is the threshold function, inspired by the all-or-nothing firing behavior of biological neurons. It produces a binary output: <span class="math display">\[
+f(x) =
+\begin{cases}
+1 &amp; \text{if } x \geq 0, \\
+0 &amp; \text{if } x &lt; 0.
+\end{cases}
+\]</span> This step-like behavior is illustrated in <a href="#fig-ch13-active-fun" class="quarto-xref">Figure&nbsp;<span>13.5</span></a>. The threshold function played an important historical role in early neural models such as the perceptron, but it is not used in modern neural networks.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-active-fun" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-active-fun-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="13-Neural-networks_files/figure-html/fig-ch13-active-fun-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-active-fun-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.5: Visualization of the threshold activation function (unit step).
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The main limitation of the threshold function is that it does not work well with gradient-based learning. Its derivative is undefined at the threshold and zero everywhere else, so it does not provide the gradient information needed for backpropagation. In addition, its binary output is too rigid to represent gradual changes in activation.</p>
+<p>A smooth alternative is the sigmoid activation function, also called the logistic function. Instead of switching abruptly from 0 to 1, it changes gradually and maps any real-valued input to the interval <span class="math inline">\((0, 1)\)</span>: <span class="math display">\[
+f(x) = \frac{1}{1 + e^{-x}}.
+\]</span> Its S-shaped curve is shown in <a href="#fig-ch13-active-fun-sigmoid" class="quarto-xref">Figure&nbsp;<span>13.6</span></a>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-active-fun-sigmoid" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-active-fun-sigmoid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="13-Neural-networks_files/figure-html/fig-ch13-active-fun-sigmoid-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-active-fun-sigmoid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.6: Visualization of the sigmoid activation function.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The sigmoid function is especially important in binary classification because its output lies between 0 and 1 and can therefore be interpreted as a probability. It also connects directly to logistic regression, which can be viewed as a neural network with no hidden layer and a single sigmoid output unit.</p>
+<p>Despite this improvement, sigmoid also has limitations. For large positive or negative inputs, the curve becomes nearly flat, so the gradient becomes very small. As a result, weight updates based on backpropagation can also become very small, which may slow learning, especially in deeper networks. For that reason, sigmoid is typically most useful in output layers for binary classification rather than in hidden layers.</p>
+</section><section id="common-activation-functions-in-modern-neural-networks" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="common-activation-functions-in-modern-neural-networks">Common Activation Functions in Modern Neural Networks</h3>
+<p>Although threshold and sigmoid functions are historically important, modern neural networks usually rely on activation functions with more favorable optimization behavior, especially in hidden layers. Three widely used examples are tanh, ReLU, and Leaky ReLU.</p>
+<p>The hyperbolic tangent, or tanh, maps inputs to the interval <span class="math inline">\((-1, 1)\)</span>. Like sigmoid, it is smooth and differentiable, but unlike sigmoid it is zero-centered, which can support more stable optimization in hidden layers. Its main limitation is that it can still saturate when inputs become very large in magnitude, leading to small gradients.</p>
+<p>The Rectified Linear Unit, or ReLU, is defined as <span class="math display">\[
+f(x) = \max(0, x).
+\]</span> It is computationally simple and has a constant gradient for positive inputs. These properties help reduce the vanishing-gradient problem and explain why ReLU became a standard choice in many neural network architectures. Its main weakness is that a neuron can become inactive if its input remains negative, producing zero output and zero gradient.</p>
+<p>Leaky ReLU modifies ReLU by allowing a small nonzero slope when the input is negative: <span class="math display">\[
+f(x) =
+\begin{cases}
+x &amp; \text{if } x \geq 0, \\
+\alpha x &amp; \text{if } x &lt; 0,
+\end{cases}
+\]</span> where <span class="math inline">\(\alpha\)</span> is a small positive constant, often chosen as 0.01. This adjustment reduces the risk of permanently inactive neurons while preserving the simplicity and efficiency that make ReLU attractive.</p>
+<p>Figure <a href="#fig-ch13-active-fun-comparison" class="quarto-xref"><span>13.7</span></a> compares the shapes of the sigmoid, tanh, ReLU, and Leaky ReLU activation functions.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-active-fun-comparison" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-active-fun-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="13-Neural-networks_files/figure-html/fig-ch13-active-fun-comparison-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-active-fun-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.7: Comparison of common activation functions: sigmoid, tanh, ReLU, and Leaky ReLU.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>These functions differ not only in shape but also in practical role. In the tabular supervised learning setting considered in this chapter, hidden layers are often built using ReLU or a related variant such as Leaky ReLU because these functions are simple, efficient, and usually support stable optimization. Tanh remains a reasonable alternative when a smooth, zero-centered activation is desired, although it is used less often in contemporary practice. For the output layer, the activation function should match the prediction task: sigmoid is natural for binary classification because it produces values in <span class="math inline">\((0, 1)\)</span> that can be interpreted as probabilities, whereas regression models typically use a linear output activation so that predictions are not artificially restricted. In multiclass classification, the output layer often contains one node per class together with a softmax-type transformation that converts outputs into class probabilities. No single activation function is uniformly best, and in practice the choice should be made in light of the task, the architecture, and the behavior of the optimization procedure.</p>
+</section></section><section id="network-architecture-layers-capacity-and-design-choices" class="level2" data-number="13.4"><h2 data-number="13.4" class="anchored" data-anchor-id="network-architecture-layers-capacity-and-design-choices">
+<span class="header-section-number">13.4</span> Network Architecture: Layers, Capacity, and Design Choices</h2>
+<p>The performance of a neural network depends not only on how it is trained, but also on how it is structured. This structure, known as the network architecture, determines how information flows through the model and how complex the learned relationships can become.</p>
+<p>A neural network’s architecture is defined by the arrangement of neurons and the connections between them. Three aspects are especially important: the number of layers, the number of neurons within each layer, and the pattern of connectivity between layers. Together, these choices determine the model’s capacity to represent patterns in the data.</p>
+<p>To illustrate the role of architecture, consider the simple network shown earlier in <a href="#fig-ch13-net-reg" class="quarto-xref">Figure&nbsp;<span>13.3</span></a>. This model consists of input nodes connected directly to output nodes through weighted connections. Such a single-layer structure is sufficient for linear regression and closely related models, including logistic regression with a sigmoid output unit, but it cannot by itself represent richer nonlinear relationships or interactions among features.</p>
+<p>Neural networks overcome this limitation by introducing one or more hidden layers, as illustrated in <a href="#fig-ch13-net-large" class="quarto-xref">Figure&nbsp;<span>13.4</span></a>. Hidden layers apply successive transformations to the data, allowing the model to construct intermediate representations before producing a final prediction. A typical multilayer perceptron therefore consists of an input layer, one or more hidden layers, and an output layer.</p>
+<p>In fully connected networks, each neuron in a layer is connected to every neuron in the next layer. These connections are associated with weights that are learned from data during training. By stacking layers and combining them with activation functions, the network can represent complex nonlinear functions through a sequence of simpler transformations.</p>
+<p>The number of neurons in each layer plays a central role. The number of input nodes is determined by the number of predictors, and the number of output nodes depends on the task, such as one node for regression, one sigmoid output node for binary classification, or one node per class in a multi-class problem. In contrast, the number of hidden neurons is a modeling choice. Increasing this number expands the expressive capacity of the network, but it also increases computational cost and the risk of overfitting.</p>
+<p>These considerations are especially important for tabular data, which is the focus of this chapter. In many tabular supervised learning problems, very deep networks are not automatically better than shallow ones. Because the number of predictors is often modest and the structure of the data is less hierarchical than in images or language, small or moderately sized multilayer perceptrons can already provide useful flexibility without introducing unnecessary complexity.</p>
+<p>For this reason, the case study later in the chapter uses a small multilayer perceptron. This choice is made for clarity and teachability, not because a small network is always optimal. A compact architecture makes it easier to see how preprocessing, hidden layers, activation functions, and evaluation fit together within the Data Science Workflow. In practice, more complex architectures may sometimes improve performance, but they also require more careful tuning and more careful control of overfitting.</p>
+<p>Choosing an appropriate architecture therefore involves balancing model complexity and generalization. A network that is too simple may underfit important structure in the data, whereas a network that is too large may fit noise rather than signal. Regularization methods such as weight decay or dropout can help reduce this risk, and validation-based comparison is often used to decide whether added complexity actually improves out-of-sample performance.</p>
+<p>This section has focused on fully connected multilayer perceptrons, which form the foundation of the neural network models studied in this chapter. Other architectures, such as convolutional neural networks for images and recurrent or sequence-based networks for ordered data, build on related ideas but use connectivity patterns designed for different data structures.</p>
+<p>Within the Data Science Workflow, architecture selection is part of the modeling stage. Choosing an appropriate network structure determines the model’s capacity and sets the conditions under which learning can proceed effectively.</p>
+</section><section id="how-neural-networks-learn" class="level2" data-number="13.5"><h2 data-number="13.5" class="anchored" data-anchor-id="how-neural-networks-learn">
+<span class="header-section-number">13.5</span> How Neural Networks Learn</h2>
+<p>How does a neural network improve its predictions over time? At the start of training, the network has not yet learned how its parameters should be set to produce accurate predictions. Learning takes place by using prediction error as feedback: the network compares its outputs with observed outcomes and then adjusts its weights and bias terms so that future predictions better match the data.</p>
+<p>This process is iterative. Over repeated passes through the data, the network produces predictions, measures the resulting error through a loss function, and updates its parameters to reduce that error. In modern neural networks, this learning process is driven by gradient-based optimization and made computationally feasible by backpropagation.</p>
+<section id="from-prediction-error-to-learning" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="from-prediction-error-to-learning">From Prediction Error to Learning</h3>
+<p>A neural network learns by using prediction error as feedback. For a given training observation, the inputs are passed through the network, layer by layer, until an output is produced. This step is called the forward pass. The predicted output is then compared with the observed target value using a loss function, which quantifies the discrepancy between the prediction and the observed outcome.</p>
+<p>The choice of loss function depends on the task. In regression, a common example is squared error, <span class="math display">\[
+L = (y - \hat{y})^2,
+\]</span> which measures how far the prediction <span class="math inline">\(\hat{y}\)</span> is from the observed value <span class="math inline">\(y\)</span> for a single observation. Across an entire dataset, these squared errors are added together to form the sum of squared errors. In binary classification, cross-entropy is often more appropriate. In either setting, the loss function converts prediction error into a numerical quantity that training seeks to minimize: poor predictions produce larger loss values, whereas accurate predictions produce smaller ones.</p>
+<p>Once this error has been quantified, the next challenge is to determine how each weight and bias term contributed to the loss and how these parameters should be adjusted to improve future predictions. This transition from error measurement to parameter updating is the central idea behind gradient-based optimization.</p>
+</section><section id="gradient-descent" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="gradient-descent">Gradient Descent</h3>
+<p>Once a loss function has been defined, the next question is how to reduce it. Gradient descent is the basic optimization method used for this purpose. The gradient of the loss with respect to a parameter tells us how the loss changes when that parameter is adjusted by a small amount. Because the gradient points in the direction of steepest increase, we reduce the loss by moving in the opposite direction.</p>
+<p>If <span class="math inline">\(w\)</span> denotes a weight and <span class="math inline">\(L\)</span> denotes the loss function, a basic gradient descent update can be written as <span class="math display">\[
+w^{(t+1)} = w^{(t)} - \eta \frac{\partial L}{\partial w},
+\]</span> where <span class="math inline">\(\eta\)</span> is the learning rate and <span class="math inline">\(t\)</span> indexes the update step. This expression says that the new value of the weight is obtained by taking the current value and subtracting a correction based on the gradient. The term <span class="math inline">\(\frac{\partial L}{\partial w}\)</span> measures how strongly the loss depends on the weight <span class="math inline">\(w\)</span>, while the learning rate determines how large the update should be.</p>
+<p>To build intuition, Figure <a href="#fig-ch13-gradient-descent" class="quarto-xref"><span>13.8</span></a> shows gradient descent in a one-dimensional optimization problem. The horizontal axis represents a single parameter value, and the vertical axis represents the corresponding loss. Starting from an initial parameter value, gradient descent updates the parameter iteratively in the direction that reduces the loss. The arrows indicate the direction of the update at different points along the curve, guiding the parameter toward a minimum of the loss function. Although real neural networks are trained in a high-dimensional parameter space, this simplified example illustrates the basic idea behind gradient-based optimization.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ch13-gradient-descent" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch13-gradient-descent-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch13_gradient_descent.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:75.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-ch13-gradient-descent-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13.8: Illustration of gradient descent in a one-dimensional optimization problem. The parameter is updated iteratively in the direction that reduces the loss.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>This update is applied repeatedly across the parameters of the network. In practice, training proceeds over multiple passes through the data. One complete pass through the full training set is called an epoch. Over many epochs, the parameters are gradually adjusted so that the loss decreases and the predictions improve. In larger problems, updates are often based on one observation or a small subset of observations at a time, which leads to methods such as stochastic gradient descent and mini-batch gradient descent.</p>
+</section><section id="backpropagation" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="backpropagation">Backpropagation</h3>
+<p>Gradient descent tells us how to update the weights once the gradients are known. Backpropagation tells us how to compute those gradients efficiently in a multilayer network.</p>
+<p>The basic idea is simple: the prediction error is first observed at the output layer, and then that error is propagated backward through the network. This is done using the chain rule of calculus, which traces how a change in one parameter affects the final loss through a sequence of intermediate steps.</p>
+<p>To illustrate the idea, consider a network with one hidden layer and a single output node. For hidden neuron <span class="math inline">\(j\)</span>, let <span class="math display">\[
+a_j = w_{j0} + \sum_{i=1}^{m} w_{ji} x_i, \qquad h_j = g(a_j),
+\]</span> and let the final prediction be <span class="math display">\[
+z = v_0 + \sum_{j=1}^{H} v_j h_j, \qquad \hat{y} = f(z).
+\]</span> Here, <span class="math inline">\(w_{ji}\)</span> is the weight from input <span class="math inline">\(x_i\)</span> to hidden neuron <span class="math inline">\(j\)</span>, <span class="math inline">\(v_j\)</span> is the weight from hidden neuron <span class="math inline">\(j\)</span> to the output, <span class="math inline">\(g(\cdot)\)</span> is the hidden-layer activation function, and <span class="math inline">\(f(\cdot)\)</span> is the output-layer activation function.</p>
+<p>Backpropagation works by tracing how the loss depends on each parameter through these intermediate quantities. For a hidden-layer weight <span class="math inline">\(w_{ji}\)</span>, the chain rule gives <span class="math display">\[
+\frac{\partial L}{\partial w_{ji}}
+=
+\frac{\partial L}{\partial \hat{y}}
+\cdot
+\frac{\partial \hat{y}}{\partial z}
+\cdot
+v_j
+\cdot
+g'(a_j)
+\cdot x_i.
+\]</span> Although this expression may look technical, its interpretation is straightforward. The gradient depends on five linked components: how the loss changes with the prediction, how the prediction changes with the output-layer input, how strongly hidden unit <span class="math inline">\(j\)</span> influences the output, how the hidden activation changes with its own input, and how strongly input <span class="math inline">\(x_i\)</span> contributes to that hidden unit. In other words, the final prediction error is passed backward through the network, and each step scales the contribution of the weight under consideration.</p>
+<p>This is the central idea of backpropagation. The algorithm does not guess which weights should change. Instead, it uses the chain rule to determine how strongly each parameter contributed to the loss, allowing the network to update its weights efficiently. The goal here is not to memorize the formula, but to understand what it shows: backpropagation makes gradient-based learning feasible in multilayer neural networks.</p>
+</section><section id="learning-rate-and-training-stability" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="learning-rate-and-training-stability">Learning Rate and Training Stability</h3>
+<p>The learning rate <span class="math inline">\(\eta\)</span> plays a crucial role in training because it controls the size of each parameter update. If <span class="math inline">\(\eta\)</span> is too large, the updates may be unstable, causing the optimization process to overshoot good solutions or oscillate rather than settle. If <span class="math inline">\(\eta\)</span> is too small, training may proceed very slowly and require many epochs before the loss decreases meaningfully.</p>
+<p>Choosing an appropriate learning rate is therefore an important practical decision. In applied work, it is often treated as a tuning parameter and assessed through validation. A learning rate that is too large may produce erratic changes in the loss or even prevent convergence, whereas a learning rate that is too small may yield a very smooth but frustratingly slow improvement. A well-chosen learning rate typically produces a steady and stable reduction in loss over time.</p>
+<p>The broader lesson is that successful neural network training depends not only on the structure of the model, but also on sensible choices in the optimization procedure. In practice, effective learning requires a balance between model design, parameter tuning, and validation-based evaluation.</p>
+</section><section id="momentum" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="momentum">Momentum</h3>
+<p>A useful refinement of gradient descent is momentum. Instead of updating parameters solely on the basis of the current gradient, momentum also incorporates part of the previous update. This can smooth the optimization path, reduce oscillation, and help the algorithm move more efficiently across uneven loss surfaces.</p>
+<p>The main idea is that the update retains some memory of previous steps. When successive gradients point in a similar direction, momentum can accelerate learning. When the optimization path begins to oscillate, momentum can help dampen unstable back-and-forth movement. In this way, momentum often leads to smoother and more efficient training than basic gradient descent alone.</p>
+<p>Many modern optimization methods build on this same idea by adapting learning rates or combining information across successive updates. In this chapter, however, the goal is not to survey optimization algorithms in detail, but to understand the core learning mechanism of neural networks.</p>
+</section><section id="termination-criteria" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="termination-criteria">Termination Criteria</h3>
+<p>Training does not continue indefinitely. In practice, neural network training stops once a chosen termination criterion is satisfied. One simple approach is to fix a maximum number of epochs in advance. Another is to stop when the loss changes only negligibly from one epoch to the next, suggesting that the optimization process is approaching convergence.</p>
+<p>In applied modeling, it is often more informative to monitor performance on a validation set than to rely only on the training loss. A network may continue to improve its fit to the training data while beginning to overfit, which can reduce performance on new observations. For this reason, a common strategy is early stopping, in which training is halted once validation performance no longer improves. This provides a practical way to balance continued learning against the risk of overfitting.</p>
+<p>Termination criteria therefore serve two related purposes: they avoid unnecessary computation and help control overfitting. In practice, stopping rules are chosen together with other training settings, including the learning rate, the number of epochs, and the overall model architecture.</p>
+<p>Taken together, these ideas explain how a neural network turns prediction error into learning. With this foundation in place, we now turn to a practical case study that shows how a neural network can be trained and evaluated on real-world data in R.</p>
+</section></section><section id="sec-ch13-case-study" class="level2" data-number="13.6"><h2 data-number="13.6" class="anchored" data-anchor-id="sec-ch13-case-study">
+<span class="header-section-number">13.6</span> Case Study: Predicting Term Deposit Subscriptions</h2>
+<p>This case study illustrates how neural networks can support data-driven marketing decisions in the financial sector. Using data from a previous telemarketing campaign, we develop a classification model to predict whether a customer will subscribe to a term deposit. The aim is to identify patterns in customer characteristics and campaign-related information that can support more targeted and efficient outreach.</p>
+<p>The dataset comes from the UC Irvine Machine Learning Repository and is distributed with the <strong>liver</strong> package. It was introduced by <span class="citation" data-cites="moro2014data">Moro, Cortez, and Rita (<a href="15-References.html#ref-moro2014data" role="doc-biblioref">2014</a>)</span> in the context of analyzing bank marketing campaigns. The response variable records whether a customer subscribed to a term deposit, while the predictors include a combination of demographic attributes and campaign-related features. This combination makes the dataset well suited for illustrating how multilayer perceptrons can be used in a supervised classification setting.</p>
+<p>Following the Data Science Workflow introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a> and illustrated in <a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>, the case study moves from problem understanding to model training and evaluation. Throughout, the emphasis is on good modeling practice, reproducibility, and the role of neural networks within a broader analytical workflow implemented in R.</p>
+<section id="problem-understanding" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="problem-understanding">Problem Understanding</h3>
+<p>Financial institutions regularly face the challenge of deciding how to use marketing resources effectively. One important question is which customers are more likely to respond positively to a campaign, so that outreach can be made more selective and efficient.</p>
+<p>In practice, marketing strategies range from broad mass campaigns to more targeted, data-driven approaches. Mass campaigns are simple to implement but often produce low response rates. Directed marketing, by contrast, uses predictive models to identify customers with a higher probability of interest. This can improve conversion rates, but it also raises important concerns related to privacy, fairness, and customer trust.</p>
+<p>This case study focuses on term deposit subscriptions in the context of bank marketing campaigns. A term deposit is a fixed-term savings product that usually offers a higher interest rate than a standard savings account. From the institution’s perspective, attracting such subscriptions can provide a stable source of funding; from the customer’s perspective, it offers a predictable return over a fixed period. Using data from earlier campaigns, our aim is to estimate the probability that a customer will subscribe to such a product.</p>
+<p>From a modeling perspective, this is a binary classification problem: the outcome records whether a customer subscribes to a term deposit or not. The predictors combine customer characteristics with campaign-related information, including the duration of the last contact. Because <code>duration</code> is only observed after a contact has taken place, the model should be interpreted as a campaign-response or benchmark prediction model rather than as a strict pre-contact targeting tool. Within that setting, the practical objective is to use available information to support more selective decision-making while remaining mindful of the broader responsibility to use customer data carefully and appropriately.</p>
+</section><section id="overview-of-the-dataset" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="overview-of-the-dataset">Overview of the Dataset</h3>
+<p>The <code>bank</code> dataset contains information from direct phone-based marketing campaigns conducted by a financial institution. Each observation corresponds to a customer who was contacted during a campaign, and the objective is to predict whether the customer subscribed to a term deposit (<code>deposit = "yes"</code> or <code>"no"</code>). The dataset combines demographic characteristics with information about prior contacts and campaign interactions, making it suitable for supervised classification using neural networks.</p>
+<p>We begin by loading the dataset into R and inspecting its structure to understand the types of variables available for modeling:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(liver)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(bank)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(bank)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>   <span class="st">'data.frame'</span><span class="sc">:</span>    <span class="dv">4521</span> obs. of  <span class="dv">17</span> variables<span class="sc">:</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="er">$</span> age      <span class="sc">:</span> int  <span class="dv">30</span> <span class="dv">33</span> <span class="dv">35</span> <span class="dv">30</span> <span class="dv">59</span> <span class="dv">35</span> <span class="dv">36</span> <span class="dv">39</span> <span class="dv">41</span> <span class="dv">43</span> ...</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> job      <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">12</span> levels <span class="st">"admin."</span>,<span class="st">"blue-collar"</span>,..<span class="sc">:</span> <span class="dv">11</span> <span class="dv">8</span> <span class="dv">5</span> <span class="dv">5</span> <span class="dv">2</span> <span class="dv">5</span> <span class="dv">7</span> <span class="dv">10</span> <span class="dv">3</span> <span class="dv">8</span> ...</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> marital  <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">3</span> levels <span class="st">"divorced"</span>,<span class="st">"married"</span>,..<span class="sc">:</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> ...</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> education<span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">4</span> levels <span class="st">"primary"</span>,<span class="st">"secondary"</span>,..<span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">1</span> ...</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> default  <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"no"</span>,<span class="st">"yes"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> ...</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> balance  <span class="sc">:</span> int  <span class="dv">1787</span> <span class="dv">4789</span> <span class="dv">1350</span> <span class="dv">1476</span> <span class="dv">0</span> <span class="dv">747</span> <span class="dv">307</span> <span class="dv">147</span> <span class="dv">221</span> <span class="sc">-</span><span class="dv">88</span> ...</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> housing  <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"no"</span>,<span class="st">"yes"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> ...</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> loan     <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"no"</span>,<span class="st">"yes"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> ...</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> contact  <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">3</span> levels <span class="st">"cellular"</span>,<span class="st">"telephone"</span>,..<span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">1</span> ...</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> day      <span class="sc">:</span> int  <span class="dv">19</span> <span class="dv">11</span> <span class="dv">16</span> <span class="dv">3</span> <span class="dv">5</span> <span class="dv">23</span> <span class="dv">14</span> <span class="dv">6</span> <span class="dv">14</span> <span class="dv">17</span> ...</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> month    <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">12</span> levels <span class="st">"apr"</span>,<span class="st">"aug"</span>,<span class="st">"dec"</span>,..<span class="sc">:</span> <span class="dv">11</span> <span class="dv">9</span> <span class="dv">1</span> <span class="dv">7</span> <span class="dv">9</span> <span class="dv">4</span> <span class="dv">9</span> <span class="dv">9</span> <span class="dv">9</span> <span class="dv">1</span> ...</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> duration <span class="sc">:</span> int  <span class="dv">79</span> <span class="dv">220</span> <span class="dv">185</span> <span class="dv">199</span> <span class="dv">226</span> <span class="dv">141</span> <span class="dv">341</span> <span class="dv">151</span> <span class="dv">57</span> <span class="dv">313</span> ...</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> campaign <span class="sc">:</span> int  <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> ...</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> pdays    <span class="sc">:</span> int  <span class="sc">-</span><span class="dv">1</span> <span class="dv">339</span> <span class="dv">330</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">-</span><span class="dv">1</span> <span class="dv">176</span> <span class="dv">330</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">-</span><span class="dv">1</span> <span class="dv">147</span> ...</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> previous <span class="sc">:</span> int  <span class="dv">0</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">2</span> ...</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> poutcome <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">4</span> levels <span class="st">"failure"</span>,<span class="st">"other"</span>,..<span class="sc">:</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">1</span> ...</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> deposit  <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"no"</span>,<span class="st">"yes"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The dataset consists of 4521 observations and 17 variables. The response variable, <code>deposit</code>, is binary, indicating whether a customer subscribed to a term deposit. The predictors can be grouped into the following categories.</p>
+<p><em>Demographic and financial characteristics</em> include age, job type, marital status, education level, credit default status, and average yearly account balance. These variables capture relatively stable attributes of customers that may influence their likelihood of subscribing.</p>
+<p><em>Loan-related variables</em> indicate whether a customer holds a housing loan or a personal loan. These features provide additional context about the customer’s financial commitments.</p>
+<p><em>Campaign-related variables</em> describe how and when customers were contacted, as well as their interaction history. These include the contact type, timing variables such as day and month, the duration of the last contact in seconds, the number of contacts during the campaign, the number of previous contacts, and the outcome of earlier campaigns.</p>
+<p>Together, these features provide a rich description of both customer profiles and campaign dynamics. For the purposes of this case study, the dataset does not require extensive data cleaning, but it does require preprocessing before neural network modeling. We therefore proceed directly to <em>Step 4: Data Setup for Modeling</em> in the Data Science Workflow introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a> and illustrated in <a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>.</p>
+</section><section id="data-setup-for-modeling" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="data-setup-for-modeling">Data Setup for Modeling</h3>
+<p>A central question in predictive modeling is how well a model performs on data it has not seen before. Addressing this question begins with how the data are partitioned. This step corresponds to <em>Step 4: Data Setup for Modeling</em> in the Data Science Workflow introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a>.</p>
+<p>We divide the dataset into separate training and test sets so that the model can be trained on one subset of the data and evaluated on another. Although this case study focuses on neural networks, using a common data split also supports fair comparison with other classification methods introduced earlier in the book, such as tree-based models (Chapter <a href="12-Tree-based-models.html" class="quarto-xref"><span>12</span></a>), logistic regression (Chapter <a href="11-Generalized-Regression.html" class="quarto-xref"><span>11</span></a>), and Naive Bayes (Chapter <a href="9-Naive-Bayes.html" class="quarto-xref"><span>9</span></a>). Evaluation under identical conditions is essential for meaningful performance comparison, as discussed in Chapter <a href="8-Model-evaluation.html" class="quarto-xref"><span>8</span></a>.</p>
+<p>We use an 80/20 split, allocating 80% of the observations to the training set and 20% to the test set. This ratio provides a practical balance between giving the model enough data to learn from and reserving enough observations for reliable evaluation. Alternative splits are possible, and readers are encouraged to explore how different choices affect the results.</p>
+<p>To maintain consistency with earlier chapters, we apply the <code>partition()</code> function from the <strong>liver</strong> package:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">splits</span> <span class="op">=</span> <span class="fu">partition</span><span class="op">(</span>data <span class="op">=</span> <span class="va">bank</span>, ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.8</span>, <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">train_set</span> <span class="op">=</span> <span class="va">splits</span><span class="op">$</span><span class="va">part1</span></span>
+<span><span class="va">test_set</span>  <span class="op">=</span> <span class="va">splits</span><span class="op">$</span><span class="va">part2</span></span>
+<span></span>
+<span><span class="va">test_labels</span> <span class="op">=</span> <span class="va">test_set</span><span class="op">$</span><span class="va">deposit</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Setting the random seed ensures reproducibility. The training set is used to fit the neural network, while the test set is reserved for performance evaluation. The vector <code>test_labels</code> stores the true class labels for later comparison with model predictions. A useful partition should also preserve the overall class balance of the response variable so that the training and test sets remain broadly comparable (see Section <a href="6-Setup-data.html#sec-ch6-cross-validation" class="quarto-xref"><span>6.2</span></a>).</p>
+<p>Our modeling objective is to classify customers as likely (<code>deposit = "yes"</code>) or unlikely (<code>deposit = "no"</code>) to subscribe to a term deposit using the predictors <code>age</code>, <code>marital</code>, <code>default</code>, <code>balance</code>, <code>housing</code>, <code>loan</code>, <code>duration</code>, <code>campaign</code>, <code>pdays</code>, and <code>previous</code>.</p>
+<p>Only a subset of the available predictors is used at this stage. This choice is intentional: it keeps the preprocessing and model specification focused while still illustrating the core workflow of neural network modeling. Variables such as <code>job</code>, <code>education</code>, <code>contact</code>, <code>day</code>, <code>month</code>, and <code>poutcome</code> are excluded initially, and readers are encouraged to incorporate them in the exercises to examine how a richer feature set affects model performance. The variable <code>duration</code> is retained in the main model because it is highly informative in this dataset, but it should be interpreted with care: since it records the duration of the last contact in seconds, it is better viewed as a benchmark or campaign-response predictor than as a feature available for strict pre-contact targeting.</p>
+<p>With the data partitioned and the predictor set defined, we now prepare the data for modeling. Two preprocessing steps are required: encoding categorical variables and scaling numerical features. These steps are essential because neural networks operate on numerical inputs and are sensitive to differences in feature scale.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Repartition the <code>bank</code> dataset into a 70% training set and a 30% test set using the same procedure. Examine whether the class distribution of the target variable <code>deposit</code> is similar in both subsets, and explain why preserving this balance is important for reliable and fair model evaluation.</p>
+</blockquote>
+<section id="encoding-binary-and-nominal-predictors" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="encoding-binary-and-nominal-predictors">Encoding Binary and Nominal Predictors</h4>
+<p>Neural networks operate on numerical inputs, which means that categorical predictors must be converted into numeric form before modeling. For binary and nominal (unordered) variables, one-hot encoding provides a flexible and widely used solution. This approach represents categories through binary indicators, allowing the network to learn category-specific effects through its weights.</p>
+<p>Before applying one-hot encoding, the categorical variables in the training and test sets should use the same factor levels. Otherwise, encoding them separately may produce different columns if a category appears in one subset but not the other. We therefore ensure consistent levels before encoding. We then apply the <code>one.hot()</code> function from the <strong>liver</strong> package to encode the selected categorical variables in both the training and test sets:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">categorical_vars</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"marital"</span>, <span class="st">"default"</span>, <span class="st">"housing"</span>, <span class="st">"loan"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">train_onehot</span> <span class="op">=</span> <span class="fu">one.hot</span><span class="op">(</span><span class="va">train_set</span>, cols <span class="op">=</span> <span class="va">categorical_vars</span><span class="op">)</span></span>
+<span><span class="va">test_onehot</span>  <span class="op">=</span> <span class="fu">one.hot</span><span class="op">(</span><span class="va">test_set</span>,  cols <span class="op">=</span> <span class="va">categorical_vars</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>If desired, the transformed datasets can be inspected using functions such as <code><a href="https://rdrr.io/r/utils/str.html">str()</a></code> or <code><a href="https://rdrr.io/r/base/names.html">names()</a></code> to verify how the original categorical variables have been expanded into binary indicators. It is also good practice to check that the encoded training and test sets contain the same predictor columns, which confirms that the encoding process has been applied consistently.</p>
+<p>The <code>one.hot()</code> function expands each categorical variable into binary columns. For example, the variable <code>marital</code>, which has three categories (<code>married</code>, <code>single</code>, and <code>divorced</code>), is represented through indicators such as <code>marital_married</code>, <code>marital_single</code>, and <code>marital_divorced</code>. Depending on the encoding convention, one category may be omitted from the final model formula to keep the predictor set compact and avoid unnecessary redundancy. For neural networks, the main goal is not regression-style identifiability, but a consistent and usable numerical representation of the predictors.</p>
+<p>Ordinal variables require additional care. Applying one-hot encoding to such features may ignore meaningful order information. Alternative encoding strategies are often more appropriate in those cases; see Section <a href="6-Setup-data.html#sec-ch6-encoding" class="quarto-xref"><span>6.4</span></a> for a more detailed discussion.</p>
+<p>With categorical predictors encoded, we now turn to feature scaling. This step is particularly important for neural networks, because differences in numerical scale can strongly influence optimization and learning behavior.</p>
+</section><section id="feature-scaling-for-numerical-predictors" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="feature-scaling-for-numerical-predictors">Feature Scaling for Numerical Predictors</h4>
+<p>Neural networks are sensitive to the scale of input features because learning relies on gradient-based optimization. When predictors vary widely in magnitude, variables with larger numerical ranges can dominate the updating process and make training slower or less stable. To mitigate this issue, we apply min-max scaling (as introduced in Section <a href="6-Setup-data.html#sec-ch6-feature-scaling" class="quarto-xref"><span>6.5</span></a>) to the numerical predictors, mapping their values to the interval <span class="math inline">\([0, 1]\)</span>. When inputs are placed on a common scale, the resulting gradients are typically better balanced across predictors, which helps the network train more efficiently. Other scaling methods are also possible, but min-max scaling is a convenient choice here because it places all numerical predictors on a common scale and keeps the preprocessing pipeline simple and transparent for illustrating neural network modeling.</p>
+<p>To avoid data leakage, the scaling parameters must be estimated using only the training data and then applied unchanged to the test set. This ensures that information from the test data does not influence model training and preserves the validity of subsequent evaluation. A visual illustration of the consequences of improper scaling is provided in <a href="7-Classification-kNN.html#fig-ch7-ex-proper-scaling" class="quarto-xref">Figure&nbsp;<span>7.5</span></a> (Section <a href="7-Classification-kNN.html#sec-ch7-knn-prep" class="quarto-xref"><span>7.5</span></a>).</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">numeric_vars</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"balance"</span>, <span class="st">"duration"</span>, <span class="st">"campaign"</span>, <span class="st">"pdays"</span>, <span class="st">"previous"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">min_train</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">sapply</a></span><span class="op">(</span><span class="va">train_onehot</span><span class="op">[</span>, <span class="va">numeric_vars</span><span class="op">]</span>, <span class="va">min</span><span class="op">)</span></span>
+<span><span class="va">max_train</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">sapply</a></span><span class="op">(</span><span class="va">train_onehot</span><span class="op">[</span>, <span class="va">numeric_vars</span><span class="op">]</span>, <span class="va">max</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">train_scaled</span> <span class="op">=</span> <span class="fu">minmax</span><span class="op">(</span><span class="va">train_onehot</span>, col <span class="op">=</span> <span class="va">numeric_vars</span>,</span>
+<span>                      min <span class="op">=</span> <span class="va">min_train</span>, max <span class="op">=</span> <span class="va">max_train</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">test_scaled</span>  <span class="op">=</span> <span class="fu">minmax</span><span class="op">(</span><span class="va">test_onehot</span>,  col <span class="op">=</span> <span class="va">numeric_vars</span>,</span>
+<span>                      min <span class="op">=</span> <span class="va">min_train</span>, max <span class="op">=</span> <span class="va">max_train</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The minimum and maximum values for each numerical predictor are estimated from the training set and then reused to scale both datasets consistently. The <code>minmax()</code> function from the <strong>liver</strong> package applies this transformation while preserving the overall shape of each variable’s distribution.</p>
+<p>With categorical encoding and feature scaling completed, the data are now in a form suitable for neural network modeling. We therefore proceed to training the neural network.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Using a 70% training set and a 30% test set for the <code>bank</code> dataset, apply the same preprocessing pipeline described in this section. One-hot encode the binary and nominal predictors and apply min-max scaling to the numerical predictors, ensuring that scaling parameters are computed using the training data only. Verify that the transformed training and test sets have compatible feature structures, and explain why this consistency is essential for neural network modeling.</p>
+</blockquote>
+</section></section><section id="training-a-neural-network-model-in-r" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="training-a-neural-network-model-in-r">Training a Neural Network Model in R</h3>
+<p>The learning ideas introduced earlier in the chapter provide the conceptual basis for training, while the <strong>neuralnet</strong> package uses a practical implementation of these ideas for fitting the model. This package provides a transparent and accessible implementation that is well suited for illustrating neural network modeling in small- to medium-sized applications.</p>
+<p>To train the model, we specify a formula in which <code>deposit</code> is the response variable and combine the encoded categorical predictors with the numerical features introduced earlier:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">formula</span> <span class="op">=</span> <span class="va">deposit</span> <span class="op">~</span> <span class="va">marital_married</span> <span class="op">+</span> <span class="va">marital_single</span> <span class="op">+</span> <span class="va">default_yes</span> <span class="op">+</span> <span class="va">housing_yes</span> <span class="op">+</span> <span class="va">loan_yes</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">balance</span> <span class="op">+</span> <span class="va">duration</span> <span class="op">+</span> <span class="va">campaign</span> <span class="op">+</span> <span class="va">pdays</span> <span class="op">+</span> <span class="va">previous</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We then fit a neural network using the <code><a href="https://rdrr.io/pkg/neuralnet/man/neuralnet.html">neuralnet()</a></code> function:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/bips-hb/neuralnet">neuralnet</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">neuralnet_model</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/neuralnet/man/neuralnet.html">neuralnet</a></span><span class="op">(</span></span>
+<span>  formula <span class="op">=</span> <span class="va">formula</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">train_scaled</span>,</span>
+<span>  hidden <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  err.fct <span class="op">=</span> <span class="st">"ce"</span>,</span>
+<span>  linear.output <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Here, <code>train_scaled</code> contains the preprocessed training data, and <code>hidden = 1</code> specifies a minimal baseline architecture with a single hidden neuron. This deliberately simple design is chosen for clarity and teachability, not because it is universally optimal. It allows us to focus on the modeling workflow and the interpretation of predictions before considering more complex architectures. Because the task is binary classification, we use cross-entropy as the error function (<code>err.fct = "ce"</code>), and <code>linear.output = FALSE</code> ensures a nonlinear output appropriate for classification.</p>
+<p>After training, the fitted network can be visualized as follows:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">neuralnet_model</span>, fontsize <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>     col.entry <span class="op">=</span> <span class="st">"#377EB8"</span>, col.hidden <span class="op">=</span> <span class="st">"#E66101"</span>, col.out <span class="op">=</span> <span class="st">"#4DAF4A"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The resulting diagram shows input nodes corresponding to the selected predictors, a single hidden layer with one neuron, and two output nodes corresponding to the two class levels of the response variable, <code>deposit = "no"</code> and <code>deposit = "yes"</code>. Although the task is binary classification, the plot reflects the two levels used to represent the response. Training stops once the optimization procedure reaches the specified stopping criterion. The package also supports repeated training runs through the <code>rep</code> argument, although we use a single run here for simplicity.</p>
+<p>A small architecture like this is useful for instructional purposes, but it is not necessarily optimal. More complex models can be considered by increasing the number of hidden neurons or hidden layers. For example, the following model uses one hidden layer with three neurons:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">neuralnet_model_3</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/neuralnet/man/neuralnet.html">neuralnet</a></span><span class="op">(</span></span>
+<span>  formula <span class="op">=</span> <span class="va">formula</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">train_scaled</span>,</span>
+<span>  hidden <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  err.fct <span class="op">=</span> <span class="st">"ce"</span>,</span>
+<span>  linear.output <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Increasing architectural complexity may improve flexibility, but it also increases computational cost and the risk of overfitting. For that reason, model evaluation remains essential when comparing alternative network structures.</p>
+<p>The <strong>neuralnet</strong> package is primarily intended for educational purposes and relatively small-scale applications. For larger datasets or deeper architectures, more specialized frameworks such as <strong>keras</strong> or <strong>torch</strong> provide greater flexibility, but those tools fall outside the scope of this chapter. Having trained the neural network, we now evaluate its predictive performance on unseen test data.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Using a 70% training set and a 30% test set for the <code>bank</code> dataset, apply the same preprocessing pipeline described earlier in this case study. Then fit a neural network with two hidden layers by setting <code>hidden = c(3, 2)</code> in the <code><a href="https://rdrr.io/pkg/neuralnet/man/neuralnet.html">neuralnet()</a></code> function. Compare this model with the simpler network that uses <code>hidden = 1</code>, and discuss whether the added architectural complexity appears to improve predictive performance enough to justify its use.</p>
+</blockquote>
+</section><section id="prediction-and-model-evaluation" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="prediction-and-model-evaluation">Prediction and Model Evaluation</h3>
+<p>To assess how well the neural network generalizes to unseen data, we evaluate its predictive performance on the test set. This corresponds to the final stage of the Data Science Workflow: model evaluation, as discussed in Chapter <a href="8-Model-evaluation.html" class="quarto-xref"><span>8</span></a>.</p>
+<p>We begin by generating predictions from the fitted network:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">neuralnet_probs</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">neuralnet_model</span>, <span class="va">test_scaled</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Because the response variable <code>deposit</code> has two levels, the fitted network returns two output values corresponding to <code>deposit = "no"</code> and <code>deposit = "yes"</code>. In the evaluation that follows, we focus on the output associated with <code>deposit = "yes"</code>:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">head</span>(neuralnet_probs), <span class="dv">2</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>        [,<span class="dv">1</span>] [,<span class="dv">2</span>]</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">1</span>,] <span class="fl">0.95</span> <span class="fl">0.05</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">2</span>,] <span class="fl">0.94</span> <span class="fl">0.06</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">3</span>,] <span class="fl">0.85</span> <span class="fl">0.15</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">4</span>,] <span class="fl">0.52</span> <span class="fl">0.48</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">5</span>,] <span class="fl">1.00</span> <span class="fl">0.00</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">6</span>,] <span class="fl">0.95</span> <span class="fl">0.05</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract predictions for 'deposit = "yes"'</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>neuralnet_probs_yes <span class="ot">=</span> neuralnet_probs[, <span class="dv">2</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To obtain class predictions, we apply a decision threshold of 0.5 and summarize the results with a confusion matrix:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">conf.mat</span>(neuralnet_probs_yes, test_labels, <span class="at">cutoff =</span> <span class="fl">0.5</span>, <span class="at">reference =</span> <span class="st">"yes"</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>         Predict</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>   Actual yes  no</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>      yes  <span class="dv">24</span>  <span class="dv">70</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>      no   <span class="dv">16</span> <span class="dv">794</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The confusion matrix summarizes the classification outcomes in terms of true positives, false positives, true negatives, and false negatives. These quantities help us understand the types of errors the model makes and their practical implications, such as unnecessary customer contact or missed subscription opportunities. In this setting, it is worth asking which type of error is more costly for the institution: contacting customers who are unlikely to subscribe, or failing to identify customers who would have responded positively.</p>
+<p>To place the neural network results in context, we also fit a logistic regression model using the same training and test split and the same predictor set. This provides a direct benchmark and allows us to compare predictive performance under identical conditions:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">logit_model</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">formula</span>, data <span class="op">=</span> <span class="va">train_scaled</span>, family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">logit_probs</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">logit_model</span>, newdata <span class="op">=</span> <span class="va">test_scaled</span>, type <span class="op">=</span> <span class="st">"response"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Because predictive performance depends on the chosen threshold, it is also useful to compare the models across all possible cutoffs. We therefore compute ROC curves and AUC values for both models using the <strong>pROC</strong> package:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://xrobin.github.io/pROC/">pROC</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">neuralnet_roc</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/pROC/man/roc.html">roc</a></span><span class="op">(</span><span class="va">test_labels</span>, <span class="va">neuralnet_probs_yes</span><span class="op">)</span></span>
+<span><span class="va">logit_roc</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/pROC/man/roc.html">roc</a></span><span class="op">(</span><span class="va">test_labels</span>, <span class="va">logit_probs</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/pROC/man/ggroc.html">ggroc</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">neuralnet_roc</span>, <span class="va">logit_roc</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="fu">scale_color_manual</span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"#377EB8"</span>, <span class="st">"#E66101"</span><span class="op">)</span>,</span>
+<span>                 labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>                   <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span><span class="st">"Neural Network; AUC ="</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/pROC/man/auc.html">auc</a></span><span class="op">(</span><span class="va">neuralnet_roc</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                   <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span><span class="st">"Logistic Regression; AUC ="</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/pROC/man/auc.html">auc</a></span><span class="op">(</span><span class="va">logit_roc</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span>                 <span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggtitle</span><span class="op">(</span><span class="st">"ROC Curves: Neural Network vs Logistic Regression"</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu">theme</span><span class="op">(</span>legend.title <span class="op">=</span> <span class="fu">element_blank</span><span class="op">(</span><span class="op">)</span>, legend.position <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">.7</span>, <span class="fl">.3</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="13-Neural-networks_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" data-fig-pos="H"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The ROC curve shows how sensitivity and specificity trade off as the classification threshold varies, while the AUC provides a threshold-independent summary of predictive performance. In this case, the neural network and logistic regression model achieve very similar AUC values. This is not surprising: the neural network uses a deliberately simple baseline architecture, and both models are fitted with the same predictor set. The comparison is useful because it shows that added model flexibility does not automatically translate into a substantial improvement in predictive performance.</p>
+<p>Taken together, the confusion matrix and ROC analysis provide a fuller view of model performance than any single metric alone. They also clarify the trade-off between flexibility and interpretability. Logistic regression offers a simpler and more transparent benchmark, whereas the neural network offers additional flexibility but may not always deliver a large gain in accuracy. Because the predictor <code>duration</code> is included in the model, the resulting performance should be interpreted in the campaign-response or benchmark setting described earlier rather than as the performance of a strict pre-contact targeting model.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Using the 70% training and 30% test split introduced earlier, fit the neural network model and report the corresponding confusion matrix, ROC curve, and AUC value. Compare these results with those obtained using the 80% training and 20% test split, and discuss what this reveals about the stability of performance estimates. You may also explore alternative classification thresholds, such as 0.4 or 0.6, and examine how the confusion matrix changes.</p>
+</blockquote>
+<p>This case study illustrates how neural networks can be applied within a complete data science workflow, from data preparation to model training and evaluation. Using the <code>bank</code> dataset, we showed how preprocessing choices such as encoding, scaling, and data partitioning shape the modeling pipeline, and how tools such as confusion matrices, ROC curves, and AUC support a more informed assessment of predictive performance. The comparison with logistic regression highlights an important practical lesson: additional model flexibility does not automatically lead to a substantial improvement in accuracy. At the same time, because the model includes <code>duration</code>, the results should be interpreted in the campaign-response setting described earlier rather than as the performance of a strict pre-contact targeting model. More generally, effective modeling requires not only fitting a model, but also interpreting its results carefully, comparing it with simpler alternatives, and ensuring that the predictors used are appropriate for the decision context.</p>
+</section></section><section id="chapter-summary-and-takeaways" class="level2" data-number="13.7"><h2 data-number="13.7" class="anchored" data-anchor-id="chapter-summary-and-takeaways">
+<span class="header-section-number">13.7</span> Chapter Summary and Takeaways</h2>
+<p>This chapter introduced neural networks for supervised learning, with a particular focus on multilayer perceptrons for tabular data in R. Building on earlier ideas from regression and classification, we examined how neural networks use hidden layers, activation functions, and gradient-based learning to model relationships that are more complex than those captured by simpler linear approaches.</p>
+<p>Several main ideas emerged. Neural networks extend linear models by introducing hidden layers and nonlinear activation functions, which allow them to represent interactions and more flexible decision boundaries. Activation functions shape how information flows through the network and therefore affect both model expressiveness and training behavior. Neural network training proceeds iteratively: prediction error is measured through a loss function, gradients are computed through backpropagation, and parameters are updated to reduce that loss. At the same time, architecture matters. The number of layers and neurons influences model capacity, computational cost, and the risk of overfitting, so these choices should be guided by the problem rather than made mechanically.</p>
+<p>The case study on term deposit subscriptions showed how these ideas come together in practice. Using the <code>bank</code> dataset, we prepared the data through encoding and scaling, trained a simple neural network model, and evaluated its performance using a confusion matrix, ROC curve, and AUC. This example reinforced several practical lessons. Neural networks require careful preprocessing because their training is sensitive to how inputs are represented and scaled. Greater architectural complexity does not automatically lead to better predictive performance. In tabular supervised learning problems, simpler models such as logistic regression can remain strong and informative benchmarks. More generally, effective neural network modeling depends not only on flexibility, but also on careful data preparation, thoughtful model design, rigorous evaluation, and clear interpretation of the prediction setting and available predictors.</p>
+</section><section id="sec-ch13-exercises" class="level2" data-number="13.8"><h2 data-number="13.8" class="anchored" data-anchor-id="sec-ch13-exercises">
+<span class="header-section-number">13.8</span> Exercises</h2>
+<p>These exercises consolidate your understanding of neural networks through conceptual reflection, hands-on modeling, and comparative analysis. They are organized into three parts: conceptual questions, applied exercises based on the <code>bank</code>, <code>adult</code>, and <code>insurance</code> datasets, and a final self-reflection section.</p>
+<section id="conceptual-questions" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="conceptual-questions">Conceptual Questions</h3>
+<ol type="1">
+<li><p>Describe the basic structure of a neural network and explain the roles of the input, hidden, and output layers.</p></li>
+<li><p>What is the purpose of an activation function? Why is nonlinearity essential in neural networks?</p></li>
+<li><p>Compare the sigmoid, tanh, ReLU, and Leaky ReLU activation functions. What are the main strengths and limitations of each?</p></li>
+<li><p>Explain how a neural network extends a linear model.</p></li>
+<li><p>What is the role of the loss function in neural network training?</p></li>
+<li><p>Explain the basic idea of gradient descent. Why does the update move in the direction opposite to the gradient?</p></li>
+<li><p>What is backpropagation, and why is it essential for training multilayer neural networks?</p></li>
+<li><p>What does the learning rate control? What can go wrong if it is chosen too large or too small?</p></li>
+<li><p>What is the purpose of a termination criterion such as early stopping?</p></li>
+<li><p>How does increasing the number of hidden layers or neurons affect model flexibility, computational cost, and the risk of overfitting?</p></li>
+<li><p>What symptoms indicate that a neural network is underfitting or overfitting the data? What practical steps can be used to address each problem?</p></li>
+<li><p>Compare neural networks with logistic regression and decision tree models in terms of flexibility, interpretability, and predictive performance.</p></li>
+<li><p>Why do neural networks require careful preprocessing, especially for categorical predictors and variables on different numerical scales?</p></li>
+<li><p>In tabular supervised learning problems, why is it useful to compare a neural network with simpler benchmark models before concluding that the neural network is preferable?</p></li>
+</ol></section><section id="hands-on-practice-neural-networks-with-the-bank-dataset" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="hands-on-practice-neural-networks-with-the-bank-dataset">Hands-On Practice: Neural Networks with the <code>bank</code> Dataset</h3>
+<p>In the case study, we used the <code>bank</code> dataset to build and evaluate a simple neural network model for predicting term deposit subscriptions. In the following exercises, you will extend that analysis by exploring alternative model architectures, comparing neural networks with simpler benchmark models, and examining how specific modeling choices influence predictive performance.</p>
+<ol start="15" type="1">
+<li><p>Load the <code>bank</code> dataset and examine its structure. Which variables are categorical, and which are numerical?</p></li>
+<li><p>Split the dataset into a 70% training set and a 30% test set. Check whether the class distribution of <code>deposit</code> is similar in both subsets, and explain why this matters for fair model evaluation.</p></li>
+<li><p>Apply the same preprocessing pipeline used in the case study. One-hot encode the categorical predictors and apply min-max scaling to the numerical predictors. Verify that the transformed training and test sets have compatible feature structures.</p></li>
+<li><p>Fit the baseline neural network model described in the chapter using the 70% training set and the same predictor set. Report its confusion matrix, ROC curve, and AUC on the test set.</p></li>
+<li><p>Fit a neural network with one hidden layer containing five neurons. Compare its predictive performance with that of the baseline model.</p></li>
+<li><p>Increase the number of neurons in the hidden layer to ten. Does the added complexity improve performance, or does it mainly increase computational cost?</p></li>
+<li><p>Fit a neural network with two hidden layers by setting <code>hidden = c(5, 3)</code>. Compare this architecture with the previous one-layer models in terms of predictive performance and stability.</p></li>
+<li><p>Refit the neural network after removing the variable <code>duration</code> from the predictor set. How much does this change the model’s performance, and what does this suggest about the role of <code>duration</code> in this dataset?</p></li>
+<li><p>Fit a neural network using sum of squared errors instead of cross-entropy. Compare the results and discuss which loss function appears more suitable for this binary classification task.</p></li>
+<li><p>For the preferred neural network model, compute the confusion matrix and interpret its precision, recall, and F1-score. In this marketing context, which type of classification error is likely to be more costly?</p></li>
+<li><p>Plot the ROC curve and compute the AUC for the preferred neural network model. How well does the model distinguish between subscribers and non-subscribers?</p></li>
+<li><p>Fit a logistic regression model using the same training and test split and the same predictor set. Compare its predictive performance with that of the neural network.</p></li>
+<li><p>Train a CART model and a C5.0 decision tree using the same training and test sets. Compare their performance with that of the neural network and logistic regression.</p></li>
+<li><p>Train a random forest model on the same data. Does it provide a meaningful improvement over the other models?</p></li>
+<li><p>Considering predictive performance, interpretability, and the role of <code>duration</code>, which model appears most appropriate for this problem? Discuss the trade-offs you observe.</p></li>
+</ol></section><section id="extension-neural-networks-with-the-adult-dataset" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="extension-neural-networks-with-the-adult-dataset">Extension: Neural Networks with the <code>adult</code> Dataset</h3>
+<p>These exercises extend the chapter’s classification workflow to a second dataset. The <code>adult</code> dataset is commonly used to predict whether an individual earns more than $50K per year based on demographic and employment attributes. The goal here is not to repeat the full case study, but to apply the same preprocessing and modeling strategy to a different classification problem and compare the neural network with simpler alternatives.</p>
+<ol start="30" type="1">
+<li><p>Load the <code>adult</code> dataset and examine its structure. Identify key differences between this dataset and the <code>bank</code> dataset.</p></li>
+<li><p>Prepare the data for modeling by handling missing values where necessary, one-hot encoding the categorical predictors, and scaling the numerical predictors. Use the same general preprocessing principles introduced earlier in this chapter.</p></li>
+<li><p>Split the dataset into an 80% training set and a 20% test set.</p></li>
+<li><p>Fit a neural network with one hidden layer containing five neurons to predict income level (<code>&lt;=50K</code> or <code>&gt;50K</code>). Evaluate its performance on the test set using a confusion matrix, ROC curve, and AUC.</p></li>
+<li><p>Increase the number of neurons in the hidden layer to ten, or fit a network with two hidden layers. Does the added complexity appear to improve predictive performance meaningfully?</p></li>
+<li><p>Fit a logistic regression model using the same training and test split and compare its performance with that of the neural network. Which model seems preferable, and why?</p></li>
+<li><p>Compare the results for the <code>adult</code> dataset with those obtained earlier for the <code>bank</code> dataset. What do these two examples suggest about when neural networks may or may not offer a meaningful advantage over simpler classification models?</p></li>
+</ol></section><section id="hands-on-practice-neural-networks-with-the-insurance-dataset" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="hands-on-practice-neural-networks-with-the-insurance-dataset">Hands-On Practice: Neural Networks with the <code>insurance</code> Dataset</h3>
+<p>These exercises extend the chapter from classification to regression. The <code>insurance</code> dataset in the <strong>liver</strong> package can be used to predict a numerical response, such as medical insurance charges, from demographic and health-related predictors. The goal is to apply the same general workflow introduced in this chapter while adapting it to a regression setting.</p>
+<ol start="37" type="1">
+<li><p>Load the <code>insurance</code> dataset and examine its structure. Which variables are categorical, and which are numerical? What is the response variable?</p></li>
+<li><p>Prepare the data for modeling by one-hot encoding the categorical predictors and scaling the numerical predictors. Explain why scaling is useful for neural networks in this regression setting as well.</p></li>
+<li><p>Split the dataset into an 80% training set and a 20% test set.</p></li>
+<li><p>Fit a neural network for regression using the <code><a href="https://rdrr.io/pkg/neuralnet/man/neuralnet.html">neuralnet()</a></code> function with <code>linear.output = TRUE</code> and a small architecture, for example one hidden layer with five neurons.</p></li>
+<li><p>Evaluate the regression model on the test set using measures such as RMSE and MAE. What do these values suggest about predictive accuracy?</p></li>
+<li><p>Fit a second neural network with a more complex architecture, such as one hidden layer with ten neurons or two hidden layers. Does the added complexity improve predictive performance meaningfully?</p></li>
+<li><p>Fit a multiple linear regression model using the same training and test split. Compare its predictive performance with that of the neural network. Which model appears preferable, and why?</p></li>
+<li><p>Reflect on the difference between using neural networks for classification and for regression. What changes in the output layer, the evaluation criteria, and the interpretation of model performance?</p></li>
+</ol></section><section id="self-reflection" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="self-reflection">Self-Reflection</h3>
+<ol start="45" type="1">
+<li><p>Reflect on how model complexity, interpretability, and predictive performance differed across the models you explored in this chapter, including neural networks, logistic regression, and tree-based methods. Under what circumstances does the additional flexibility of a neural network appear worthwhile, and when might a simpler model be preferable?</p></li>
+<li><p>Looking across both the classification and regression exercises, which parts of the modeling pipeline did you find most challenging or most insightful: data preparation, architecture choice, tuning, evaluation, or interpretation? How would these experiences influence the way you approach a new dataset in the future?</p></li>
+</ol>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-moro2014data" class="csl-entry" role="listitem">
+Moro, Sérgio, Paulo Cortez, and Paulo Rita. 2014. <span>“A Data-Driven Approach to Predict the Success of Bank Telemarketing.”</span> <em>Decision Support Systems</em> 62: 22–31.
+</div>
+</div>
+</section></section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/book-data-science-r\.netlify\.app");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./12-Tree-based-models.html" class="pagination-link" aria-label="Decision Trees and Random Forests">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Decision Trees and Random Forests</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./14-Clustering.html" class="pagination-link" aria-label="Clustering for Insight: Segmenting Data Without Labels">
+        <span class="nav-page-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Clustering for Insight: Segmenting Data Without Labels</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Data Science Foundations and Machine Learning with R was written by <a href="https://www.uva.nl/profile/a.mohammadi"><span style="color:#0056B3">Reza Mohammadi</span></a>.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/edit/main/13-Neural-networks.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>This book was built with <a href="https://quarto.org/">Quarto</a>.</p>
+</div>
+  </div>
+</footer>
+
+
+</body></html>

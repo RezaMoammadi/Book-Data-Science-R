@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Reza Mohammadi">
+<title>9&nbsp; Naive Bayes Classifier – &lt;span style='color:#0056B3'&gt;Data Science Foundations and Machine Learning with R: From Data to Decisions&lt;/span&gt;</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./10-Regression.html" rel="next">
+<link href="./8-Model-evaluation.html" rel="prev">
+<link href="./images/logo.png" rel="icon" type="image/png">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-5c395c020fa0215c66c8d962dcba7617.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script><script defer="" data-domain="r4ds.hadley.nz" src="https://plausible.io/js/plausible.js"></script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+</head>
+<body class="nav-sidebar docked">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./9-Naive-Bayes.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Naive Bayes Classifier</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./"><span style="color:#0056B3">Data Science Foundations and Machine Learning with R: From Data to Decisions</span></a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/RezaMoammadi/Book-Data-Science-R" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Download" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Download"><i class="bi bi-download"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+<li>
+            <a class="dropdown-item sidebar-tools-main-item" href="./-span-style=-color--0056B3--Data-Science-Foundations-and-Machine-Learning-with-R--From-Data-to-Decisions--span-.pdf">
+              <i class="bi bi-file-pdf pe-1"></i>
+            Download PDF
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="./-span-style=-color--0056B3--Data-Science-Foundations-and-Machine-Learning-with-R--From-Data-to-Decisions--span-.epub">
+              <i class="bi bi-journal pe-1"></i>
+            Download ePub
+            </a>
+          </li>
+      </ul>
+</div>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-1" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-1">
+<li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.facebook.com/sharer/sharer.php?u=|url|">
+              <i class="bi bi-facebook pe-1"></i>
+            Facebook
+            </a>
+          </li>
+      </ul>
+</div>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./0-preface.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./1-Intro-R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">R Foundations for Data Science</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2-Intro-data-science.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">The Data Science Workflow and the Role of Machine Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3-Data-preparation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data Preparation in Practice: From Raw Data to Insight</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4-Exploratory-data-analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Exploratory Data Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./5-Statistics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Statistical Inference and Hypothesis Testing</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6-Setup-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Data Setup for Modeling</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./7-Classification-kNN.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Classification Using k-Nearest Neighbors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./8-Model-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Model Evaluation and Performance Assessment</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./9-Naive-Bayes.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Naive Bayes Classifier</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Regression Analysis: Linear and Nonlinear Models</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-Generalized-Regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Generalized Linear Models for Binary and Count Outcomes</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-Tree-based-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Decision Trees and Random Forests</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-Neural-networks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Neural Networks for Supervised Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-Clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Clustering for Insight: Segmenting Data Without Labels</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-References.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li><a href="#bayes-theorem-and-probabilistic-foundations" id="toc-bayes-theorem-and-probabilistic-foundations" class="nav-link active" data-scroll-target="#bayes-theorem-and-probabilistic-foundations"><span class="header-section-number">9.1</span> Bayes’ Theorem and Probabilistic Foundations</a></li>
+  <li><a href="#the-naive-bayes-classifier" id="toc-the-naive-bayes-classifier" class="nav-link" data-scroll-target="#the-naive-bayes-classifier"><span class="header-section-number">9.2</span> The Naive Bayes Classifier</a></li>
+  <li><a href="#sec-ch9-naive" id="toc-sec-ch9-naive" class="nav-link" data-scroll-target="#sec-ch9-naive"><span class="header-section-number">9.3</span> Why Is It Called “Naive”?</a></li>
+  <li><a href="#sec-ch9-types" id="toc-sec-ch9-types" class="nav-link" data-scroll-target="#sec-ch9-types"><span class="header-section-number">9.4</span> Types of Naive Bayes Classifiers</a></li>
+  <li><a href="#sec-ch9-laplace" id="toc-sec-ch9-laplace" class="nav-link" data-scroll-target="#sec-ch9-laplace"><span class="header-section-number">9.5</span> The Laplace Smoothing Technique</a></li>
+  <li><a href="#sec-ch9-case-study" id="toc-sec-ch9-case-study" class="nav-link" data-scroll-target="#sec-ch9-case-study"><span class="header-section-number">9.6</span> Case Study: Predicting Loan Approval with Naive Bayes</a></li>
+  <li><a href="#chapter-summary-and-takeaways" id="toc-chapter-summary-and-takeaways" class="nav-link" data-scroll-target="#chapter-summary-and-takeaways"><span class="header-section-number">9.7</span> Chapter Summary and Takeaways</a></li>
+  <li><a href="#sec-ch9-exercises" id="toc-sec-ch9-exercises" class="nav-link" data-scroll-target="#sec-ch9-exercises"><span class="header-section-number">9.8</span> Exercises</a></li>
+  </ul><div class="toc-actions"><ul><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/edit/main/9-Naive-Bayes.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title"><span id="sec-ch9-bayes" class="quarto-section-identifier"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Naive Bayes Classifier</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header><div class="chapterquote">
+<p>The measure of belief is the measure of action.</p>
+<div class="author">
+<p>— Thomas Bayes</p>
+</div>
+</div>
+<p>How can we make predictions quickly while still accounting for uncertainty in a principled way? Consider a bank that must decide whether to approve a loan application based on information such as education, employment status, income, credit score, and asset values. Decisions of this kind must often be made quickly and consistently, yet they also carry financial consequences. The Naive Bayes classifier provides a simple probabilistic framework for such decisions by estimating class probabilities from observed predictor values.</p>
+<p>This chapter introduces Naive Bayes, a probabilistic classifier grounded in Bayes’ theorem. Rather than relying on similarity or distance to nearby observations, Naive Bayes predicts class membership by estimating the probability of each class given the observed predictor values. This probability-based perspective is especially useful when uncertainty must be quantified and when classification thresholds must be adjusted to reflect practical goals. In this sense, Naive Bayes provides a useful complement to the <em>k</em>-Nearest Neighbors (kNN) method introduced in Chapter <a href="7-Classification-kNN.html" class="quarto-xref"><span>7</span></a> and can be evaluated using the same tools discussed in Chapter <a href="8-Model-evaluation.html" class="quarto-xref"><span>8</span></a>, including confusion matrices, ROC curves, and AUC.</p>
+<p>A central feature of Naive Bayes is its simplifying assumption that predictors are conditionally independent given the class label. Although this assumption is rarely exactly true in practice, it makes the method computationally efficient and often surprisingly effective, especially in settings with many predictors. For this reason, Naive Bayes has remained a widely used method in applications such as spam filtering, document classification, and financial decision-making.</p>
+<p>At the same time, Naive Bayes has important limitations. Strong dependence among predictors can reduce predictive performance, and continuous variables require additional distributional assumptions that may not always fit the data well. Even so, Naive Bayes remains a useful baseline and a practical first model in many classification problems. It is fast to train, straightforward to implement, and easy to interpret through its probability-based predictions. For these reasons, it remains valuable both as an initial modeling choice and as a benchmark against which more complex classifiers can be compared.</p>
+<section id="what-this-chapter-covers" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="what-this-chapter-covers">What This Chapter Covers</h3>
+<p>This chapter introduces the Naive Bayes classifier as a probabilistic approach to classification that combines conceptual simplicity with practical usefulness. Although the method is especially well known for high-dimensional applications such as text classification, it is also effective in many applied settings where fast, interpretable predictions are needed.</p>
+<p>We begin with the probabilistic foundation of the method through Bayes’ theorem and show how probabilities can be updated when new evidence becomes available. We then explain how this idea leads to the Naive Bayes classifier, which predicts class membership by comparing posterior probabilities across classes. Next, we examine the conditional independence assumption that makes the method computationally efficient, discuss why this simplification is both useful and restrictive, and introduce the main variants of Naive Bayes, including Bernoulli, Multinomial, and Gaussian Naive Bayes.</p>
+<p>We also consider the zero-frequency problem and show how Laplace smoothing helps make the classifier more stable when certain feature values are rare or absent in the training data. The chapter concludes with an end-to-end case study in R using the <code>loan</code> dataset from the <strong>liver</strong> package, where we train, evaluate, and interpret a Naive Bayes classifier within the Data Science Workflow introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a> and illustrated in <a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>.</p>
+</section><section id="bayes-theorem-and-probabilistic-foundations" class="level2" data-number="9.1"><h2 data-number="9.1" class="anchored" data-anchor-id="bayes-theorem-and-probabilistic-foundations">
+<span class="header-section-number">9.1</span> Bayes’ Theorem and Probabilistic Foundations</h2>
+<p>Naive Bayes is grounded in Bayesian probability, specifically in Bayes’ theorem, which is commonly associated with the 18th-century statistician Thomas Bayes <span class="citation" data-cites="bayes1958essay">(<a href="15-References.html#ref-bayes1958essay" role="doc-biblioref">Bayes 1958</a>)</span>. Bayes’ theorem provides a formal rule for updating probabilities when new evidence becomes available. This idea lies at the heart of Bayesian inference and continues to play an important role in statistics and machine learning.</p>
+<p>A central idea in Bayesian reasoning is that learning proceeds by combining prior beliefs with observed data. The prior represents what is believed before the data are observed, the likelihood describes how probable the observed data are under different values or hypotheses, and the posterior represents the updated belief after the data have been taken into account. Figure <a href="#fig-bayes-theorem" class="quarto-xref"><span>9.1</span></a> presents this relationship schematically.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-bayes-theorem" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-bayes-theorem-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch9_bayes_theorem.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bayes-theorem-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9.1: Conceptual illustration of Bayes’ theorem. Prior beliefs and observed data are combined through the likelihood to produce the posterior distribution.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>How should we revise our beliefs when new information is observed? Many real-world decisions must be made under uncertainty, whether we are assessing financial risk, interpreting medical test results, or filtering spam emails. Bayes’ theorem formalizes this updating process by showing how an initial probability can be revised systematically in light of observed evidence. For example, when evaluating a loan application, a bank may begin with a general expectation based on historical data and then refine that assessment after observing information such as education, employment status, income, or credit score.</p>
+<p>From this perspective, probability is interpreted not only as a long-run frequency but also as a measure of uncertainty that can be updated when new information becomes available. Bayes’ theorem therefore provides a coherent mathematical framework for learning from evidence. We begin by building intuition for this updating process and then turn to its mathematical form.</p>
+<section id="how-does-bayes-theorem-work" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="how-does-bayes-theorem-work">How Does Bayes’ Theorem Work?</h3>
+<p>Bayes’ theorem describes how we update an initial probability after observing new evidence. In many practical situations, we do not begin from complete uncertainty. Instead, we start with a general expectation based on what is already known and then revise that expectation when additional information becomes available.</p>
+<p>Consider again the example of loan approval. Before examining the details of a specific applicant, a bank may already know the overall proportion of applications that are approved. This provides a starting point. Once further information is observed, such as education level, employment status, income, or credit score, that initial probability can be updated. If the new evidence is associated with a higher chance of approval, the updated probability increases. If it is associated with a lower chance of approval, the updated probability decreases.</p>
+<p>This same logic appears in many other settings. In medical testing, the probability that a patient has a condition is updated after a test result is observed. In spam filtering, the probability that an email is spam is revised after certain words or patterns are detected. In each case, the underlying principle is the same: we begin with an existing belief and refine it systematically in light of new evidence.</p>
+<p>Bayes’ theorem therefore provides a general framework for learning from data under uncertainty. It allows us to move from a broad population-level expectation to a more specific probability for a subgroup or an individual case. In the next subsection, we express this updating process mathematically and examine how its components can be interpreted in probabilistic terms.</p>
+</section><section id="the-essence-of-bayes-theorem" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="the-essence-of-bayes-theorem">The Essence of Bayes’ Theorem</h3>
+<p>The conceptual idea of Bayesian updating was introduced in Figure <a href="#fig-bayes-theorem" class="quarto-xref"><span>9.1</span></a>: we begin with prior beliefs, combine them with observed data through the likelihood, and obtain an updated posterior belief. We now express this same idea mathematically through Bayes’ theorem: <span class="math display">\[\begin{equation}
+\label{eq-bayes-theorem}
+P(A \mid B) = \frac{P(A \cap B)}{P(B)}.
+\end{equation}\]</span></p>
+<p>This equation describes how the probability of event <span class="math inline">\(A\)</span> is updated after observing event <span class="math inline">\(B\)</span>. In this expression, <span class="math inline">\(P(A \mid B)\)</span> denotes the conditional probability of event <span class="math inline">\(A\)</span> given event <span class="math inline">\(B\)</span>, <span class="math inline">\(P(A \cap B)\)</span> denotes the joint probability that both events occur, and <span class="math inline">\(P(B)\)</span> denotes the marginal probability of event <span class="math inline">\(B\)</span>.</p>
+<p>To clarify these components, Figure <a href="#fig-venn-diagram" class="quarto-xref"><span>9.2</span></a> presents a visual interpretation using a Venn diagram. The overlapping region represents the joint probability <span class="math inline">\(P(A \cap B)\)</span>, while the full area corresponding to event <span class="math inline">\(B\)</span> represents the marginal probability <span class="math inline">\(P(B)\)</span>. The ratio of these two quantities gives the conditional probability <span class="math inline">\(P(A \mid B)\)</span>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-venn-diagram" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-venn-diagram-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch9_Venn-diagram_probabilities.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:75.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-venn-diagram-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9.2: A Venn diagram illustrating the joint and marginal probabilities involved in Bayes’ theorem.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>Bayes’ theorem can also be written in a form that is especially useful for classification. Since the joint probability can be expressed as <span class="math inline">\(P(A \cap B) = P(B \mid A)P(A)\)</span>, we obtain: <span class="math display">\[\begin{equation}
+\label{eq-bayes-theorem-2}
+P(A \mid B) = \frac{P(B \mid A)P(A)}{P(B)}.
+\end{equation}\]</span></p>
+<p>This form makes the logic of Bayesian updating more explicit. The term <span class="math inline">\(P(A)\)</span> represents the prior probability of event <span class="math inline">\(A\)</span>, <span class="math inline">\(P(B \mid A)\)</span> measures how likely the observed evidence is if event <span class="math inline">\(A\)</span> is true, and <span class="math inline">\(P(B)\)</span> serves as a normalizing constant. In this interpretation, <span class="math inline">\(P(A \mid B)\)</span> is called the posterior probability because it represents the updated probability of event <span class="math inline">\(A\)</span> after observing event <span class="math inline">\(B\)</span>.</p>
+<p>To see how Bayes’ theorem works in practice, consider the <code>loan</code> dataset from the <strong>liver</strong> package. Suppose we want to estimate the probability that a loan application is <code>approved</code> (<span class="math inline">\(A\)</span>) given that the applicant has <code>education = graduate</code> (<span class="math inline">\(B\)</span>). We begin by loading the dataset and constructing a contingency table:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(liver)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(loan)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">addmargins</span>(<span class="fu">xtabs</span>(<span class="sc">~</span> loan_status <span class="sc">+</span> education, <span class="at">data =</span> loan))</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>              education</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>   loan_status graduate not<span class="sc">-</span>graduate  Sum</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>      approved     <span class="dv">1339</span>         <span class="dv">1317</span> <span class="dv">2656</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>      rejected      <span class="dv">805</span>          <span class="dv">808</span> <span class="dv">1613</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>      Sum          <span class="dv">2144</span>         <span class="dv">2125</span> <span class="dv">4269</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let <span class="math inline">\(A\)</span> denote the event that a loan application is <code>approved</code>, and let <span class="math inline">\(B\)</span> denote the event that the applicant has <code>education = graduate</code>. The prior probability that a loan application is approved is: <span class="math display">\[
+P(A) = P(\text{approved}) = \frac{\text{Total approved applications}}{\text{Total applications}}
+= \frac{2656}{4269}
+= 0.622.
+\]</span></p>
+<p>Using Bayes’ theorem, the conditional probability that an application is approved given that the applicant is a graduate is: <span class="math display">\[\begin{equation}
+\label{eq-bayes-loan-graduate}
+\begin{split}
+P(\text{approved} \mid \text{graduate})
+&amp;= \frac{P(\text{approved} \cap \text{graduate})}{P(\text{graduate})} \\
+&amp;= \frac{\text{Number of approved graduate applications}}{\text{Total number of graduate applications}} \\
+&amp;= \frac{1339}{2144} \\
+&amp;= 0.625.
+\end{split}
+\end{equation}\]</span></p>
+<p>This result gives the observed proportion of approved applications among applicants with <code>education = graduate</code>. Because this conditional probability (0.625) is slightly higher than the overall approval probability of 0.622, graduate applicants appear to have a somewhat higher approval rate than the applicant pool as a whole. This comparison remains associative rather than causal: it shows how probabilities differ across observed groups, not why those differences arise.</p>
+<p>This example illustrates the central idea of Bayes’ theorem: we begin with an overall probability and update it using additional information about the observed case. In the next section, we build on this probabilistic foundation to show how Bayes’ theorem can be turned into a practical classification algorithm.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Using the same contingency table, compute the probability that a loan application is <code>approved</code> given that the applicant has <code>education = not-graduate</code>. How does this probability compare with the value obtained for applicants with <code>education = graduate</code>? <em>Hint:</em> Identify the relevant counts in the table and apply Bayes’ theorem. You may verify your result in R.</p>
+</blockquote>
+</section></section><section id="the-naive-bayes-classifier" class="level2" data-number="9.2"><h2 data-number="9.2" class="anchored" data-anchor-id="the-naive-bayes-classifier">
+<span class="header-section-number">9.2</span> The Naive Bayes Classifier</h2>
+<p>Bayes’ theorem provides a general rule for updating probabilities when new evidence becomes available. In classification problems, this principle can be used to estimate the probability that an observation belongs to a particular class given its observed characteristics. The Naive Bayes classifier applies Bayes’ theorem in exactly this way.</p>
+<p>Suppose we observe a set of predictor variables <span class="math inline">\(X_1, X_2, \dots, X_m\)</span> describing an individual case. In the <code>loan</code> dataset, for example, these predictors may include variables such as <code>education</code>, <code>income_annum</code>, <code>loan_amount</code>, <code>loan_term</code>, and <code>cibil_score</code>. Our goal is to estimate the probability that the corresponding loan application belongs to a particular outcome class. In this chapter, the outcome variable is <code>loan_status</code>, which takes the values <code>approved</code> or <code>rejected</code>.</p>
+<p>Using Bayes’ theorem, the probability that an observation belongs to class <span class="math inline">\(y\)</span> given the observed predictors can be written as</p>
+<p><span class="math display">\[
+P(Y = y \mid X_1, \dots, X_m)
+=
+\frac{P(X_1, \dots, X_m \mid Y = y) P(Y = y)}
+{P(X_1, \dots, X_m)}.
+\]</span></p>
+<p>This expression combines two key components. The term <span class="math inline">\(P(Y = y)\)</span> represents the prior probability of class <span class="math inline">\(y\)</span>, which reflects how common that outcome is in the population. The term <span class="math inline">\(P(X_1, \dots, X_m \mid Y = y)\)</span> represents the likelihood, which measures how probable the observed predictor values are if the observation truly belongs to class <span class="math inline">\(y\)</span>. Together, these quantities determine the posterior probability <span class="math inline">\(P(Y = y \mid X_1, \dots, X_m)\)</span>.</p>
+<p>In classification tasks, we typically compute this posterior probability for each possible class and then assign the observation to the class with the highest probability. This decision rule can be written as</p>
+<p><span class="math display">\[
+\hat{y}
+=
+\arg\max_{y}
+P(Y = y \mid X_1, \dots, X_m).
+\]</span></p>
+<p>In other words, the classifier predicts the class whose posterior probability is largest given the observed predictors.</p>
+<p>At first glance, applying Bayes’ theorem in this way may appear straightforward. However, a practical difficulty arises when the number of predictors is large. The likelihood term <span class="math inline">\(P(X_1, \dots, X_m \mid Y = y)\)</span> requires estimating a joint probability distribution over all predictors simultaneously. In many datasets, including the <code>loan</code> dataset used in this chapter, estimating such high-dimensional joint distributions directly is difficult because many combinations of predictor values occur rarely or may not appear in the training data at all.</p>
+<p>The Naive Bayes classifier addresses this challenge by introducing a simplifying assumption about the predictors. Instead of modeling their full joint distribution, the method assumes that predictors are conditionally independent given the class label. This assumption greatly simplifies the probability calculations and allows the classifier to scale efficiently to problems with many predictors. In the next section, we examine this assumption more closely and explain why it gives the method the name <em>Naive Bayes</em>.</p>
+</section><section id="sec-ch9-naive" class="level2" data-number="9.3"><h2 data-number="9.3" class="anchored" data-anchor-id="sec-ch9-naive">
+<span class="header-section-number">9.3</span> Why Is It Called “Naive”?</h2>
+<p>The label <em>naive</em> refers to the key simplifying assumption behind the classifier: it treats predictors as conditionally independent given the class label. This means that once the outcome is known, the model assumes that the predictors no longer provide information about one another. Although this assumption is rarely exactly true in real-world data, it makes the probability calculations much simpler and is the main reason the method is computationally efficient.</p>
+<p>To see why this matters, consider again the <code>loan</code> dataset used later in the case study of this chapter (Section <a href="#sec-ch9-case-study" class="quarto-xref"><span>9.6</span></a>). It contains demographic and financial variables such as <code>education</code>, <code>self_employed</code>, <code>income_annum</code>, <code>loan_amount</code>, <code>loan_term</code>, <code>cibil_score</code>, and several asset-related measures. In practice, many of these predictors are likely to be related. Applicants with higher annual income may also hold more valuable assets, and credit score may be associated with loan amount or repayment capacity. Even so, Naive Bayes assumes that these predictors contribute separately to the classification once the outcome variable <code>loan_status</code> is known.</p>
+<p>Suppose we want to estimate the probability that an application belongs to class <span class="math inline">\(y_1\)</span> given predictor values <span class="math inline">\(X_1, \dots, X_{11}\)</span>. From Bayes’ theorem, we write <span class="math display">\[
+P(Y = y_1 \mid X_1, \dots, X_{11})
+=
+\frac{P(Y = y_1) \times P(X_1, \dots, X_{11} \mid Y = y_1)}
+{P(X_1, \dots, X_{11})}.
+\]</span></p>
+<p>The main challenge lies in estimating the likelihood term <span class="math inline">\(P(X_1, \dots, X_{11} \mid Y = y_1)\)</span>. When the number of predictors is large, directly estimating this full joint conditional distribution becomes difficult because many combinations of predictor values occur rarely or may not appear in the training data at all.</p>
+<p>Naive Bayes simplifies this problem by assuming conditional independence, so that <span class="math display">\[
+P(X_1, \dots, X_{11} \mid Y = y_1)
+=
+P(X_1 \mid Y = y_1) \times \cdots \times P(X_{11} \mid Y = y_1).
+\]</span></p>
+<p>This factorization replaces one complex probability with a product of simpler conditional probabilities. As a result, the classifier becomes much easier to estimate and can be applied efficiently even when the number of predictors is large.</p>
+<p>Of course, this assumption is often unrealistic. In the <code>loan</code> dataset, variables such as <code>income_annum</code>, <code>residential_assets_value</code>, and <code>bank_asset_value</code> are likely to be related, even within the groups of approved and rejected applications. For this reason, the Naive Bayes model should not be understood as a perfect description of reality. Rather, it is a practical approximation that trades realism for simplicity and speed.</p>
+<p>Despite this simplification, Naive Bayes often performs surprisingly well in practice. When predictor dependencies are not too strong, or when a fast and interpretable baseline model is needed, the method can still provide useful predictions. This helps explain why Naive Bayes remains popular in applications such as text classification, spam detection, and credit-related decision-making.</p>
+<p>The conditional independence assumption is therefore both the source of the method’s strength and its main limitation. It makes probabilistic classification manageable, but it may also reduce predictive accuracy when strong relationships among predictors are essential for distinguishing between classes. In the next section, we examine how this general framework is adapted to different types of predictors.</p>
+</section><section id="sec-ch9-types" class="level2" data-number="9.4"><h2 data-number="9.4" class="anchored" data-anchor-id="sec-ch9-types">
+<span class="header-section-number">9.4</span> Types of Naive Bayes Classifiers</h2>
+<p>Not all predictors behave in the same way. Some are binary, some are categorical with several levels, and others are continuous. As a result, applying Naive Bayes requires us to make distributional assumptions that match the nature of the predictors. This is why several variants of the Naive Bayes classifier have been developed. The three most common are Bernoulli Naive Bayes, Multinomial Naive Bayes, and Gaussian Naive Bayes.</p>
+<p><em>Bernoulli Naive Bayes</em> is designed for binary predictors that record the presence or absence of a characteristic. This variant is common in text classification when features indicate whether a word appears in a document, rather than how often it appears. In the <code>loan</code> dataset, a binary variable such as <code>self_employed</code> provides a simple example of the kind of predictor that fits this setting.</p>
+<p><em>Multinomial Naive Bayes</em> is primarily used for count data, especially when predictors represent frequencies across categories. It is widely applied in text classification, where predictors record the number of times words appear in a document. This variant models the predictor vector using a multinomial distribution and is especially useful when counts, rather than simple presence or absence, carry meaningful information.</p>
+<p><em>Gaussian Naive Bayes</em> is used for continuous predictors that are assumed to follow a normal distribution within each class. Instead of working with discrete counts or binary indicators, it models class-conditional feature values using Gaussian densities. In the <code>loan</code> dataset, variables such as <code>income_annum</code>, <code>loan_amount</code>, <code>cibil_score</code>, and the asset-related measures are examples of predictors that are naturally handled in this way.</p>
+<p>Choosing an appropriate variant helps align the probability model with the structure of the data. In practice, some software implementations can accommodate mixed predictor types by applying different assumptions to different variables within the same Naive Bayes framework. In this chapter, the <strong>naivebayes</strong> package allows us to work with the mix of categorical and continuous predictors in the <code>loan</code> dataset within a single modeling framework.</p>
+<p>The names <em>Bernoulli</em> and <em>Gaussian</em> refer to well-known probability distributions associated with Jacob Bernoulli and Carl Friedrich Gauss. These distributions provide the mathematical foundation for the corresponding Naive Bayes variants. In the next section, we examine a practical issue that can arise across Naive Bayes models: what happens when a predictor value is not observed in the training data for one of the classes.</p>
+</section><section id="sec-ch9-laplace" class="level2" data-number="9.5"><h2 data-number="9.5" class="anchored" data-anchor-id="sec-ch9-laplace">
+<span class="header-section-number">9.5</span> The Laplace Smoothing Technique</h2>
+<p>A practical difficulty in Naive Bayes classification arises when a predictor value appears in the test data but was never observed in the training data for one of the classes. In that case, the estimated conditional probability of that predictor value within the class becomes zero. Because Naive Bayes multiplies conditional probabilities across predictors, a single zero is enough to force the entire product to zero, regardless of how strongly the remaining predictors support that class.</p>
+<p>This issue is known as the <em>zero-frequency problem</em>. It occurs because Naive Bayes often estimates conditional probabilities directly from observed counts in the training data. If a category is absent for a particular class, its estimated class-conditional probability is zero. To address this problem, we use <em>Laplace smoothing</em> (also called <em>add-one smoothing</em>). Named after Pierre-Simon Laplace, this technique assigns a small non-zero probability to every possible feature-class combination, even when some combinations are not observed in the training data.</p>
+<p>To illustrate the idea, consider the variable <code>self_employed</code> in the <code>loan</code> dataset. Suppose that in a subset of the data, no rejected loan applications are associated with <code>self_employed = no</code>. For illustration, we can construct such a subset as follows:</p>
+<div class="cell" data-layout-align="center">
+<pre><code>              self_employed
+   loan_status no yes
+      approved 35  38
+      rejected  0  28</code></pre>
+</div>
+<p>Without smoothing, the estimated conditional probability is <span class="math display">\[
+P(\text{no} \mid \text{rejected})
+= \frac{P(\text{no} \cap \text{rejected})}{P(\text{rejected})}
+= \frac{0}{35}
+= 0.
+\]</span> Here, <code>no</code> refers to <code>self_employed = no</code>, and <code>rejected</code> refers to <code>loan_status = rejected</code>. If this zero enters the Naive Bayes calculation, the contribution of the <code>rejected</code> class becomes zero before the posterior probabilities are normalized. In effect, the model rules out the <code>rejected</code> class entirely for any observation with <code>self_employed = no</code>, even if the other predictor values strongly suggest rejection.</p>
+<p>Laplace smoothing avoids this problem by adding a small constant <span class="math inline">\(k\)</span> (typically <span class="math inline">\(k = 1\)</span>) to each count. The smoothed estimate becomes <span class="math display">\[
+P(\text{no} \mid \text{rejected})
+= \frac{\text{count}(\text{no} \cap \text{rejected}) + k}
+{\text{count}(\text{rejected}) + mk},
+\]</span> where <span class="math inline">\(m\)</span> is the number of possible categories of <code>self_employed</code>. In this example, <span class="math inline">\(m = 2\)</span> because the variable has two categories: <code>yes</code> and <code>no</code>. This adjustment ensures that every feature value receives a non-zero probability within each class, even if it was not observed in the training data.</p>
+<p>In R, Laplace smoothing can be applied through the <code>laplace</code> argument in the <strong>naivebayes</strong> package, where <code>laplace = 1</code> corresponds to add-one smoothing. Although <span class="math inline">\(k = 1\)</span> is a common default, the smoothing value can be adjusted if needed. By preventing zero probabilities, Laplace smoothing makes the classifier more stable and reliable in practice, especially when some classes are small or certain predictor values are rare. With these building blocks in place, we are now ready to apply Naive Bayes to a complete classification problem using the <code>loan</code> dataset.</p>
+</section><section id="sec-ch9-case-study" class="level2" data-number="9.6"><h2 data-number="9.6" class="anchored" data-anchor-id="sec-ch9-case-study">
+<span class="header-section-number">9.6</span> Case Study: Predicting Loan Approval with Naive Bayes</h2>
+<p>How can a bank decide whether to approve or reject a loan application before extending credit? This question lies at the core of financial risk assessment, where each lending decision involves balancing business opportunity against the risk of loss. Accurate predictions can support more consistent decision-making, responsible lending, and effective risk management.</p>
+<p>In this case study, we apply the Naive Bayes classifier to predict whether a loan application will be <code>approved</code> or <code>rejected</code> using the <code>loan</code> dataset from the <strong>liver</strong> package in R. The dataset contains financial and demographic variables commonly used in lending decisions, making it a suitable setting for illustrating probability-based classification in practice.</p>
+<p>We follow the <em>Data Science Workflow</em> introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a> and illustrated in <a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>. The analysis also builds on the data setup for modeling discussed in Chapter <a href="7-Classification-kNN.html" class="quarto-xref"><span>7</span></a> and the evaluation tools introduced in Chapter <a href="8-Model-evaluation.html" class="quarto-xref"><span>8</span></a>. By moving step by step from problem understanding and data understanding to model training, evaluation, and interpretation, this case study shows how Naive Bayes can support systematic and data-driven loan approval decisions.</p>
+<section id="problem-understanding" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="problem-understanding">Problem Understanding</h3>
+<p>Loan approval is a high-stakes decision for financial institutions. Approving an application that later turns out to be risky can lead to financial loss, while rejecting an application that could have been safely approved may result in missed business opportunities and reduced access to credit for potentially reliable borrowers. For this reason, lending decisions must balance caution with fairness and consistency.</p>
+<p>In practice, banks rely on information available at the time of application, such as education, employment status, income, credit score, loan amount, and asset values, to assess whether an application should be <code>approved</code> or <code>rejected</code>. This makes loan approval a natural binary classification problem, where the goal is to use observed applicant characteristics to predict the likely decision outcome.</p>
+<p>Our objective is to develop a Naive Bayes model that predicts whether a loan application will be <code>approved</code> or <code>rejected</code> using the variables available in the <code>loan</code> dataset. In addition to producing class labels, the model estimates the probability of each outcome. These probability-based predictions are especially valuable in lending because they allow decisions to be adjusted to institutional priorities, such as being more cautious in risky cases or more inclusive when uncertainty is lower.</p>
+</section><section id="data-understanding" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="data-understanding">Data Understanding</h3>
+<p>Before training the Naive Bayes classifier, we briefly examine the data to understand its structure and confirm that it is suitable for modeling. At this stage, the goal is not to conduct a full exploratory analysis, but rather to identify the variables available for prediction, verify their types, and check for basic data-quality issues. The dataset contains 4269 observations and 13 variables, including one outcome variable and multiple predictors.</p>
+<p>To inspect the structure of the dataset and the variable types, we begin with:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(loan)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>   <span class="st">'data.frame'</span><span class="sc">:</span>    <span class="dv">4269</span> obs. of  <span class="dv">13</span> variables<span class="sc">:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="er">$</span> loan_id                 <span class="sc">:</span> int  <span class="dv">1</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">4</span> <span class="dv">5</span> <span class="dv">6</span> <span class="dv">7</span> <span class="dv">8</span> <span class="dv">9</span> <span class="dv">10</span> ...</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> no_of_dependents        <span class="sc">:</span> int  <span class="dv">2</span> <span class="dv">0</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">5</span> <span class="dv">0</span> <span class="dv">5</span> <span class="dv">2</span> <span class="dv">0</span> <span class="dv">5</span> ...</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> education               <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"graduate"</span>,<span class="st">"not-graduate"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> ...</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> self_employed           <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"no"</span>,<span class="st">"yes"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> ...</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> income_annum            <span class="sc">:</span> int  <span class="dv">9600000</span> <span class="dv">4100000</span> <span class="dv">9100000</span> <span class="dv">8200000</span> <span class="dv">9800000</span> <span class="dv">4800000</span> <span class="dv">8700000</span> <span class="dv">5700000</span> <span class="dv">800000</span> <span class="dv">1100000</span> ...</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> loan_amount             <span class="sc">:</span> int  <span class="dv">29900000</span> <span class="dv">12200000</span> <span class="dv">29700000</span> <span class="dv">30700000</span> <span class="dv">24200000</span> <span class="dv">13500000</span> <span class="dv">33000000</span> <span class="dv">15000000</span> <span class="dv">2200000</span> <span class="dv">4300000</span> ...</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> loan_term               <span class="sc">:</span> int  <span class="dv">12</span> <span class="dv">8</span> <span class="dv">20</span> <span class="dv">8</span> <span class="dv">20</span> <span class="dv">10</span> <span class="dv">4</span> <span class="dv">20</span> <span class="dv">20</span> <span class="dv">10</span> ...</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> cibil_score             <span class="sc">:</span> int  <span class="dv">778</span> <span class="dv">417</span> <span class="dv">506</span> <span class="dv">467</span> <span class="dv">382</span> <span class="dv">319</span> <span class="dv">678</span> <span class="dv">382</span> <span class="dv">782</span> <span class="dv">388</span> ...</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> residential_assets_value<span class="sc">:</span> int  <span class="dv">2400000</span> <span class="dv">2700000</span> <span class="dv">7100000</span> <span class="dv">18200000</span> <span class="dv">12400000</span> <span class="dv">6800000</span> <span class="dv">22500000</span> <span class="dv">13200000</span> <span class="dv">1300000</span> <span class="dv">3200000</span> ...</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> commercial_assets_value <span class="sc">:</span> int  <span class="dv">17600000</span> <span class="dv">2200000</span> <span class="dv">4500000</span> <span class="dv">3300000</span> <span class="dv">8200000</span> <span class="dv">8300000</span> <span class="dv">14800000</span> <span class="dv">5700000</span> <span class="dv">800000</span> <span class="dv">1400000</span> ...</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> luxury_assets_value     <span class="sc">:</span> int  <span class="dv">22700000</span> <span class="dv">8800000</span> <span class="dv">33300000</span> <span class="dv">23300000</span> <span class="dv">29400000</span> <span class="dv">13700000</span> <span class="dv">29200000</span> <span class="dv">11800000</span> <span class="dv">2800000</span> <span class="dv">3300000</span> ...</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> bank_asset_value        <span class="sc">:</span> int  <span class="dv">8000000</span> <span class="dv">3300000</span> <span class="dv">12800000</span> <span class="dv">7900000</span> <span class="dv">5000000</span> <span class="dv">5100000</span> <span class="dv">4300000</span> <span class="dv">6000000</span> <span class="dv">600000</span> <span class="dv">1600000</span> ...</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> loan_status             <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"approved"</span>,<span class="st">"rejected"</span><span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The <code>loan</code> dataset contains financial and demographic information relevant to loan approval decisions. Because it combines categorical and continuous predictors in a binary classification setting, it provides a useful example for illustrating how Naive Bayes can be applied to lending-related problems. The dataset also includes <code>loan_id</code>, which serves only as an identifier and is therefore excluded from the analysis.</p>
+<p>The predictors used in this analysis are <code>no_of_dependents</code> (number of dependents), <code>education</code> (education level), <code>self_employed</code> (whether the applicant is self-employed), <code>income_annum</code> (annual income), <code>loan_amount</code> (requested loan amount), <code>loan_term</code> (loan duration), <code>cibil_score</code> (credit score), <code>residential_assets_value</code> (value of residential assets), <code>commercial_assets_value</code> (value of commercial assets), <code>luxury_assets_value</code> (value of luxury assets), and <code>bank_asset_value</code> (value of bank-held assets). The outcome variable is <code>loan_status</code>, which indicates whether an application was <code>approved</code> or <code>rejected</code>.</p>
+<p>To obtain a concise numerical overview and check for missing values or obvious anomalies, we then examine the summary statistics:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(loan)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>       loan_id     no_of_dependents        education    self_employed  income_annum      loan_amount         loan_term   </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    Min.   <span class="sc">:</span>   <span class="dv">1</span>   Min.   <span class="sc">:</span><span class="fl">0.000</span>    graduate    <span class="sc">:</span><span class="dv">2144</span>   no <span class="sc">:</span><span class="dv">2119</span>      Min.   <span class="sc">:</span> <span class="dv">200000</span>   Min.   <span class="sc">:</span>  <span class="dv">300000</span>   Min.   <span class="sc">:</span> <span class="fl">2.0</span>  </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span>st Qu.<span class="sc">:</span><span class="dv">1068</span>   <span class="dv">1</span>st Qu.<span class="sc">:</span><span class="fl">1.000</span>    not<span class="sc">-</span>graduate<span class="sc">:</span><span class="dv">2125</span>   yes<span class="sc">:</span><span class="dv">2150</span>      <span class="dv">1</span>st Qu.<span class="sc">:</span><span class="dv">2700000</span>   <span class="dv">1</span>st Qu.<span class="sc">:</span> <span class="dv">7700000</span>   <span class="dv">1</span>st Qu.<span class="sc">:</span> <span class="fl">6.0</span>  </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    Median <span class="sc">:</span><span class="dv">2135</span>   Median <span class="sc">:</span><span class="fl">3.000</span>                                      Median <span class="sc">:</span><span class="dv">5100000</span>   Median <span class="sc">:</span><span class="dv">14500000</span>   Median <span class="sc">:</span><span class="fl">10.0</span>  </span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    Mean   <span class="sc">:</span><span class="dv">2135</span>   Mean   <span class="sc">:</span><span class="fl">2.499</span>                                      Mean   <span class="sc">:</span><span class="dv">5059124</span>   Mean   <span class="sc">:</span><span class="dv">15133450</span>   Mean   <span class="sc">:</span><span class="fl">10.9</span>  </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="dv">3202</span>   <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="fl">4.000</span>                                      <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="dv">7500000</span>   <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="dv">21500000</span>   <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="fl">16.0</span>  </span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    Max.   <span class="sc">:</span><span class="dv">4269</span>   Max.   <span class="sc">:</span><span class="fl">5.000</span>                                      Max.   <span class="sc">:</span><span class="dv">9900000</span>   Max.   <span class="sc">:</span><span class="dv">39500000</span>   Max.   <span class="sc">:</span><span class="fl">20.0</span>  </span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>     cibil_score    residential_assets_value commercial_assets_value luxury_assets_value bank_asset_value  </span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    Min.   <span class="sc">:</span><span class="fl">300.0</span>   Min.   <span class="sc">:</span> <span class="sc">-</span><span class="dv">100000</span>         Min.   <span class="sc">:</span>       <span class="dv">0</span>        Min.   <span class="sc">:</span>  <span class="dv">300000</span>    Min.   <span class="sc">:</span>       <span class="dv">0</span>  </span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span>st Qu.<span class="sc">:</span><span class="fl">453.0</span>   <span class="dv">1</span>st Qu.<span class="sc">:</span> <span class="dv">2200000</span>         <span class="dv">1</span>st Qu.<span class="sc">:</span> <span class="dv">1300000</span>        <span class="dv">1</span>st Qu.<span class="sc">:</span> <span class="dv">7500000</span>    <span class="dv">1</span>st Qu.<span class="sc">:</span> <span class="dv">2300000</span>  </span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    Median <span class="sc">:</span><span class="fl">600.0</span>   Median <span class="sc">:</span> <span class="dv">5600000</span>         Median <span class="sc">:</span> <span class="dv">3700000</span>        Median <span class="sc">:</span><span class="dv">14600000</span>    Median <span class="sc">:</span> <span class="dv">4600000</span>  </span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    Mean   <span class="sc">:</span><span class="fl">599.9</span>   Mean   <span class="sc">:</span> <span class="dv">7472616</span>         Mean   <span class="sc">:</span> <span class="dv">4973155</span>        Mean   <span class="sc">:</span><span class="dv">15126306</span>    Mean   <span class="sc">:</span> <span class="dv">4976692</span>  </span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="fl">748.0</span>   <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="dv">11300000</span>         <span class="dv">3</span>rd Qu.<span class="sc">:</span> <span class="dv">7600000</span>        <span class="dv">3</span>rd Qu.<span class="sc">:</span><span class="dv">21700000</span>    <span class="dv">3</span>rd Qu.<span class="sc">:</span> <span class="dv">7100000</span>  </span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    Max.   <span class="sc">:</span><span class="fl">900.0</span>   Max.   <span class="sc">:</span><span class="dv">29100000</span>         Max.   <span class="sc">:</span><span class="dv">19400000</span>        Max.   <span class="sc">:</span><span class="dv">39200000</span>    Max.   <span class="sc">:</span><span class="dv">14700000</span>  </span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>      loan_status  </span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    approved<span class="sc">:</span><span class="dv">2656</span>  </span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    rejected<span class="sc">:</span><span class="dv">1613</span>  </span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>                   </span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>                   </span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>                   </span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>   </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Inspect the output of <code>summary(loan)</code> and identify which variables are categorical and which are numerical. Which predictors appear to have especially wide ranges, and how might that matter for other classification methods such as kNN?</p>
+</blockquote>
+<p>These outputs indicate that the dataset is well structured and suitable for modeling. No obvious missing-value problems or major irregularities are visible in the variables used here, so we proceed to data setup and model training without additional preprocessing.</p>
+</section><section id="data-setup-for-modeling" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="data-setup-for-modeling">Data Setup for Modeling</h3>
+<p>Before training the Naive Bayes classifier, we partition the dataset into training and test sets so that we can evaluate how well the model generalizes to unseen data. We use an 80/20 split, with 80% of the observations assigned to the training set and 20% to the test set. To remain consistent with earlier chapters, we use the <code>partition()</code> function from the <strong>liver</strong> package:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">splits</span> <span class="op">=</span> <span class="fu">partition</span><span class="op">(</span>data <span class="op">=</span> <span class="va">loan</span>, ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.8</span>, <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">train_set</span> <span class="op">=</span> <span class="va">splits</span><span class="op">$</span><span class="va">part1</span></span>
+<span><span class="va">test_set</span>  <span class="op">=</span> <span class="va">splits</span><span class="op">$</span><span class="va">part2</span></span>
+<span></span>
+<span><span class="va">test_labels</span> <span class="op">=</span> <span class="va">test_set</span><span class="op">$</span><span class="va">loan_status</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Setting <code>set.seed(42)</code> ensures that the same random partition is obtained each time the code is run. The training set is used to estimate the Naive Bayes model, while the test set is reserved for evaluating predictive performance on unseen data. The vector <code>test_labels</code> stores the true class labels for the observations in the test set.</p>
+<p>As discussed in Section <a href="6-Setup-data.html#sec-ch6-cross-validation" class="quarto-xref"><span>6.2</span></a>, it is good practice to check whether the training and test sets remain reasonably comparable after partitioning, especially with respect to the outcome variable. In this chapter, we proceed directly to modeling, but this validation step is recommended in applied work.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Verify whether the class distribution of <code>loan_status</code> remains similar across the training and test sets. You may do this by comparing the proportion of approved applications in the two sets using a two-sample proportion test.</p>
+</blockquote>
+<p>Unlike distance-based methods such as <em>k</em>-Nearest Neighbors, Naive Bayes does not rely on geometric distance calculations. As a result, there is no need to scale numerical variables such as <code>income_annum</code>, <code>loan_amount</code>, or <code>cibil_score</code>, nor is it necessary to convert categorical variables such as <code>education</code> and <code>self_employed</code> into dummy variables. Naive Bayes models class-conditional distributions directly and can therefore handle mixed predictor types without these additional transformations. This contrasts with methods such as kNN, for which scaling and encoding are essential parts of data preparation.</p>
+</section><section id="applying-the-naive-bayes-classifier" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="applying-the-naive-bayes-classifier">Applying the Naive Bayes Classifier</h3>
+<p>With the dataset partitioned, we now train the Naive Bayes classifier. This model is well suited to loan approval classification because it is computationally efficient, interpretable, and able to handle a mix of categorical and numerical predictors.</p>
+<p>Several R packages implement Naive Bayes, including <strong>naivebayes</strong> and <strong>e1071</strong>. In this case study, we use the <strong>naivebayes</strong> package, which provides a flexible implementation for classification with mixed predictor types. During training, the <code><a href="https://majkamichal.github.io/naivebayes/reference/naive_bayes.html">naive_bayes()</a></code> function estimates the class-conditional distributions required for prediction and stores the results in a model object.</p>
+<p>Unlike instance-based methods such as <em>k</em>-Nearest Neighbors (see Chapter <a href="7-Classification-kNN.html" class="quarto-xref"><span>7</span></a>), Naive Bayes has an explicit training stage followed by a prediction stage. During training, the model estimates the distribution of each predictor within each class. During prediction, these estimates are combined using Bayes’ theorem to compute posterior class probabilities for new observations.</p>
+<p>To train the model, we specify a formula in which <code>loan_status</code> is the outcome variable and all remaining variables, except <code>loan_id</code>, are used as predictors:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">formula</span> <span class="op">&lt;-</span> <span class="va">loan_status</span> <span class="op">~</span> <span class="va">.</span> <span class="op">-</span> <span class="va">loan_id</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We then fit the model using the <code><a href="https://majkamichal.github.io/naivebayes/reference/naive_bayes.html">naive_bayes()</a></code> function:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/majkamichal/naivebayes">naivebayes</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">nb_model</span> <span class="op">=</span> <span class="fu"><a href="https://majkamichal.github.io/naivebayes/reference/naive_bayes.html">naive_bayes</a></span><span class="op">(</span><span class="va">formula</span>, data <span class="op">=</span> <span class="va">train_set</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The function automatically determines how to model each predictor based on its type. Categorical variables such as <code>education</code> and <code>self_employed</code> are represented through class-conditional probabilities, whereas numerical variables such as <code>income_annum</code>, <code>loan_amount</code>, <code>cibil_score</code>, and the asset-related variables are modeled using Gaussian distributions by default.</p>
+<p>To inspect the fitted model, we can examine a summary of its estimated parameters:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(nb_model)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>   <span class="sc">==</span><span class="er">===================================================</span> Naive Bayes <span class="sc">==</span><span class="er">====================================================</span> </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>   <span class="sc">-</span> Call<span class="sc">:</span> <span class="fu">naive_bayes.formula</span>(<span class="at">formula =</span> formula, <span class="at">data =</span> train_set) </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>   <span class="sc">-</span> Laplace<span class="sc">:</span> <span class="dv">0</span> </span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>   <span class="sc">-</span> Classes<span class="sc">:</span> <span class="dv">2</span> </span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>   <span class="sc">-</span> Samples<span class="sc">:</span> <span class="dv">3415</span> </span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>   <span class="sc">-</span> Features<span class="sc">:</span> <span class="dv">12</span> </span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>   <span class="sc">-</span> Conditional distributions<span class="sc">:</span> </span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>       <span class="sc">-</span> Bernoulli<span class="sc">:</span> <span class="dv">2</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>       <span class="sc">-</span> Gaussian<span class="sc">:</span> <span class="dv">10</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>   <span class="sc">-</span> Prior probabilities<span class="sc">:</span> </span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>       <span class="sc">-</span> approved<span class="sc">:</span> <span class="fl">0.6214</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>       <span class="sc">-</span> rejected<span class="sc">:</span> <span class="fl">0.3786</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>   <span class="sc">------------------------------------------------------------------------------------------------------------------------</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This output reports the estimated means and standard deviations for numerical predictors, together with the conditional probabilities for categorical predictors. These estimates form the basis of the posterior probability calculations used for classification. For a more detailed view, we can print the full model object using <code>print(nb_model)</code>, although the resulting output can be quite extensive.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Split the <code>loan</code> dataset into 70% training data and 30% test data, then fit a Naive Bayes classifier following the same steps as in this subsection. Inspect the fitted model using <code>print(nb_model)</code> and compare the estimated distributions with those obtained from the 80%–20% split. What differences, if any, do you observe?</p>
+</blockquote>
+</section><section id="prediction-and-model-evaluation" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="prediction-and-model-evaluation">Prediction and Model Evaluation</h3>
+<p>With the Naive Bayes classifier trained, we now apply it to the test set and evaluate its predictive performance. We begin by examining the predicted class probabilities returned by the model and then assess classification quality using two complementary approaches: a confusion matrix at a fixed threshold and threshold-independent evaluation based on the ROC curve and AUC.</p>
+<p>To obtain posterior probabilities for each class, we use the <code><a href="https://rdrr.io/r/stats/predict.html">predict()</a></code> function from the <strong>naivebayes</strong> package and set <code>type = "prob"</code> so that the model returns probabilities rather than hard class assignments:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">prob_naive_bayes</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">nb_model</span>, <span class="va">test_set</span>, type <span class="op">=</span> <span class="st">"prob"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To inspect the output, we display the first six rows and round the probabilities to three decimal places:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">head</span>(prob_naive_bayes, <span class="at">n =</span> <span class="dv">6</span>), <span class="dv">3</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>        approved rejected</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">1</span>,]    <span class="fl">0.037</span>    <span class="fl">0.963</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">2</span>,]    <span class="fl">0.021</span>    <span class="fl">0.979</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">3</span>,]    <span class="fl">0.689</span>    <span class="fl">0.311</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">4</span>,]    <span class="fl">1.000</span>    <span class="fl">0.000</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">5</span>,]    <span class="fl">0.029</span>    <span class="fl">0.971</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">6</span>,]    <span class="fl">0.990</span>    <span class="fl">0.010</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The resulting matrix contains one column for each possible outcome. The first column reports the estimated probability of <code>approved</code>, and the second reports the probability of <code>rejected</code>. These probabilities provide more information than a single predicted label because they indicate how strongly the model favors one class over the other. For example, an application with a very high predicted probability of <code>rejected</code> is classified with greater confidence than one with probabilities close to 0.5.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Inspect the predicted probabilities in <code>prob_naive_bayes</code>. Identify one application that is assigned a high probability of <code>rejected</code> and one application with a predicted probability close to 0.5. How would your confidence in the classification differ in these two cases, and why?</p>
+</blockquote>
+<p>Importantly, Naive Bayes does not require a fixed decision threshold. Instead, posterior probabilities can be converted into class predictions using a threshold chosen to reflect specific practical goals, such as being more cautious when rejecting applications or more inclusive when approving them. In the next subsection, we translate these probabilities into class labels and evaluate model performance using a confusion matrix and additional metrics introduced in Chapter <a href="8-Model-evaluation.html" class="quarto-xref"><span>8</span></a>.</p>
+<section id="confusion-matrix" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="confusion-matrix">Confusion Matrix</h4>
+<p>To evaluate the classification performance of the Naive Bayes model, we compute a confusion matrix using the <code>conf.mat()</code> and <code>conf.mat.plot()</code> functions from the <strong>liver</strong> package:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract probability of "approved"</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>prob_naive_bayes <span class="ot">=</span> prob_naive_bayes[, <span class="st">"approved"</span>] </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">conf.mat</span>(prob_naive_bayes, test_labels, <span class="at">cutoff =</span> <span class="fl">0.5</span>, <span class="at">reference =</span> <span class="st">"approved"</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>             Predict</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>   Actual     approved rejected</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>     approved      <span class="dv">508</span>       <span class="dv">26</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>     rejected       <span class="dv">39</span>      <span class="dv">281</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="fu">conf.mat.plot</span>(prob_naive_bayes, test_labels, <span class="at">cutoff =</span> <span class="fl">0.5</span>, <span class="at">reference =</span> <span class="st">"approved"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="9-Naive-Bayes_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:30.0%" data-fig-pos="H"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Here, we use a decision threshold of 0.5, classifying an application as <code>approved</code> if its predicted probability of approval exceeds 50%. This threshold is a modeling choice rather than a fixed property of the algorithm. The reference class is set to <code>approved</code>, meaning that performance measures such as sensitivity and precision are computed with respect to correctly identifying approved applications.</p>
+<p>The confusion matrix compares the predicted class labels with the observed outcomes, separating correct classifications from different types of errors. In this setting, the matrix shows how often the model correctly identifies approved and rejected applications, as well as how often it makes false approvals or false rejections. These distinctions are important in lending, because the practical consequences of approving a risky application differ from those of rejecting an application that might otherwise have been accepted.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Explore how changing the classification threshold affects model performance. Repeat the analysis using cutoff values such as 0.4 and 0.6, and examine how sensitivity, specificity, and overall accuracy change. What trade-offs emerge as the threshold is adjusted?</p>
+</blockquote>
+</section><section id="roc-curve-and-auc" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="roc-curve-and-auc">ROC Curve and AUC</h4>
+<p>To complement the confusion matrix, we evaluate the Naive Bayes classifier using the <em>Receiver Operating Characteristic (ROC) curve</em> and the <em>Area Under the Curve (AUC)</em>. Unlike the confusion matrix, which summarizes performance at a single decision threshold, ROC analysis evaluates model performance across all possible thresholds and therefore provides a threshold-independent perspective.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://xrobin.github.io/pROC/">pROC</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org">ggplot2</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">roc_naive_bayes</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/pROC/man/roc.html">roc</a></span><span class="op">(</span><span class="va">test_labels</span>, <span class="va">prob_naive_bayes</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/pROC/man/ggroc.html">ggroc</a></span><span class="op">(</span><span class="va">roc_naive_bayes</span>, size <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">ggtitle</a></span><span class="op">(</span><span class="st">"ROC Curve for Naive Bayes"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="9-Naive-Bayes_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" data-fig-pos="H"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The ROC curve plots the <em>true positive rate</em> (sensitivity) against the <em>false positive rate</em> (<span class="math inline">\(1 -\)</span> specificity) as the classification threshold varies. Curves that bend closer to the top-left corner indicate stronger discriminative ability, reflecting high sensitivity combined with a low false positive rate.</p>
+<p>To summarize this information in a single number, we compute the AUC:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">auc</span>(roc_naive_bayes), <span class="dv">3</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>   [<span class="dv">1</span>] <span class="fl">0.967</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The AUC value, 0.967, measures the model’s ability to distinguish between approved and rejected applications. It can be interpreted as the probability that a randomly selected approved application receives a higher predicted probability of approval than a randomly selected rejected application. An AUC of 1 corresponds to perfect discrimination, whereas an AUC of 0.5 indicates performance no better than random guessing.</p>
+<p>Taken together, the ROC curve and AUC provide a concise and threshold-independent assessment of classification performance. They are especially useful when we want to compare classifiers or evaluate predictive quality without committing to a single cutoff value.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Using a 70%–30% train–test split, refit the Naive Bayes classifier and report the corresponding ROC curve and AUC value. How do these results compare with those obtained using the 80%–20% split? Briefly comment on any differences you observe.</p>
+</blockquote>
+</section></section></section><section id="chapter-summary-and-takeaways" class="level2" data-number="9.7"><h2 data-number="9.7" class="anchored" data-anchor-id="chapter-summary-and-takeaways">
+<span class="header-section-number">9.7</span> Chapter Summary and Takeaways</h2>
+<p>This chapter introduced the Naive Bayes classifier as an efficient and interpretable approach to probabilistic classification. Grounded in Bayes’ theorem, the method estimates the probability that an observation belongs to a given class by combining prior information with observed predictor values. We first examined the probabilistic foundation of the method through Bayes’ theorem and then showed how this idea leads naturally to a practical classification rule based on posterior probabilities.</p>
+<p>We then explained the simplifying assumption that gives Naive Bayes its name: predictors are treated as conditionally independent given the outcome. Although this assumption rarely holds exactly in practice, it greatly reduces computational complexity and often yields useful predictive performance. We also examined three common variants of the method, Bernoulli, Multinomial, and Gaussian Naive Bayes, each suited to different types of predictors, and discussed how Laplace smoothing helps prevent zero probabilities when feature values are rare or absent in the training data.</p>
+<p>Through a case study using the <code>loan</code> dataset from the <strong>liver</strong> package, we applied Naive Bayes in R to predict whether a loan application would be <code>approved</code> or <code>rejected</code>. We trained the model, generated predicted probabilities, evaluated performance using confusion matrices, ROC curves, and AUC, and interpreted the results in the context of threshold-based decision-making.</p>
+<p>A key takeaway from this chapter is that Naive Bayes treats classification as a probabilistic decision problem rather than a purely categorical one. Its conditional independence assumption represents a deliberate trade-off: the model sacrifices flexibility in order to gain computational efficiency, simplicity, and interpretability. As the case study showed, the practical value of Naive Bayes depends not only on predictive performance, but also on how probability thresholds are chosen to reflect the goals and costs of the application domain.</p>
+<p>The next chapter introduces <em>logistic regression</em>, a discriminative model that approaches classification from a different perspective. Instead of modeling class probabilities through conditional distributions of the predictors, logistic regression models the log-odds of class membership directly. This provides a useful complement to Naive Bayes, particularly when the effects of individual predictors and the interpretation of model coefficients are of central interest.</p>
+</section><section id="sec-ch9-exercises" class="level2" data-number="9.8"><h2 data-number="9.8" class="anchored" data-anchor-id="sec-ch9-exercises">
+<span class="header-section-number">9.8</span> Exercises</h2>
+<p>The following exercises are designed to strengthen your understanding of the Naive Bayes classifier and its practical applications. They progress from conceptual questions that test your grasp of probabilistic reasoning and model assumptions, to hands-on analyses using the <code>churn_mlc</code> and <code>churn</code> datasets from the <strong>liver</strong> package. Together, these tasks guide you through data preparation, model training, evaluation, and interpretation—helping you connect theoretical principles to real-world predictive modeling.</p>
+<section id="conceptual-questions" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="conceptual-questions">Conceptual Questions</h4>
+<ol type="1">
+<li><p>Why is Naive Bayes considered a probabilistic classification model?</p></li>
+<li><p>What is the difference between prior probability, likelihood, and posterior probability in Bayes’ theorem?</p></li>
+<li><p>What does it mean that Naive Bayes assumes feature independence?</p></li>
+<li><p>In which situations does the feature independence assumption become problematic? Provide an example.</p></li>
+<li><p>What are the main strengths of Naive Bayes? Why is it widely used in text classification and spam filtering?</p></li>
+<li><p>What are its major limitations, and how do they affect performance?</p></li>
+<li><p>How does Laplace smoothing prevent zero probabilities in Naive Bayes? <em>Hint: See Section <a href="#sec-ch9-laplace" class="quarto-xref"><span>9.5</span></a>.</em></p></li>
+<li><p>When should you use multinomial, Bernoulli, or Gaussian Naive Bayes? <em>Hint: See Section <a href="#sec-ch9-types" class="quarto-xref"><span>9.4</span></a>.</em></p></li>
+<li><p>Compare Naive Bayes to k-Nearest Neighbors (Chapter <a href="7-Classification-kNN.html" class="quarto-xref"><span>7</span></a>). How do their assumptions differ?</p></li>
+<li><p>How does changing the probability threshold affect predictions and evaluation metrics?</p></li>
+<li><p>Why can Naive Bayes remain effective even when the independence assumption is violated?</p></li>
+<li><p>What dataset characteristics typically cause Naive Bayes to perform poorly?</p></li>
+<li><p>How does Gaussian Naive Bayes handle continuous variables?</p></li>
+<li><p>How can domain knowledge improve Naive Bayes results?</p></li>
+<li><p>How does Naive Bayes handle imbalanced datasets? What preprocessing strategies help?</p></li>
+<li><p>How can prior probabilities be adjusted to reflect business priorities?</p></li>
+</ol></section><section id="hands-on-practice-naive-bayes-with-the-churn_mlc-dataset" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="hands-on-practice-naive-bayes-with-the-churn_mlc-dataset">Hands-On Practice: Naive Bayes with the <code>churn_mlc</code> Dataset</h4>
+<p>The <code>churn_mlc</code> dataset from the <strong>liver</strong> package contains information about customer subscriptions. The goal is to predict whether a customer will churn (<code>churn = yes/no</code>) using Naive Bayes. See Section <a href="4-Exploratory-data-analysis.html#sec-ch4-EDA-churn" class="quarto-xref"><span>4.3</span></a> for prior exploration.</p>
+<section id="data-setup-for-modeling-1" class="level5 unnumbered unlisted"><h5 class="unnumbered unlisted anchored" data-anchor-id="data-setup-for-modeling-1">Data Setup for Modeling</h5>
+<ol start="17" type="1">
+<li><p>Load the dataset and inspect its structure.</p></li>
+<li><p>Summarize key variables and their distributions.</p></li>
+<li><p>Partition the data into 80% training and 20% test sets using <code>partition()</code> from <strong>liver</strong>.</p></li>
+<li><p>Confirm that the class distribution of <code>churn</code> is similar across both sets.</p></li>
+</ol></section><section id="training-and-evaluation" class="level5 unnumbered unlisted"><h5 class="unnumbered unlisted anchored" data-anchor-id="training-and-evaluation">Training and Evaluation</h5>
+<ol start="21" type="1">
+<li>Define the model formula:</li>
+</ol>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">formula</span> <span class="op">=</span> <span class="va">churn</span> <span class="op">~</span> <span class="va">account_length</span> <span class="op">+</span> <span class="va">voice_plan</span> <span class="op">+</span> <span class="va">voice_messages</span> <span class="op">+</span></span>
+<span>                 <span class="va">intl_plan</span> <span class="op">+</span> <span class="va">intl_mins</span> <span class="op">+</span> <span class="va">day_mins</span> <span class="op">+</span> <span class="va">eve_mins</span> <span class="op">+</span></span>
+<span>                 <span class="va">night_mins</span> <span class="op">+</span> <span class="va">customer_calls</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<ol start="22" type="1">
+<li><p>Train a Naive Bayes model using the <strong>naivebayes</strong> package.</p></li>
+<li><p>Summarize the model and interpret class-conditional probabilities.</p></li>
+<li><p>Predict class probabilities for the test set.</p></li>
+<li><p>Display the first ten predictions and interpret churn likelihoods.</p></li>
+<li><p>Generate a confusion matrix with <code>conf.mat()</code> using a 0.5 threshold.</p></li>
+<li><p>Visualize it with <code>conf.mat.plot()</code> from <strong>liver</strong>.</p></li>
+<li><p>Compute accuracy, precision, recall, and F1-score.</p></li>
+<li><p>Adjust the threshold to 0.3 and observe the change in performance metrics.</p></li>
+<li><p>Plot the ROC curve and compute AUC.</p></li>
+<li><p>Retrain the model with Laplace smoothing (<code>laplace = 1</code>) and compare results.</p></li>
+<li><p>Compare the Naive Bayes model to k-Nearest Neighbors using identical partitions.</p></li>
+<li><p>Remove one predictor at a time and re-evaluate model performance.</p></li>
+<li><p>Diagnose poor performance on subsets of data: could it stem from class imbalance or correlated features?</p></li>
+</ol></section></section><section id="hands-on-practice-naive-bayes-with-the-churn-dataset" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="hands-on-practice-naive-bayes-with-the-churn-dataset">Hands-On Practice: Naive Bayes with the <code>churn</code> Dataset</h4>
+<p>The <code>churn</code> dataset from the <strong>liver</strong> package contains 10,127 customer records and 21 variables combining churn, credit, and demographic features. It allows you to evaluate how financial and behavioral variables jointly affect churn.</p>
+<section id="data-setup-for-modeling-2" class="level5 unnumbered unlisted"><h5 class="unnumbered unlisted anchored" data-anchor-id="data-setup-for-modeling-2">Data Setup for Modeling</h5>
+<ol start="35" type="1">
+<li><p>Load the dataset and report its structure.</p></li>
+<li><p>Inspect the structure and summary statistics. Identify the target variable (<code>churn</code>) and main predictors.</p></li>
+<li><p>Partition the data into 80% training and 20% test sets using <code>partition()</code> from <strong>liver</strong>.</p></li>
+<li><p>Verify that the class distribution of <code>churn</code> is consistent between the training and test sets.</p></li>
+</ol></section><section id="training-and-evaluation-1" class="level5 unnumbered unlisted"><h5 class="unnumbered unlisted anchored" data-anchor-id="training-and-evaluation-1">Training and Evaluation</h5>
+<ol start="39" type="1">
+<li><p>Define a model formula with predictors such as <code>credit.score</code>, <code>age</code>, <code>tenure</code>, <code>balance</code>, <code>products.number</code>, <code>credit.card</code>, and <code>active.member</code>.</p></li>
+<li><p>Train a Naive Bayes classifier using the <strong>naivebayes</strong> package.</p></li>
+<li><p>Summarize the model and interpret key conditional probabilities.</p></li>
+<li><p>Predict outcomes for the test set and generate a confusion matrix with a 0.5 threshold.</p></li>
+<li><p>Compute evaluation metrics: accuracy, precision, recall, and F1-score.</p></li>
+<li><p>Plot the ROC curve and compute AUC.</p></li>
+<li><p>Retrain the model with Laplace smoothing (<code>laplace = 1</code>) and compare results.</p></li>
+<li><p>Adjust the classification threshold to 0.3 and note changes in sensitivity and specificity.</p></li>
+<li><p>Identify any predictors that might violate the independence assumption and discuss their potential effects on model performance.</p></li>
+</ol></section><section id="reflection" class="level5 unnumbered unlisted"><h5 class="unnumbered unlisted anchored" data-anchor-id="reflection">Reflection</h5>
+<ol start="48" type="1">
+<li><p>Compare results with the <code>churn_mlc</code> dataset. Does adding financial information improve predictive accuracy?</p></li>
+<li><p>How could this model support retention or credit risk management strategies?</p></li>
+<li><p>Identify the top three most influential predictors using feature importance or conditional probabilities. Do they differ from the most influential features in the <code>churn_mlc</code> dataset? What might this reveal about customer behavior?</p></li>
+</ol></section></section><section id="critical-thinking" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="critical-thinking">Critical Thinking</h4>
+<ol start="51" type="1">
+<li><p>How could a company use this model to inform business decisions related to churn?</p></li>
+<li><p>If false negatives are costlier than false positives, how should the decision threshold be adjusted?</p></li>
+<li><p>How might you use this model to target promotions for likely churners?</p></li>
+<li><p>Suppose a new feature, <em>customer satisfaction score</em>, were added. How could it improve predictions?</p></li>
+<li><p>How would you address poor model performance on new data?</p></li>
+<li><p>How might feature correlation affect Naive Bayes reliability?</p></li>
+<li><p>How could Naive Bayes be extended to handle multi-class classification problems?</p></li>
+<li><p>Would Naive Bayes be suitable for time-series churn data? Why or why not?</p></li>
+</ol></section><section id="self-reflection" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="self-reflection">Self-Reflection</h4>
+<ol start="59" type="1">
+<li><p>Summarize the main strengths and limitations of Naive Bayes in your own words.</p></li>
+<li><p>How did the independence assumption influence your understanding of model behavior?</p></li>
+<li><p>Which stage—data preparation, training, or evaluation—most enhanced your understanding of Naive Bayes?</p></li>
+<li><p>How confident are you in applying Naive Bayes to datasets with mixed data types?</p></li>
+<li><p>Which extension would you explore next: smoothing, alternative distributions, or correlated features?</p></li>
+<li><p>Compared to models like kNN or logistic regression, when is Naive Bayes preferable, and why?</p></li>
+<li><p>Reflect on how Naive Bayes connects back to the broader Data Science Workflow. At which stage does its simplicity provide the greatest advantage?</p></li>
+</ol>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-bayes1958essay" class="csl-entry" role="listitem">
+Bayes, Thomas. 1958. <em>Essay Toward Solving a Problem in the Doctrine of Chances</em>. Biometrika Office.
+</div>
+</div>
+</section></section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/book-data-science-r\.netlify\.app");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./8-Model-evaluation.html" class="pagination-link" aria-label="Model Evaluation and Performance Assessment">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Model Evaluation and Performance Assessment</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./10-Regression.html" class="pagination-link" aria-label="Regression Analysis: Linear and Nonlinear Models">
+        <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Regression Analysis: Linear and Nonlinear Models</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Data Science Foundations and Machine Learning with R was written by <a href="https://www.uva.nl/profile/a.mohammadi"><span style="color:#0056B3">Reza Mohammadi</span></a>.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/edit/main/9-Naive-Bayes.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>This book was built with <a href="https://quarto.org/">Quarto</a>.</p>
+</div>
+  </div>
+</footer>
+
+
+</body></html>
