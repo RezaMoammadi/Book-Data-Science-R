@@ -22,7 +22,7 @@ Divide each difficulty into as many parts as is feasible and necessary to resolv
 ::::
 :::::
 
-In real-world settings, data rarely arrive in a clean, analysis-ready format. It often contains missing values, extreme observations, inconsistent entries, and nonstandard codes that reflect how data were collected rather than how they will be analyzed. While curated teaching datasets are useful for learning, they can give the misleading impression that data science begins only after the difficult preparation work has already been done.
+In real-world settings, data rarely arrive in a clean, analysis-ready format. They often contain missing values, extreme observations, inconsistent entries, and nonstandard codes that reflect how they were collected rather than how they will be analyzed. While curated teaching datasets are useful for learning, they can give the misleading impression that data science begins only after the difficult preparation work has already been done.
 
 This chapter focuses on data preparation as a core stage of the Data Science Workflow. Regardless of how sophisticated a statistical method or machine learning algorithm may be, its results depend on the quality, consistency, and structure of the data used to train or evaluate it. Preparing data is therefore not a peripheral technical step, but an analytical activity that shapes model performance, interpretability, and credibility.
 
@@ -32,11 +32,9 @@ Data preparation naturally overlaps with later stages of the workflow, but the f
 
 ### What This Chapter Covers {.unnumbered .unlisted}
 
-This chapter develops data preparation as a sequence of practical decisions that make a dataset more coherent, reliable, and suitable for later analysis. We begin by examining feature types and how they are represented in R, since preparation choices depend on whether variables are numerical, categorical, ordinal, or binary. We then turn to outliers and implausible values, distinguishing rare but meaningful observations from values that are likely to reflect data errors.
+This chapter develops data preparation as a sequence of practical decisions that make a dataset more coherent, reliable, and suitable for later analysis. We begin with feature types and their representation in R, then examine outliers and implausible values, distinguishing rare but meaningful observations from values that likely reflect data errors.
 
-The next part of the chapter focuses on missing values. We discuss how missing values may appear in R, why nonstandard placeholder codes must be recognized explicitly, and how simple imputation methods can be used to complete a dataset while preserving its meaning as far as possible. Finally, we apply these ideas in a case study on the `adult` dataset, where missing values, sparse categorical features, and skewed numerical variables arise together in a realistic prediction context.
-
-The chapter uses two datasets for complementary purposes. The `diamonds` dataset from the **ggplot2** package provides a controlled setting for illustrating individual preparation techniques. The `adult` dataset from the **liver** package then shows how these techniques can be combined in an end-to-end workflow. Together, these examples show how data preparation transforms raw data into a coherent, documented, and analytically useful form before exploratory analysis and modeling begin.
+We then turn to missing values, placeholder codes, and imputation strategies, including median imputation and random sampling imputation. The chapter also discusses how sparse or high-cardinality categorical features can be simplified when they create unnecessary complexity. We use the `diamonds` dataset from the **ggplot2** package to illustrate individual preparation techniques and the `adult` dataset from the **liver** package to show how these techniques can be combined in a more realistic workflow. Together, these examples show how data preparation transforms raw data into a documented and analytically useful form before exploratory analysis and modeling begin.
 
 ## Feature Types and Data Representation {#sec-ch3-feature-types}
 
@@ -59,21 +57,19 @@ The categorical variables `cut`, `color`, and `clarity` describe quality ratings
 
 ### Numerical and Categorical Features {.unnumbered .unlisted}
 
-At a high level, most features used in data science can be grouped into two broad types: numerical and categorical variables. Each of these can be divided into common subtypes. Figure [-@fig-ch3-feature-type] summarizes this classification.
+At a high level, most features used in data science can be grouped into two broad types: numerical and categorical features. Each type can be divided into common subtypes. Figure [-@fig-ch3-feature-type] summarizes this classification.
 
 ```{r fig-ch3-feature-type, echo = FALSE, out.width = "60%"}
-#| fig-cap: "Overview of common feature types used in data analysis, including numerical (continuous and discrete) and categorical (ordinal, nominal, and binary) variables."
+#| fig-cap: "Overview of common feature types used in data analysis, including numerical (continuous and discrete) and categorical (ordinal, nominal, and binary) features."
 
 knitr::include_graphics("images/ch3_feature_type.png")
 ```
 
-Numerical features represent measurable quantities. Continuous variables can take many possible values within a range, such as diamond price, carat weight, or physical dimensions. Discrete numerical variables take countable values, often integers, such as the number of purchases, website visits, or product defects. Although the `diamonds` dataset does not contain discrete numerical features, such variables are common in applied data science.
+Numerical features represent measurable quantities. Continuous features can take many possible values within a range, such as diamond price, carat weight, or physical dimensions. Discrete numerical features take countable values, often integers, such as the number of purchases, website visits, or product defects. Although the `diamonds` dataset does not contain discrete numerical features, such features are common in applied data science.
 
-In more detailed statistical terminology, numerical variables are sometimes described as interval or ratio variables. Interval variables have meaningful differences but no true zero point, such as temperature measured in degrees Celsius. Ratio variables have both meaningful differences and a meaningful zero point, such as price, weight, length, or duration. Most numerical variables used in this chapter, including `price`, `carat`, and the physical dimensions of diamonds, are ratio variables. For data preparation, however, the broader distinction between numerical and categorical features is usually the most important starting point.
+Categorical features describe group membership rather than numerical magnitude. Nominal features represent categories without an inherent order, such as product type, region, or blood group. Ordinal features have a meaningful order, although the spacing between levels is not necessarily uniform. In the `diamonds` dataset, `cut`, `color`, and `clarity` are ordinal categorical features because their levels represent ordered quality grades. For example, `color` ranges from D, the most colorless grade, to J, the least colorless grade in this dataset. Binary features are categorical features with exactly two levels, such as yes/no, success/failure, or churn/no churn.
 
-Categorical features describe group membership rather than numerical magnitude. Nominal variables represent categories without an inherent order, such as product type, region, or blood group. Ordinal variables have a meaningful order, although the spacing between levels is not necessarily uniform. In the `diamonds` dataset, `cut`, `color`, and `clarity` are ordinal categorical variables because their levels represent ordered quality grades. For example, `color` ranges from D, the most colorless grade, to J, the least colorless grade in this dataset. Binary variables form a special case of categorical variables with exactly two levels, such as yes/no, success/failure, or churn/no churn.
-
-This distinction matters because preparation choices depend on feature type. Outlier detection is usually meaningful for numerical variables but not for unordered categories. Imputation for a numerical variable might use the median or a sampled observed value, while imputation for a categorical variable might use the mode or a sampled category. Similarly, simplifying sparse categories is relevant for categorical features, whereas transformations such as logarithms or square roots apply to numerical variables.
+This distinction matters because preparation choices depend on feature type. Outlier detection is usually meaningful for numerical features, but not for unordered categorical features. Imputation for a numerical feature might use the median or a sampled observed value, while imputation for a categorical feature might use the mode or a sampled category. Similarly, simplifying sparse categories is relevant for categorical features, whereas transformations such as logarithms or square roots apply to numerical features.
 
 ### How R Represents Feature Types {.unnumbered .unlisted}
 
@@ -114,7 +110,7 @@ Visualization provides a natural starting point for detecting outliers and impla
 
 Boxplots use the interquartile range (IQR) to flag potential outliers. Values lying more than 1.5 times the IQR below the first quartile or above the third quartile are often displayed as individual points. This rule is useful for screening, but it should not be interpreted as proof that a value is wrong.
 
-```{r fig-simple-boxplot, echo = FALSE, out.width = "40%"}
+```{r fig-simple-boxplot, echo = FALSE, out.width = "35%"}
 #| fig-cap: "Boxplots summarize a variable’s distribution and flag potential outliers. Observations beyond 1.5 times the interquartile range (IQR) from the quartiles are shown as individual points."
 
 knitr::include_graphics("images/ch3_simple_boxplot.png")
@@ -137,7 +133,7 @@ ggplot(data = diamonds) +
   labs(title = "Zoomed view", y = "Diamond width (mm)")
 ```
 
-The full-scale boxplot in the left panel shows that a small number of extreme values stretch the vertical axis, compressing the main body of the distribution. The zoomed view makes the typical range easier to see: most diamond widths lie between approximately 2 and 6 mm, while a few observations fall far outside the usual range. The `coord_cartesian()` function changes only the displayed range of the plot; it does not remove observations from the data. The boxplots highlight that some values are unusually large relative to the interquartile range, but they do not show the full distribution or the exact number of affected observations.
+The full-scale boxplot shows that a small number of extreme values stretch the vertical axis and compress the main body of the distribution. The zoomed view shows that most diamond widths lie between approximately 2 and 6 mm, with a few observations far outside the usual range. The `coord_cartesian()` function changes only the displayed range; it does not remove observations from the data.
 
 Histograms provide a complementary view because they show how frequently values occur across the range of a variable. We again compare the full distribution with a zoomed-in view of the vertical axis:
 
@@ -156,7 +152,7 @@ ggplot(data = diamonds) +
   labs(title = "Zoomed count scale", x = "Diamond width (mm)", y = "Count")
 ```
 
-The full-scale histogram in the left panel shows that most values are concentrated between approximately 2 and 6 mm, while observations at the extremes are difficult to distinguish. The zoomed histogram in the right panel reveals several atypical observations. In particular, the variable contains seven zero values and two unusually large values, one slightly above 30 mm and another close to 60 mm. A width of zero is not physically meaningful for a diamond, while very large widths should be inspected together with the other dimensions before deciding how to handle them.
+The full-scale histogram shows that most values are concentrated between approximately 2 and 6 mm. The zoomed count scale reveals seven zero values and two unusually large values, one slightly above 30 mm and another close to 60 mm. A width of zero is physically impossible, while very large widths should be inspected together with the other dimensions before any preparation decision is made.
 
 Before changing the data, we inspect the affected rows:
 
@@ -174,21 +170,11 @@ This step is important because outliers should not be treated by looking at one 
 
 Once unusual values have been identified, the next step is to decide how they should be handled. There is no universally correct strategy. The appropriate response depends on whether the value is impossible, suspicious but plausible, or rare and informative. It also depends on the data collection process, the analytical objective, and the type of model or summary that will be used later.
 
-Several practical strategies are commonly used:
+When an unusual value is valid and potentially informative, it should usually be retained. In fraud detection, for example, extreme values may be precisely the cases of interest. Similarly, in the `adult` dataset examined later in this chapter, unusually large values of `capital_gain` may correspond to genuine financial events rather than errors. In such cases, the aim is not to remove the value, but to understand its influence. If the unusual value may carry useful information, an additional indicator variable can sometimes be created to flag its presence.
 
-- *Retain the value* when it represents a valid observation that may carry important information. In fraud detection, for example, extreme values may be precisely the cases of interest. Similarly, in the `adult` dataset examined later in this chapter, unusually large values of `capital_gain` may correspond to genuine financial events.
+When there is strong evidence that a value is erroneous, a different response is needed. Implausible measurements, such as a diamond width of zero or a negative value for a quantity that cannot be negative, should not be silently retained. Such values may be recoded as `NA`, corrected if reliable information is available, or removed only when the affected record cannot be used responsibly. Removing observations should generally be treated as a last resort, since it can reduce information and introduce bias if applied too broadly.
 
-- *Recode the value as missing* when there is strong evidence that it is erroneous. Implausible measurements, such as a diamond width of zero or a negative value for a quantity that cannot be negative, are often better treated as `NA` than silently retained.
-
-- *Flag the value* by creating an indicator variable when the observation may be unusual and informative. This allows later analyses to account for the presence of unusual observations, but should be used selectively to avoid unnecessary complexity.
-
-- *Transform the variable* when the issue is not an isolated error but a strongly skewed distribution. Logarithmic or square-root transformations can reduce the influence of large values, although they also change the interpretation of the variable.
-
-- *Use robust methods or winsorization* when extreme values may dominate methods that are sensitive to them. Robust summaries, tree-based models, median-based methods, or capped values can reduce sensitivity to extremes, but the choice must be justified and documented.
-
-- *Remove the observation* only when the value is clearly invalid, cannot be corrected or reasonably imputed, and would otherwise compromise the analysis. Removal should be treated as a last resort rather than a default response.
-
-In practice, a cautious and transparent approach is essential. Automatically removing outliers may simplify an analysis, but it can also discard meaningful information. Conversely, retaining impossible values can make summaries and models unreliable. The goal is not to make the dataset look neat, but to make preparation decisions that are defensible, documented, and consistent with the purpose of the analysis.
+Some unusual values are not isolated errors but part of a strongly skewed distribution. In these cases, transformations such as logarithms or square roots, robust summaries, winsorization, or models that are less sensitive to extreme values may be more appropriate than deletion. Whatever strategy is used, it should be justified and documented. The goal is not to make the dataset look neat, but to make preparation decisions that are defensible, transparent, and consistent with the purpose of the analysis.
 
 ### Example: Cleaning Diamond Dimensions {.unnumbered .unlisted}
 
@@ -285,22 +271,13 @@ An important extension is multiple imputation, which creates several completed v
 
 We now return to the cleaned `diamonds_clean` dataset created in the previous section. Implausible values of `y`, including zero widths and values above 30 mm, were recoded as `NA`. The next question is how these missing values should be handled.
 
-We begin by examining the distribution of the cleaned variable:
-
-```{r out.width = "60%"}
-ggplot(data = diamonds_clean) +
-  geom_density(aes(x = y), bw = 0.6, na.rm = TRUE) +
-  labs(x = "Diamond width (mm)", y = "Density")
-```
-
-A numerical summary provides additional information:
+We begin by examining a numerical summary of the cleaned variable:
 
 ```{r}
 summary(diamonds_clean$y)
-sum(is.na(diamonds_clean$y))
 ```
 
-The distribution of `y` is mildly right-skewed, and the mean is slightly larger than the median. The summary also confirms that nine values are now recorded as missing. In this setting, median imputation provides a simple and robust option.
+The summary confirms that nine values are now recorded as missing. It also suggests a mildly right-skewed distribution, with the mean slightly larger than the median. Since the number of missing values is small, median imputation provides a simple first approach for illustrating how missing entries can be filled.
 
 We use the `impute()` function from the **Hmisc** package to replace the missing values with the median of the observed values:
 
@@ -312,9 +289,7 @@ diamonds_clean$y_median <- impute(diamonds_clean$y, fun = median)
 
 This code creates a new variable, `y_median`, rather than overwriting `y`. Keeping the cleaned variable `y` unchanged preserves the preparation history and allows different imputation strategies to be compared.
 
-Median imputation fills the missing values with a single robust summary value. In this example, only nine values are missing, so a full histogram of the imputed variable would look almost identical to the histogram of the cleaned variable. The main effect is therefore easier to describe than to see: each missing value is replaced by the same median width. This makes the method simple and reproducible, but it also introduces repeated values and slightly reduces variability.
-
-As an alternative, we can use random sampling imputation. To make the result reproducible, we set a seed before drawing replacement values:
+Median imputation fills each missing value with the same summary value. This makes the method simple and reproducible, but it also introduces repeated values and slightly reduces variability. As an alternative, we use random sampling imputation, which draws replacement values from the observed nonmissing values of `y`. To make the result reproducible, we set a seed before sampling:
 
 ```{r}
 set.seed(42)
@@ -322,9 +297,9 @@ set.seed(42)
 diamonds_clean$y_random <- impute(diamonds_clean$y, fun = "random")
 ```
 
-Random sampling imputation replaces each missing value with a value drawn from the observed distribution of `y`. This preserves the marginal spread of the variable more directly than median imputation, but it does not use information from related variables such as `carat`, `x`, `z`, or `price`.
+Random sampling imputation preserves the marginal spread of the variable more directly than median imputation. However, it does not use information from related variables such as `carat`, `x`, `z`, or `price`.
 
-Because only nine values were imputed, the difference between median and random sampling imputation is easier to see by inspecting the affected observations directly:
+Because only nine values were imputed, the difference between the two methods is easiest to see by inspecting the affected observations directly:
 
 ```{r}
 missing_y <- is.na(diamonds_clean$y)
@@ -338,28 +313,9 @@ data.frame(
 
 The table shows the main difference between the two methods. Median imputation assigns the same replacement value to every missing observation, while random sampling imputation assigns values drawn from the observed distribution. These sampled values vary across observations, but they should still be interpreted as plausible replacements rather than recovered true measurements.
 
-We can also compare the original variable with the version obtained after cleaning and random sampling imputation. This comparison summarizes the full preparation sequence: the implausible values in `y` are first recoded as missing, and the resulting missing values are then replaced by values sampled from the observed distribution.
-
-```{r out.width = "100%"}
-#| layout-ncol: 2
-#| fig-width: 4
-#| fig-height: 4
-
-ggplot(diamonds) +
-  geom_point(aes(x = y, y = price), size = 0.1, na.rm = TRUE) +
-  labs(title = "Original variable", x = "Diamond width (mm)", y = "Price")
-
-ggplot(diamonds_clean) +
-  geom_point(aes(x = y_random, y = price), size = 0.1) +
-  labs(title = "After cleaning and random imputation", x = "Diamond width (mm)", y = "Price")
-```
-
-The left panel shows the implausible widths that motivated the cleaning step. In the right panel, these values no longer appear as extreme measurements because they have first been recoded as missing and then replaced through random sampling imputation. This comparison should therefore be interpreted as the combined effect of cleaning and imputation, rather than as the effect of imputation alone.
-
-In predictive modeling, imputation should usually be learned from the training set and then applied to validation or test data, rather than estimated from the full dataset before partitioning. This prevents information from the validation or test set from influencing the preparation of the training data.
+This example uses the full dataset to illustrate the mechanics of imputation. In predictive modeling, however, imputation rules should usually be learned from the training set and then applied to validation or test data, rather than estimated from the full dataset before partitioning. This prevents information from the validation or test set from influencing the preparation of the training data.
 
 > **Practice:** Compare median imputation and random sampling imputation for the variables `x` and `z`. After recoding physically implausible values as `NA`, create imputed versions of each variable and compare their summaries and distributions. Which method better preserves the observed distribution, and what assumptions does it make?
-
 
 ## Case Study: Preparing Data to Predict High Earners {#sec-ch3-data-pre-adult}
 
@@ -381,35 +337,27 @@ library(liver)
 data(adult)
 ```
 
-To preserve the original dataset, we create a working copy that will be modified during the preparation steps:
-
-```{r}
-adult_prepared <- adult
-```
-
-The object `adult` contains the original dataset loaded from the **liver** package, while `adult_prepared` will store the prepared version developed throughout this case study. This distinction makes the preparation workflow easier to follow and allows us to return to the original data if needed.
-
 To inspect the dataset structure and variable types, we use the `str()` function:
 
 ```{r}
 str(adult)
 ```
 
-The dataset contains `r nrow(adult)` observations and `r ncol(adult)` variables. Most variables serve as predictors, while the target variable, `income`, indicates whether an individual earns more than \$50,000 per year (`>50K`) or not (`<=50K`). The dataset includes a mixture of numerical, binary, ordinal, and nominal features.
+The dataset contains `r nrow(adult)` observations and `r ncol(adult)` variables. Most variables serve as predictors, while the target variable, `income`, indicates whether an individual earns more than \$50,000 per year (`>50K`) or not (`<=50K`). The predictors include numerical features such as `age`, `demogweight`, `education_num`, `capital_gain`, `capital_loss`, and `hours_per_week`, as well as categorical features such as `workclass`, `education`, `marital_status`, `occupation`, `relationship`, `race`, `gender`, and `native_country`.
 
 The dataset also includes demographic variables such as `race`, `gender`, and `native_country`. In applied prediction settings, the use of such variables requires careful ethical, legal, and contextual consideration. In this chapter, these variables are treated as part of a data preparation exercise, while broader questions about fairness, bias, and responsible modeling are revisited later in the book.
 
-The numerical variables include `age`, `demogweight`, `education_num`, `capital_gain`, `capital_loss`, and `hours_per_week`. These variables describe demographic, survey-weighting, educational, financial, and work-related information. Although `education_num` is stored numerically, it represents ordered educational attainment rather than a direct physical measurement.
+> **Practice:** Use `str(adult)` and `summary(adult)` to inspect the dataset. Classify each variable as numerical, binary categorical, ordinal categorical, or nominal categorical. Then identify variables that may require preparation because of nonstandard missing-value codes, sparse categories, or strongly skewed numerical distributions.
 
-Several variables describe categorical characteristics. The variables `workclass`, `marital_status`, `occupation`, `relationship`, `race`, and `native_country` are nominal categorical features. The variable `education` is ordinal because its levels represent an ordered progression of educational attainment. The variables `gender` and `income` are binary categorical variables, with `income` serving as the target variable for later prediction.
-
-To gain an initial overview of distributions and possible data-quality issues, we inspect summary statistics:
+Before modifying the data, we create a working copy:
 
 ```{r}
-summary(adult)
+adult_prepared <- adult
 ```
 
-The summary output provides the starting point for the preparation steps that follow. In particular, it reveals nonstandard missing-value codes, sparse categorical levels, and strongly skewed numerical variables. We begin by recoding the nonstandard missing-value codes in `adult_prepared` so that R recognizes them as missing values.
+The object `adult` contains the original dataset loaded from the **liver** package, while `adult_prepared` will store the prepared version developed throughout this case study. This distinction keeps the preparation workflow transparent and allows us to return to the original data if needed.
+
+The structure of the dataset provides the starting point for the preparation steps that follow. Several categorical variables require closer inspection for nonstandard missing-value codes, sparse levels, and possible category simplification. We begin by inspecting and recoding the nonstandard missing-value codes in `adult_prepared` so that R recognizes them as missing values.
 
 ### Recoding Nonstandard Missing-Value Codes {.unnumbered .unlisted}
 
@@ -672,7 +620,7 @@ The exercises in this chapter reinforce the main ideas of data preparation throu
 
 23. The `adult` dataset includes demographic variables such as `race`, `gender`, and `native_country`. Discuss why the use of these variables in income prediction requires ethical, legal, and contextual consideration.
 
-#### Hands-On Practice: Data Preparation with `house_price` {.unnumbered .unlisted}
+#### Applied Challenge: Data Preparation with `house_price` {.unnumbered .unlisted}
 
 24. Load the `house_price` dataset from the **liver** package. Create a brief data audit that identifies the response variable, numerical predictors, categorical predictors, and variables with missing values.
 
