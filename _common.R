@@ -14,8 +14,10 @@ inst_pkgs = load_pkgs = c(
   "mltools",
   "knitr",
   "kableExtra", 
-  "downlit", "xml2", # code linking 
-  "tidyr",   # for pivot_longer function in ch12
+  "downlit",   # code linking 
+  "xml2",     # code linking 
+  "grid",     # for ch4 
+  "tidyr",    # for pivot_longer function in ch12
   "mice",    # for imputation in ch13
   "ranger",  # for mice package we need in ch13
   "liver", 
