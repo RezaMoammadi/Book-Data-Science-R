@@ -22,104 +22,96 @@ Statistics is the grammar of science.
 ::::
 :::::
 
-Imagine a bank notices that customers who contact customer service frequently appear more likely to close their credit card accounts. Is this pattern evidence of a genuine underlying relationship, or could it simply reflect random variation in the data? Questions like these lie at the heart of statistical inference.
+Imagine a bank notices that customers who contact customer service frequently appear more likely to close their credit card accounts. Is this pattern evidence of a genuine relationship in the broader customer population, or could it simply reflect random variation in the observed data? Statistical inference addresses this central question: when does an observed pattern provide credible evidence beyond the particular sample at hand?
 
-Statistical inference uses information from a sample to draw conclusions about a broader population. It enables analysts to move beyond the descriptive summaries of exploratory data analysis and toward evidence-based decision-making. In practice, inference helps answer questions such as: *What proportion of customers are likely to churn?* and *Do churners make more service contacts on average than non-churners?*
+Statistical inference uses sample data to draw conclusions about population-level quantities and relationships. It allows us to move beyond the descriptive summaries of exploratory data analysis and to quantify uncertainty in a principled way. In practice, inference helps answer questions such as: *What proportion of customers are likely to churn?* *Do churners make more service contacts on average than non-churners?* and *How much uncertainty surrounds these estimates?*
 
-In Chapter [-@sec-ch4-EDA], we examined the `churn` dataset and identified several promising patterns. For example, customers with more frequent service contacts or lower spending levels appeared more likely to churn. However, EDA alone cannot tell us whether these differences reflect genuine population-level effects or are merely artifacts of sampling variability. Statistical inference provides the framework to make such distinctions in a principled way.
-
-This chapter emphasizes that sound inference relies on more than formulas or computational steps. It requires critical thinking: recognizing how randomness influences observed data, understanding the limitations of sample-based conclusions, and interpreting results with appropriate caution. Misunderstandings can lead to misleading or overconfident claims, a theme highlighted in Darrell Huff’s classic book [*How to Lie with Statistics*](https://www.goodreads.com/book/show/51291.How_to_Lie_with_Statistics). Strengthening your skills in statistical reasoning will help you evaluate evidence rigorously and draw conclusions that are both accurate and defensible.
+In Chapter [-@sec-ch4-EDA], we examined the `churn` dataset and identified several patterns, including higher churn among customers with more frequent service contacts or lower spending levels. Exploratory data analysis can reveal such patterns, but it cannot by itself determine whether they reflect broader population-level relationships. This chapter introduces point estimation, confidence intervals, and hypothesis testing as tools for evaluating evidence, quantifying uncertainty, and preparing for the modeling decisions developed in Chapter [-@sec-ch6-data-setup].
 
 ### What This Chapter Covers {.unnumbered .unlisted}
 
-This chapter introduces statistical inference, a set of methods that allow us to draw conclusions about populations using information from samples. Building on the exploratory work of earlier chapters, the focus now shifts from identifying patterns to evaluating whether those patterns reflect meaningful population-level effects. This transition is a central step in the data science workflow, where initial insights are tested and uncertainty is quantified.
+This chapter introduces the main ideas of statistical inference and shows how they help us evaluate patterns observed in data. We begin with point estimation, where sample statistics are used to estimate unknown population parameters. We then introduce confidence intervals as a way to quantify uncertainty around these estimates.
 
-The chapter begins with point estimation, where sample statistics are used to estimate unknown population parameters. It then introduces confidence intervals, which provide a principled way to express the uncertainty associated with these estimates. Hypothesis testing follows, offering a framework for assessing whether observed differences or associations are likely to have arisen by chance. Along the way, you will work with several real-world datasets, including `churn` and `diamonds` in the main text, and the `bank`, `churn_mlc`, and `marketing` datasets from the **liver** package in the exercises.
+The chapter then develops the logic of hypothesis testing, including null and alternative hypotheses, significance levels, *p*-values, Type I and Type II errors, statistical power, and the distinction between one-tailed and two-tailed tests. These ideas provide the foundation for deciding whether observed differences or associations are plausible evidence of broader population-level patterns.
 
-Throughout the chapter, you will apply these inferential tools in R to evaluate patterns, interpret *p*-values and confidence intervals, and distinguish statistical significance from practical relevance. These skills form the basis for reliable, data-driven conclusions and support the Modeling work that follows.
+Finally, the chapter applies common inferential methods in R, including tests for means, proportions, categorical associations, group comparisons, and correlations. Throughout the chapter, emphasis is placed not only on carrying out the calculations, but also on interpreting uncertainty, distinguishing statistical significance from practical relevance, and using inference carefully within the broader data science workflow.
 
-The chapter concludes by revisiting how statistical inference supports later phases of the data science workflow, including validating data partitions and assessing feature relevance for Modeling, topics that will be developed further in Chapter [-@sec-ch6-data-setup].
+## Statistical Inference: From Samples to Populations
 
-## Introduction to Statistical Inference
+When we analyze a dataset such as `churn`, we observe information about a particular group of customers. However, the aim is usually broader than describing only those observed customers. We often want to draw conclusions about the larger customer population that the data are intended to represent. For example, we may ask whether the observed churn rate is a reliable estimate of the population churn rate, or whether customers with frequent service contacts tend to churn more often in the broader population.
 
-Data science is not only about describing data; it is about learning from data in order to understand the real world. When we analyze a dataset such as `churn`, we observe information about a particular group of customers. Yet our ultimate goal is rarely limited to those specific observations. Instead, we seek to draw conclusions about the broader customer population: Are churn rates increasing? Do customers with frequent service interactions tend to leave more often? Are observed differences meaningful, or are they simply the result of random fluctuations?
+Statistical inference provides the framework for reasoning from sample data to population-level conclusions. Because we rarely observe an entire population, we must use partial information and account for the uncertainty this creates. Probability provides the language for quantifying this uncertainty, as illustrated in Figure [-@fig-inference].
 
-Statistical inference provides the framework for answering such questions. It connects the data observed in a sample with the larger population from which that sample is drawn. Because we rarely have access to the entire population, we must rely on partial information. This reliance introduces uncertainty, and probability serves as the language used to quantify it, as illustrated in @fig-inference.
-
-```{r fig-inference, echo=FALSE, out.width="100%", fig.cap="A conceptual overview of statistical inference. Data from a sample are used to infer properties of the population, with probability quantifying uncertainty."}
-
+```{r fig-inference, echo=FALSE, out.width="100%", fig.cap = "A conceptual overview of statistical inference. A sample is drawn from a population, sample statistics such as $\\bar{x}$, $s$, and $p$ are computed from the sample, and inference uses these statistics to learn about unknown population parameters such as $\\mu$, $\\sigma$, and $\\pi$."}
 knitr::include_graphics("images/ch5_inference.png")
 ```
 
-A crucial assumption underlying statistical inference is that the data meaningfully represent the population of interest. In classical settings, this is achieved through random sampling, where each member of the population has a known and non-zero probability of being included in the sample. Random sampling does not eliminate variability; rather, it ensures that differences we observe are driven by natural randomness instead of systematic bias.
+A crucial assumption underlying statistical inference is that the data meaningfully represent the population of interest. In classical settings, this is achieved through random sampling, where each member of the population has a known and non-zero probability of being included in the sample. Random sampling does not remove variability, but it reduces the risk that observed differences are mainly caused by systematic selection bias. In many data science applications, datasets are observational rather than collected through carefully controlled sampling designs. The same principle still applies: conclusions are credible only to the extent that the data reasonably reflect the population about which we want to make claims.
 
-In many real-world data science applications, however, datasets are observational rather than generated through carefully designed sampling schemes. The principle remains the same: valid inference depends on whether the data reasonably reflect the population about which conclusions are drawn. If certain groups are overrepresented or underrepresented, conclusions may be distorted.
+Sampling variability is central to inference. If we were to collect another sample from the same population, the numerical summaries would almost certainly be different. The sample mean, sample standard deviation, and sample proportion would vary from one sample to another, even if the underlying population remained unchanged. Statistical inference acknowledges this variability and provides methods for assessing how much confidence we should place in conclusions drawn from one observed dataset.
 
-When we analyze a dataset, we observe only one realization of a broader process. If we were to collect another sample from the same population, the numerical summaries would almost certainly differ. Statistical inference acknowledges this variability and provides tools to assess how much confidence we should place in our conclusions.
+To express this distinction formally, we distinguish between population parameters and sample statistics. Population parameters are fixed but unknown quantities, such as $\mu$ for a population mean, $\sigma$ for a population standard deviation, and $\pi$ for a population proportion. Sample statistics are computed from observed data and are used to estimate these unknown quantities. We write $\bar{x}$ for a sample mean, $s$ for a sample standard deviation, and $p$ for a sample proportion. The aim of inference is to use sample statistics such as $\bar{x}$ and $p$ to learn about population parameters such as $\mu$ and $\pi$.
 
-In statistical notation, we distinguish between population parameters and sample statistics. Population parameters, which are fixed but unknown, are typically denoted by Greek letters such as $\mu$ (population mean), $\sigma$ (population standard deviation), and $\pi$ (population proportion). Their observable counterparts computed from data are denoted by symbols such as $\bar{x}$ (sample mean), $s$ (sample standard deviation), and $p$ (sample proportion). The aim of inference is to use sample statistics to learn about unknown population parameters, as illustrated in Figure [-@fig-inference].
+The methods in this chapter rely on probability distributions to describe how sample statistics vary across repeated samples. For example, the $t$-distribution is used when estimating a population mean with unknown population variability, while chi-square-based methods are used for several tests involving categorical data. These distributions provide the foundation for the confidence intervals and hypothesis tests introduced later in the chapter.
 
-To formalize how sample statistics vary across repeated samples, statistical inference relies on probability distributions. Certain distributions play a central role. The normal distribution often arises when sample sizes are large. The $t$-distribution accounts for additional uncertainty when population variability is estimated from the data. The chi-square distribution is commonly used when analyzing categorical data and assessing variability in frequency tables. These distributions form the mathematical foundation for the confidence intervals and hypothesis tests developed later in this chapter.
+Within the Data Science Workflow, inference helps us move from exploratory patterns to evidence-based conclusions. Exploratory data analysis may suggest that customers with many service contacts (`contacts_count_12`) churn more often, but inference asks whether such a pattern is likely to reflect a broader population-level relationship or could plausibly arise from random variation. This distinction is essential: a statistically significant result is meaningful only when the data are relevant to the question and the assumptions behind the analysis are reasonable.
 
-Within the Data Science Workflow (see @fig-ch2_DSW), inference bridges exploratory data analysis and predictive modeling. Exploratory analysis helps reveal potential patterns, such as higher churn rates among customers with many service contacts (`contacts_count_12`). Inference then evaluates whether these patterns are likely to reflect genuine population-level relationships or could plausibly have arisen by chance.
+Statistical inference is organized around three connected ideas, shown in Figure [-@fig-stat-inference-pillars]. Point estimation provides numerical estimates of unknown population parameters. Confidence intervals quantify uncertainty around those estimates. Hypothesis testing provides a structured framework for evaluating whether observed patterns offer credible evidence against a specified baseline claim.
 
-Statistical thinking therefore requires more than applying formulas or running functions in R. It involves asking how the data were generated, what assumptions are being made, and whether observed patterns are likely to persist beyond the specific sample at hand. A statistically significant result is meaningful only if the data are relevant to the question and reasonably representative of the population of interest. Without this foundation, even technically correct calculations may lead to misleading interpretations. In this sense, statistical inference is not merely a computational procedure but a disciplined way of thinking about evidence, variability, and generalization.
-
-Statistical inference is typically organized around three interconnected components (see @fig-stat-inference-pillars). Point estimation provides numerical summaries that serve as estimates of population parameters. Confidence intervals quantify the uncertainty surrounding those estimates. Hypothesis testing offers a structured framework for evaluating whether observed patterns are statistically credible.
-
-```{r fig-stat-inference-pillars, echo=FALSE, out.width="95%", fig.cap="The three core goals of statistical inference: point estimation, confidence intervals, and hypothesis testing. Together they support reliable generalization from sample data."}
+```{r fig-stat-inference-pillars, echo=FALSE, out.width="95%", fig.cap = "Three connected components of statistical inference: point estimation, confidence intervals, and hypothesis testing. Point estimation summarizes the sample, confidence intervals quantify uncertainty, and hypothesis testing evaluates evidence against a specified claim."}
 knitr::include_graphics("images/ch5_inference_pillars.png")
 ```
 
-These components build on one another. Estimation provides an initial summary, confidence intervals express the associated uncertainty, and hypothesis testing formalizes decisions about statistical evidence. Together, they allow analysts to move beyond description toward principled, evidence-based conclusions. The remainder of this chapter introduces each component in turn, beginning with point estimation and progressing through confidence intervals and hypothesis testing, supported by practical implementation in R.
+These components build on one another. Point estimation gives an initial summary, confidence intervals express the associated uncertainty, and hypothesis testing formalizes decisions about statistical evidence. The remainder of this chapter introduces each component in turn, beginning with point estimation and progressing through confidence intervals and hypothesis testing, supported by practical implementation in R.
 
-## Point Estimation
+## Point Estimates and Sampling Variability
 
-When analyzing sample data, an essential first step in statistical inference is to estimate characteristics of the population from which the sample is drawn. In Chapter [-@sec-ch4-EDA-churn], we summarized patterns in the `churn` dataset using descriptive statistics. We now formalize those summaries as estimates of population parameters. These parameters include quantities such as the average number of customer service contacts, the typical transaction amount, or the proportion of customers who churn.
+Statistical inference often begins with estimation. After exploring a dataset, we usually want to use its numerical summaries to learn about the broader population that the data are intended to represent. In Chapter [-@sec-ch4-EDA], the `churn` dataset was used to describe patterns in customer behavior, including service contacts, transaction amounts, and churn status. In this section, we reinterpret such summaries as estimates of population parameters, such as the average number of customer service contacts, the mean annual transaction amount, and the proportion of customers who churn.
 
-Because we rarely have access to the entire population, we rely on *point estimates* computed from sample data. A population parameter is fixed but unknown, whereas a sample statistic is observable and varies from sample to sample. A point estimate is a single numerical value that serves as our best guess for a population parameter. For example, the sample mean estimates the population mean, and the sample proportion estimates the population proportion.
+Because we rarely have access to the entire population, we rely on point estimates computed from sample data. A population parameter is fixed but unknown, whereas a sample statistic is observable and varies from sample to sample. A point estimate is a single numerical value that serves as an estimate of a population parameter. For example, the sample mean estimates the population mean, and the sample proportion estimates the population proportion.
 
 To illustrate, consider the proportion of customers who churn in the `churn` dataset:
 
 ```{r}
-library(liver) # load the liver package to access the churn dataset
-data(churn)    # load the churn dataset
+library(liver)
+data(churn)
 
-prop.table(table(churn$churn))["yes"]
+churn_rate = mean(churn$churn == "yes")
+churn_rate
 ```
 
-The resulting value, `r round(prop.table(table(churn$churn))["yes"], 2)`, provides a sample-based estimate of the true proportion of churners in the broader customer population.
+The resulting value, `r round(churn_rate, 2)`, provides a sample-based estimate of the population proportion of churners. Using the notation introduced earlier, this value is the sample proportion $p$, which estimates the unknown population proportion $\pi$.
 
 Similarly, we can estimate the average annual transaction amount across all customers:
 
 ```{r}
-mean(churn$transaction_amount_12)
+mean_transaction = mean(churn$transaction_amount_12)
+mean_transaction
 ```
 
-The computed mean, `r round(mean(churn$transaction_amount_12), 2)`, serves as a point estimate of the corresponding population mean.
+The computed mean, `r round(mean_transaction, 2)`, serves as a point estimate of the corresponding population mean $\mu$. Both examples illustrate the same principle: a statistic calculated from the observed data is used to estimate an unknown quantity in the population.
 
-> *Practice:* Estimate the average annual transaction amount among customers who churn (`churn == "yes"`) in the `churn` dataset by first subsetting the data and then computing the sample mean of `transaction_amount_12`. How does this estimate compare to the overall average computed above? What might this difference suggest about the spending behavior of churned customers?
+A point estimate is useful because it gives a concise numerical summary, but it does not tell us how precise that estimate is. If we had observed a different sample from the same customer population, the churn rate and average transaction amount would probably not be exactly the same. This sample-to-sample variation is called *sampling variability*, and it is the reason statistical inference must go beyond reporting a single number.
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-churn[churn == "unknown"] <- NA
-churn <- droplevels(churn)
+For example, the observed mean transaction amount is only one estimate of the population mean. Another sample of customers might produce a slightly higher or lower mean, even if it came from the same underlying population. This does not make the estimate wrong; it means that the estimate is uncertain. The next section introduces confidence intervals, which provide a systematic way to express this uncertainty around point estimates.
 
-churn$education <- impute(churn$education, "random")
-churn$income    <- impute(churn$income, "random")
-churn$marital   <- impute(churn$marital, "random")
-```
+> *Practice:* Estimate the average annual transaction amount among customers who churn (`churn == "yes"`) in the `churn` dataset by first subsetting the data and then computing the sample mean of `transaction_amount_12`. How does this estimate compare to the overall average computed above? What question might this difference raise about the spending behavior of churned customers?
 
 ## Confidence Intervals: Quantifying Uncertainty {#sec-ch5-confidence-interval}
 
-While point estimates provide useful summaries, they do not indicate how precise those estimates are. A single number does not reveal how much it might vary across different samples. Without accounting for this variability, we risk interpreting random fluctuations as meaningful patterns. Confidence intervals address this limitation by providing a principled way to quantify uncertainty and assess the reliability of our estimates.
+While point estimates provide useful summaries, they do not indicate how precise those estimates are. A single number does not show how much an estimate might vary across different samples. Without accounting for this variability, we risk interpreting random fluctuations as meaningful patterns. Confidence intervals address this limitation by providing a principled way to express uncertainty around point estimates.
 
-Confidence intervals express the uncertainty associated with estimating population parameters. Rather than reporting only a point estimate, such as “the average annual transaction amount in the `churn` dataset is \$4,404,” a confidence interval might state that “we are 95 percent confident that the true average lies between \$4,337 and \$4,470.” This range reflects the sampling variability that arises whenever conclusions are drawn from a sample rather than from the entire population.
+Confidence intervals express the uncertainty associated with estimating population parameters. Rather than reporting only a point estimate, such as “the average annual transaction amount in the `churn` dataset is \$4,404,” a confidence interval might report a range such as \$4,337 to \$4,470. This interval gives a range of plausible values for the population mean and reflects the sampling variability that arises whenever conclusions are drawn from a sample rather than from the entire population.
 
-At its core, a confidence interval has a simple structure: $$
+A confidence interval should not be interpreted as a probability statement about the fixed population parameter. For example, a 95 percent confidence interval does not mean that there is a 95 percent probability that the population mean lies inside the particular interval computed from the observed data. Instead, it means that if we repeatedly drew samples in the same way and constructed an interval from each sample using the same method, about 95 percent of those intervals would contain the population mean, assuming the conditions used to construct the interval are satisfied.
+
+At its core, a confidence interval has a simple structure:
+$$
 \text{Point Estimate} \pm \text{Margin of Error}.
 $$
 
-The margin of error quantifies the uncertainty surrounding the estimate and can be written as $$
+The margin of error quantifies the uncertainty surrounding the estimate and can be written as:
+$$
 \text{Margin of Error} = \text{Critical Value} \times \text{Standard Error}.
 $$
 
@@ -127,232 +119,225 @@ The standard error measures how much a statistic is expected to vary from sample
 
 ### Confidence Interval for a Population Mean {.unnumbered .unlisted}
 
-Suppose we wish to estimate the average annual transaction amount in the customer population represented by the `churn` dataset. Let $\mu$ denote the unknown population mean and $\bar{x}$ the sample mean.
+Suppose we wish to estimate the average annual transaction amount in the customer population represented by the `churn` dataset. Let $\mu$ denote the unknown population mean and $\bar{x}$ the sample mean. A confidence interval for $\mu$ uses the sample mean as the point estimate and then adds a margin of error to reflect sampling variability.
 
-For a sample of size $n$ with sample standard deviation $s$, the standard error of the mean is $$
+For a sample of size $n$ with sample standard deviation $s$, the estimated standard error of the sample mean is
+$$
 \frac{s}{\sqrt{n}}.
 $$
-
 This expression reveals two important ideas. Larger samples reduce uncertainty because the denominator $\sqrt{n}$ increases as $n$ grows. Conversely, greater variability in the data increases uncertainty, since a larger value of $s$ produces a wider interval.
 
-To construct a confidence interval, we multiply the standard error by a *critical value*, which determines how wide the interval must be to achieve a chosen confidence level. For example, a 95 percent confidence level requires a multiplier large enough so that, in repeated sampling, approximately 95 percent of constructed intervals contain the true population mean.
+To construct a confidence interval, we multiply the standard error by a critical value, which determines how wide the interval must be to achieve a chosen confidence level. For example, a 95 percent confidence level requires a multiplier large enough so that, in repeated sampling, approximately 95 percent of intervals constructed in this way contain the population mean.
 
-When the population standard deviation $\sigma$ is unknown, which is almost always the case in practice, we use the $t$-distribution. The confidence interval for the population mean is $$
+When the population standard deviation $\sigma$ is unknown, which is almost always the case in practice, we use the $t$-distribution. For a confidence level of $1-\alpha$, the confidence interval for the population mean is
+$$
 \bar{x} \pm t_{\frac{\alpha}{2}, n-1}\left(\frac{s}{\sqrt{n}}\right),
 $$
+where $t_{\frac{\alpha}{2}, n-1}$ denotes the positive critical value from the $t$-distribution with $n-1$ degrees of freedom, leaving an upper-tail probability of $\alpha/2$. Although the notation may appear technical, the structure remains intuitive: estimate $\pm$ (multiplier $\times$ uncertainty). The width of the interval reflects the combined influence of sample size, variability, and the chosen confidence level.
 
-where $t_{\alpha/2, n-1}$ denotes the critical value from the $t$-distribution with $n-1$ degrees of freedom. Although the notation may appear technical, the structure remains intuitive: estimate $\pm$ (multiplier $\times$ uncertainty). The width of the interval reflects the combined influence of sample size, variability, and the chosen confidence level. See Figure [-@fig-confidence-interval] for a visual representation of confidence interval for a population mean.
+This interval assumes that the observations are independent and that the sampling distribution of the sample mean is approximately normal. These conditions are reasonable when the original data are approximately normal or when the sample size is sufficiently large. Figure [-@fig-confidence-interval] provides a visual representation of a confidence interval for a population mean.
 
-```{r fig-confidence-interval, echo = FALSE, out.width = "80%", fig.cap = "Confidence interval for a population mean. The interval is centered around the point estimate, with its width determined by the margin of error. The confidence level specifies the long-run proportion of such intervals that contain the true parameter."}
-
+```{r fig-confidence-interval, echo = FALSE, out.width = "80%", fig.cap = "Confidence interval for a population mean. The interval is centered around the sample mean, and its width is determined by the margin of error. The confidence level describes the long-run proportion of intervals constructed by this method that contain the population mean."}
 knitr::include_graphics("images/ch5_confidence_interval.png")
 ```
 
-The $t$-distribution closely resembles the standard normal ($z$) distribution but accounts for additional uncertainty introduced when $\sigma$ is estimated from the data. When $\sigma$ is known, the interval becomes $$
-\bar{x} \pm z_{\frac{\alpha}{2}}\left(\frac{\sigma}{\sqrt{n}}\right).
+The $t$-distribution closely resembles the standard normal distribution but accounts for additional uncertainty introduced when $\sigma$ is estimated from the data. If $\sigma$ were known, the interval would instead be
 $$
+\bar{x} \pm z_{\frac{\alpha}{2}}\left(\frac{\sigma}{\sqrt{n}}\right),
+$$
+where $z_{\frac{\alpha}{2}}$ denotes the positive standard normal critical value leaving an upper-tail probability of $\alpha/2$. Because $\sigma$ is rarely known, the $t$-distribution is typically used. For large sample sizes, the $t$-distribution approaches the normal distribution, and the resulting intervals are nearly identical.
 
-In practice, however, $\sigma$ is rarely known, so the $t$-distribution is typically used. For large sample sizes, the $t$-distribution approaches the normal distribution, and the resulting intervals are nearly identical.
-
-In practice, we rarely compute these quantities manually. Statistical software determines the appropriate critical value and standard error automatically. To construct a 95 percent confidence interval for the average annual transaction amount in the `churn` dataset, we use:
+Statistical software computes the necessary quantities automatically. To construct a 95 percent confidence interval for the average annual transaction amount in the `churn` dataset, we use:
 
 ```{r}
 t_result = t.test(churn$transaction_amount_12, conf.level = 0.95)
 t_result$conf.int
 ```
 
-The `t.test()` function in R performs a $t$-test and, by default, also returns a confidence interval for the population mean. In this example, we use it to compute the 95 percent confidence interval for the average annual transaction amount across customers in the dataset. The argument `conf.level = 0.95` specifies the desired confidence level, while the function automatically determines the appropriate $t$ critical value based on the sample size. Although we focus here on the confidence interval, the same function will be used in Sections [-@sec-ch5-one-sample-t-test] and [-@sec-ch5-two-sample-t-test] to test hypotheses about population means.
+The `t.test()` function in R performs a $t$-test and also returns a confidence interval for the population mean. Here, we use it only to compute the 95 percent confidence interval for the average annual transaction amount. The argument `conf.level = 0.95` specifies the desired confidence level, while the function determines the standard error and the appropriate $t$ critical value from the data. The same function will be used later in Sections [-@sec-ch5-one-sample-t-test] and [-@sec-ch5-two-sample-t-test] to test hypotheses about population means.
 
-Interpretation requires care. A 95 percent confidence interval does not mean that there is a 95 percent probability that the true mean lies within this specific interval. Instead, if we were to repeatedly draw samples of the same size and construct a confidence interval from each, approximately 95 percent of those intervals would contain the true population mean. The population mean $\mu$ is fixed, whereas the interval endpoints vary from sample to sample.
+The resulting interval gives a range of plausible values for the population mean annual transaction amount, under the assumptions of the method. It should not be interpreted as saying that there is a 95 percent probability that $\mu$ lies inside this particular interval. The population mean is fixed; the interval varies from sample to sample.
 
 > *Practice:* Construct a 95 percent confidence interval for the average annual transaction amount among customers who churn (`churn == "yes"`) in the `churn` dataset by first subsetting the data and then applying `t.test()` with `conf.level = 0.95`. Compare the resulting interval with the overall confidence interval computed above. How does the average transaction amount among churned customers differ from the overall average, and how might differences in sample size or variability influence the width of the interval?
 
 ### Confidence Interval for a Population Proportion {.unnumbered .unlisted}
 
-Suppose we wish to estimate the overall churn rate in the customer population. From the `churn` dataset, we can compute the sample proportion of customers who churn. But how precise is this estimate? How much might it vary if we were to observe a different sample?
+Suppose we wish to estimate the overall churn rate in the customer population. From the `churn` dataset, we can compute the sample proportion of customers who churn. As with the sample mean, however, this estimate is subject to sampling variability. A different sample of customers might produce a slightly different churn rate.
 
-Let $\pi$ denote the true population proportion of customers who churn, and let $p$ be the sample proportion computed from the data. For sufficiently large samples, the sampling distribution of $p$ is approximately normal. A common rule of thumb is that both $np$ and $n(1-p)$ should be at least 5 (or 10) to justify this approximation. Under this condition, the standard error of the sample proportion is $$
+Let $\pi$ denote the unknown population proportion of customers who churn, and let $p$ denote the sample proportion computed from the data. For sufficiently large samples, the sampling distribution of $p$ is approximately normal. A common rule of thumb is that both $np$ and $n(1-p)$ should be at least 5, or more conservatively at least 10, to justify this approximation. Under this condition, the estimated standard error of the sample proportion is
+$$
 \sqrt{\frac{p(1-p)}{n}}.
 $$
-
-A confidence interval for the population proportion is therefore given by $$
+A confidence interval for the population proportion is therefore based on
+$$
 p \pm z_{\frac{\alpha}{2}} \sqrt{\frac{p(1-p)}{n}},
-$$ where $z_{\alpha/2}$ is the critical value from the standard normal distribution corresponding to the chosen confidence level.
+$$
+where $z_{\frac{\alpha}{2}}$ is the positive standard normal critical value corresponding to the chosen confidence level. The structure is the same as before: point estimate plus or minus a margin of error.
 
 To construct a 95 percent confidence interval for the proportion of customers who churn in the `churn` dataset, we use:
 
 ```{r}
-prop_result = prop.test(table(churn$churn)["yes"],
-                        n = nrow(churn),
-                        conf.level = 0.95)
+prop_result = prop.test(
+  x = sum(churn$churn == "yes"),
+  n = nrow(churn),
+  conf.level = 0.95
+)
 
 prop_result$conf.int
 ```
 
-The `prop.test()` function computes the interval automatically using a normal approximation (with a continuity correction by default). The resulting interval provides a range of plausible values for the true churn rate in the broader customer population.
+The `prop.test()` function computes the interval automatically using a normal approximation with a continuity correction by default. The resulting interval provides a range of plausible values for the population churn rate.
 
-As with the mean, interpretation requires care. A 95 percent confidence interval for $\pi$ does not imply that there is a 95 percent probability that the true proportion lies within this specific interval. Rather, it means that if we repeatedly drew samples of the same size and constructed intervals in the same way, approximately 95 percent of those intervals would contain the true population proportion. The width of the interval depends on both the sample size and the variability in the data. Larger samples produce narrower intervals, reflecting greater precision.
+As with the confidence interval for a mean, interpretation requires care. A 95 percent confidence interval for $\pi$ does not imply that there is a 95 percent probability that the population proportion lies within this specific interval. Rather, it means that if we repeatedly drew samples of the same size and constructed intervals in the same way, approximately 95 percent of those intervals would contain the population proportion, assuming the conditions behind the method are satisfied. The width of the interval depends on both the sample size and the variability in the binary outcome. Larger samples produce narrower intervals, reflecting greater precision.
 
-> *Practice:* Construct a 90 percent confidence interval for the proportion of customers who churn by setting `conf.level = 0.90`. Compare its width with the 95 percent interval. How does changing the confidence level alter the critical value, and what does this imply about the trade-off between precision and certainty?
+> *Practice:* Construct a 90 percent confidence interval for the proportion of customers who churn by setting `conf.level = 0.90` in `prop.test()`. Compare its width with the 95 percent interval. Which interval is narrower, and why? What does this comparison show about the trade-off between confidence level and precision?
 
-Confidence intervals also play an important role when comparing groups. Constructing separate intervals for churned and active customers allows us to assess whether their average transaction amounts plausibly differ at the population level. In this way, confidence intervals not only quantify uncertainty but also prepare the ground for the formal hypothesis testing framework introduced next.
+Confidence intervals also help prepare the ground for hypothesis testing. They provide a range of plausible values for a population parameter and make uncertainty visible before we make a formal decision about a statistical claim. In the next section, we turn from estimating parameters to testing whether observed differences or associations provide evidence against a specified baseline assumption.
 
-## Hypothesis Testing
 
-Suppose a bank introduces a new customer service protocol and randomly applies it to a subset of customers. After several months, analysts observe that the treated group exhibits a slightly lower churn rate than the untreated group. But does this difference reflect a genuine improvement? Or could it simply be the result of natural sampling variability?
 
-Questions of this kind arise frequently in data-driven decision making. Observed differences are common, but not all differences are meaningful. Some emerge because of random fluctuation rather than underlying population-level change.
 
-Hypothesis testing provides a structured framework for distinguishing between these possibilities. While confidence intervals quantify the uncertainty surrounding an estimate, hypothesis testing addresses a different but complementary question: *Do the data provide sufficient evidence to challenge a specific claim about the population?*
 
-Within the Data Science Workflow, hypothesis testing forms a bridge between exploratory observations and formal conclusions. In Chapter [-@sec-ch4-EDA-churn], exploratory analysis suggested that churn tends to be higher among customers with lower spending and fewer transactions. Such patterns are informative, but they remain descriptive. Hypothesis testing allows us to evaluate whether these observed relationships are statistically credible or could plausibly have arisen by chance.
 
-In this sense, hypothesis testing is not merely a computational procedure. It is a disciplined way of assessing evidence and making decisions under uncertainty. We begin by formalizing the logic of hypothesis testing before applying it to concrete examples using the `churn` dataset.
 
-### The Logic of Hypothesis Testing {.unnumbered .unlisted}
 
-At its core, hypothesis testing is based on a simple but powerful idea: begin with a default assumption about the population and evaluate whether the observed data provide sufficient evidence to question it.
 
-The framework is built around two competing statements:
 
--   The null hypothesis ($H_0$): the default assumption, typically representing no difference, no association, or equality of population parameters.
 
--   The alternative hypothesis ($H_a$): the competing claim that a difference or association exists.
 
-The logic proceeds by temporarily assuming that the null hypothesis is true. Under this assumption, we ask: *If there were truly no difference or no relationship, how likely would we be to observe data as extreme as those obtained?* If the observed data would be very unlikely under $H_0$, this casts doubt on the null hypothesis. Conversely, if the data are consistent with what we would expect under $H_0$, we do not have strong evidence against it.
+## Hypothesis Testing: Evaluating Statistical Evidence
 
-This reasoning may initially appear indirect. Why not attempt to prove the alternative hypothesis directly? In statistical inference, it is typically easier to assess how incompatible the data are with a clearly specified baseline assumption than to prove that a particular alternative explanation must be true. Hypothesis testing therefore evaluates evidence against $H_0$ rather than attempting to confirm $H_a$. In this way, hypothesis testing provides a disciplined approach to reasoning under uncertainty: we measure how surprising the data would be under a default assumption and base our conclusions on the strength of that evidence.
+Suppose a bank introduces a new customer service protocol and randomly applies it to a subset of customers. After several months, analysts observe that the treated group has a slightly lower churn rate than the untreated group. Does this difference provide evidence that the protocol reduced churn, or could it simply reflect natural sampling variability?
 
-> *Practice*: Consider the claim that the average number of customer service calls is 2 per month. Formulate the null and alternative hypotheses for testing whether the true average differs from this value. Clearly state which hypothesis represents the default assumption.
+Hypothesis testing provides a structured framework for evaluating such questions. While confidence intervals quantify uncertainty around an estimate, hypothesis testing asks whether the observed data provide sufficient evidence to challenge a specific claim about the population. The starting point is usually a default assumption, such as no difference between two groups or no association between two variables.
 
-### Intuition Behind the *p*-Value {.unnumbered .unlisted}
+Within the Data Science Workflow, hypothesis testing helps move from exploratory patterns to formal statistical conclusions. In Chapter [-@sec-ch4-EDA-churn], exploratory analysis suggested that churn may be related to customer spending and service contacts. Hypothesis testing allows us to assess whether such patterns are statistically credible, while still requiring careful interpretation of assumptions, effect size, and practical relevance.
 
-The *p*-value formalizes the idea of how unusual the observed data are under the null hypothesis. More precisely, the *p*-value is the probability of obtaining results at least as extreme as those observed, assuming that $H_0$ is true.
+### Null and Alternative Hypotheses {.unnumbered .unlisted}
 
-To build intuition, suppose the null hypothesis states that there is no difference in churn rates between two customer groups. If this assumption were correct, any observed difference in sample proportions would arise purely from random variation. Small differences would occur frequently, whereas very large differences would be rare.
+At its core, hypothesis testing begins with a default assumption about the population and evaluates whether the observed data provide enough evidence to question it. This default assumption is called the null hypothesis, denoted by $H_0$. It typically represents no difference, no association, or equality of population parameters. The competing statement is the alternative hypothesis, denoted by $H_a$, which represents the claim that the population differs from the null hypothesis in some specified way.
 
-Now imagine that the data reveal a difference that appears substantial. The central question becomes: *If there were truly no difference in the population, how likely would it be to observe a difference at least this large?* The *p*-value answers precisely this question. It measures the probability of observing data as extreme as those obtained, under the assumption that $H_0$ is true (see @fig-p-value for a visualization).
+The logic proceeds by temporarily assuming that $H_0$ is true. Under this assumption, we ask: *If there were truly no difference or no association in the population, how likely would we be to observe data as extreme as those obtained?* When the observed data would be very unlikely under $H_0$, this casts doubt on the null hypothesis. When the data are consistent with what we would expect under $H_0$, we do not have strong evidence against it.
 
-A small *p*-value indicates that the observed result would be unlikely if the null hypothesis were correct. This provides evidence against $H_0$. A large *p*-value indicates that the observed data are consistent with what we would expect under $H_0$, and therefore do not provide strong evidence against it.
+This reasoning is indirect but deliberate. Hypothesis testing does not prove that $H_a$ is true. Instead, it evaluates how compatible the observed data are with a clearly specified baseline claim. A test therefore provides evidence against $H_0$, rather than proof of the alternative hypothesis. This distinction is essential for interpreting statistical results carefully.
 
-It is essential to understand what the *p*-value does *not* represent. It is not the probability that $H_0$ is true. Rather, it is the probability of the observed data, or more extreme data, *given that* $H_0$ is true. The distinction is fundamental: hypothesis testing does not determine whether the null hypothesis is true or false. Instead, it evaluates how incompatible the observed data are with the null assumption. In this way, the *p*-value serves as a quantitative measure of the strength of evidence against $H_0$.
+> *Practice:* Consider the claim that the average number of customer service contacts is 2. Formulate the null and alternative hypotheses for testing whether the true average differs from this value. Clearly state which hypothesis represents the default assumption.
 
-> *Practice:* Suppose a hypothesis test yields a *p*-value of 0.08. At a significance level of $\alpha = 0.05$, what decision would you make? Does this result prove that the null hypothesis is true? Explain your reasoning in words.
+### The p-value and Significance Level {.unnumbered .unlisted}
 
-### Decision Rule and Significance Level {.unnumbered .unlisted}
+The *p*-value measures how unusual the observed result is under the null hypothesis. More precisely, it is the probability of obtaining a result at least as extreme as the one observed, assuming that $H_0$ is true. A small *p*-value indicates that the observed result would be unlikely under $H_0$, and therefore provides evidence against the null hypothesis.
 
-To make decisions systematic and transparent, we compare the *p*-value to a pre-specified threshold known as the significance level, denoted by $\alpha$. A common choice is $\alpha = 0.05$, although other values may be appropriate depending on the context.
+To build intuition, suppose $H_0$ states that there is no difference in churn rates between two customer groups. If this assumption were true, any observed difference in sample churn rates would arise from random variation. Small differences would be common, whereas very large differences would be rare. The *p*-value answers the question: *If there were truly no difference in the population, how likely would we be to observe a difference at least as large as the one in the sample?*
 
-The significance level is chosen before examining the data. It represents the maximum probability of incorrectly rejecting a true null hypothesis that we are willing to tolerate. In other words, $\alpha$ controls the risk of a Type I error. The decision rule is straightforward:
+A *p*-value should not be interpreted as the probability that $H_0$ is true. It is a probability about the observed result under the assumption that $H_0$ is true, not a probability that the hypothesis itself is true. A small *p*-value provides evidence against $H_0$, but it does not show that the effect is large or practically important. Conversely, a large *p*-value indicates that the observed result is compatible with $H_0$, but it does not prove that $H_0$ is true.
 
-> Reject $H_0$ if the *p*-value is less than $\alpha$.
+To make decisions systematic and transparent, we compare the *p*-value with a pre-specified threshold known as the significance level, denoted by $\alpha$. A common choice is $\alpha = 0.05$, although other values may be appropriate depending on the context. The significance level is chosen before examining the result and controls the long-run probability of incorrectly rejecting a true null hypothesis, a Type I error discussed more fully in the next subsection.
 
-If the *p*-value is greater than or equal to $\alpha$, we do not reject $H_0$. It is important to emphasize that we do not “accept” the null hypothesis. A large *p*-value does not confirm that $H_0$ is true; it simply indicates that the data do not provide strong evidence against it.
+The decision rule is straightforward: reject $H_0$ if the *p*-value is less than $\alpha$. If the *p*-value is greater than or equal to $\alpha$, we do not reject $H_0$. We avoid saying that we “accept” $H_0$, because failing to reject the null hypothesis means only that the data do not provide strong enough evidence against it. Figure [-@fig-hypothesis-testing] summarizes this decision process.
 
-To illustrate this logic, consider a simple example. Suppose we test whether the average account tenure differs from 36 months: $$
-\begin{cases}
-H_0: \mu = 36 \\
-H_a: \mu \neq 36
-\end{cases}
-$$ Assume that a one-sample t-test produces a *p*-value of $0.03$. If we set $\alpha = 0.05$, we reject $H_0$ because $0.03 < 0.05$. The observed data would be relatively unlikely under the assumption that the true mean equals 36 months. If instead we had chosen $\alpha = 0.01$, we would not reject $H_0$, since $0.03 > 0.01$. The same data therefore lead to different decisions depending on the pre-specified tolerance for Type I error.
-
-This example highlights two important principles. First, hypothesis testing is based on controlled risk rather than certainty. Second, conclusions depend jointly on the observed evidence and the chosen significance level.
-
-There is also a close relationship between hypothesis testing and confidence intervals. For a two-sided test at significance level $\alpha$, rejecting $H_0$ is equivalent to observing that the hypothesized parameter value lies outside the corresponding $(1 - \alpha)$ confidence interval. Both approaches rely on the same underlying measure of sampling variability and provide complementary perspectives on statistical evidence (see @fig-hypothesis-testing).
-
-```{r fig-hypothesis-testing, echo=FALSE, out.width="75%", fig.cap="Visual summary of hypothesis testing, showing how sample evidence informs the decision to reject or not reject the null hypothesis ($H_0$)."}
-
+```{r fig-hypothesis-testing, echo=FALSE, out.width="75%", fig.cap = "Decision process in hypothesis testing. After stating $H_0$ and $H_a$ and collecting data, the p-value is compared with the significance level $\\alpha$ to decide whether the evidence is strong enough to reject $H_0$."}
 knitr::include_graphics("images/ch5_hypothesis_testing.png")
 ```
 
-### Errors and Statistical Power {.unnumbered .unlisted}
+To illustrate this logic, suppose we test whether the average account tenure differs from 36 months, using the hypotheses
+$$
+\begin{cases}
+H_0: \mu = 36 \\
+H_a: \mu \neq 36.
+\end{cases}
+$$
+Assume that a one-sample $t$-test produces a *p*-value of $0.03$. If we set $\alpha = 0.05$, we reject $H_0$ because $0.03 < 0.05$. The observed result would be relatively unlikely under the assumption that the true mean equals 36 months. If instead we choose $\alpha = 0.01$, we do not reject $H_0$, since $0.03 > 0.01$. The same result can therefore lead to different decisions depending on the pre-specified tolerance for error.
 
-Because hypothesis testing relies on sample data rather than the entire population, decisions are inherently subject to uncertainty. As a result, two types of error are possible.
+This example highlights two important principles. First, hypothesis testing is based on controlled risk rather than certainty. Second, conclusions depend jointly on the observed evidence, the chosen significance level, and the practical importance of the effect being studied.
 
-A *Type I error* occurs when we reject $H_0$ even though it is true. In practical terms, this means concluding that a difference or association exists when, in reality, it does not. The probability of making a Type I error is denoted by $\alpha$, the significance level chosen before conducting the test. By selecting $\alpha = 0.05$, for example, we accept a 5 percent risk of incorrectly rejecting a true null hypothesis.
+> *Practice:* Suppose a hypothesis test yields a *p*-value of 0.08. At a significance level of $\alpha = 0.05$, what decision would you make? Does this result prove that the null hypothesis is true? Explain your reasoning in words.
 
-A *Type II error* occurs when we do not reject $H_0$ even though it is false. In this case, a genuine difference or association exists in the population, but the sample data fail to provide strong enough evidence to detect it. The probability of making a Type II error is denoted by $\beta$.
+### Decision Errors and Statistical Power {.unnumbered .unlisted}
 
-These two errors reflect different types of risk. Reducing $\alpha$ lowers the probability of a Type I error but may increase the probability of a Type II error. In practice, there is often a trade-off between being too quick to declare a difference and being too cautious to detect a real one.
+Because hypothesis testing relies on sample data rather than the entire population, decisions are subject to uncertainty. Even when the testing procedure is applied correctly, two types of error are possible.
 
-A related concept is *statistical power*, defined as $$
-\text{Power} = 1 - \beta,
-$$ which represents the probability of correctly rejecting $H_0$ when it is false. Power measures the ability of a test to detect a genuine difference when one exists. Statistical power increases as the sample size grows, because larger samples reduce sampling variability and make true differences easier to detect. Power also increases when the variability in the data is smaller or when the true difference between groups is larger. In contrast, small samples or highly variable data make it more difficult to distinguish signal from noise, thereby reducing power. The possible outcomes of hypothesis testing are summarized in Table [-@tbl-hypothesis-errors].
+A Type I error occurs when we reject $H_0$ even though it is true. In practical terms, this means concluding that a difference or association exists when, in reality, it does not. The probability of making a Type I error is controlled by the significance level $\alpha$, which is chosen before conducting the test. For example, setting $\alpha = 0.05$ means that, when $H_0$ is true and the test assumptions hold, the long-run probability of incorrectly rejecting $H_0$ is 5 percent.
+
+A Type II error occurs when we do not reject $H_0$ even though it is false. In this case, a genuine difference or association exists in the population, but the sample does not provide sufficient evidence to detect it. The probability of making a Type II error is denoted by $\beta$.
+
+These two errors represent different risks. Reducing $\alpha$ makes it harder to reject $H_0$, which lowers the risk of a Type I error but can increase the risk of a Type II error. In practice, hypothesis testing therefore involves a trade-off between being too quick to declare an effect and being too cautious to detect one.
+
+A related concept is statistical power, defined as
+$$
+\text{Power} = 1 - \beta.
+$$
+Power is the probability of correctly rejecting $H_0$ when it is false, for a specified alternative or true effect size. It depends on several factors, including the sample size, the variability in the data, the significance level, and the size of the true effect. Larger samples, lower variability, and larger true effects generally increase power, because they make genuine differences easier to detect. Small samples or highly variable data reduce power, making it harder to distinguish signal from noise.
+
+Table [-@tbl-hypothesis-errors] summarizes the possible outcomes of hypothesis testing according to whether $H_0$ is true or false. This summary reinforces an important point: hypothesis testing does not eliminate uncertainty but provides a structured way to manage the risks of different statistical decisions. The appropriate balance between Type I and Type II errors depends on the context. In some applications, false alarms are costly; in others, failing to detect a real effect may be the more serious mistake.
 
 ::: {#tbl-hypothesis-errors .table}
-| Decision            | Reality: $H_0$ is True  | Reality: $H_0$ is False |
+| Decision            | Reality: $H_0$ is true  | Reality: $H_0$ is false |
 |---------------------|-------------------------|-------------------------|
-| Do not Reject $H_0$ | Correct decision        | Type II Error ($\beta$) |
-| Reject $H_0$        | Type I Error ($\alpha$) | Correct decision        |
+| Do not reject $H_0$ | Correct decision        | Type II error ($\beta$) |
+| Reject $H_0$        | Type I error ($\alpha$) | Correct decision        |
 
-Possible outcomes of hypothesis testing.
+Possible decision outcomes in hypothesis testing, depending on whether $H_0$ is true or false.
 :::
-
-An analogy often used is a criminal trial. The null hypothesis represents the presumption of innocence. Rejecting $H_0$ corresponds to convicting a defendant. A Type I error is convicting an innocent person, whereas a Type II error is acquitting a guilty one. As in legal decision-making, hypothesis testing involves balancing the risks of different types of mistakes rather than eliminating uncertainty altogether.
 
 ### One-Tailed and Two-Tailed Tests {.unnumbered .unlisted}
 
-The form of a hypothesis test depends on the research question and, more specifically, on how the alternative hypothesis is formulated. In some situations, the goal is to determine whether a parameter differs from a specified value in either direction. In other cases, the interest lies in detecting a deviation in a particular direction.
+The form of a hypothesis test is determined by the research question and, more specifically, by the alternative hypothesis. Sometimes we want to know whether a parameter differs from a specified value in either direction. In other cases, we are interested only in detecting a deviation in one particular direction.
 
-A *two-tailed test* is appropriate when the alternative hypothesis states that the parameter is not equal to a specified value, written as $H_a: \theta \neq \theta_0$. This form is used when deviations in both directions are of interest. For example, we may wish to assess whether the average annual transaction amount differs from \$4,000, without specifying whether it is higher or lower.
+A two-tailed test is used when deviations in both directions are relevant. The alternative hypothesis has the form $H_a: \theta \neq \theta_0$. For example, we may wish to assess whether the average annual transaction amount differs from \$4,000, without specifying whether it is higher or lower. A left-tailed test is used when the alternative hypothesis is $H_a: \theta < \theta_0$, such as testing whether the average number of months on book is less than 24 months. A right-tailed test is used when the alternative hypothesis is $H_a: \theta > \theta_0$, such as testing whether the churn rate is greater than 30 percent.
 
-A *right-tailed test* is used when the alternative hypothesis asserts that the parameter exceeds a specified value, written as $H_a: \theta > \theta_0$. This form is appropriate when the objective is to detect an increase. For instance, we might test whether the churn rate is greater than 30 percent.
+The alternative hypothesis determines which outcomes are considered “at least as extreme” as the observed test statistic and therefore how the *p*-value is computed. Under $H_0$, the *p*-value is calculated as a tail area under the sampling distribution of the test statistic. In a two-tailed test, values far from what is expected under $H_0$ in either direction provide evidence against the null hypothesis. In a left-tailed test, only unusually small values contribute to the *p*-value, whereas in a right-tailed test, only unusually large values do. Figure [-@fig-p-value] visualizes these three cases.
 
-A *left-tailed test* is used when the alternative hypothesis proposes that the parameter is smaller than a specified value, written as $H_a: \theta < \theta_0$. This form applies when the objective is to detect a decrease, such as determining whether the average number of months on book is less than 24 months.
-
-The specification of the alternative hypothesis determines which outcomes are considered “at least as extreme” as the observed test statistic and therefore how the *p*-value is computed. Under $H_0$, we examine the sampling distribution of the test statistic and calculate the *p*-value as an area under that distribution. In a two-tailed test, extreme values in both directions provide evidence against $H_0$, so the *p*-value is the combined area in the two tails. In a right-tailed test, only unusually large values contribute to the *p*-value, corresponding to the area to the right of the observed statistic. In a left-tailed test, only unusually small values contribute, corresponding to the area to the left. Figure [-@fig-p-value] visualizes these three cases and illustrates how the shaded tail region represents the *p*-value in each setting.
-
-```{r fig-p-value, echo=FALSE, out.width="80%", fig.cap="P-values represented as tail areas under the sampling distribution assumed by $H_0$. The shaded region corresponds to the p-value for two-tailed, right-tailed, and left-tailed tests."}
-
-knitr::include_graphics("images/ch5_p-value.png")
+```{r fig-p-value, echo=FALSE, out.width="75%", fig.cap = "Tail areas used to compute p-values for two-tailed, left-tailed, and right-tailed tests. Under the sampling distribution of the test statistic when $H_0$ is true, the shaded region represents outcomes at least as extreme as the observed test statistic in the direction or directions specified by $H_a$."}
+knitr::include_graphics("images/ch5_test_type_and_p-value.png")
 ```
 
-The choice between a one-tailed and two-tailed test must be determined by the research question before examining the data. Selecting the direction after observing the results compromises the validity of the *p*-value and increases the risk of drawing misleading conclusions.
+There is also a close relationship between hypothesis tests and confidence intervals, provided that both are based on the same assumptions. For a two-tailed test at significance level $\alpha$, rejecting $H_0: \theta = \theta_0$ is equivalent to finding that $\theta_0$ lies outside the corresponding two-sided $(1 - \alpha)$ confidence interval. For one-tailed tests, the analogous relationship involves one-sided confidence bounds rather than the usual two-sided interval.
 
-### Choosing the Appropriate Hypothesis Test {.unnumbered .unlisted}
+The choice between a one-tailed and two-tailed test must be made before examining the data. Choosing the direction after seeing the results invalidates the interpretation of the *p*-value, because it uses the data both to define the hypothesis and to test it. For this reason, two-tailed tests are often preferred unless the research question clearly justifies a directional alternative in advance. With these general principles in place, we can next consider how to match common inferential questions to appropriate statistical tests.
 
-Once the null and alternative hypotheses have been clearly formulated, the next step is to select a statistical test that aligns with both the research question and the structure of the data. This decision is not arbitrary; it depends primarily on the type of outcome variable and the number of groups or variables being compared.
+## Choosing an Appropriate Hypothesis Test {#sec-ch5-choosing-test}
 
-A useful starting point is to determine whether the primary variable of interest is numerical or categorical. If the goal is to draw inference about a population mean based on numerical data, tests such as the one-sample or two-sample t-test are appropriate. If the objective is to draw inference about proportions or relationships between categorical variables, tests for proportions or chi-square procedures are typically used. When more than two groups are compared with respect to a numerical outcome, analysis of variance (ANOVA) provides a natural extension of the two-sample t-test. When assessing linear association between two numerical variables, a correlation test is appropriate.
+The general logic of hypothesis testing is similar across many statistical procedures: state $H_0$ and $H_a$, usually compute a test statistic, obtain a *p*-value, and interpret the result in context. What changes from one problem to another is the specific test used to evaluate the evidence. Choosing an appropriate test requires matching the research question to the structure of the data.
 
-In this way, the choice of test reflects the structure of the variables involved and the specific parameter being evaluated. The null hypothesis always expresses a statement about equality or lack of association, but the mathematical form of the test statistic depends on the data type and comparison framework. Table [-@tbl-hypothesis-test] provides a concise summary of commonly used hypothesis tests and the types of research questions to which they apply.
+A useful starting point is to distinguish between numerical and categorical variables. Questions about population means usually lead to t-tests or analysis of variance, depending on the number of groups and whether the observations are independent or paired. Questions about proportions or associations between categorical variables lead to proportion tests or chi-square tests. Questions about linear association between two numerical variables are commonly addressed using a correlation test. Table [-@tbl-hypothesis-test] summarizes these common choices.
 
 ::: {#tbl-hypothesis-test .table}
-| Test | Null Hypothesis ($H_0$) | Applied To |
-|--------------------|---------------------|-------------------------------|
-| One-sample t-test | $H_0: \mu = \mu_0$ | Single numerical variable |
-| Test for Proportion | $H_0: \pi = \pi_0$ | Single categorical variable |
-| Two-sample t-test | $H_0: \mu_1 = \mu_2$ | Numerical outcome for two independent groups |
-| Paired t-test | $H_0: \mu_d = 0$ | Numerical outcome for paired observations |
-| Two-sample Z-test | $H_0: \pi_1 = \pi_2$ | Two binary categorical variables |
-| Chi-square Test | $H_0: \pi_1 = \cdots = \pi_k$ | Two categorical variables |
-| Analysis of Variance (ANOVA) | $H_0: \mu_1 = \cdots = \mu_k$ | Numerical outcome by multi-level group |
+| Test | Null hypothesis ($H_0$) | Typical setting |
+|---|---|---|
+| One-sample t-test | $H_0: \mu = \mu_0$ | One numerical variable |
+| One-sample Proportion Test | $H_0: \pi = \pi_0$ | One binary categorical variable |
+| Two-sample t-test | $H_0: \mu_1 = \mu_2$ | Numerical outcome and two independent groups |
+| Paired t-test | $H_0: \mu_d = 0$ | Numerical paired observations or matched pairs |
+| Two-sample Z-test | $H_0: \pi_1 = \pi_2$ | Binary outcome and two independent groups |
+| Chi-square Test | $H_0$: the variables are independent | Two categorical variables |
+| Analysis of Variance (ANOVA) | $H_0: \mu_1 = \cdots = \mu_k$ | Numerical outcome and a categorical group with three or more levels |
 | Correlation Test | $H_0: \rho = 0$ | Two numerical variables |
 
-Common hypothesis tests, their corresponding null hypotheses, and the types of data to which they are typically applied.
+Common hypothesis tests, their corresponding null hypotheses, and typical data settings.
 :::
 
-The remainder of this chapter applies these tests to concrete examples drawn from the `churn` dataset. Each example emphasizes not only the mechanics of implementation in R but also the interpretation of results in context. By linking statistical procedures to practical questions, we reinforce the central objective of inference: making principled conclusions from data while acknowledging uncertainty.
+The table should be used as a guide rather than a mechanical rule. In practice, the selected test must also be compatible with the study design, sample size, distributional assumptions, independence assumptions, and measurement scale of the variables. The remainder of this chapter applies these tests to concrete examples, emphasizing both implementation in R and interpretation in context.
 
 ## One-sample t-test {#sec-ch5-one-sample-t-test}
 
-Suppose a bank believes that customers typically remain active for 36 months before they churn. Has customer behavior changed in recent years? Is the average tenure of customers still close to this benchmark? The one-sample t-test provides a principled way to evaluate such questions.
+Suppose a bank uses 36 months as a benchmark for typical customer account tenure. Has customer behavior changed in recent years? Is the average tenure of customers still consistent with this benchmark, or does the observed data suggest a meaningful departure from it? The one-sample t-test provides a principled way to evaluate such questions.
 
-The one-sample t-test assesses whether the mean of a numerical variable in a population equals a specified value. It is commonly used when organizations compare sample evidence with a theoretical expectation or operational benchmark. Because the population standard deviation is usually unknown, the test statistic follows a $t$-distribution, which accounts for the additional uncertainty introduced by estimating variability from the sample.
+The one-sample t-test assesses whether the mean of a numerical variable in a population equals a specified value. It is commonly used when organizations compare sample evidence with a theoretical expectation, historical average, or operational benchmark. Because the population standard deviation is usually unknown, the test statistic follows a $t$-distribution, which accounts for the additional uncertainty introduced by estimating variability from the sample.
 
-The form of the hypotheses depends on the research question. For a two-sided test, the hypotheses are $$
+The form of the hypotheses depends on the research question. For a two-sided test, the hypotheses are
+$$
 \begin{cases}
 H_0: \mu = \mu_0 \\
-H_a: \mu \neq \mu_0
+H_a: \mu \neq \mu_0.
 \end{cases}
 $$
-
 If interest lies in detecting a decrease, the alternative becomes $H_a: \mu < \mu_0$, whereas to detect an increase, it becomes $H_a: \mu > \mu_0$.
 
-To illustrate, we return to the `churn` dataset. In earlier exploratory analysis, the variable `months_on_book` emerged as an important feature related to customer retention. We now assess whether the average account tenure differs from the benchmark value of 36 months at the 5 percent significance level ($\alpha = 0.05$). The hypotheses are $$
+To illustrate, we return to the `churn` dataset. The variable `months_on_book` records how long a customer has been associated with the bank. We now assess whether the average account tenure differs from the benchmark value of 36 months at the 5 percent significance level ($\alpha = 0.05$). The hypotheses are
+$$
 \begin{cases}
-H_0: \mu   =  36 \\
-H_a: \mu \neq 36
+H_0: \mu = 36 \\
+H_a: \mu \neq 36.
 \end{cases}
 $$
 
@@ -363,125 +348,116 @@ t_test <- t.test(churn$months_on_book, mu = 36)
 t_test
 ```
 
-The output reports the test statistic, degrees of freedom, the *p*-value, and a 95 percent confidence interval for the population mean. The *p*-value is `r round(t_test$p.value, 2)`, which exceeds $\alpha = 0.05$. We therefore do not reject $H_0$, indicating that the data do not provide sufficient evidence that the average tenure differs from 36 months.
+The output reports the test statistic, degrees of freedom, the *p*-value, and a 95 percent confidence interval for the population mean. The *p*-value is `r round(t_test$p.value, 2)`, which exceeds $\alpha = 0.05$. We therefore do not reject $H_0$. This means that the observed data do not provide sufficient evidence that the average tenure differs from 36 months. It does not prove that the true population mean is exactly 36 months.
 
-The 95 percent confidence interval is (`r round(t_test$conf.int[1], 2)`, `r round(t_test$conf.int[2], 2)`), and because 36 lies within this interval, the conclusion is consistent with the hypothesis test. The sample mean is `r round(t_test$estimate, 2)` months, which serves as our point estimate of the population mean. The test statistic follows a $t$-distribution with $n - 1$ degrees of freedom because the population standard deviation is unknown.
+The 95 percent confidence interval is (`r round(t_test$conf.int[1], 2)`, `r round(t_test$conf.int[2], 2)`). Because 36 lies within this interval, the confidence interval leads to the same conclusion as the hypothesis test. The sample mean is `r round(t_test$estimate, 2)` months, which serves as our point estimate of the population mean. Together, the *p*-value and confidence interval suggest that the observed average tenure is consistent with the 36-month benchmark, within the uncertainty expected from sampling variability.
 
-From a practical perspective, even if a difference had been statistically significant, its magnitude would need to be evaluated carefully. A deviation of a few tenths of a month may have limited operational relevance, whereas a difference of several months could meaningfully affect retention strategy.
+From a practical perspective, the size of any difference should also be considered. Even if a very small difference from 36 months were statistically significant in a large dataset, it might have limited operational relevance. A difference of several months, by contrast, could have clearer implications for retention strategy, customer engagement, or lifecycle analysis. The one-sample t-test therefore provides a structured method for comparing a sample mean with a fixed benchmark, but effective interpretation requires attention to the *p*-value, the confidence interval, and the practical importance of the observed difference.
 
 > *Practice:* Test whether the average account tenure of customers is less than 36 months. Formulate the hypotheses and conduct a left-tailed test using `t.test()` with the option `alternative = "less"`. Interpret the result at $\alpha = 0.05$.
 
-> *Practice:* Subset the data to customers who churn (`subset(churn, churn == "yes")`) and use a one-sample t-test to assess whether the average annual transaction amount (`transaction_amount_12`) differs from \$4,000.
+## One-sample Proportion Test {#sec-ch5-one-sample-proportion-test}
 
-The one-sample t-test provides a structured method for comparing a sample mean with a fixed benchmark. Statistical significance indicates whether an observed difference is unlikely to be due to random variation alone, but practical relevance determines whether the difference matters in context. Effective decision-making requires attention to both.
+Suppose a bank expects that 15 percent of its credit card customers churn each year. Has the observed churn rate changed from this benchmark? Are recent retention strategies associated with a lower churn rate, or is the observed difference small enough to be explained by sampling variability? These questions arise whenever the outcome of interest is binary, such as churn versus no churn, default versus no default, or subscription versus no subscription.
 
-## Hypothesis Testing for Proportion
+A one-sample proportion test evaluates whether the population proportion $\pi$ of a particular outcome equals a hypothesized value $\pi_0$. It is used for binary categorical variables, where each observation belongs to one of two categories. In the `churn` dataset, for example, the response variable `churn` records whether a customer churned (`"yes"`) or did not churn (`"no"`).
 
-Suppose a bank believes that 15 percent of its credit card customers churn each year. Has that rate changed in the current quarter? Are recent retention strategies having a measurable impact? These are common analytical questions whenever the outcome of interest is binary, such as churn versus no churn. To formally assess whether the observed proportion in a sample differs from a historical or expected benchmark, we use a test for a population proportion.
-
-A proportion test evaluates whether the population proportion ($\pi$) of a particular category is equal to a hypothesised value ($\pi_0$). It is most appropriate when analysing binary categorical variables, such as service subscription, default status, or churn. The `prop.test()` function in R implements this test and can be used either for a single proportion or for comparing two proportions.
-
-Suppose we want to test whether the observed churn rate in the `churn` dataset differs from the bank’s expectation of 15 percent. The hypotheses for a two-tailed test are: $$
+Suppose we want to test whether the churn rate in the population differs from the bank’s benchmark value of 15 percent. For a two-sided test, the hypotheses are
+$$
 \begin{cases}
-H_0: \pi = 0.15 \\ 
-H_a: \pi \neq 0.15
+H_0: \pi = 0.15 \\
+H_a: \pi \neq 0.15.
 \end{cases}
 $$
+Here, $\pi$ denotes the population proportion of customers who churn, and $0.15$ is the benchmark value specified under the null hypothesis.
 
-We conduct a two-tailed proportion test in R:
+We conduct the one-sample proportion test in R as follows:
 
 ```{r}
-prop_test <- prop.test(x = sum(churn$churn == "yes"),
-                       n = nrow(churn),
-                       p = 0.15)
+prop_test = prop.test(
+  x = sum(churn$churn == "yes"),
+  n = nrow(churn),
+  p = 0.15
+)
 
 prop_test
 ```
 
-Here, `x` is the number of churned customers, `n` is the total sample size, and `p = 0.15` specifies the hypothesised population proportion. The test uses a chi-square approximation to evaluate whether the observed sample proportion differs significantly from this value.
+In this code, `x` is the number of customers who churned, `n` is the total number of customers in the sample, and `p = 0.15` specifies the hypothesized population proportion under $H_0$. The function `prop.test()` uses a chi-square approximation to test whether the observed sample proportion differs from the hypothesized value. By default, it also reports a confidence interval for the population proportion.
 
-The output provides three key results: the *p*-value, a confidence interval for the true proportion, and the estimated sample proportion. The *p*-value is `r round(prop_test$p.value, 3)`. Because it is less than the significance level ($\alpha = 0.05$), we reject the null hypothesis. This indicates statistical evidence that the true churn rate differs from 15 percent.
+The output provides the *p*-value, a 95 percent confidence interval, and the observed sample proportion. The *p*-value is `r round(prop_test$p.value, 3)`, which is less than $\alpha = 0.05$. We therefore reject $H_0$ and conclude that the observed data provide statistical evidence that the population churn rate differs from 15 percent.
 
-The 95 percent confidence interval for the population proportion is (`r round(prop_test$conf.int[1], 3)`, `r round(prop_test$conf.int[2], 3)`). Since this interval does not contain $0.15$, the conclusion is consistent with the decision to reject ($H_0$). The observed sample proportion is `r round(prop_test$estimate, 3)`, which serves as our point estimate of the population churn rate.
+The 95 percent confidence interval for the population proportion is (`r round(prop_test$conf.int[1], 3)`, `r round(prop_test$conf.int[2], 3)`). Since this interval does not contain $0.15$, the confidence interval leads to the same conclusion as the hypothesis test. The observed sample proportion is `r round(prop_test$estimate, 3)`, which serves as the point estimate of the population churn rate.
 
-> *Practice:* Test whether the proportion of churned customers exceeds 15 percent. Set up a right-tailed one-sample proportion test using the option `alternative = "greater"` in the `prop.test()` function.
+From a practical perspective, rejecting $H_0$ tells us that the observed churn rate is statistically different from the 15 percent benchmark, but it does not by itself determine whether the difference is operationally important. The estimated proportion and confidence interval should be examined alongside business context, such as the cost of customer loss, the size of the customer base, and the expected impact of retention interventions. The one-sample proportion test therefore provides a structured way to compare a binary outcome with a fixed benchmark, while still requiring practical judgment when interpreting the result.
 
-This example shows how a test for a single proportion can be used to validate operational assumptions about customer behavior. The *p*-value indicates whether a difference is statistically significant, whereas the confidence interval and estimated proportion help assess practical relevance. When combined with domain knowledge, this method supports evidence-informed decisions about customer retention.
+> *Practice:* Test whether the proportion of churned customers exceeds 15 percent. Formulate the hypotheses and conduct a right-tailed one-sample proportion test using `prop.test()` with the option `alternative = "greater"`. Interpret the result at $\alpha = 0.05$.
 
 ## Two-sample t-test {#sec-ch5-two-sample-t-test}
 
-Do customers who churn have lower credit limits than those who remain active? If so, can credit availability help explain churn behavior? The two-sample t-test provides a statistical method to address such questions by comparing the means of a numerical variable across two independent groups.
+Do customers who churn have different credit limits from customers who remain active? If so, how large is the difference, and is it supported by statistical evidence rather than random variation alone? The two-sample t-test provides a statistical method for comparing the means of a numerical variable across two independent groups.
 
-Also known as *Student’s t-test*, this method was developed by William Sealy Gosset in the early twentieth century while he was employed at the Guinness Brewery. Because his employer restricted publication under his own name, he published his work under the pseudonym “Student.” Gosset’s central challenge was practical: how to make reliable inferences from small samples when the population variance was unknown. The resulting $t$-distribution accounts for this additional uncertainty and remains one of the most widely used tools in statistical inference.
+The two-sample t-test assesses whether two population means are equal. It is appropriate when the outcome variable is numerical and the grouping variable has two independent categories. Because the population standard deviations are usually unknown, the test uses a $t$-distribution to account for the uncertainty introduced by estimating variability from the sample.
 
-In Section [-@sec-EDA-sec-numeric], we examined the distribution of the total credit limit (`credit_limit`) for churners and non-churners using violin and histogram plots. These visualizations suggested that churners may have slightly lower credit limits. The next step is to assess whether this difference is statistically significant.
+In Section [-@sec-EDA-sec-numeric], we examined the distribution of total credit limit (`credit_limit`) for churners and non-churners using visual summaries. These plots suggested that customers who churn may have somewhat lower credit limits than those who remain active. We now assess whether this observed difference is statistically significant.
 
-```{r echo = FALSE, out.width = "100%"}
-#| layout-ncol: 2
-#| fig-width: 4
-#| fig-height: 4
-
-ggplot(data = churn, aes(x = churn, y = credit_limit, fill = churn)) +
-  geom_violin(trim = FALSE) +
-  labs(x = "Churn", y = "Credit Limit")
-
-ggplot(data = churn) +
-  geom_histogram(aes(x = credit_limit, fill = churn)) +
-  labs(x = "Credit Limit", y = "Count", fill = "Churn")
-```
-
-Both plots indicate that churners tend to have slightly lower credit limits than customers who stay. To test whether this difference is statistically significant, we apply the two-sample t-test. We start by formulating the hypotheses:
-
+Let $\mu_{\text{yes}}$ denote the population mean credit limit for customers who churn and $\mu_{\text{no}}$ the population mean credit limit for customers who do not churn. For a two-sided test, the hypotheses are
 $$
 \begin{cases}
-H_0: \mu_1 = \mu_2 \\
-H_a: \mu_1 \neq \mu_2
+H_0: \mu_{\text{yes}} = \mu_{\text{no}} \\
+H_a: \mu_{\text{yes}} \neq \mu_{\text{no}}.
 \end{cases}
 $$
+The null hypothesis states that the average credit limit is the same in the two customer populations, while the alternative hypothesis states that the two averages differ.
 
-Here, $\mu_1$ and $\mu_2$ represent the mean credit limits for churners and non-churners, respectively. The null hypothesis states that the population means are equal. To perform the test, we use the `t.test()` function in R. The formula syntax `credit_limit ~ churn` instructs R to compare the credit limits across the two churn groups:
+Before interpreting the test output, it is useful to compute the group means explicitly. This avoids relying on the order in which R reports group estimates, which may depend on the ordering of factor levels.
+
+```{r}
+credit_means <- aggregate(credit_limit ~ churn, data = churn, mean)
+credit_means
+```
+
+We then apply the two-sample t-test using the formula syntax `credit_limit ~ churn`, which instructs R to compare credit limits across the two churn groups:
 
 ```{r}
 t_test_credit <- t.test(credit_limit ~ churn, data = churn)
 t_test_credit
 ```
 
-The output includes the test statistic, *p*-value, degrees of freedom, confidence interval, and estimated group means. The *p*-value is `r round(t_test_credit$p.value, 4)`, which is smaller than the standard significance level $\alpha = 0.05$. We therefore reject $H_0$ and conclude that the average credit limits differ between churners and non-churners.
+The output includes the test statistic, degrees of freedom, *p*-value, confidence interval, and estimated group means. The *p*-value is `r round(t_test_credit$p.value, 4)`, which is smaller than $\alpha = 0.05$. We therefore reject $H_0$ and conclude that the observed data provide statistical evidence that the average credit limit differs between churners and non-churners.
 
-The 95 percent confidence interval for the difference in means is (`r round(t_test_credit$conf.int[1], 3)`, `r round(t_test_credit$conf.int[2], 3)`), and because zero is not contained in this interval, the result is consistent with rejecting the null hypothesis. The estimated group means are `r round(t_test_credit$estimate[1], 2)` for churners and `r round(t_test_credit$estimate[2], 2)` for non-churners, indicating that churners tend to have lower credit limits.
+The group means computed above show that the average credit limit is `r round(credit_means$credit_limit[credit_means$churn == "yes"], 2)` for customers who churn and `r round(credit_means$credit_limit[credit_means$churn == "no"], 2)` for customers who do not churn. Thus, in this sample, customers who churn have a lower average credit limit. The 95 percent confidence interval reported by `t.test()` for the difference in group means is (`r round(t_test_credit$conf.int[1], 3)`, `r round(t_test_credit$conf.int[2], 3)`). Because zero is not contained in this interval, the confidence interval leads to the same conclusion as the hypothesis test.
 
-> *Practice:* Test whether the average tenure (`months_on_book`) differs between churners and non-churners using `t.test(months_on_book ~ churn, data = churn)`. visualizations for this variable appear in Section [-@sec-EDA-sec-numeric].
+The two-sample t-test assumes that the two groups are independent and that the numerical outcome is approximately normally distributed within each group, or that the sample sizes are large enough for the sampling distribution of the mean difference to be approximately normal. By default, R performs Welch’s t-test, which adjusts the degrees of freedom to allow for unequal variances between groups. If the data are strongly skewed or contain substantial outliers, a nonparametric alternative such as the Mann–Whitney U test may be more appropriate.
 
-The two-sample t-test assumes independent groups and approximately normal distributions within each group. In practice, the test is robust when sample sizes are large, due to the Central Limit Theorem. By default, R performs Welch’s t-test, which adjusts the degrees of freedom to accommodate unequal variances between groups and therefore does not require the assumption of equal population variances. If the data are strongly skewed or contain substantial outliers, a nonparametric alternative such as the Mann–Whitney U test may be appropriate.
+From a practical perspective, the result shows an association between churn status and credit limit, not a causal effect of credit limit on churn. Lower credit limits among churners may reflect differences in customer profile, usage behavior, risk assessment, or engagement. The finding may therefore help identify variables worth considering in later modeling, but it does not imply that changing credit limits would necessarily reduce churn. As always, practical relevance depends on the magnitude of the difference and the decision context.
 
-From a business perspective, lower credit limits among churners may indicate financial constraints, lower engagement, or risk management decisions by the bank. This finding can support targeted strategies, such as credit line adjustments or personalized outreach. As always, assessing practical relevance is essential: even if a difference is statistically significant, its magnitude must be evaluated in context.
+> *Practice:* Test whether the average tenure (`months_on_book`) differs between churners and non-churners using `t.test(months_on_book ~ churn, data = churn)`. Before interpreting the test result, compute the group means explicitly using `aggregate()` or `tapply()`. Interpret the *p*-value, confidence interval, and practical relevance at $\alpha = 0.05$.
 
-The two-sample t-test is an effective way to evaluate patterns identified during exploratory analysis. It helps analysts move from visual impressions to statistical evidence, strengthening the foundation for downstream Modeling.
-
-When observations are measured on the same units under two conditions, however, the independence assumption no longer holds. In such cases, the paired $t$-test provides a more appropriate approach.
+The two-sample t-test is appropriate when the two groups being compared are independent. This condition is essential: each observation should belong to only one group, and observations in one group should not be naturally paired with observations in the other. When the same units are measured under two conditions, such as before and after an intervention, the independence assumption no longer holds. In such cases, the paired $t$-test provides a more appropriate approach.
 
 ## Paired t-test {#sec-ch5-paired-t-test}
 
 In many practical situations, observations occur in natural pairs. For example, we may measure the same individuals before and after a treatment, evaluate employee performance before and after training, or compare outcomes for the same customers under two conditions. Because each pair refers to the same unit of analysis, the observations are not independent. The paired $t$-test is designed for this type of data.
 
-Unlike the two-sample $t$-test, which compares the means of two *independent groups*, the paired $t$-test analyzes the *differences within each pair*. This structure arises when the same units are measured twice or when observations are naturally matched. Let $(x_{i,1}, x_{i,2})$ denote the two measurements for the $i$th unit. For each pair, we compute the difference $$
+Unlike the two-sample $t$-test, which compares the means of two independent groups, the paired $t$-test analyzes the differences within each pair. Let $(x_{i,1}, x_{i,2})$ denote the two measurements for the $i$th unit. For each pair, we compute the difference
+$$
 d_i = x_{i,2} - x_{i,1}.
 $$
-
-The paired $t$-test then examines whether the mean difference $\mu_d$ equals zero. The hypotheses are $$
+The paired $t$-test then examines whether the population mean difference $\mu_d$ equals zero. For a two-sided test, the hypotheses are
+$$
 \begin{cases}
 H_0: \mu_d = 0 \\
-H_a: \mu_d \neq 0
+H_a: \mu_d \neq 0.
 \end{cases}
-$$ for a two-sided test, although one-sided alternatives can also be used when a specific direction is of interest.
+$$
+One-sided alternatives can also be used when the research question specifies a direction in advance.
 
-By focusing on differences within pairs, the paired $t$-test removes variability between individuals and isolates the effect of the change or intervention. As a result, paired designs often provide more precise inference than analyses that treat the observations as independent.
+By focusing on differences within pairs, the paired $t$-test removes part of the variability between units and isolates the within-unit change. As a result, paired designs often provide more precise inference than analyses that incorrectly treat paired observations as independent.
 
-To illustrate the idea, suppose a bank launches a marketing campaign designed to encourage customers to increase their credit card usage. To evaluate the campaign, the bank records the total transaction amount for the same group of customers *before and after* the campaign. Because each observation corresponds to the same customer measured at two points in time, the data form natural pairs. It is therefore important to distinguish this situation from the two-sample $t$-test introduced earlier. The two-sample test compares the means of independent groups, such as the spending of different customers in two segments. In contrast, the paired $t$-test compares two measurements taken on the same units or on closely matched units. Applying a two-sample test in this setting would incorrectly treat the observations as independent and ignore the relationship between the paired measurements.
+Because the `churn` dataset does not contain before-and-after measurements for the same customers, we use a small simulated example to illustrate the paired design. Suppose a bank launches a marketing campaign designed to encourage customers to increase their credit card usage. To evaluate the campaign, the bank records the total transaction amount for the same group of customers before and after the campaign. Since each customer is measured twice, the data form natural pairs.
 
-Let $d = \text{after} - \text{before}$ denote the change in spending for each customer. The paired $t$-test evaluates whether the average change in spending differs from zero, indicating that the campaign may have affected customer behavior.
-
-The following example simulates transaction data for 100 customers and then performs a paired $t$-test.
+Let $d = \text{after} - \text{before}$ denote the change in spending for each customer. The paired $t$-test evaluates whether the average change in spending differs from zero. The following code simulates transaction data for 100 customers:
 
 ```{r}
 set.seed(42)
@@ -492,11 +468,10 @@ before <- rnorm(n, mean = 4000, sd = 800)
 after  <- before + rnorm(n, mean = 300, sd = 500)
 ```
 
-Figure [-@fig-ch5-paired-t-test-plot] helps visualize the paired structure of the data. In the left panel, each line connects the spending values for a single customer before and after the campaign. If many lines trend upward from left to right, this suggests that spending increased following the campaign.
-
-The right panel shows the distribution of the differences ($\text{after} - \text{before}$). The dashed vertical line represents zero difference. If most values lie to the right of this line, the data suggest that many customers increased their spending. The paired $t$-test formally evaluates whether the *mean of these differences* is significantly different from zero.
+Figure [-@fig-ch5-paired-t-test-plot] visualizes the paired structure of the data. In the left panel, each line connects the spending values for a single customer before and after the campaign. The right panel shows the distribution of the differences, $\text{after} - \text{before}$, with the dashed vertical line marking zero difference. If most differences lie to the right of this line, the data suggest that spending increased for many customers.
 
 ::: {#fig-ch5-paired-t-test-plot}
+
 ```{r, echo = FALSE, out.width = "100%"}
 #| layout-ncol: 2
 #| fig-width: 4
@@ -506,13 +481,15 @@ customer <- 1:n
 
 df <- data.frame(
   customer = rep(customer, 2),
-  period = factor(rep(c("Before", "After"), each = n),
-                  levels = c("Before", "After")),
+  period = factor(
+    rep(c("Before", "After"), each = n),
+    levels = c("Before", "After")
+  ),
   spending = c(before, after)
 )
 
 ggplot(df, aes(x = period, y = spending, group = customer)) +
-  geom_line(alpha = 0.4, color = "gray50") +
+  geom_line(alpha = 0.4, color = "gray50", linewidth = 0.5) +
   geom_point(size = 2, color = "#2C7FB8") +
   labs(x = "Campaign Period", y = "Transaction Amount")
 
@@ -526,425 +503,376 @@ df_diff <- data.frame(
 ggplot(df_diff, aes(x = difference)) +
   geom_histogram(bins = 12, fill = "#2C7FB8", color = "white", alpha = 0.8) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(x = "Difference in Transaction Amount",
-       y = "Number of Customers") +
+  labs(
+    x = "Difference in Transaction Amount",
+    y = "Number of Customers"
+  ) +
   theme_minimal()
 ```
 
-Customer transaction amounts before and after a marketing campaign (left) and distribution of differences (right).
+Customer transaction amounts before and after a marketing campaign (left) and distribution of paired differences (right).
 :::
 
-We can perform the paired $t$-test in R using the `t.test()` function with the argument `paired = TRUE`:
+We perform the paired $t$-test in R using the `t.test()` function with the argument `paired = TRUE`:
 
 ```{r}
-t.test(after, before, paired = TRUE)
+paired_test <- t.test(after, before, paired = TRUE)
+paired_test
 ```
 
-The argument `paired = TRUE` instructs R to treat the observations as matched pairs. Internally, R computes the differences between the paired values and performs a one-sample $t$-test on those differences. The output reports the estimated mean difference, the $t$ statistic, the degrees of freedom, the $p$-value, and a confidence interval for the mean difference. In this simulated example, the $p$-value is cloth to zero, providing strong evidence against $H_0$. We therefore conclude that the marketing campaign significantly increased customer spending.
+The argument `paired = TRUE` instructs R to treat the observations as matched pairs. Internally, R computes the differences between the paired values and performs a one-sample $t$-test on those differences. The output reports the estimated mean difference, the $t$ statistic, the degrees of freedom, the *p*-value, and a confidence interval for the population mean difference.
 
-Paired $t$-tests are widely used when the same units are measured under two conditions. Common applications include before–after experiments, repeated measurements on the same subjects, and evaluations of interventions or policy changes.
+In this simulated example, the *p*-value is `r round(paired_test$p.value, 4)`, providing strong evidence against $H_0$. We therefore conclude that the average transaction amount after the campaign is higher than before the campaign in this simulated paired sample. The confidence interval for $\mu_d$ gives a plausible range for the average change in spending and should be interpreted together with the estimated mean difference.
 
-Nonparametric alternatives are available when the assumptions of the $t$-test are questionable. In particular, if the data are highly skewed, contain strong outliers, or arise from small samples where normality cannot be reasonably assumed, rank-based methods provide a useful alternative. A commonly used option is the *Wilcoxon test*, implemented in R through the `wilcox.test()` function. This function can perform a one-sample test, a paired test, or a two-sample test (also known as the Wilcoxon rank-sum or Mann–Whitney test). Although these methods are less sensitive to deviations from normality, the $t$-test remains preferable when its assumptions are reasonably satisfied because it typically provides more efficient inference.
+Paired $t$-tests are widely used when the same units are measured under two conditions, such as before-and-after studies, repeated measurements on the same subjects, or evaluations of interventions. The key requirement is that each observation in one condition has a natural counterpart in the other condition.
 
-> *Practice:* Conduct a one-sided paired $t$-test to evaluate whether the marketing campaign increased customer spending ($H_a: \mu_d > 0$). Use `alternative = "greater"` in `t.test()`. Compare the resulting $p$-value with the two-sided test above and explain why the values differ.
+When the distribution of paired differences is strongly skewed, contains substantial outliers, or comes from a very small sample, a nonparametric alternative such as the Wilcoxon signed-rank test may be more appropriate. In R, this can be implemented using `wilcox.test()` with `paired = TRUE`.
+
+> *Practice:* Conduct a one-sided paired $t$-test to evaluate whether the marketing campaign increased customer spending ($H_a: \mu_d > 0$). Use `alternative = "greater"` in `t.test()`. Compare the resulting *p*-value with the two-sided test above and explain why the values differ.
 
 ## Two-sample Z-test {#sec-ch5-two-sample-z-test}
 
-Do male and female customers churn at different rates? If so, could gender-based differences in behavior or service interaction help explain customer attrition? When the outcome of interest is binary (such as churn versus no churn) and we want to compare proportions across two independent groups, the two-sample Z-test provides an appropriate statistical framework.
+Do male and female customers churn at different rates? When the outcome of interest is binary, such as churn versus no churn, and we want to compare proportions across two independent groups, the two-sample Z-test provides an appropriate statistical framework.
 
-Whereas the two-sample t-test compares means of numerical variables, the Z-test evaluates whether the difference between two population proportions is statistically significant or could plausibly be attributed to sampling variability. This makes it especially useful when analysing binary categorical outcomes.
+Whereas the two-sample t-test compares means of numerical variables, the two-sample Z-test evaluates whether two population proportions are equal. This makes it useful for comparing binary outcomes across groups, such as churn status across demographic categories or default status across customer segments.
 
-In Chapter [-@sec-ch4-EDA], Section [-@sec-EDA-categorical], we examined churn patterns across demographic groups, including *gender*. Bar plots suggested that churn rates may differ between male and female customers. The two-sample Z-test allows us to formally evaluate whether these observed differences are statistically meaningful.
+In Section [-@sec-EDA-categorical], we examined churn patterns across demographic groups, including `gender`, using bar plots and proportional comparisons. Those exploratory displays suggested that churn rates may differ between male and female customers. We now use a two-sample Z-test to assess whether the observed difference in proportions is larger than we would expect from sampling variability alone.
 
-```{r echo = FALSE, out.width = "100%"}
-#| layout-ncol: 2
-#| fig-width: 4
-#| fig-height: 4
-
-ggplot(data = churn) + 
-  geom_bar(aes(x = gender, fill = churn)) +
-  labs(
-    x = "Gender",
-    y = "Number of Customers",
-    fill = "Churn"
-  )
-
-ggplot(data = churn) + 
-  geom_bar(aes(x = gender, fill = churn), position = "fill") +
-  labs(
-    x = "Gender",
-    y = "Proportion",
-    fill = "Churn"
-  )
-```
-
-The first plot displays the number of churned and non-churned customers across genders, while the second shows proportional differences. These patterns suggest that churn may not be evenly distributed across male and female customers. To assess whether the difference is statistically significant, we set up the following hypotheses:
-
+For a two-sided comparison, the hypotheses are
 $$
 \begin{cases}
-H_0: \pi_1 = \pi_2 \\
-H_a: \pi_1 \neq \pi_2
+H_0: \pi_{\text{female}} = \pi_{\text{male}} \\
+H_a: \pi_{\text{female}} \neq \pi_{\text{male}}.
 \end{cases}
 $$
+Here, $\pi_{\text{female}}$ and $\pi_{\text{male}}$ denote the population churn proportions for the two gender groups. The null hypothesis states that the churn proportions are equal, while the alternative hypothesis states that they differ.
 
-Here, $\pi_1$ and $\pi_2$ are the proportions of churners among male and female customers, respectively. We construct a contingency table:
+We first construct a contingency table with gender groups as rows and churn status as columns:
 
 ```{r}
-table_gender <- table(churn$churn, churn$gender,
-                      dnn = c("Churn", "Gender"))
+table_gender <- table(
+  churn$gender,
+  churn$churn,
+  dnn = c("Gender", "Churn")
+)
+
 table_gender
 ```
 
-Next, we apply the `prop.test()` function to compare the two proportions:
+Next, we explicitly extract the number of churned customers and the total number of customers in each gender group. This makes the comparison clearer than passing the full contingency table directly to `prop.test()`:
 
 ```{r}
-z_test_gender <- prop.test(table_gender)
+x_gender <- table_gender[, "yes"]
+n_gender <- rowSums(table_gender)
+
+gender_rates <- x_gender / n_gender
+gender_rates
+```
+
+The object `x_gender` contains the number of churned customers in each gender group, while `n_gender` contains the corresponding group sizes. The estimated churn proportions in `gender_rates` should be used to interpret the direction and size of the observed difference.
+
+We then apply `prop.test()` to compare the two proportions:
+
+```{r}
+z_test_gender <- prop.test(
+  x = x_gender,
+  n = n_gender
+)
+
 z_test_gender
 ```
 
-The output includes the *p*-value, a confidence interval for the difference in proportions, and the estimated churn proportions for each gender. The *p*-value is `r round(z_test_gender$p.value, 3)`, which is less than the significance level $\alpha = 0.05$. We therefore reject $H_0$ and conclude that the churn rate differs between male and female customers.
+Although this section uses the traditional name two-sample Z-test, R’s `prop.test()` reports the result using a chi-square approximation. For two independent groups, this procedure addresses the same inferential question: whether the two population proportions are equal.
 
-The 95 percent confidence interval for the difference in proportions is (`r round(z_test_gender$conf.int[1], 3)`, `r round(z_test_gender$conf.int[2], 3)`). Because this interval does not contain zero, it supports the conclusion that the proportions are statistically different. The estimated churn proportions are `r round(z_test_gender$estimate[1], 3)` for male customers and `r round(z_test_gender$estimate[2], 3)` for female customers, indicating the direction and magnitude of the difference.
+The output includes the *p*-value, a confidence interval for the difference in proportions, and the estimated churn proportions for the two groups. The *p*-value is `r round(z_test_gender$p.value, 3)`, which is less than $\alpha = 0.05$. We therefore reject $H_0$ and conclude that the observed data provide statistical evidence that the churn proportions differ between the two gender groups.
 
-From a business perspective, differences in churn rates across demographic groups may reflect differences in service expectations, product usage patterns, or engagement levels. However, as always, statistical significance does not guarantee practical relevance. Even if one gender group shows a higher churn rate, the size of the difference should be interpreted in context before informing retention strategies.
+The 95 percent confidence interval for the difference in proportions is (`r round(z_test_gender$conf.int[1], 3)`, `r round(z_test_gender$conf.int[2], 3)`). Because this interval does not contain zero, the confidence interval leads to the same conclusion as the hypothesis test. The named values in `gender_rates` show the estimated churn proportion for each group and should be used to interpret which group has the higher observed churn rate and how large the difference is.
 
-> *Practice:* Test whether the proportion of churned customers is higher among female customers than among male customers. Follow the same steps as in this section and set up a right-tailed two-sample Z-test by specifying `alternative = "greater"` in the `prop.test()` function.
+From a practical perspective, a statistically significant difference in churn proportions across gender groups should be interpreted carefully. The test shows an association between gender group and churn status in the data, but it does not explain why the difference occurs. Any use of demographic variables in customer analysis should be considered alongside fairness, privacy, and business relevance. The result should also be interpreted together with the estimated proportions, confidence interval, sample sizes, and the size of the observed difference.
 
-The two-sample Z-test complements visual exploration and provides a rigorous method for comparing proportions. By integrating statistical inference with domain knowledge, organizations can make informed decisions about customer segmentation and retention strategies.
+> *Practice:* Test whether the proportion of churned customers is higher among female customers than among male customers. Before running the test, order the counts so that the female group is first and the male group is second. Then use `prop.test()` with `alternative = "greater"` and interpret the result at $\alpha = 0.05$.
 
 ## Chi-square Test {#sec-ch5-chi-square-test}
 
-Does customer churn vary across marital groups? And if so, does marital status reveal behavioral differences that could help inform retention strategies? These are typical questions when analysing relationships between two categorical variables. The Chi-square test provides a statistical method for evaluating whether such variables are associated or whether any observed differences are likely due to chance.
+Does customer churn vary across marital groups? More generally, are two categorical variables statistically associated, or could the observed differences in category counts be explained by sampling variability? The chi-square test provides a method for evaluating whether two categorical variables are independent.
 
-While earlier tests compared means or proportions between two groups, the Chi-square test examines whether the distribution of outcomes across several categories deviates from what would be expected if the variables were independent. It is particularly useful for demographic segmentation and behavioral analysis when one or both variables have more than two levels.
+Unlike t-tests, which compare means of numerical variables, the chi-square test examines counts in a contingency table. It compares the observed cell counts with the counts that would be expected if the two categorical variables were independent. This makes the test useful for questions involving categorical outcomes, such as whether churn status is associated with demographic or customer-profile variables.
 
-To illustrate the method, we revisit the `churn` dataset. In Chapter [-@sec-ch4-EDA], Section [-@sec-EDA-categorical], we explored churn rates across the marital categories “single”, “married”, and “divorced”. As in that chapter, we use the cleaned version of the dataset, where “unknown” marital values were removed during the data preparation step. Visualizations suggested possible differences across groups, but a formal statistical test is required to determine whether these differences are statistically meaningful.
+To illustrate the method, we return to the `churn` dataset. In Section [-@sec-EDA-categorical], we explored churn across several categorical variables, including `marital`. The variable includes the categories `"divorced"`, `"married"`, `"single"`, and `"unknown"`. The `"unknown"` category should be interpreted cautiously, because it represents missing or unreported marital status rather than a substantive marital group. We now use a chi-square test to assess whether marital status and churn are statistically associated.
 
-We begin by visualizing churn across marital groups:
-
-```{r echo = FALSE, out.width = "100%"}
-#| layout-ncol: 2
-#| fig-width: 4
-#| fig-height: 4
-
-ggplot(data = churn) + 
-  geom_bar(aes(x = marital, fill = churn)) +
-  labs(
-    x = "Marital Status",
-    y = "Number of Customers",
-    fill = "Churn"
-  )
-
-ggplot(data = churn) + 
-  geom_bar(aes(x = marital, fill = churn), position = "fill") +
-  labs(
-    x = "Marital Status",
-    y = "Proportion",
-    fill = "Churn"
-  )
-```
-
-The left plot presents raw churn counts; the right plot shows churn proportions within each marital category. While these visuals indicate potential differences, we use the Chi-square test to formally assess whether marital status and churn are associated.
-
-We first construct a contingency table:
+We first construct a contingency table with churn status as rows and marital status as columns:
 
 ```{r}
-table_marital <- table(churn$churn, churn$marital,
-                       dnn = c("Churn", "Marital"))
+table_marital = table(churn$churn, churn$marital, dnn = c("Churn", "Marital"))
 table_marital
 ```
 
-This table serves as the input to the `chisq.test()` function, which assesses whether two categorical variables are independent. The hypotheses are: $$
+The chi-square test evaluates whether churn status is independent of marital status. In this example, because churn is binary, this is equivalent to asking whether the population churn proportion is the same across marital categories. The hypotheses can therefore be written as
+$$
 \begin{cases}
-H_0: \pi_{\text{divorced, yes}} = \pi_{\text{married, yes}} = \pi_{\text{single, yes}} \\
-H_a: \text{Churn proportions differ across at least one marital group.}
+H_0: \pi_{\text{divorced}} = \pi_{\text{married}} = \pi_{\text{single}} = \pi_{\text{unknown}} \\
+H_a: \text{at least one marital category has a different churn proportion.}
 \end{cases}
 $$
+Here, $\pi_{\text{divorced}}$, $\pi_{\text{married}}$, $\pi_{\text{single}}$, and $\pi_{\text{unknown}}$ denote the population proportions of customers who churn within the divorced, married, single, and unknown marital-status categories, respectively. Under $H_0$, the distribution of churn status is the same across marital categories, apart from differences expected from sampling variability.
 
-We conduct the test as follows:
+We conduct the test using `chisq.test()`:
 
 ```{r}
-chisq_marital <- chisq.test(table_marital)
+chisq_marital = chisq.test(table_marital)
 chisq_marital
 ```
 
-The output includes the Chi-square statistic, degrees of freedom, expected frequencies under independence, and the *p*-value. The *p*-value is `r round(chisq_marital$p.value, 4)`, which is slightly greater than the significance level $\alpha = 0.05$. From a classical inferential perspective, we therefore do not reject $H_0$ and conclude that the sample does not provide sufficient statistical evidence to claim that churn behavior differs across marital groups.
+The output reports the chi-square statistic, degrees of freedom, and *p*-value. The *p*-value is `r round(chisq_marital$p.value, 4)`, which is greater than $\alpha = 0.05$. We therefore do not reject $H_0$. This means that the sample does not provide sufficient statistical evidence of an association between marital status and churn. It does not prove that marital status and churn are independent in the population.
 
-However, this conclusion should not be interpreted as evidence that marital status is irrelevant for predictive modeling. The Chi-square test evaluates the relationship between marital status and churn in isolation. In contrast, machine learning algorithms assess features jointly, accounting for interactions and correlations among multiple predictors. A variable that shows little association on its own may still improve predictive performance when considered alongside other features.
-
-Moreover, many modeling approaches, such as logistic regression with regularization, tree-based methods, or ensemble models, incorporate feature selection as part of the training process. These algorithms determine the contribution of each predictor in the context of the full model. For this reason, it is generally premature to eliminate a variable solely on the basis of a single univariate hypothesis test.
-
-In predictive modeling, the ultimate criterion is not statistical significance in isolation, but improvement in out-of-sample predictive performance. We return to this distinction in later chapters when constructing and evaluating classification models.
-
-To check whether the test assumptions are satisfied, we inspect the expected frequencies:
+To check whether the chi-square approximation is appropriate, we inspect the expected frequencies under independence:
 
 ```{r}
 chisq_marital$expected
 ```
 
-A general rule is that all expected cell counts should be at least 5. When expected frequencies are very small, the Chi-square approximation becomes unreliable, and Fisher’s exact test may be a better option. In the `churn` dataset, the expected counts are sufficiently large for the Chi-square test to be appropriate.
+A common rule of thumb is that expected cell counts should generally be at least 5. When expected counts are too small, the chi-square approximation may be unreliable, and Fisher’s exact test may be more appropriate. In this example, the expected counts are sufficiently large for the chi-square test to be used.
 
-Even when the test does not detect a statistically significant association, examining which categories deviate most from their expected counts can provide useful descriptive insight. Identifying whether certain marital groups churn slightly more or less than expected may point toward behavioral patterns worth exploring in further modeling or segmentation analysis.
+The result should also be interpreted in relation to the broader modeling goal. A non-significant chi-square test does not imply that `marital` should automatically be removed from later predictive models. The test evaluates the marginal association between marital status and churn, considering this pair of variables in isolation. Predictive models evaluate variables jointly and may capture interactions or conditional patterns that are not visible in a single univariate test. For this reason, it is premature to eliminate a predictor solely on the basis of one hypothesis test.
 
-> *Practice:* Test whether education level is associated with churn in the `churn` dataset. Follow the same steps as above. For more information on the `education` variable, see Section [-@sec-EDA-categorical] in Chapter [-@sec-ch4-EDA].
+> *Practice:* Test whether education level is associated with churn in the `churn` dataset. Construct a contingency table, apply `chisq.test()`, inspect the expected counts, and interpret the result at $\alpha = 0.05$. For more information on the `education` variable, see Section [-@sec-EDA-categorical].
 
-The Chi-square test therefore complements exploratory visualization by providing a formal statistical framework for analysing associations between categorical variables. Combined with domain expertise, it supports data-informed decisions about customer segmentation and engagement strategies.
+## Analysis of Variance (ANOVA) Test {#sec-ch5-anova}
 
-## Analysis of Variance (ANOVA) Test
+So far, we have examined hypothesis tests that compare two groups, such as the two-sample t-test and the two-sample Z-test. But what if we want to compare a numerical outcome across more than two groups? For example, does the mean price of diamonds differ across cut categories? When the grouping variable has three or more levels, analysis of variance (ANOVA) provides a formal way to test whether at least one group mean differs from the others.
 
-So far, we have examined hypothesis tests that compare two groups, such as the *two-sample t-test* and the *Z-test*. But what if we want to compare more than two groups? For example, does the average price of diamonds vary across different quality ratings? When dealing with a categorical variable that has multiple levels, the *Analysis of Variance (ANOVA)* provides a principled way to test whether at least one group mean differs significantly from the others.
+ANOVA compares variability between group means with variability within groups. If the between-group variability is large relative to the within-group variability, the data provide evidence that not all population means are equal. The test statistic follows an $F$-distribution under the null hypothesis. Figure [-@fig-ch5-anova-concept] illustrates this idea conceptually.
 
-ANOVA is especially useful for evaluating how a categorical factor with more than two levels affects a numerical outcome. It assesses whether the variability between group means is greater than what would be expected due to random sampling alone. The test statistic follows an F-distribution, which compares variance across and within groups.
-
-To illustrate, consider the `diamonds` dataset from the **ggplot2** package. We analyze whether the mean price (`price`) differs by cut quality (`cut`), which has five levels: "Fair," "Good," "Very Good," "Premium," and "Ideal."
-
-```{r}
-data(diamonds)   
-
-ggplot(data = diamonds) + 
-  geom_boxplot(aes(x = cut, y = price, fill = cut)) +
-  scale_fill_manual(values = c("#F4A582", "#FDBF6F", "#FFFFBF", "#A6D5BA", "#1B9E77"))
+```{r fig-ch5-anova-concept, echo=FALSE, out.width="60%", fig.cap="Conceptual idea behind ANOVA. The method compares variability between group means with variability within groups. Larger between-group variability relative to within-group variability provides evidence that not all population means are equal."}
+knitr::include_graphics("images/ch5_anova.png")
 ```
 
-The boxplot shows clear differences in the distribution and median prices across cut categories. Visual inspection, however, cannot determine whether these observed differences are statistically significant. ANOVA provides the formal test needed to make this determination.
-
-We evaluate whether cut quality affects diamond price by comparing the mean price across all five categories. Our hypotheses are: $$
-\begin{cases}
-H_0: \mu_1 = \mu_2 = \mu_3 = \mu_4 = \mu_5 \quad \text{(All group means are equal);} \\
-H_a: \text{At least one group mean differs.}
-\end{cases}
-$$
-
-We apply the `aov()` function in R, which fits a linear model and produces an ANOVA table summarising the variation between and within groups:
+To illustrate ANOVA in R, we use the `diamonds` dataset from the **ggplot2** package. The response variable is `price`, and the grouping variable is `cut`, which has five levels: `"Fair"`, `"Good"`, `"Very Good"`, `"Premium"`, and `"Ideal"`. Diamond prices are right-skewed, so the visual comparison should be interpreted cautiously. In this introductory example, we keep the original price scale to focus on the basic ANOVA workflow.
 
 ```{r}
-anova_test <- aov(price ~ cut, data = diamonds)
+data(diamonds)
+
+ggplot(data = diamonds) + 
+  geom_boxplot(aes(x = cut, y = price)) +
+  labs(x = "Cut", y = "Price")
+```
+
+The boxplot shows differences in the price distributions across cut categories. Visual inspection, however, cannot determine whether the observed differences in group means are statistically significant. ANOVA provides a formal test of this question.
+
+For this example, let $\mu_1, \ldots, \mu_5$ denote the population mean prices for the five cut categories. The hypotheses are
+$$
+\begin{cases}
+H_0: \mu_1 = \mu_2 = \mu_3 = \mu_4 = \mu_5 \\
+H_a: \text{at least one mean price differs.}
+\end{cases}
+$$
+The null hypothesis states that the mean price is the same across all cut categories. The alternative hypothesis states that at least one cut category has a different mean price.
+
+We apply the `aov()` function in R, which fits a linear model and produces an ANOVA table summarizing variation between and within groups:
+
+```{r}
+anova_test = aov(price ~ cut, data = diamonds)
 summary(anova_test)
 ```
 
-The output reports the degrees of freedom (`Df`), the F-statistic (`F value`), and the corresponding *p*-value (`Pr(>F)`). Because the *p*-value is below the significance level ($\alpha = 0.05$), we reject the null hypothesis and conclude that cut quality has a statistically significant effect on diamond price. Rejecting $H_0$ indicates that at least one group mean differs, but it does not tell us which cuts differ from each other. For this, we use post-hoc tests such as Tukey’s Honest Significant Difference (HSD) test, which controls for multiple comparisons while identifying significantly different pairs of groups.
+The output reports the degrees of freedom, the $F$ statistic, and the corresponding *p*-value. Because the *p*-value is below $\alpha = 0.05$, we reject $H_0$ and conclude that mean price differs across at least one cut category. This conclusion refers to an unadjusted comparison across cut groups. It does not imply that cut quality causes differences in price, because this simple ANOVA does not adjust for other important predictors such as carat, clarity, color, or depth.
 
-As with any statistical method, ANOVA has assumptions: independent observations, roughly normal distributions within groups, and approximately equal variances across groups. With large sample sizes—such as those in the diamonds dataset—the test is reasonably robust to moderate deviations from these conditions.
+ANOVA assumes independent observations, approximately normal residuals within groups, and roughly equal variances across groups. With large datasets, the test can be robust to moderate departures from normality, but strong skewness or unequal variances should still be considered when interpreting the result.
 
-From a business perspective, understanding differences in price across cut levels supports pricing, inventory, and marketing decisions. For example, if higher-quality cuts consistently command higher prices, retailers may emphasize them in promotions. Conversely, if mid-tier cuts show similar prices, pricing strategies may be reconsidered to align with customer perceptions of value.
+Rejecting $H_0$ tells us that not all group means are equal, but it does not identify which cut categories differ from each other. Pairwise follow-up comparisons can be used for that purpose, but they are not needed for the main aim of this section, which is to introduce the overall ANOVA test.
+
+As with other hypothesis tests, statistical significance should be interpreted together with practical relevance. The `diamonds` dataset is large, so even small differences in mean price may produce very small *p*-values. For pricing or inventory decisions, the magnitude of the differences and their relevance in context matter as much as the rejection of the null hypothesis.
 
 > *Practice:* Use ANOVA to test whether the average carat (`carat`) differs across clarity levels (`clarity`) in the `diamonds` dataset. Fit the model using `aov(carat ~ clarity, data = diamonds)` and examine the ANOVA output. For a visual comparison, create a boxplot similar to the one used for cut quality.
 
 ## Correlation Test {#sec-ch5-correlation-test}
 
-Suppose you are analysing sales data and notice that as advertising spend increases, product sales tend to rise as well. Is this trend real, or merely coincidental? In exploratory analysis (see Section [-@sec-EDA-sec-multivariate]), we used scatter plots and correlation matrices to visually assess such relationships. The next step is to evaluate whether the observed association is statistically meaningful. The correlation test provides a formal method for determining whether a linear relationship between two numerical variables is stronger than what we would expect by random chance.
+Suppose we examine two numerical variables and observe that larger values of one variable tend to occur with larger values of another. For example, in sales data, higher advertising expenditure may be associated with higher product sales. In exploratory analysis (see Section [-@sec-EDA-sec-multivariate]), scatter plots and correlation matrices were used to assess such relationships visually. A correlation test provides a formal way to evaluate whether the observed linear association is stronger than would be expected under the hypothesis of no population correlation.
 
-The correlation test evaluates both the **strength** and **direction** of a linear relationship by testing the null hypothesis that the population correlation coefficient ($\rho$) is equal to zero. This test is particularly useful when examining how continuous variables co-vary—insights that can guide pricing strategies, forecasting models, and feature selection in predictive analytics.
+The Pearson correlation coefficient measures the strength and direction of a linear association between two numerical variables. Its population value is denoted by $\rho$, and its sample estimate is usually denoted by $r$. Values of $r$ close to 1 indicate a strong positive linear association, values close to -1 indicate a strong negative linear association, and values near 0 indicate little linear association. Pearson correlation does not measure every kind of relationship: nonlinear patterns may be poorly summarized by a single correlation coefficient.
 
-To illustrate, we test the relationship between `carat` (diamond weight) and `price` in the `diamonds` dataset from the **ggplot2** package. A positive relationship is expected: larger diamonds typically command higher prices. We begin with a scatter plot to visually explore the trend:
+To illustrate, we examine the relationship between `carat` and `price` in the `diamonds` dataset from the **ggplot2** package. Larger diamonds are generally more expensive, so we expect a positive association. We begin with a scatter plot, because the visual pattern is essential for interpreting the correlation coefficient:
 
 ```{r}
 ggplot(diamonds, aes(x = carat, y = price)) +
   geom_point(alpha = 0.3, size = 0.6) +
-  labs(x = "Diamond Weight (Carats)", y = "Price (dolors)")
+  labs(x = "Diamond Weight (Carats)", y = "Price (dollars)")
 ```
 
-The plot clearly shows an upward trend, suggesting a positive association. However, visual inspection does not provide formal evidence. To test the linear relationship, we set up the following hypotheses: $$
+The scatter plot shows a clear upward trend: diamonds with larger carat values tend to have higher prices. The relationship is positive, although the spread also increases for larger diamonds. This visual pattern is important because a correlation coefficient summarizes only the overall linear tendency and does not describe the full shape or variability of the relationship.
+
+The correlation test evaluates whether the population correlation is zero. For a two-sided test, the hypotheses are
+$$
 \begin{cases}
-H_0: \rho = 0 \quad \text{(No linear correlation)} \\
-H_a: \rho \neq 0 \quad \text{(A significant linear correlation exists)}
+H_0: \rho = 0 \\
+H_a: \rho \neq 0.
 \end{cases}
 $$
+The null hypothesis states that there is no linear correlation in the population, while the alternative hypothesis states that the population linear correlation differs from zero.
 
-We conduct the test using the `cor.test()` function, which performs a Pearson correlation test and reports the correlation coefficient, *p*-value, and a confidence interval for $\rho$:
+We conduct the Pearson correlation test using `cor.test()`:
 
 ```{r}
-cor_test <- cor.test(diamonds$carat, diamonds$price)
+cor_test = cor.test(diamonds$carat, diamonds$price, method = "pearson")
 cor_test
 ```
 
-The output highlights three important results. First, the *p*-value is very close to zero, which is well below the significance level $\alpha = 0.05$. We therefore reject $H_0$ and conclude that a significant linear relationship exists between carat and price. Second, the correlation coefficient is `r round(cor_test$estimate, 2)`, indicating a strong positive association. Finally, the 95 percent confidence interval for the true correlation is (`r round(cor_test$conf.int, 3)`), which does not include zero and thus reinforces the conclusion of a statistically meaningful relationship.
+The output reports the sample correlation coefficient, the *p*-value, and a confidence interval for the population correlation. The estimated correlation is `r round(cor_test$estimate, 2)`, indicating a strong positive linear association between carat and price. The 95 percent confidence interval is (`r round(cor_test$conf.int[1], 3)`, `r round(cor_test$conf.int[2], 3)`), which provides a plausible range for the population correlation.
 
-From a business perspective, this finding supports the intuitive notion that carat weight is one of the primary determinants of diamond pricing. However, correlation does not imply causation: even a strong correlation may overlook other important attributes, such as cut quality or clarity, that also influence price. These relationships can be examined more fully using multivariate regression models.
+The *p*-value is very small, so we reject $H_0$ at $\alpha = 0.05$. However, in a large dataset such as `diamonds`, statistical significance is not surprising: even weak correlations can produce very small *p*-values when the sample size is large. The more informative quantities here are the estimated correlation, the confidence interval, and the scatter plot. Together, they show that `carat` and `price` have a strong positive linear association in this dataset.
 
-The correlation test provides a rigorous framework for evaluating linear relationships between numerical variables. When combined with visual summaries and domain knowledge, it helps identify meaningful patterns and informs decisions about pricing, product quality, and model design.
+This result should be interpreted carefully. A strong correlation does not imply causation, and the correlation test does not adjust for other variables. Diamond price is also related to other characteristics, such as cut, clarity, color, and depth. Moreover, Pearson correlation summarizes linear association only; if the relationship is curved or changes across the range of the data, a single correlation coefficient may hide important structure. Multivariate regression models, introduced in Chapter [-@sec-ch10-regression], provide a more appropriate framework for studying several predictors jointly.
 
-> *Practice:* Using the `churn` dataset, test whether `credit_limit` and `transaction_amount_12` are linearly correlated. Create a scatter plot, compute the correlation using `cor.test()`, and interpret the strength and significance of the relationship.
+> *Practice:* Using the `churn` dataset, test whether `credit_limit` and `transaction_amount_12` are linearly correlated. Create a scatter plot, compute the Pearson correlation using `cor.test()`, and interpret the estimated correlation, confidence interval, *p*-value, and practical relevance of the relationship.
 
 ## From Inference to Prediction in Data Science {#sec-ch5-inference-ds}
 
-You may have identified a statistically significant association between churn and service calls. But will this insight help predict *which specific customers* are likely to churn next month? This question captures an important transition in the data science workflow: moving from explaining relationships to predicting outcomes.
+A statistically significant association can be informative, but it does not automatically answer a predictive question. For example, we may find that the average number of customer service contacts differs between churners and non-churners. This result tells us something about a population-level relationship, but it does not by itself show how accurately we can predict which specific customers are likely to churn next month.
 
-While the principles introduced in this chapter—estimation, confidence intervals, and hypothesis testing—provide the foundations for rigorous reasoning under uncertainty, their role changes as we shift from classical statistical inference to predictive Modeling. In traditional statistics, the emphasis is on *population-level conclusions* drawn from sample data. In data science, the central objective is *predictive performance* and the ability to generalise reliably to new, unseen observations.
+This distinction marks an important transition in the Data Science Workflow. Statistical inference asks what conclusions can be drawn about population-level quantities or relationships from sample data. Prediction asks how accurately a model can generalize to new, unseen observations. These goals are related, but they are not the same. Inference emphasizes uncertainty, assumptions, effect sizes, and population-level interpretation. Prediction emphasizes out-of-sample performance, model comparison, and reliable generalization.
 
-This distinction has several practical implications. In large datasets, even very small differences can be statistically significant, but not necessarily useful. For example, finding that churners make 0.1 fewer calls on average may yield a significant *p*-value, yet contribute almost nothing to predictive accuracy. In Modeling, the goal is not to determine whether each variable is significant in isolation, but whether it improves the model’s ability to forecast or classify effectively.
+The difference has practical consequences. A variable can be statistically significant without being very useful for prediction. In a large dataset, even a very small difference between groups may produce a small *p*-value, while contributing little to classification accuracy or forecast quality. Conversely, a variable may improve predictive performance even when its role is difficult to summarize through a simple hypothesis test, especially when it contributes through interactions, nonlinear patterns, or combinations with other predictors.
 
-Traditional inference often begins with a clearly defined hypothesis, such as testing whether a marketing intervention increases conversion rates. In contrast, predictive Modeling typically begins with exploration: analysts examine many features, apply transformations, compare algorithms, and refine models based on validation metrics. The focus shifts from confirming specific hypotheses to discovering patterns that support robust generalization.
+This is one reason why inference and prediction should not be treated as interchangeable. Hypothesis tests usually evaluate specific questions about individual variables or relationships, often in isolation. Predictive modeling evaluates how well a set of variables, transformations, and algorithms work together on new data. In modeling, the central question is not whether each predictor is statistically significant on its own, but whether the model as a whole improves prediction in a reliable and interpretable way.
 
-Despite this shift, inference remains highly relevant throughout the Modeling pipeline. During data preparation, hypothesis tests can verify that training and test sets are comparable, reducing the risk of biased evaluation (see Chapter [-@sec-ch6-data-setup]). When selecting features, inference-based reasoning helps identify variables that show meaningful relationships with the outcome. Later, in model diagnostics, statistical concepts such as residual analysis, variance decomposition, and measures of uncertainty are essential for detecting overfitting, assessing assumptions, and interpreting model behavior. These ideas return again in Chapter [-@sec-ch10-regression], where hypothesis testing is used to assess regression coefficients and evaluate competing models.
+Inference still remains relevant in predictive data science, but its role must be understood carefully. During data setup, descriptive checks can help assess whether training and test sets have broadly similar distributions. Formal tests may sometimes be informative, but they should not be treated as the main criterion for a good split. A useful split is primarily one that supports fair evaluation of generalization performance, avoids data leakage, and reflects the prediction problem of interest, as discussed in Chapter [-@sec-ch6-data-setup].
 
-Recognizing how the role of inference evolves in predictive contexts allows us to use these tools more effectively. The goal is not to replace inference with prediction, but to integrate both perspectives. As we move to the next chapter, we begin constructing predictive models. The principles developed throughout this chapter—careful reasoning about variability, uncertainty, and structure—remain central to building models that are not only accurate but also interpretable and grounded in evidence.
+Inference also supports model interpretation and diagnostic reasoning. In regression models, for example, hypothesis tests and confidence intervals can help assess uncertainty in estimated coefficients, while residual analysis and variance-based summaries help evaluate model assumptions. These tools return in Chapter [-@sec-ch10-regression], where we examine how regression models can be used both for interpretation and prediction. In more flexible machine learning models, inferential ideas still matter, but they are often combined with validation metrics, resampling, and model comparison.
+
+The aim is therefore not to replace inference with prediction, or prediction with inference. Rather, we use each perspective for the question it is designed to address. Inference helps us reason about population-level evidence and uncertainty; prediction helps us evaluate how well a model performs on new observations. Together, they support data science workflows that are not only accurate, but also transparent, cautious, and grounded in evidence.
 
 ## Chapter Summary and Takeaways
 
-This chapter equipped you with the essential tools of statistical inference. You learned how to use point estimates and confidence intervals to quantify uncertainty and how to apply hypothesis testing to evaluate evidence for or against specific claims about populations.
+This chapter introduced statistical inference as a framework for reasoning from sample data to population-level conclusions. Because samples vary, numerical summaries such as means, proportions, and correlations are uncertain estimates rather than fixed truths. Point estimates provide useful summaries, but confidence intervals are needed to express the uncertainty surrounding them.
 
-We applied a range of hypothesis tests using real-world examples: t-tests for comparing group means, proportion tests for binary outcomes, ANOVA for examining differences across multiple groups, the Chi-square test for assessing associations between categorical variables, and correlation tests for measuring linear relationships between numerical variables.
+We also developed the logic of hypothesis testing. A hypothesis test evaluates whether observed data provide sufficient evidence against a specified null hypothesis. The resulting *p*-value must be interpreted carefully: it is not the probability that the null hypothesis is true, and it does not measure the practical importance of an effect. Statistical significance should therefore be considered alongside effect size, assumptions, sample size, and domain relevance.
 
-Together, these methods form a framework for drawing rigorous, data-driven conclusions. In the context of data science, they support not only analysis but also model diagnostics, the evaluation of data partitions, and the interpretability of predictive models. While *p*-values help assess statistical significance, they should always be interpreted alongside effect size, underlying assumptions, and domain relevance to ensure that findings are both meaningful and actionable.
+Confidence intervals and hypothesis tests offer complementary views of statistical evidence. Confidence intervals show a range of plausible values for a population parameter, while hypothesis tests evaluate evidence against a specific claim. Together, they help distinguish random variation from patterns that may reflect broader population-level relationships.
 
-Statistical inference continues to play an important role in later chapters. It helps validate training and test splits (Chapter [-@sec-ch6-data-setup]) and reappears in regression Modeling (Chapter [-@sec-ch10-regression]), where hypothesis tests are used to assess model coefficients and compare competing models. For readers who want to explore statistical inference more deeply, a helpful introduction is *Intuitive Introductory Statistics* by Wolfe and Schneider [@wolfe2017intuitive].
+The chapter also emphasized the limits of inference in data science. A statistically significant variable is not necessarily useful for prediction, and a predictively useful variable may not be simple to interpret through a single hypothesis test. Inference supports predictive modeling by clarifying uncertainty, assumptions, and relationships in the data, but it does not replace validation on new observations. Descriptive checks can help assess whether training and test sets have broadly similar distributions, but formal tests should not be treated as the main criterion for a good split.
 
-In the next chapter, we transition from inference to modeling, beginning with one of the most critical steps in any supervised learning task: dividing data into training and test sets. This step ensures that model evaluation is fair, transparent, and reliable, setting the stage for building predictive systems that generalise to new data.
+In the next chapter, we move from statistical inference to data setup for supervised learning. We examine how to divide data into training and test sets, avoid data leakage, and prepare datasets for fair and reliable model evaluation. These steps build on the inferential ideas introduced here while shifting the focus toward predictive performance and generalization.
+
+
+
 
 ## Exercises {#sec-ch5-exercises}
 
-This set of exercises is designed to help you consolidate and apply what you have learned about statistical inference. They are organized into three parts: conceptual questions to deepen your theoretical grasp, hands-on tasks to practice applying inference methods in R, and reflection prompts to encourage thoughtful integration of statistical thinking into your broader data science workflow.
+These exercises consolidate the main ideas of statistical inference and hypothesis testing. They move from conceptual understanding to applied work in R, with emphasis on choosing appropriate tests, formulating hypotheses, interpreting uncertainty, and distinguishing statistical significance from practical relevance.
 
-#### Conceptual Questions {.unnumbered}
+#### Conceptual Understanding {.unnumbered}
 
-1.  Why is hypothesis testing important in data science? Explain its role in making data-driven decisions and how it complements exploratory data analysis.
+1. Explain why statistical inference is needed when we want to draw population-level conclusions from sample data. In your answer, distinguish between a sample statistic and a population parameter.
 
-2.  What is the difference between a confidence interval and a hypothesis test? How do they provide different ways of drawing conclusions about population parameters?
+2. What is sampling variability, and why does it matter when interpreting results from data? Give an example in which two samples from the same population might lead to slightly different estimates or conclusions.
 
-3.  The *p*-value represents the probability of observing the sample data, or something more extreme, assuming the null hypothesis is true. How should *p*-values be interpreted, and why is a *p*-value of 0.001 in a two-sample t-test not necessarily evidence of practical significance?
+3. Compare confidence intervals and hypothesis tests. How do they provide complementary ways of reasoning about uncertainty? Give an example of a situation in which both approaches could be used to address the same research question.
 
-4.  Explain the concepts of *Type I* and *Type II* errors in hypothesis testing. Why is it important to balance the risks of these errors when designing statistical tests?
+4. Explain what a *p*-value means in the context of a hypothesis test. Why is it incorrect to interpret a *p*-value as the probability that the null hypothesis is true?
 
-5.  In a hypothesis test, failing to reject the null hypothesis does not imply that the null hypothesis is true. Explain why this is the case and discuss the implications of this result in practice.
+5. Distinguish between Type I and Type II errors. How is statistical power related to a Type II error? Give one example where a Type I error would be more serious and another example where a Type II error would be more serious.
 
-6.  When working with small sample sizes, why is the t-distribution used instead of the normal distribution? How does the shape of the t-distribution change as the sample size increases?
+6. Why should statistical significance not be confused with practical relevance? Explain how a very large dataset can produce a small *p*-value for an effect that may have little practical importance.
 
-7.  One-tailed and two-tailed hypothesis tests serve different purposes. When would a one-tailed test be more appropriate than a two-tailed test? Provide an example where each type of test would be applicable.
+7. Pearson correlation measures linear association between two numerical variables. Explain why a strong Pearson correlation does not imply causation and why nonlinear relationships may not be well summarized by Pearson correlation.
 
-8.  Both the two-sample Z-test and the Chi-square test analyze categorical data but serve different purposes. How do they differ, and when would one be preferred over the other?
+#### Confidence Intervals and Estimation {.unnumbered}
 
-9.  The *Analysis of Variance* (ANOVA) test is designed to compare means across multiple groups. Why can’t multiple t-tests be used instead? What is the advantage of using ANOVA in this context?
+For the applied exercises in this section and the next sections, use the `loan`, `bike_demand`, and `purchase_intention` datasets from the **liver** package. These exercises focus on estimating population means and proportions, quantifying uncertainty, and interpreting how confidence level and sample size affect interval width.
 
-#### Hands-On Practice: Hypothesis Testing in R {.unnumbered}
-
-For the following exercises, use the `churn_mlc`, `bank`, `marketing`, and `diamonds` datasets available in the **liver** and **ggplot2** packages. We have previously used the `churn_mlc`, `bank`, and `diamonds` datasets in this and earlier chapters. In @sec-ch10-regression, we will introduce the `marketing` dataset for regression analysis.
-
-To load the datasets, use the following commands:
-
-```{r}
+```{r eval = FALSE}
 library(liver)
-library(ggplot2)   
 
-# To import the datasets
-data(churn_mlc)  
-data(bank)  
-data(marketing, package = "liver")  
-data(diamonds)  
+data(loan)
+data(bike_demand)
+data(purchase_intention)
 ```
 
-10. We are interested in knowing the 90% confidence interval for the population mean of the variable "`night_calls`" in the `churn_mlc` dataset. In R, we can obtain a confidence interval for the population mean using the `t.test()` function as follows:
+8. Construct a 95 percent confidence interval for the population mean of `loan_amount` in the `loan` dataset using `t.test()`. Then construct a 99 percent confidence interval for the same quantity. Compare the two intervals and explain why one is wider. How does the confidence level affect the precision of the estimate?
 
-```{r}
-t.test(x = churn_mlc$night_calls, conf.level = 0.90)$"conf.int"
+9. Estimate the proportion of approved loans in the `loan` dataset. Use the following structure to construct a 95 percent confidence interval for the population approval proportion:
+
+```{r eval = FALSE}
+prop.test(x = sum(loan$loan_status == "approved"),
+          n = nrow(loan), conf.level = 0.95)
 ```
 
-Interpret the confidence interval in the context of customer service calls made at night. Report the 99% confidence interval for the population mean of "`night_calls`" and compare it with the 90% confidence interval. Which interval is wider, and what does this indicate about the precision of the estimates? Why does increasing the confidence level result in a wider interval, and how does this impact decision-making in a business context?
+Interpret the confidence interval in context. What does it tell us about uncertainty in the estimated approval rate?
 
-11. Subgroup analyses help identify behavioral patterns in specific customer segments. In the `churn_mlc` dataset, we focus on customers with both an *International Plan* and a *Voice Mail Plan* who make more than 220 daytime minutes of calls. To create this subset, we use:
+10. Construct a 95 percent confidence interval for the mean hourly bike count (`bike_count`) in the `bike_demand` dataset using `t.test()`. Interpret the interval in terms of average hourly demand.
 
-```{r}
-sub_churn = subset(churn_mlc, (intl_plan == "yes") & (voice_plan == "yes") & (day_mins > 220)) 
+11. Estimate the proportion of online shopping sessions that result in revenue in the `purchase_intention` dataset. Use the event `revenue == "yes"` and construct a 95 percent confidence interval by writing the code explicitly with `x` and `n`, rather than passing a table directly to `prop.test()`. Interpret both the sample proportion and the confidence interval.
+
+12. Take a random sample of 100 observations from the `bike_demand` dataset without replacement and construct a 95 percent confidence interval for the mean of `bike_count`. Repeat the analysis with a random sample of 1000 observations. Use `set.seed()` before sampling, compare the widths of the two intervals, and explain how sample size affects precision.
+
+#### Hypothesis Testing in R {.unnumbered}
+
+13. In the `loan` dataset, test whether the average `cibil_score` differs from 700. State the null and alternative hypotheses, run the one-sample t-test using `t.test()`, and interpret the *p*-value and confidence interval at $\alpha = 0.05$. Comment briefly on whether the observed difference is practically meaningful.
+
+14. Test whether the proportion of approved loans is greater than 50 percent. Use a one-sample proportion test with the event `loan_status == "approved"`:
+
+```{r eval = FALSE}
+prop.test(x = sum(loan$loan_status == "approved"),
+          n = nrow(loan), p = 0.50, alternative = "greater")
 ```
 
-Next, we compute the 95% confidence interval for the proportion of churners in this subset using `prop.test()`:
+State the null and alternative hypotheses and interpret the result at $\alpha = 0.05$. In addition to statistical significance, discuss whether the observed approval proportion is practically meaningful.
 
-```{r}
-prop.test(table(sub_churn$churn), conf.level = 0.95)$"conf.int"
+15. Compare the average `cibil_score` between approved and rejected loan applications. Before running the two-sample t-test, compute the group means explicitly using `aggregate()` or `tapply()`. Then run `t.test(cibil_score ~ loan_status, data = loan)` and interpret the *p*-value, confidence interval, and direction of the difference.
+
+16. Test whether loan approval status is associated with education level. Construct a contingency table using `education` and `loan_status`, apply `chisq.test()`, inspect the expected counts, and interpret the result at $\alpha = 0.05`. Explain why this test shows association rather than causation.
+
+17. In the `purchase_intention` dataset, test whether the purchase proportion differs between weekend and non-weekend sessions. Use a two-sample proportion test by first constructing a table and then extracting the number of `"yes"` outcomes and group totals:
+
+```{r eval = FALSE}
+tab_weekend = table(purchase_intention$weekend, purchase_intention$revenue)
+
+x_weekend = tab_weekend[, "yes"]
+n_weekend = rowSums(tab_weekend)
+
+x_weekend / n_weekend
+
+prop.test(x = x_weekend, n = n_weekend)
 ```
 
-Compare this confidence interval with the overall churn rate in the dataset (see @sec-ch5-confidence-interval). What insights can be drawn about this customer segment, and how might they inform retention strategies?
+State the null and alternative hypotheses. Interpret the estimated proportions, confidence interval, and *p*-value. Pay attention to the order of the groups when interpreting the direction of the difference.
 
-12. In the `churn_mlc` dataset, we test whether the mean number of customer service calls (`customer_calls`) is greater than 1.5 at a significance level of 0.01. The right-tailed test is formulated as:
+18. Test whether mean `bike_count` differs across `season` categories in the `bike_demand` dataset using ANOVA. Fit the model using `aov(bike_count ~ season, data = bike_demand)` and interpret the ANOVA table. Explain why rejecting the null hypothesis does not tell us which seasons differ from each other, and comment briefly on whether the comparison should be interpreted causally.
 
-$$
-\begin{cases}
-  H_0:  \mu \leq 1.5 \\
-  H_a:  \mu > 1.5
-\end{cases}
-$$
+19. Assess the linear association between `temperature` and `bike_count` in the `bike_demand` dataset. Create a scatter plot, compute Pearson’s correlation using `cor.test()`, and interpret the estimated correlation, confidence interval, and *p*-value. Explain why the scatter plot and estimated correlation are more informative than the *p*-value alone, especially in a large dataset.
 
-Since the level of significance is $\alpha = 0.01$, the confidence level is $1-\alpha = 0.99$. We perform the test using:
+#### Selecting Statistical Tests in Context {.unnumbered}
 
-```{r}
-t.test(x = churn_mlc$customer_calls, 
-        mu = 1.5, 
-        alternative = "greater", 
-        conf.level = 0.99)
-```
+20. In the `loan` dataset, suppose we want to examine whether the mean `loan_amount` differs between approved and rejected loan applications. Identify an appropriate statistical test, state the null and alternative hypotheses, and justify your choice based on the variable types and group structure.
 
-Report the *p*-value and determine whether to reject the null hypothesis at $\alpha=0.01$. Explain your decision and discuss its implications in the context of customer service interactions.
+21. In the `loan` dataset, examine whether `loan_status` is associated with `self_employed`. Identify the appropriate test, construct the relevant contingency table, and explain why this test is suitable for two categorical variables. If you run the test in R, inspect the expected counts and interpret the result in context.
 
-13. In the `churn_mlc` dataset, we test whether the proportion of churners ($\pi$) is less than 0.14 at a significance level of $\alpha=0.01$. The confidence level is $99\%$, corresponding to $1-\alpha = 0.99$. The test is conducted in R using:
+22. In the `bike_demand` dataset, suppose we want to test whether mean `bike_count` differs across `season` categories. Identify the appropriate test and formulate the hypotheses. Explain why this problem requires a method for comparing more than two group means.
 
-```{r}
-prop.test(table(churn_mlc$churn), 
-           p = 0.14, 
-           alternative = "less", 
-           conf.level = 0.99)
-```
+23. In the `purchase_intention` dataset, examine whether `visitor_type` is associated with `revenue`. Choose the appropriate test, formulate the hypotheses, run the test in R, inspect the expected counts if relevant, and interpret the result in context.
 
-State the null and alternative hypotheses. Report the *p*-value and determine whether to reject the null hypothesis at $\alpha=0.01$. Explain your conclusion and its potential impact on customer retention strategies.
+24. Suppose a test shows that `loan_amount` differs significantly between approved and rejected loan applications. Explain why this result should not be interpreted as evidence that loan amount causes approval or rejection. What other variables might need to be considered?
 
-14. In the `churn_mlc` dataset, we examine whether the number of customer service calls (`customer_calls`) differs between churners and non-churners. To test this, we perform a two-sample t-test:
+25. In the `bike_demand` dataset, a very small *p*-value is obtained when testing the association between `temperature` and `bike_count`. Explain why the estimated correlation and scatter plot are still necessary for interpretation. Discuss how sample size affects the interpretation of statistical significance.
 
-```{r}
-t.test(customer_calls ~ churn, data = churn_mlc)
-```
+#### Reflection and Communication {.unnumbered}
 
-State the null and alternative hypotheses. Determine whether to reject the null hypothesis at a significance level of $\alpha=0.05$. Report the *p*-value and interpret the results, explaining whether there is evidence of a relationship between churn status and customer service call frequency.
+26. Write a short explanation for a non-technical audience describing what a 95 percent confidence interval means. Use either the loan approval proportion, average bike demand, or online purchase proportion as your example. Avoid technical notation and focus on the idea of uncertainty.
 
-15. In the `marketing` dataset, we test whether there is a *positive* relationship between `revenue` and `spend` at a significance level of $\alpha = 0.025$. We perform a one-tailed correlation test using:
+27. A manager says, “The *p*-value is below 0.05, so this variable is important.” Write a short response explaining why this statement is incomplete. Refer to effect size, sample size, assumptions, and practical relevance.
 
-```{r}
-cor.test(x = marketing$spend, 
-         y = marketing$revenue, 
-         alternative = "greater", 
-         conf.level = 0.975)
-```
+28. Explain how inference supports predictive modeling without replacing it. In your answer, distinguish between population-level evidence and prediction for new observations. Also explain why hypothesis tests should not be treated as the main criterion for selecting predictors or assessing the quality of training and test splits.
 
-State the null and alternative hypotheses. Report the *p*-value and determine whether to reject the null hypothesis. Explain your decision and discuss its implications for understanding the relationship between marketing spend and revenue.
 
-16. In the `churn_mlc` dataset, for the variable “`day_mins`”, test whether the mean number of "Day Minutes" is greater than 180. Set the level of significance to be 0.05.
 
-17. In the `churn_mlc` dataset, for the variable "`intl_plan`" test at $\alpha=0.05$ whether the proportion of customers who have international plan is less than 0.15.
 
-18. In the `churn_mlc` dataset, test whether there is a relationship between the target variable “`churn`” and the variable “`intl_charge`” with $\alpha=0.05$.
 
-19. In the `bank` dataset, test whether there is a relationship between the target variable “`deposit`” and the variable “`education`” with $\alpha=0.05$.
 
-20. Compute the proportion of customers in the `churn_mlc` dataset who have an International Plan (`intl_plan`). Construct a 95% confidence interval for this proportion using R, and interpret the confidence interval in the context of customer subscriptions.
 
-21. Using the `churn_mlc` dataset, test whether the average number of daytime minutes (`day_mins`) for churners differs significantly from 200 minutes. Conduct a one-sample t-test in R and interpret the results in relation to customer behavior.
 
-22. Compare the average number of international calls (`intl_calls`) between churners and non-churners. Perform a two-sample t-test and evaluate whether the observed differences in means are statistically significant.
 
-23. Test whether the proportion of customers with a Voice Mail Plan (`voice_plan`) differs between churners and non-churners. Use a two-sample Z-test in R and interpret the results, considering the implications for customer retention strategies.
 
-24. Investigate whether marital status (`marital`) is associated with deposit subscription (`deposit`) in the `bank` dataset. Construct a contingency table and perform a Chi-square test to assess whether marital status has a significant impact on deposit purchasing behavior.
 
-25. Using the `diamonds` dataset, test whether the mean price of diamonds differs across different diamond cuts (`cut`). Conduct an ANOVA test and interpret the results. If the test finds significant differences, discuss how post-hoc tests could be used to further explore the findings.
 
-26. Assess the correlation between `carat` and `price` in the `diamonds` dataset. Perform a correlation test in R and visualize the relationship using a scatter plot. Interpret the results in the context of diamond pricing.
 
-27. Construct a 95% confidence interval for the mean number of customer service calls (`customer_calls`) among churners. Explain how the confidence interval helps quantify uncertainty and how it might inform business decisions regarding customer support.
 
-28. Take a random sample of 100 observations from the `churn_mlc` dataset and test whether the average `eve_mins` differs from 200. Repeat the test using a sample of 1000 observations. Compare the results and discuss how sample size affects hypothesis testing and statistical power.
-
-29. Suppose a hypothesis test indicates that customers with a Voice Mail Plan are significantly less likely to churn (*p* $<$ 0.01). What are some potential business strategies a company could implement based on this finding? Beyond statistical significance, what additional factors should be considered before making marketing decisions?
-
-#### Reflection {.unnumbered}
-
-30. How do confidence intervals and hypothesis tests complement each other when assessing the reliability of results in data science?
-
-31. In your work or studies, can you think of a situation where failing to reject the null hypothesis was an important finding? What did it help clarify?
-
-32. Describe a time when statistical significance and practical significance diverged in a real-world example. What lesson did you learn?
-
-33. How might understanding Type I and Type II errors influence how you interpret results from automated reports, dashboards, or A/B tests?
-
-34. When designing a data analysis for your own project, how would you decide which statistical test to use? What questions would guide your choice?
-
-35. How can confidence intervals help communicate uncertainty to non-technical stakeholders? Can you think of a better way to present this information visually?
-
-36. Which statistical test from this chapter do you feel most comfortable with, and which would you like to practice more? Why?
