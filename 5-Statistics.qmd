@@ -639,67 +639,67 @@ The result should also be interpreted in relation to the broader modeling goal. 
 
 ## Analysis of Variance (ANOVA) Test {#sec-ch5-anova}
 
-So far, we have examined hypothesis tests that compare two groups, such as the two-sample t-test and the two-sample Z-test. But what if we want to compare a numerical outcome across more than two groups? For example, does the mean price of diamonds differ across cut categories? When the grouping variable has three or more levels, analysis of variance (ANOVA) provides a formal way to test whether at least one group mean differs from the others.
+So far, we have examined hypothesis tests that compare two groups, such as the two-sample t-test and the two-sample proportion test. But what if we want to compare a numerical outcome across more than two groups? For example, does average bike demand differ across seasons? When the grouping variable has three or more levels, analysis of variance (ANOVA) provides a formal way to test whether at least one group mean differs from the others.
 
 ANOVA compares variability between group means with variability within groups. If the between-group variability is large relative to the within-group variability, the data provide evidence that not all population means are equal. The test statistic follows an $F$-distribution under the null hypothesis. Figure [-@fig-ch5-anova-concept] illustrates this idea conceptually.
 
-```{r fig-ch5-anova-concept, echo=FALSE, out.width="60%", fig.cap="Conceptual idea behind ANOVA. The method compares variability between group means with variability within groups. Larger between-group variability relative to within-group variability provides evidence that not all population means are equal."}
+```{r fig-ch5-anova-concept, echo=FALSE, out.width="65%", fig.cap="Conceptual idea behind ANOVA. The method compares variability between group means with variability within groups. Larger between-group variability relative to within-group variability provides evidence that not all population means are equal."}
 knitr::include_graphics("images/ch5_anova.png")
 ```
 
-To illustrate ANOVA in R, we use the `diamonds` dataset from the **ggplot2** package. The response variable is `price`, and the grouping variable is `cut`, which has five levels: `"Fair"`, `"Good"`, `"Very Good"`, `"Premium"`, and `"Ideal"`. Diamond prices are right-skewed, so the visual comparison should be interpreted cautiously. In this introductory example, we keep the original price scale to focus on the basic ANOVA workflow.
+To illustrate ANOVA in R, we use the `bike_demand` dataset from the **liver** package, which will be revisited in the regression case study in Chapter [-@sec-ch10-regression]. The response variable is `bike_count`, which records hourly bike demand, and the grouping variable is `season`. This example asks whether mean hourly bike demand differs across seasons. The comparison is useful as a simple one-factor analysis, although it should not be interpreted as a complete model of bike demand. We begin with a boxplot to compare the distribution of bike demand across seasons:
 
 ```{r}
-data(diamonds)
+data(bike_demand)
 
-ggplot(data = diamonds) + 
-  geom_boxplot(aes(x = cut, y = price)) +
-  labs(x = "Cut", y = "Price")
+ggplot(data = bike_demand) + 
+  geom_boxplot(aes(x = season, y = bike_count)) +
+  labs(x = "Season", y = "Hourly Bike Count")
 ```
 
-The boxplot shows differences in the price distributions across cut categories. Visual inspection, however, cannot determine whether the observed differences in group means are statistically significant. ANOVA provides a formal test of this question.
+The boxplot suggests that bike demand varies across seasons, with higher values in summer and lower values in winter. Visual inspection, however, cannot determine whether the observed differences in group means are statistically significant. ANOVA provides a formal test of this question.
 
-For this example, let $\mu_1, \ldots, \mu_5$ denote the population mean prices for the five cut categories. The hypotheses are
+For this example, the hypotheses are
 $$
 \begin{cases}
-H_0: \mu_1 = \mu_2 = \mu_3 = \mu_4 = \mu_5 \\
-H_a: \text{at least one mean price differs.}
+H_0: \mu_{\text{autumn}} = \mu_{\text{spring}} = \mu_{\text{summer}} = \mu_{\text{winter}} \\
+H_a: \text{at least one seasonal mean bike count differs.}
 \end{cases}
 $$
-The null hypothesis states that the mean price is the same across all cut categories. The alternative hypothesis states that at least one cut category has a different mean price.
+Here, $\mu_{\text{autumn}}$, $\mu_{\text{spring}}$, $\mu_{\text{summer}}$, and $\mu_{\text{winter}}$ denote the population mean hourly bike counts for the four seasons. The null hypothesis states that the mean hourly bike count is the same across the four seasons. The alternative hypothesis states that at least one season has a different mean hourly bike count.
 
 We apply the `aov()` function in R, which fits a linear model and produces an ANOVA table summarizing variation between and within groups:
 
 ```{r}
-anova_test = aov(price ~ cut, data = diamonds)
+anova_test = aov(bike_count ~ season, data = bike_demand)
 summary(anova_test)
 ```
 
-The output reports the degrees of freedom, the $F$ statistic, and the corresponding *p*-value. Because the *p*-value is below $\alpha = 0.05$, we reject $H_0$ and conclude that mean price differs across at least one cut category. This conclusion refers to an unadjusted comparison across cut groups. It does not imply that cut quality causes differences in price, because this simple ANOVA does not adjust for other important predictors such as carat, clarity, color, or depth.
+The output reports the degrees of freedom, the $F$ statistic, and the corresponding *p*-value. The *p*-value is very small, below $\alpha = 0.05$, so we reject $H_0$ and conclude that mean hourly bike demand differs across at least one season. This conclusion refers to an unadjusted comparison across seasons. It does not imply that season alone explains bike demand, because this simple ANOVA does not adjust for other important variables such as weather conditions, holidays, weekdays, or time of day.
 
-ANOVA assumes independent observations, approximately normal residuals within groups, and roughly equal variances across groups. With large datasets, the test can be robust to moderate departures from normality, but strong skewness or unequal variances should still be considered when interpreting the result.
+ANOVA assumes independent observations, approximately normal residuals within groups, and roughly equal variances across groups. With large datasets, the test can be robust to moderate departures from normality, but strong skewness, unequal variances, or temporal dependence should still be considered when interpreting the result.
 
-Rejecting $H_0$ tells us that not all group means are equal, but it does not identify which cut categories differ from each other. Pairwise follow-up comparisons can be used for that purpose, but they are not needed for the main aim of this section, which is to introduce the overall ANOVA test.
+Rejecting $H_0$ tells us that not all group means are equal, but it does not identify which seasons differ from each other. Pairwise follow-up comparisons can be used for that purpose, but they are not needed for the main aim of this section, which is to introduce the overall ANOVA test.
 
-As with other hypothesis tests, statistical significance should be interpreted together with practical relevance. The `diamonds` dataset is large, so even small differences in mean price may produce very small *p*-values. For pricing or inventory decisions, the magnitude of the differences and their relevance in context matter as much as the rejection of the null hypothesis.
+Because bike demand is related to many factors, this ANOVA should be treated as an initial descriptive comparison rather than a complete model. Later regression models can examine seasonal differences while adjusting for other predictors.
 
-> *Practice:* Use ANOVA to test whether the average carat (`carat`) differs across clarity levels (`clarity`) in the `diamonds` dataset. Fit the model using `aov(carat ~ clarity, data = diamonds)` and examine the ANOVA output. For a visual comparison, create a boxplot similar to the one used for cut quality.
+> *Practice:* Use ANOVA to test whether average bike demand differs across `weather` categories in the `bike_demand` dataset. Fit the model using `aov(bike_count ~ weather, data = bike_demand)` and examine the ANOVA output. For a visual comparison, create a boxplot of `bike_count` by `weather`.
 
 ## Correlation Test {#sec-ch5-correlation-test}
 
-Suppose we examine two numerical variables and observe that larger values of one variable tend to occur with larger values of another. For example, in sales data, higher advertising expenditure may be associated with higher product sales. In exploratory analysis (see Section [-@sec-EDA-sec-multivariate]), scatter plots and correlation matrices were used to assess such relationships visually. A correlation test provides a formal way to evaluate whether the observed linear association is stronger than would be expected under the hypothesis of no population correlation.
+Suppose we examine two numerical variables and observe that larger values of one variable tend to occur with larger values of another. For example, warmer weather may be associated with higher bike demand, since people may be more willing to cycle when outdoor conditions are comfortable. In exploratory analysis (see Section [-@sec-EDA-sec-multivariate]), scatter plots and correlation coefficients were used to describe such relationships visually and numerically.
 
-The Pearson correlation coefficient measures the strength and direction of a linear association between two numerical variables. Its population value is denoted by $\rho$, and its sample estimate is usually denoted by $r$. Values of $r$ close to 1 indicate a strong positive linear association, values close to -1 indicate a strong negative linear association, and values near 0 indicate little linear association. Pearson correlation does not measure every kind of relationship: nonlinear patterns may be poorly summarized by a single correlation coefficient.
+In this section, we move from description to inference. A correlation test evaluates whether the observed linear association provides evidence that the population correlation $\rho$ differs from zero. We focus on Pearson correlation, which measures linear association between two numerical variables. As discussed in Section [-@sec-EDA-sec-multivariate], nonlinear patterns may not be well summarized by Pearson correlation, so the scatter plot remains essential for interpretation.
 
-To illustrate, we examine the relationship between `carat` and `price` in the `diamonds` dataset from the **ggplot2** package. Larger diamonds are generally more expensive, so we expect a positive association. We begin with a scatter plot, because the visual pattern is essential for interpreting the correlation coefficient:
+To illustrate, we examine the relationship between `temperature` and `bike_count` in the `bike_demand` dataset used in the previous section. The variable `bike_count` records hourly bike demand, while `temperature` records the corresponding temperature. We begin with a scatter plot, because the visual pattern is essential for interpreting the correlation coefficient:
 
 ```{r}
-ggplot(diamonds, aes(x = carat, y = price)) +
+ggplot(bike_demand, aes(x = temperature, y = bike_count)) +
   geom_point(alpha = 0.3, size = 0.6) +
-  labs(x = "Diamond Weight (Carats)", y = "Price (dollars)")
+  labs(x = "Temperature", y = "Hourly Bike Count")
 ```
 
-The scatter plot shows a clear upward trend: diamonds with larger carat values tend to have higher prices. The relationship is positive, although the spread also increases for larger diamonds. This visual pattern is important because a correlation coefficient summarizes only the overall linear tendency and does not describe the full shape or variability of the relationship.
+The scatter plot shows a positive association between temperature and hourly bike demand. At lower temperatures, bike counts are generally low, while higher temperatures are associated with a wider range of bike counts and many larger values. The pattern is not perfectly linear: the spread of `bike_count` increases as temperature rises, and many observations remain concentrated near low bike counts. This visual evidence is important because Pearson correlation summarizes only the overall linear tendency and does not capture changing variability, possible curvature, or clustering in the data.
 
 The correlation test evaluates whether the population correlation is zero. For a two-sided test, the hypotheses are
 $$
@@ -713,15 +713,15 @@ The null hypothesis states that there is no linear correlation in the population
 We conduct the Pearson correlation test using `cor.test()`:
 
 ```{r}
-cor_test = cor.test(diamonds$carat, diamonds$price, method = "pearson")
+cor_test = cor.test(bike_demand$temperature,
+                    bike_demand$bike_count,
+                    method = "pearson")
 cor_test
 ```
 
-The output reports the sample correlation coefficient, the *p*-value, and a confidence interval for the population correlation. The estimated correlation is `r round(cor_test$estimate, 2)`, indicating a strong positive linear association between carat and price. The 95 percent confidence interval is (`r round(cor_test$conf.int[1], 3)`, `r round(cor_test$conf.int[2], 3)`), which provides a plausible range for the population correlation.
+The estimated correlation is `r round(cor_test$estimate, 2)`, indicating a moderate positive linear association between `temperature` and `bike_count`. The 95 percent confidence interval is (`r round(cor_test$conf.int[1], 2)`, `r round(cor_test$conf.int[2], 2)`), suggesting that the population correlation is positive. The *p*-value is very small, so we reject $H_0$ at $\alpha = 0.05$ and conclude that the data provide evidence of a nonzero linear association.
 
-The *p*-value is very small, so we reject $H_0$ at $\alpha = 0.05$. However, in a large dataset such as `diamonds`, statistical significance is not surprising: even weak correlations can produce very small *p*-values when the sample size is large. The more informative quantities here are the estimated correlation, the confidence interval, and the scatter plot. Together, they show that `carat` and `price` have a strong positive linear association in this dataset.
-
-This result should be interpreted carefully. A strong correlation does not imply causation, and the correlation test does not adjust for other variables. Diamond price is also related to other characteristics, such as cut, clarity, color, and depth. Moreover, Pearson correlation summarizes linear association only; if the relationship is curved or changes across the range of the data, a single correlation coefficient may hide important structure. Multivariate regression models, introduced in Chapter [-@sec-ch10-regression], provide a more appropriate framework for studying several predictors jointly.
+This result should still be interpreted carefully. Correlation does not imply causation, and this test does not adjust for season, weather conditions, holidays, weekdays, time of day, or temporal structure in the data. In addition, Pearson correlation summarizes only linear association, while the scatter plot suggests changing variability across the temperature range. Multivariate regression models, introduced in Chapter [-@sec-ch10-regression], provide a more appropriate framework for studying several predictors jointly.
 
 > *Practice:* Using the `churn` dataset, test whether `credit_limit` and `transaction_amount_12` are linearly correlated. Create a scatter plot, compute the Pearson correlation using `cor.test()`, and interpret the estimated correlation, confidence interval, *p*-value, and practical relevance of the relationship.
 

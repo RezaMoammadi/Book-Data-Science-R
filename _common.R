@@ -159,7 +159,7 @@ ggplot2::update_geom_defaults("violin", list(
 # Points (scatter)
 ggplot2::update_geom_defaults("point", list(
   colour = "#377EB8",   # warm accent for series
-  size   = 2.2,
+  size   = 0.8,     
   alpha  = 0.85
 ))
 

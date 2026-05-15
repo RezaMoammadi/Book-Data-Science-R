@@ -119,7 +119,9 @@ This result gives the observed proportion of approved applications among applica
 
 This example illustrates the central idea of Bayes’ theorem: we begin with an overall probability and update it using additional information about the observed case. In the next section, we build on this probabilistic foundation to show how Bayes’ theorem can be turned into a practical classification algorithm.
 
-> *Practice:* Using the same contingency table, compute the probability that a loan application is `approved` given that the applicant has `education = not-graduate`. How does this probability compare with the value obtained for applicants with `education = graduate`? *Hint:* Identify the relevant counts in the table and apply Bayes’ theorem. You may verify your result in R.
+> *Practice:* Using the same contingency table, compute the probability that a loan application is `approved` given that the applicant has `education = not-graduate`. How does this probability compare with the value obtained for applicants with `education = graduate`? 
+
+> *Optional Exploration:* A famous example of Bayesian updating is the *Monty Hall problem*, in which a contestant chooses one of three doors, after which the host reveals a losing option and offers the contestant a chance to switch choices. Although many people initially believe that switching does not matter, conditional probability shows that switching increases the probability of winning from $1/3$ to $2/3$. This example illustrates how probabilities can change substantially when new information becomes available.
 
 ## The Naive Bayes Classifier
 
@@ -240,6 +242,30 @@ Loan approval is a high-stakes decision for financial institutions. Approving an
 In practice, banks rely on information available at the time of application, such as education, employment status, income, credit score, loan amount, and asset values, to assess whether an application should be `approved` or `rejected`. This makes loan approval a natural binary classification problem, where the goal is to use observed applicant characteristics to predict the likely decision outcome.
 
 Our objective is to develop a Naive Bayes model that predicts whether a loan application will be `approved` or `rejected` using the variables available in the `loan` dataset. In addition to producing class labels, the model estimates the probability of each outcome. These probability-based predictions are especially valuable in lending because they allow decisions to be adjusted to institutional priorities, such as being more cautious in risky cases or more inclusive when uncertainty is lower.
+
+### Data Understanding {.unnumbered .unlisted}
+
+Before training the Naive Bayes classifier, we briefly examine the data to understand its structure and confirm that it is suitable for modeling. At this stage, the goal is not to conduct a full exploratory analysis, but rather to identify the variables available for prediction, verify their types, and check for basic data-quality issues. The dataset contains `r nrow(loan)` observations and `r ncol(loan)` variables, including one outcome variable and multiple predictors.
+
+To inspect the structure of the dataset and the variable types, we begin with:
+
+```{r}
+str(loan)
+```
+
+The `loan` dataset contains financial and demographic information relevant to loan approval decisions. Because it combines categorical and continuous predictors in a binary classification setting, it provides a useful example for illustrating how Naive Bayes can be applied to lending-related problems. The dataset also includes `loan_id`, which serves only as an identifier and is therefore excluded from the analysis.
+
+The outcome variable is `loan_status`, which indicates whether an application was `approved` or `rejected`. The predictors include applicant characteristics such as `no_of_dependents`, `education`, and `self_employed`; loan-related information such as `income_annum`, `loan_amount`, `loan_term`, and `cibil_score`; and asset-related measures such as `residential_assets_value`, `commercial_assets_value`, `luxury_assets_value`, and `bank_asset_value`.
+
+To obtain a concise overview of the variables and check for missing values or obvious anomalies, we then examine the summary statistics:
+
+```{r}
+summary(loan)
+```
+
+These outputs indicate that the dataset is well structured and suitable for modeling. No obvious missing-value problems or major irregularities are visible in the variables used here, so we proceed to data setup and model training without additional preprocessing.
+
+> *Practice:* Inspect the output of `summary(loan)` and identify which variables are categorical and which are numerical. Which predictors appear to have especially wide ranges, and how might that matter for other classification methods such as kNN?
 
 ### Data Understanding {.unnumbered .unlisted}
 
@@ -403,166 +429,107 @@ A key takeaway from this chapter is that Naive Bayes treats classification as a 
 
 The next chapter introduces *logistic regression*, a discriminative model that approaches classification from a different perspective. Instead of modeling class probabilities through conditional distributions of the predictors, logistic regression models the log-odds of class membership directly. This provides a useful complement to Naive Bayes, particularly when the effects of individual predictors and the interpretation of model coefficients are of central interest.
 
+
 ## Exercises {#sec-ch9-exercises}
 
-The following exercises are designed to strengthen your understanding of the Naive Bayes classifier and its practical applications. They progress from conceptual questions that test your grasp of probabilistic reasoning and model assumptions, to hands-on analyses using the `churn_mlc` and `churn` datasets from the **liver** package. Together, these tasks guide you through data preparation, model training, evaluation, and interpretation—helping you connect theoretical principles to real-world predictive modeling.
+The following exercises strengthen your understanding of Naive Bayes as a probabilistic classification method. They begin with conceptual questions on Bayesian reasoning, conditional independence, classifier variants, Laplace smoothing, and threshold-based evaluation. The hands-on exercises then apply these ideas to the `purchase_intention` and `bank` datasets from the **liver** package.
 
 #### Conceptual Questions {.unnumbered .unlisted}
 
-1.  Why is Naive Bayes considered a probabilistic classification model?
+1. Why is Naive Bayes considered a probabilistic classification model?
 
-2.  What is the difference between prior probability, likelihood, and posterior probability in Bayes’ theorem?
+2. What is the difference between prior probability, likelihood, and posterior probability in Bayes’ theorem?
 
-3.  What does it mean that Naive Bayes assumes feature independence?
+3. What does it mean that Naive Bayes assumes predictors are conditionally independent given the class label?
 
-4.  In which situations does the feature independence assumption become problematic? Provide an example.
+4. Why does the conditional independence assumption make Naive Bayes computationally efficient?
 
-5.  What are the main strengths of Naive Bayes? Why is it widely used in text classification and spam filtering?
+5. In which situations can the conditional independence assumption become problematic? Provide an example.
 
-6.  What are its major limitations, and how do they affect performance?
+6. What are the main strengths and limitations of Naive Bayes as a classification method?
 
-7.  How does Laplace smoothing prevent zero probabilities in Naive Bayes? *Hint: See Section [-@sec-ch9-laplace].*
+7. How does Laplace smoothing prevent zero probabilities in Naive Bayes? 
 
-8.  When should you use multinomial, Bernoulli, or Gaussian Naive Bayes? *Hint: See Section [-@sec-ch9-types].*
+8. When should Bernoulli, Multinomial, or Gaussian Naive Bayes be used? 
 
-9.  Compare Naive Bayes to k-Nearest Neighbors (Chapter [-@sec-ch7-classification-knn]). How do their assumptions differ?
+9. How does Gaussian Naive Bayes handle continuous predictors?
 
-10. How does changing the probability threshold affect predictions and evaluation metrics?
+10. Compare Naive Bayes with *k*-Nearest Neighbors (Chapter [-@sec-ch7-classification-knn]). How do their assumptions and prediction mechanisms differ?
 
-11. Why can Naive Bayes remain effective even when the independence assumption is violated?
+11. How does changing the probability threshold affect predicted class labels and evaluation metrics?
 
-12. What dataset characteristics typically cause Naive Bayes to perform poorly?
+12. Why might domain knowledge be useful when selecting predictors, interpreting probabilities, or choosing a classification threshold?
 
-13. How does Gaussian Naive Bayes handle continuous variables?
+#### Hands-On Practice: Naive Bayes with the `purchase_intention` Dataset {.unnumbered .unlisted}
 
-14. How can domain knowledge improve Naive Bayes results?
+The `purchase_intention` dataset from the **liver** package contains information about online browsing sessions. The goal is to predict whether a visitor completes a purchase using Naive Bayes. This dataset is revisited in Chapter [-@sec-ch11-case-study], where we analyze the same prediction problem using logistic regression.
 
-15. How does Naive Bayes handle imbalanced datasets? What preprocessing strategies help?
+13. Load the `purchase_intention` dataset and inspect its structure.
 
-16. How can prior probabilities be adjusted to reflect business priorities?
+14. Identify the outcome variable `revenue` and summarize its class distribution.
 
-#### Hands-On Practice: Naive Bayes with the `churn_mlc` Dataset {.unnumbered .unlisted}
+15. Inspect the predictor variables and distinguish between categorical and numerical predictors.
 
-The `churn_mlc` dataset from the **liver** package contains information about customer subscriptions. The goal is to predict whether a customer will churn (`churn = yes/no`) using Naive Bayes. See Section [-@sec-ch4-EDA-churn] for prior exploration.
+16. Partition the data into 70% training and 30% test sets using `partition()` from **liver**.
 
-##### Data Setup for Modeling {.unnumbered .unlisted}
+17. Verify that the class distribution of `revenue` is reasonably similar in the training and test sets.
 
-17. Load the dataset and inspect its structure.
+18. Define a Naive Bayes model formula using `revenue` as the response and the suitable remaining variables as predictors, then train the classifier using the **naivebayes** package.
 
-18. Summarize key variables and their distributions.
+19. Summarize the fitted model and identify how categorical and numerical predictors are represented.
 
-19. Partition the data into 80% training and 20% test sets using `partition()` from **liver**.
+20. Predict class probabilities for the test set and display the first ten predicted probabilities.
 
-20. Confirm that the class distribution of `churn` is similar across both sets.
+21. Generate and visualize a confusion matrix using `conf.mat()` and `conf.mat.plot()` from **liver** with a cutoff of 0.5. Then change the cutoff and describe how the classification results change.
 
-##### Training and Evaluation {.unnumbered .unlisted}
+22. Plot the ROC curve and compute the AUC. What does the AUC suggest about the model’s ability to distinguish between purchasers and non-purchasers?
 
-21. Define the model formula:
+23. Retrain the model with Laplace smoothing (`laplace = 1`) and compare the results with the model fitted without smoothing.
 
-``` r
-formula = churn ~ account_length + voice_plan + voice_messages +
-                 intl_plan + intl_mins + day_mins + eve_mins +
-                 night_mins + customer_calls
-```
+24. Identify two predictors that may be related to each other. Explain how such dependence might affect the Naive Bayes assumption.
 
-22. Train a Naive Bayes model using the **naivebayes** package.
+#### Hands-On Practice: Naive Bayes with the `bank` Dataset {.unnumbered .unlisted}
 
-23. Summarize the model and interpret class-conditional probabilities.
+The `bank` dataset from the **liver** package contains information from a direct marketing campaign by a banking institution. The goal is to predict whether a client subscribes to a term deposit using Naive Bayes. This dataset is revisited in Chapter [-@sec-ch13-neural-networks], where we analyze the same prediction problem using neural networks.
 
-24. Predict class probabilities for the test set.
+25. Load the `bank` dataset and inspect its structure.
 
-25. Display the first ten predictions and interpret churn likelihoods.
+26. Identify the outcome variable `deposit` and summarize its class distribution.
 
-26. Generate a confusion matrix with `conf.mat()` using a 0.5 threshold.
+27. Inspect the predictor variables and distinguish between categorical and numerical predictors.
 
-27. Visualize it with `conf.mat.plot()` from **liver**.
+28. Partition the data into 70% training and 30% test sets using `partition()` from **liver**.
 
-28. Compute accuracy, precision, recall, and F1-score.
+29. Verify that the class distribution of `deposit` is reasonably similar in the training and test sets.
 
-29. Adjust the threshold to 0.3 and observe the change in performance metrics.
+30. Define a Naive Bayes model formula using `deposit` as the response and `age`, `marital`, `default`, `balance`, `housing`, `loan`, `duration`, `campaign`, `pdays`, and `previous` as predictors. Then train the classifier using the **naivebayes** package.
 
-30. Plot the ROC curve and compute AUC.
+31. Summarize the fitted model and identify how categorical and numerical predictors are represented.
 
-31. Retrain the model with Laplace smoothing (`laplace = 1`) and compare results.
+32. Predict class probabilities for the test set and display the first ten predicted probabilities.
 
-32. Compare the Naive Bayes model to k-Nearest Neighbors using identical partitions.
+33. Generate and visualize a confusion matrix using `conf.mat()` and `conf.mat.plot()` from **liver** with a cutoff of 0.5. Interpret the main types of correct and incorrect classifications.
 
-33. Remove one predictor at a time and re-evaluate model performance.
+34. Change the classification cutoff and describe how sensitivity, specificity, and precision change.
 
-34. Diagnose poor performance on subsets of data: could it stem from class imbalance or correlated features?
+35. Plot the ROC curve and compute the AUC. What does the AUC suggest about the model’s ability to distinguish between subscribers and non-subscribers?
 
-#### Hands-On Practice: Naive Bayes with the `churn` Dataset {.unnumbered .unlisted}
+36. Based on the model results, discuss how a bank could use predicted subscription probabilities to prioritize clients for a marketing campaign.
 
-The `churn` dataset from the **liver** package contains 10,127 customer records and 21 variables combining churn, credit, and demographic features. It allows you to evaluate how financial and behavioral variables jointly affect churn.
+#### Critical Thinking and Reflection {.unnumbered .unlisted}
 
-##### Data Setup for Modeling {.unnumbered .unlisted}
+37. In the `loan`, `purchase_intention`, and `bank` examples, how do predicted probabilities provide more information than predicted class labels alone?
 
-35. Load the dataset and report its structure.
+38. If false positives and false negatives have different practical costs, how should this influence the choice of classification threshold? Give an example from either loan approval, online purchasing, or term deposit marketing.
 
-36. Inspect the structure and summary statistics. Identify the target variable (`churn`) and main predictors.
+39. How might strong relationships among predictors affect the reliability of a Naive Bayes classifier? Give an example using one of the datasets considered in this chapter.
 
-37. Partition the data into 80% training and 20% test sets using `partition()` from **liver**.
+40. When might Naive Bayes be preferable to kNN or logistic regression? Consider interpretability, computation, predictor types, and prediction goals.
 
-38. Verify that the class distribution of `churn` is consistent between the training and test sets.
+41. How could domain knowledge help in selecting predictors, interpreting predicted probabilities, or choosing a decision threshold?
 
-##### Training and Evaluation {.unnumbered .unlisted}
+42. Suppose a Naive Bayes model performs well on the test set but poorly on new data collected later. What possible explanations should be investigated?
 
-39. Define a model formula with predictors such as `credit.score`, `age`, `tenure`, `balance`, `products.number`, `credit.card`, and `active.member`.
+43. How could Naive Bayes be extended or adapted for a multi-class classification problem?
 
-40. Train a Naive Bayes classifier using the **naivebayes** package.
-
-41. Summarize the model and interpret key conditional probabilities.
-
-42. Predict outcomes for the test set and generate a confusion matrix with a 0.5 threshold.
-
-43. Compute evaluation metrics: accuracy, precision, recall, and F1-score.
-
-44. Plot the ROC curve and compute AUC.
-
-45. Retrain the model with Laplace smoothing (`laplace = 1`) and compare results.
-
-46. Adjust the classification threshold to 0.3 and note changes in sensitivity and specificity.
-
-47. Identify any predictors that might violate the independence assumption and discuss their potential effects on model performance.
-
-##### Reflection {.unnumbered .unlisted}
-
-48. Compare results with the `churn_mlc` dataset. Does adding financial information improve predictive accuracy?
-
-49. How could this model support retention or credit risk management strategies?
-
-50. Identify the top three most influential predictors using feature importance or conditional probabilities. Do they differ from the most influential features in the `churn_mlc` dataset? What might this reveal about customer behavior?
-
-#### Critical Thinking {.unnumbered .unlisted}
-
-51. How could a company use this model to inform business decisions related to churn?
-
-52. If false negatives are costlier than false positives, how should the decision threshold be adjusted?
-
-53. How might you use this model to target promotions for likely churners?
-
-54. Suppose a new feature, *customer satisfaction score*, were added. How could it improve predictions?
-
-55. How would you address poor model performance on new data?
-
-56. How might feature correlation affect Naive Bayes reliability?
-
-57. How could Naive Bayes be extended to handle multi-class classification problems?
-
-58. Would Naive Bayes be suitable for time-series churn data? Why or why not?
-
-#### Self-Reflection {.unnumbered .unlisted}
-
-59. Summarize the main strengths and limitations of Naive Bayes in your own words.
-
-60. How did the independence assumption influence your understanding of model behavior?
-
-61. Which stage—data preparation, training, or evaluation—most enhanced your understanding of Naive Bayes?
-
-62. How confident are you in applying Naive Bayes to datasets with mixed data types?
-
-63. Which extension would you explore next: smoothing, alternative distributions, or correlated features?
-
-64. Compared to models like kNN or logistic regression, when is Naive Bayes preferable, and why?
-
-65. Reflect on how Naive Bayes connects back to the broader Data Science Workflow. At which stage does its simplicity provide the greatest advantage?
+44. Reflect on how Naive Bayes connects to the broader Data Science Workflow. At which stage does its simplicity provide the greatest advantage, and why?
