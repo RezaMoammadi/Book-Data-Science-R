@@ -52,7 +52,27 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="site_libs/quarto-nav/headroom.min.js"></script>
@@ -347,7 +367,7 @@ window.Quarto = {
 </div>
 </div>
 <p>How can we determine whether a machine learning model is genuinely effective? Is 95 percent accuracy always impressive, or can it conceal important weaknesses? How should we weigh the benefits of detecting true cases against the costs of false alarms? These questions lie at the core of model evaluation.</p>
-<p>The quote that opens this chapter captures a central idea in predictive modeling: the goal is not to find a perfect model, but to determine whether a model is useful for the task at hand. A fitted model becomes valuable only when we assess how well it performs on new data and whether that performance aligns with the aims of the analysis. In practice, model evaluation depends on the metrics we choose, the classification threshold we apply, and the relative costs of different types of errors.</p>
+<p>The quote <span class="citation" data-cites="box1979robustness">(<a href="15-References.html#ref-box1979robustness" role="doc-biblioref">Box 1979</a>)</span> that opens this chapter captures a central idea in predictive modeling: the goal is not to find a perfect model, but to determine whether a model is useful for the task at hand. A fitted model becomes valuable only when we assess how well it performs on new data and whether that performance aligns with the aims of the analysis. In practice, model evaluation depends on the metrics we choose, the classification threshold we apply, and the relative costs of different types of errors.</p>
 <p>In the previous chapter, we introduced k-Nearest Neighbors (kNN) and applied it to the <code>churn</code> dataset. We examined how feature scaling and the choice of <span class="math inline">\(k\)</span> affect the model’s predictions. We now take the next step by asking how those predictions should be evaluated. This chapter focuses on the <em>Model Evaluation</em> phase of the Data Science Workflow introduced in Chapter <a href="2-Intro-data-science.html" class="quarto-xref"><span>2</span></a> and illustrated in <a href="2-Intro-data-science.html#fig-ch2_DSW" class="quarto-xref">Figure&nbsp;<span>2.1</span></a>. Once a model has been prepared and fitted, we must determine whether it generalises well to unseen data.</p>
 <p>A model that appears strong during development may still perform poorly in practice, especially when the classes are imbalanced or when false positives and false negatives carry different consequences. For this reason, model evaluation must go beyond a single summary measure. We need to examine whether the model detects the cases that matter most, how it behaves under class imbalance, and what kinds of errors it makes. These considerations motivate the evaluation tools introduced in this chapter.</p>
 <section id="what-this-chapter-covers" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="what-this-chapter-covers">What This Chapter Covers</h3>
@@ -361,7 +381,7 @@ window.Quarto = {
 <p>Figure <a href="#fig-ch8-confusion-matrix" class="quarto-xref"><span>8.1</span></a> shows the structure of a confusion matrix. The rows correspond to the <em>actual</em> class labels, and the columns represent the <em>predicted</em> labels. Each cell records one of four possible outcomes. <em>True positives (TP)</em> occur when the model correctly predicts the positive class. <em>False positives (FP)</em> occur when the model incorrectly predicts the positive class. <em>True negatives (TN)</em> are correct predictions of the negative class, while <em>false negatives (FN)</em> occur when the model fails to identify a positive case.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch8-confusion-matrix" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<div id="fig-ch8-confusion-matrix" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch8-confusion-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch8_confusion-matrix.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:60.0%" data-fig-pos="H">
 </div>
@@ -482,7 +502,7 @@ F1 =
 <p>The practical effect of threshold choice is shown in Figure <a href="#fig-ch8-threshold" class="quarto-xref"><span>8.2</span></a>. A lower threshold classifies more observations as positive, whereas a higher threshold applies a stricter standard before assigning the positive class. Because each threshold produces a different set of predicted labels, the confusion matrix and all metrics derived from it also change.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch8-threshold" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<div id="fig-ch8-threshold" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch8-threshold-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch8_threshold.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H">
 </div>
@@ -540,10 +560,10 @@ Figure&nbsp;8.2: Effect of the classification threshold on predicted class label
 <p>When a classifier returns predicted probabilities, its performance changes as the classification threshold changes. A lower threshold usually identifies more positive cases, whereas a higher threshold is more conservative. To examine model performance across <em>all</em> possible thresholds, we use the <em>Receiver Operating Characteristic (ROC) curve</em>.</p>
 <p>The ROC curve plots the <em>true positive rate</em> (sensitivity) on the vertical axis against the <em>false positive rate</em> (<span class="math inline">\(1-\text{specificity}\)</span>) on the horizontal axis. Each point on the curve corresponds to a different classification threshold. A curve closer to the top-left corner indicates stronger ability to distinguish positive cases from negative ones, whereas a curve near the diagonal indicates little discriminatory power beyond random guessing.</p>
 <p>It is important to interpret the ROC curve correctly. The ROC curve is primarily a <em>discrimination tool</em>: it shows how well a model ranks positive cases above negative cases across thresholds. It does <em>not</em> by itself determine which threshold is best for a particular application. Choosing an operating threshold still depends on the relative costs of false positives and false negatives in the real decision problem.</p>
-<p>Figure <a href="#fig-roc-curve" class="quarto-xref">Figure&nbsp;<span>8.3</span></a> provides a conceptual illustration of ROC behavior. Curves that bend more strongly toward the top-left corner reflect better separation between the classes, whereas the diagonal line represents random performance.</p>
+<p>Figure <a href="#fig-roc-curve" class="quarto-xref"><span>8.3</span></a> a conceptual illustration of ROC behavior. Curves that bend more strongly toward the top-left corner reflect better separation between the classes, whereas the diagonal line represents random performance.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-roc-curve" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<div id="fig-roc-curve" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-roc-curve-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch8_roc-curve.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:55.0%" data-fig-pos="H">
 </div>
@@ -612,7 +632,7 @@ Figure&nbsp;8.3: Conceptual illustration of ROC curves. Curves closer to the top
 <p>For the ROC curve, the AUC measures how well the model discriminates between the positive and negative classes across all possible thresholds. Geometrically, it is the area under the ROC curve. An intuitive interpretation is that ROC-AUC can be viewed as the probability that a randomly chosen positive case receives a higher score than a randomly chosen negative case. Larger values therefore indicate stronger <em>discriminatory ability</em>. A value of 1 indicates perfect discrimination, whereas a value of 0.5 corresponds to random guessing.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch8-auc" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<div id="fig-ch8-auc" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch8-auc-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch8_auc.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:45.0%" data-fig-pos="H">
 </div>
@@ -646,7 +666,7 @@ Figure&nbsp;8.4: The AUC summarizes the ROC curve into a single number that refl
 <p>In a multi-class problem, the confusion matrix becomes a square matrix whose size matches the number of classes. Rows correspond to the actual classes and columns to the predicted classes, as shown in <a href="#fig-ch8-confusion-matrices" class="quarto-xref">Figure&nbsp;<span>8.5</span></a>. Correct predictions appear along the diagonal, whereas off-diagonal entries show which classes are being confused with one another. This is often one of the most informative diagnostic tools in multi-class classification, because it reveals not only how often the model is wrong, but also <em>how</em> it is wrong.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
-<div id="fig-ch8-confusion-matrices" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<div id="fig-ch8-confusion-matrices" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-pos="H" data-fig-align="center">
 <figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-ch8-confusion-matrices-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="images/ch8_confusion-matrices.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H">
 </div>
@@ -770,6 +790,11 @@ R^2 = 1 - \frac{13}{125} = 0.896.
 </ol>
 
 
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-box1979robustness" class="csl-entry" role="listitem">
+Box, George EP. 1979. <span>“Robustness in the Strategy of Scientific Model Building.”</span> In <em>Robustness in Statistics</em>, 201–36. Elsevier.
+</div>
+</div>
 </section></section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
