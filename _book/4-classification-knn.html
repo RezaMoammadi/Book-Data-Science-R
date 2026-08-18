@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Reza Mohammadi">
+<title>4&nbsp; Classification Using k-Nearest Neighbors – &lt;span style='color:#0056B3'&gt;Data Science Foundations and Machine Learning with R: From Data to Decisions&lt;/span&gt;</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./5-model-evaluation.html" rel="next">
+<link href="./3-data-preperation.html" rel="prev">
+<link href="./images/logo.png" rel="icon" type="image/png">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-5c395c020fa0215c66c8d962dcba7617.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script><script defer="" data-domain="r4ds.hadley.nz" src="https://plausible.io/js/plausible.js"></script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+</head>
+<body class="nav-sidebar docked">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./4-classification-knn.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Classification Using k-Nearest Neighbors</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./"><span style="color:#0056B3">Data Science Foundations and Machine Learning with R: From Data to Decisions</span></a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/RezaMoammadi/Book-Data-Science-R" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Download" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Download"><i class="bi bi-download"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+<li>
+            <a class="dropdown-item sidebar-tools-main-item" href="./-span-style=-color--0056B3--Data-Science-Foundations-and-Machine-Learning-with-R--From-Data-to-Decisions--span-.pdf">
+              <i class="bi bi-file-pdf pe-1"></i>
+            Download PDF
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="./-span-style=-color--0056B3--Data-Science-Foundations-and-Machine-Learning-with-R--From-Data-to-Decisions--span-.epub">
+              <i class="bi bi-journal pe-1"></i>
+            Download ePub
+            </a>
+          </li>
+      </ul>
+</div>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-1" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-1">
+<li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.facebook.com/sharer/sharer.php?u=|url|">
+              <i class="bi bi-facebook pe-1"></i>
+            Facebook
+            </a>
+          </li>
+      </ul>
+</div>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./0-preface.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./1-intro-data-science.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">The Data Science Workflow and the Role of Machine Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./2-data-understanding-eda.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Data Understanding and Exploratory Data Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./3-data-preperation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data Preparation for Modeling</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./4-classification-knn.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Classification Using k-Nearest Neighbors</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./5-model-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Model Evaluation and Performance Assessment</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./6-naive-bayes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Naive Bayes Classifier</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./7-statistical-inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Statistical Inference for Data Science</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./8-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Regression Analysis: Linear and Nonlinear Models</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./9-generalized-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Generalized Linear Models for Binary and Count Outcomes</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-tree-based-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Decision Trees and Random Forests</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11-neural-networks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Neural Networks for Supervised Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Clustering for Insight: Segmenting Data Without Labels</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Appendix-r-foundations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">R Foundations for Data Science</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li><a href="#classification" id="toc-classification" class="nav-link active" data-scroll-target="#classification"><span class="header-section-number">4.1</span> Classification</a></li>
+  <li><a href="#how-k-nearest-neighbors-works" id="toc-how-k-nearest-neighbors-works" class="nav-link" data-scroll-target="#how-k-nearest-neighbors-works"><span class="header-section-number">4.2</span> How k-Nearest Neighbors Works</a></li>
+  <li><a href="#a-simple-example-of-knn-classification" id="toc-a-simple-example-of-knn-classification" class="nav-link" data-scroll-target="#a-simple-example-of-knn-classification"><span class="header-section-number">4.3</span> A Simple Example of kNN Classification</a></li>
+  <li><a href="#sec-knn-distance-metrics" id="toc-sec-knn-distance-metrics" class="nav-link" data-scroll-target="#sec-knn-distance-metrics"><span class="header-section-number">4.4</span> How Does kNN Measure Similarity?</a></li>
+  <li><a href="#sec-knn-data-prepration" id="toc-sec-knn-data-prepration" class="nav-link" data-scroll-target="#sec-knn-data-prepration"><span class="header-section-number">4.5</span> Model-Specific Preparation for kNN</a></li>
+  <li><a href="#sec-knn-choose-k" id="toc-sec-knn-choose-k" class="nav-link" data-scroll-target="#sec-knn-choose-k"><span class="header-section-number">4.6</span> Selecting an Appropriate Value of <span class="math inline">\(k\)</span> in kNN</a></li>
+  <li><a href="#sec-knn-case-churn" id="toc-sec-knn-case-churn" class="nav-link" data-scroll-target="#sec-knn-case-churn"><span class="header-section-number">4.7</span> Case Study: Predicting Customer Churn with kNN</a></li>
+  <li><a href="#chapter-summary-and-takeaways" id="toc-chapter-summary-and-takeaways" class="nav-link" data-scroll-target="#chapter-summary-and-takeaways"><span class="header-section-number">4.8</span> Chapter Summary and Takeaways</a></li>
+  <li><a href="#sec-knn-exercises" id="toc-sec-knn-exercises" class="nav-link" data-scroll-target="#sec-knn-exercises"><span class="header-section-number">4.9</span> Exercises</a></li>
+  </ul><div class="toc-actions"><ul><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/edit/main/4-classification-knn.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title"><span id="sec-chapter-knn" class="quarto-section-identifier"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Classification Using k-Nearest Neighbors</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header><div class="chapterquote">
+<p>Tell me who your friends are, and I will tell you who you are.</p>
+<div class="author">
+<p>— Spanish proverb</p>
+</div>
+</div>
+<p>How can we predict an outcome that has not yet been observed? A business may want to know whether a customer will churn, a bank whether a transaction is fraudulent, or a clinician which diagnostic category best describes a new patient. In each case, the answer can be informed by previously observed cases with known outcomes. <em>Classification</em> formalizes this idea by using labeled data to assign new observations to one of a set of predefined categories.</p>
+<p>With this chapter, we move from preparing data to using them for prediction and enter the fifth stage of the Data Science Workflow, <em>Modeling</em> (Figure <a href="1-intro-data-science.html#fig-ds_DSW" class="quarto-xref"><span>1.1</span></a>). Chapter <a href="2-data-understanding-eda.html" class="quarto-xref"><span>2</span></a> focused on understanding and exploring the data, while Chapter <a href="3-data-preperation.html" class="quarto-xref"><span>3</span></a> translated those findings into data prepared appropriately for modeling. We now use those prepared data to construct our first predictive model.</p>
+<p>We begin with k-Nearest Neighbors (kNN), a classification method built around a simple and powerful idea: observations that are close to one another in their predictor values often share similar outcomes. Rather than estimating coefficients or constructing an explicit prediction rule in advance, kNN classifies a new observation by looking at the classes of nearby observations in the training data. This direct connection between similarity and prediction makes kNN a natural starting point for understanding how supervised learning turns observed data into predictions for new cases.</p>
+<p>This chapter develops kNN from intuition to application. We examine how similarity is represented through distance, how the choice of the number of neighbors <span class="math inline">\(k\)</span> influences classification, and why feature representation and scaling are especially important for a distance-based method. We then apply kNN to the <code>churn</code> dataset in R, moving from model-specific preparation and tuning to prediction and an initial model evaluation.</p>
+<section id="what-this-chapter-covers" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="what-this-chapter-covers">What This Chapter Covers</h3>
+<p>This chapter introduces classification as a supervised learning task in which the goal is to predict a categorical outcome. It then presents kNN, a distance-based method that classifies new observations by comparing them with nearby training cases. We examine how similarity is defined through distance, how the choice of the number of neighbors <span class="math inline">\(k\)</span> influences predictions, and why feature representation and scaling are particularly important for this method.</p>
+<p>Building on the principles introduced in Chapter <a href="3-data-preperation.html" class="quarto-xref"><span>3</span></a>, we then apply model-specific preparation for kNN in a case study using the <code>churn</code> dataset. The case study shows how to select a value of <span class="math inline">\(k\)</span> using the training data, apply the classifier in R, generate predictions for new observations, and obtain a first view of the resulting test-set classifications. A more systematic treatment of predictive performance and model evaluation is developed in Chapter <a href="5-model-evaluation.html" class="quarto-xref"><span>5</span></a>.</p>
+</section><section id="classification" class="level2" data-number="4.1"><h2 data-number="4.1" class="anchored" data-anchor-id="classification">
+<span class="header-section-number">4.1</span> Classification</h2>
+<p>Classification is a supervised learning task in which the goal is to predict a categorical outcome from a set of input features. In binary classification, the outcome has two categories, such as churn versus no churn or spam versus not spam. In multiclass classification, the outcome has more than two categories, such as assigning an image to one of several object types. Classification problems arise in many practical settings, including fraud detection, customer retention, medical diagnosis, and recommendation systems.</p>
+<p>Classification differs from regression primarily in the type of response being predicted. In regression, the response variable is numerical, such as income, temperature, or house price. In classification, the response variable is categorical, and the aim is to assign each observation to one of a set of predefined classes. In both settings, a model is learned from labeled data and then used to make predictions for new observations, but the form of the prediction differs.</p>
+<p>A wide range of algorithms can be used for classification, and no single method is best for every problem. Methods such as Naive Bayes (Chapter <a href="6-naive-bayes.html" class="quarto-xref"><span>6</span></a>), Logistic Regression (Chapter <a href="9-generalized-regression.html" class="quarto-xref"><span>9</span></a>), Decision Trees and Random Forests (Chapter <a href="10-tree-based-models.html" class="quarto-xref"><span>10</span></a>), and Neural Networks (Chapter <a href="11-neural-networks.html" class="quarto-xref"><span>11</span></a>) differ in how they represent relationships in the data and in the trade-offs they make between interpretability, flexibility, and computational cost. The suitability of a method depends on factors such as the structure of the dataset, the types of predictors, the size of the training sample, and the goals of the analysis.</p>
+<p>As the first predictive modeling method introduced in this book, kNN provides a natural entry point to classification because its predictions can be understood directly through the idea of similarity between observations. Its reliance on local neighborhoods also makes the effects of feature representation, distance, and model tuning particularly visible. These ideas provide an initial setting for considering how a model behaves when applied to new observations, while the broader concepts of generalization, underfitting, overfitting, and predictive performance are developed systematically in Chapter <a href="5-model-evaluation.html" class="quarto-xref"><span>5</span></a>.</p>
+</section><section id="how-k-nearest-neighbors-works" class="level2" data-number="4.2"><h2 data-number="4.2" class="anchored" data-anchor-id="how-k-nearest-neighbors-works">
+<span class="header-section-number">4.2</span> How k-Nearest Neighbors Works</h2>
+<p>The kNN algorithm predicts the class of a new observation by comparing it with similar observations in the training data. Because it relies directly on similarity, kNN is one of the most intuitive methods in classification. It is also a useful example of a non-parametric classifier: rather than assuming a fixed functional form for the relationship between predictors and the outcome, it bases prediction on the local structure of the data.</p>
+<p>Unlike many classification algorithms, kNN does not estimate coefficients or fit an explicit decision rule during a dedicated training stage. Instead, it stores the training data and postpones most computation until a prediction is required, which is why it is often described as a lazy learner. When a new observation is presented, the algorithm computes its distance to the training observations, identifies the <span class="math inline">\(k\)</span> closest neighbors, and assigns the class label by majority vote among those neighbors. The choice of <span class="math inline">\(k\)</span> therefore plays a central role in shaping the model’s behavior.</p>
+<p>In binary classification, ties can occur when the selected neighbors are evenly split between the two classes, especially when <span class="math inline">\(k\)</span> is an even number. Ties can also arise in multiclass problems when no single class has a clear majority among the nearest neighbors. For this reason, odd values of <span class="math inline">\(k\)</span> are often preferred in binary classification because they reduce the chance of a tie. In some extensions of kNN, closer neighbors are given more influence than more distant ones, leading to distance-weighted versions of the algorithm.</p>
+<p>Because kNN shifts computation from training to prediction, it avoids explicit model fitting but can become computationally expensive when the training set is large. This trade-off is an important practical consideration, particularly when predictions must be made quickly or repeatedly.</p>
+<section id="how-does-knn-classify-a-new-observation" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="how-does-knn-classify-a-new-observation">How Does kNN Classify a New Observation?</h3>
+<p>To classify a new observation, the kNN algorithm computes its distance to each point in the training set, typically using Euclidean distance. It then selects the <span class="math inline">\(k\)</span> nearest neighbors and assigns the class label that occurs most frequently among them. In this way, prediction depends entirely on the local neighborhood of the new observation in feature space.</p>
+<p>Figure <a href="#fig-knn-simple-example" class="quarto-xref"><span>4.1</span></a> illustrates this idea using a simple two-dimensional dataset with two classes and a new data point to be classified. When <span class="math inline">\(k\)</span> is small, the prediction depends on only a few nearby observations. When <span class="math inline">\(k\)</span> is larger, more neighbors influence the decision, which can lead to a different classification outcome. For example, when <span class="math inline">\(k = 3\)</span>, two of the three nearest neighbors belong to Class B, so the new observation is classified as Class B. When <span class="math inline">\(k = 6\)</span>, the neighborhood composition changes, and four of the six nearest neighbors belong to Class A, so the predicted class becomes Class A.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-knn-simple-example" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-knn-simple-example-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/ch_knn_simple_example.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:60.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-knn-simple-example-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.1: A two-dimensional toy dataset with two classes and a new data point, illustrating the kNN algorithm with k = 3 and k = 6.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>This example shows how the choice of <span class="math inline">\(k\)</span> directly affects the classification result. Smaller values of <span class="math inline">\(k\)</span> emphasize local structure and may be more sensitive to noise, whereas larger values incorporate broader neighborhood information and tend to produce smoother decision boundaries. Selecting an appropriate value of <span class="math inline">\(k\)</span> is therefore essential, a topic we examine in more detail later in this chapter.</p>
+</section><section id="strengths-and-limitations-of-knn" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="strengths-and-limitations-of-knn">Strengths and Limitations of kNN</h3>
+<p>The kNN algorithm is valued for its simplicity and transparency. Because predictions are based directly on nearby observations, the logic behind each classification is often easy to explain. This makes kNN a natural starting point for understanding classification and a useful baseline for comparison with more complex models.</p>
+<p>At the same time, kNN has important limitations. The algorithm is sensitive to irrelevant or noisy features, which can distort distance calculations and reduce predictive performance. Since distances must be computed to the training observations at prediction time, kNN can also become computationally expensive as the size of the training set grows.</p>
+<p>The effectiveness of kNN depends strongly on how the feature space is constructed because irrelevant features, differences in scale, and unusual observations can distort distance calculations and alter which observations are identified as nearest neighbors. These sensitivities make the preparation decisions introduced in Chapter <a href="3-data-preperation.html" class="quarto-xref"><span>3</span></a> particularly consequential for kNN. Later in this chapter, we focus on the model-specific preparation needed to ensure that distances provide a meaningful basis for classification.</p>
+</section></section><section id="a-simple-example-of-knn-classification" class="level2" data-number="4.3"><h2 data-number="4.3" class="anchored" data-anchor-id="a-simple-example-of-knn-classification">
+<span class="header-section-number">4.3</span> A Simple Example of kNN Classification</h2>
+<p>To illustrate how kNN operates in practice, we consider a simplified classification example involving drug prescriptions. We use a synthetic dataset of 200 patients that records each patient’s age, sodium-to-potassium (Na/K) ratio, and prescribed drug type. Although artificially generated, the dataset reflects patterns commonly encountered in clinical decision settings. It is available in the <strong>liver</strong> package under the name <code>drug</code>. Figure <a href="#fig-knn-ex-drug-scatter-plot" class="quarto-xref"><span>4.2</span></a> shows the distribution of patients in a two-dimensional feature space, where each point represents a patient and the drug type is indicated by color and shape.</p>
+<p>This example highlights three distinct situations that commonly arise in kNN classification: a stable prediction in a dense and homogeneous region of the feature space, sensitivity to the choice of <span class="math inline">\(k\)</span>, and ambiguity near a class boundary. To illustrate these cases, suppose three new patients arrive at the clinic, and we must determine which drug is most suitable for each based on age and Na/K ratio. Patient 1 is 40 years old with a Na/K ratio of 30.5. Patient 2 is 28 years old with a ratio of 9.6, and Patient 3 is 61 years old with a ratio of 10.5. These patients are shown as stars in Figure <a href="#fig-knn-ex-drug-scatter-plot" class="quarto-xref"><span>4.2</span></a>, together with their three nearest neighbors.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-knn-ex-drug-scatter-plot" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-knn-ex-drug-scatter-plot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="4-classification-knn_files/figure-html/fig-knn-ex-drug-scatter-plot-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-knn-ex-drug-scatter-plot-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.2: Scatter plot of age versus sodium-to-potassium ratio for 200 patients, with drug type indicated by color and shape. The three new patients are shown as dark stars, and their three nearest neighbors are highlighted with gray circles.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>Patient 1 illustrates a stable prediction in a dense and homogeneous region. The patient lies well within a cluster of training observations that share the same drug label, and the nearest neighbors all agree on the assigned class. In such settings, kNN tends to produce a stable prediction because small changes in the value of <span class="math inline">\(k\)</span> or in the patient’s location are unlikely to alter the local majority.</p>
+<p>Patient 2 illustrates sensitivity to the choice of <span class="math inline">\(k\)</span>, as shown in the left panel of Figure <a href="#fig-knn-ex-drug-zoomed-in" class="quarto-xref"><span>4.3</span></a>. When <span class="math inline">\(k = 1\)</span>, the prediction depends on a single nearest neighbor and can therefore be highly sensitive to local variation. When <span class="math inline">\(k = 2\)</span>, the two nearest neighbors belong to different classes, so the result is a tie. When <span class="math inline">\(k = 3\)</span>, one class gains a majority, and the prediction becomes more stable. This example shows how small values of <span class="math inline">\(k\)</span> can lead to unstable decisions and how increasing <span class="math inline">\(k\)</span> can reduce sensitivity to individual observations.</p>
+<p>Patient 3, shown in the right panel of Figure <a href="#fig-knn-ex-drug-zoomed-in" class="quarto-xref"><span>4.3</span></a>, illustrates ambiguity near a class boundary. This patient lies in a region where observations from multiple drug classes are close together. In this multiclass setting, the three nearest neighbors may belong to three different classes, so even when <span class="math inline">\(k = 3\)</span>, no class receives more than one vote. In other words, there is no clear majority. As a result, the predicted class becomes inherently uncertain, and even small changes in the patient’s features or in the value of <span class="math inline">\(k\)</span> may change the outcome. This behavior highlights an important limitation of kNN: predictions near class boundaries can be unstable because the local neighborhood contains conflicting class information.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-knn-ex-drug-zoomed-in" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-knn-ex-drug-zoomed-in-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="4-classification-knn_files/figure-html/fig-knn-ex-drug-zoomed-in-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-knn-ex-drug-zoomed-in-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.3: Zoomed-in views of new Patient 2 (left) and new Patient 3 (right) with their three nearest neighbors.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Using Figure <a href="#fig-knn-ex-drug-scatter-plot" class="quarto-xref"><span>4.2</span></a>, consider how kNN might classify a 50-year-old patient with a sodium-to-potassium ratio of 10. How would your reasoning change as the value of <span class="math inline">\(k\)</span> increases?</p>
+</blockquote>
+<p>Together, these three patients illustrate three core features of kNN. Predictions are often stable when a new observation lies in a dense region dominated by a single class, but they can become sensitive to the choice of <span class="math inline">\(k\)</span> or uncertain near class boundaries. These examples also show that distance-based classification depends strongly on the geometry of the feature space. In the next sections, we formalize how similarity is measured and examine how to choose the value of <span class="math inline">\(k\)</span> more systematically.</p>
+</section><section id="sec-knn-distance-metrics" class="level2" data-number="4.4"><h2 data-number="4.4" class="anchored" data-anchor-id="sec-knn-distance-metrics">
+<span class="header-section-number">4.4</span> How Does kNN Measure Similarity?</h2>
+<p>In kNN, classifying a new observation depends on identifying the most similar observations in the training data. To make this idea precise, similarity is quantified using a distance metric, which measures how close two observations are in the feature space. The smaller the distance, the more similar the observations are considered to be for the purpose of identifying nearest neighbors.</p>
+<p>For example, suppose we compare two patients using age and sodium-to-potassium (Na/K) ratio. One patient is 40 years old with a Na/K ratio of 30.5, and the other is 28 years old with a ratio of 9.6. In this setting, similarity is determined by how far apart the two patients are in the two-dimensional feature space defined by these variables.</p>
+<section id="euclidean-distance" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="euclidean-distance">Euclidean Distance</h3>
+<p>A commonly used distance metric in kNN is Euclidean distance, which corresponds to the straight-line distance between two points. For two points <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> in an <span class="math inline">\(n\)</span>-dimensional feature space, it is defined as <span class="math display">\[
+\text{dist}(x, y) = \sqrt{(x_1 - y_1)^2 + (x_2 - y_2)^2 + \cdots + (x_n - y_n)^2},
+\]</span> where <span class="math inline">\(x = (x_1, x_2, \ldots, x_n)\)</span> and <span class="math inline">\(y = (y_1, y_2, \ldots, y_n)\)</span> are the corresponding feature vectors.</p>
+<p>Using age and Na/K ratio for the two patients introduced above, the Euclidean distance is <span class="math display">\[
+\text{dist}(x, y) = \sqrt{(40 - 28)^2 + (30.5 - 9.6)^2}
+= \sqrt{144 + 436.81}
+= 24.11.
+\]</span></p>
+<p>Figure <a href="#fig-knn-euclidean-distance" class="quarto-xref"><span>4.4</span></a> visualizes this distance in a two-dimensional feature space. The line connecting the two patients represents their Euclidean distance.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-knn-euclidean-distance" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center" data-fig-pos="H">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-knn-euclidean-distance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="4-classification-knn_files/figure-html/fig-knn-euclidean-distance-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" data-fig-pos="H">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-knn-euclidean-distance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.4: Visual representation of Euclidean distance between two patients in a two-dimensional feature space.
+</figcaption></figure>
+</div>
+</div>
+</div>
+<p>Euclidean distance is intuitive and widely used, particularly when predictors are numerical. Other distance measures, such as Manhattan distance, Hamming distance, or cosine similarity, can be useful in particular applications. For the purposes of this chapter, however, Euclidean distance is sufficient for developing the main ideas behind kNN.</p>
+<p>For a distance measure to provide a meaningful notion of similarity, the predictors must be represented appropriately and placed on suitable scales. Poorly encoded categorical variables or large differences in numerical scale can distort the geometry of the feature space and, consequently, which observations are identified as nearest neighbors. The general principles for encoding and scaling were developed in Chapter <a href="3-data-preperation.html" class="quarto-xref"><span>3</span></a>. In the next section, we focus only on how those preparation decisions apply specifically to kNN.</p>
+</section></section><section id="sec-knn-data-prepration" class="level2" data-number="4.5"><h2 data-number="4.5" class="anchored" data-anchor-id="sec-knn-data-prepration">
+<span class="header-section-number">4.5</span> Model-Specific Preparation for kNN</h2>
+<p>The preparation principles introduced in Chapter <a href="3-data-preperation.html" class="quarto-xref"><span>3</span></a> apply to predictive models generally, but some are especially important for kNN because predictions are based directly on distances between observations. In a distance-based method, the representation of the predictors determines the geometry of the feature space and, consequently, which observations are identified as nearest neighbors.</p>
+<p>Two considerations are particularly important for kNN. First, predictors used in the distance calculation must have an appropriate numerical representation. Numerical predictors already have a numerical form, although they may still require scaling or other preparation. Categorical predictors must be encoded in a way that reflects their structure without introducing artificial relationships between categories. For example, assigning arbitrary integers to nominal categories can create numerical distances that have no meaningful interpretation.</p>
+<p>Second, numerical predictors must be placed on suitable relative scales. If one predictor has a much larger numerical range than another, it may contribute disproportionately to the distance calculation and dominate the selection of nearest neighbors. Scaling helps prevent differences in measurement units or numerical ranges from determining the notion of similarity. The general procedures for encoding categorical predictors and scaling numerical predictors were developed in Chapter <a href="3-data-preperation.html" class="quarto-xref"><span>3</span></a>; here, our focus is on why these choices are particularly consequential for kNN.</p>
+<p>Data-dependent transformations must also follow the training-only principle established in Chapter <a href="3-data-preperation.html" class="quarto-xref"><span>3</span></a>. In the train–test setting considered here, parameters used to transform the predictors are estimated from the training data and then applied unchanged to the test data and any future observations. This keeps all observations on the same scale while ensuring that information from the test set does not influence model preparation.</p>
+<p>The drug example introduced earlier provides a simple illustration. The following code applies min-max scaling to age and sodium-to-potassium ratio. In the proper approach, the minimum and maximum values are obtained from the training data and then used to transform both the training observations and the new patients. For comparison, the incorrect approach scales the new observations independently.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://book-data-science-r.netlify.app">liver</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Correct scaling: apply training-derived parameters to the test data</span></span>
+<span><span class="va">min_train</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">$</span><span class="va">age</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">$</span><span class="va">ratio</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">max_train</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">$</span><span class="va">age</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">$</span><span class="va">ratio</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">train_scaled</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/liver/man/minmax.html">minmax</a></span><span class="op">(</span><span class="va">train_set</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"ratio"</span><span class="op">)</span>, min <span class="op">=</span> <span class="va">min_train</span>, max <span class="op">=</span> <span class="va">max_train</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">test_scaled</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/liver/man/minmax.html">minmax</a></span><span class="op">(</span><span class="va">test_set</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"ratio"</span><span class="op">)</span>, min <span class="op">=</span> <span class="va">min_train</span>, max <span class="op">=</span> <span class="va">max_train</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Incorrect scaling: scale the test data independently</span></span>
+<span><span class="va">train_scaled_wrongly</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/liver/man/minmax.html">minmax</a></span><span class="op">(</span><span class="va">train_set</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"ratio"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">test_scaled_wrongly</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/liver/man/minmax.html">minmax</a></span><span class="op">(</span><span class="va">test_set</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"ratio"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Figure <a href="#fig-knn-ex-proper-scaling" class="quarto-xref"><span>4.5</span></a> shows the effect of these two approaches. The left panel displays the original feature space. In the middle panel, the training observations and the new patients are transformed using the same minimum and maximum values obtained from the training data, so they remain expressed in a common coordinate system. In the right panel, the new patients are scaled independently. Their locations relative to the training observations are therefore distorted, which can change which training cases are identified as nearest neighbors.</p>
+<div class="cell" data-layout-nrow="2" data-layout-align="center">
+<div id="fig-knn-ex-proper-scaling" class="quarto-layout-panel">
+<figure class="quarto-float quarto-float-fig figure"><div aria-describedby="fig-knn-ex-proper-scaling-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="quarto-layout-row">
+<div class="cell-output-display quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-knn-ex-proper-scaling" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-knn-ex-proper-scaling-1" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-subfloat-fig figure"><div aria-describedby="fig-knn-ex-proper-scaling-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="4-classification-knn_files/figure-html/fig-knn-ex-proper-scaling-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H" data-ref-parent="fig-knn-ex-proper-scaling">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-knn-ex-proper-scaling-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(a) Without Scaling
+</figcaption></figure>
+</div>
+</div>
+<div class="cell-output-display quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-knn-ex-proper-scaling" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-knn-ex-proper-scaling-2" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-subfloat-fig figure"><div aria-describedby="fig-knn-ex-proper-scaling-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="4-classification-knn_files/figure-html/fig-knn-ex-proper-scaling-2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H" data-ref-parent="fig-knn-ex-proper-scaling">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-knn-ex-proper-scaling-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(b) Proper Scaling
+</figcaption></figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="cell-output-display quarto-layout-cell-subref quarto-layout-cell" data-ref-parent="fig-knn-ex-proper-scaling" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-knn-ex-proper-scaling-3" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-subfloat-fig figure"><div aria-describedby="fig-knn-ex-proper-scaling-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="4-classification-knn_files/figure-html/fig-knn-ex-proper-scaling-3.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H" data-ref-parent="fig-knn-ex-proper-scaling">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-subfloat-caption quarto-subfloat-fig" id="fig-knn-ex-proper-scaling-3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+(c) Improper Scaling
+</figcaption></figure>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-knn-ex-proper-scaling-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.5: Effect of scaling on the feature space used by kNN. The left panel shows the original data, the middle panel shows proper scaling using parameters estimated from the training data, and the right panel shows the distortion produced when the new observations are scaled independently.
+</figcaption></figure>
+</div>
+</div>
+<p>For kNN, this distinction is particularly important because predictions depend on distances between new observations and the training data. If the two are transformed using different scaling rules, those distances no longer describe positions within a common feature space, and the resulting neighborhoods can be misleading. The case study later in this chapter applies the same preparation principles to a dataset containing both numerical and categorical predictors.</p>
+</section><section id="sec-knn-choose-k" class="level2" data-number="4.6"><h2 data-number="4.6" class="anchored" data-anchor-id="sec-knn-choose-k">
+<span class="header-section-number">4.6</span> Selecting an Appropriate Value of <span class="math inline">\(k\)</span> in kNN</h2>
+<p>The parameter <span class="math inline">\(k\)</span>, which determines the number of nearest neighbors used to classify a new observation, has an important influence on the behavior of kNN. There is no single value of <span class="math inline">\(k\)</span> that is best for every dataset, so it must be chosen based on the observed data and the prediction problem.</p>
+<p>When <span class="math inline">\(k\)</span> is small, predictions depend on a very local neighborhood. For example, with <span class="math inline">\(k = 1\)</span>, the predicted class is determined entirely by the single closest training observation. This makes the classifier highly responsive to local structure, but also sensitive to individual observations, noise, or mislabeled cases.</p>
+<p>As <span class="math inline">\(k\)</span> increases, the prediction is based on a broader neighborhood. The resulting decision boundary tends to become smoother and less sensitive to individual training observations. However, if <span class="math inline">\(k\)</span> becomes too large, meaningful local patterns may be averaged away. In the extreme case where <span class="math inline">\(k\)</span> approaches the size of the training set, predictions may be dominated by the class that is most common overall. This progression from highly local predictions to increasingly smooth ones is closely related to the broader concepts of bias, variance, underfitting, and overfitting, which are developed in Chapter <a href="5-model-evaluation.html" class="quarto-xref"><span>5</span></a>.</p>
+<p>Because the appropriate value of <span class="math inline">\(k\)</span> depends on the data, it should be selected empirically during model development. Candidate values can be compared using a validation set or, more generally, through resampling methods such as K-fold cross-validation within the training data. As discussed in Chapter <a href="3-data-preperation.html" class="quarto-xref"><span>3</span></a>, cross-validation makes more efficient use of the available training observations and generally provides a more stable basis for model tuning. In this chapter, however, we use a single validation split to keep the tuning procedure transparent while introducing kNN. The test set remains separate from this process and is used only after a value of <span class="math inline">\(k\)</span> has been selected.</p>
+<p>The criterion used to compare candidate values of <span class="math inline">\(k\)</span> also depends on the prediction problem. In this chapter, we use accuracy as a simple measure for illustrating the tuning process. Other measures may be more appropriate when classes are imbalanced or when different types of classification errors have different consequences. These considerations are examined systematically in Chapter <a href="5-model-evaluation.html" class="quarto-xref"><span>5</span></a>.</p>
+<p>Selecting <span class="math inline">\(k\)</span> is therefore a model-tuning problem: small values emphasize highly local patterns, whereas larger values produce smoother classifications based on broader neighborhoods. In the following case study, we apply this reasoning to the <code>churn</code> dataset and select a value of <span class="math inline">\(k\)</span> using only the training data.</p>
+</section><section id="sec-knn-case-churn" class="level2" data-number="4.7"><h2 data-number="4.7" class="anchored" data-anchor-id="sec-knn-case-churn">
+<span class="header-section-number">4.7</span> Case Study: Predicting Customer Churn with kNN</h2>
+<p>In this case study, we apply the kNN algorithm to a practical classification problem using the <code>churn</code> dataset from the <strong>liver</strong> package in R. The goal is to predict whether a customer has churned (<code>yes</code>) or not (<code>no</code>) based on demographic information and service usage patterns. Readers unfamiliar with the dataset are encouraged to review the exploratory analysis in Section <a href="2-data-understanding-eda.html#sec-eda-EDA-churn" class="quarto-xref"><span>2.5</span></a>, which provides context and preliminary findings.</p>
+<p>This dataset provides an instructive test case for kNN because it combines several features that make distance-based classification both useful and challenging. It contains a mix of numerical and categorical predictors, so meaningful comparison requires careful encoding and scaling. It may also exhibit some class imbalance, which affects how model performance should be interpreted. At the same time, kNN offers an intuitive way to compare each customer with similar customers in the training data, making the resulting predictions easy to understand in local terms. For these reasons, the <code>churn</code> dataset is well suited for illustrating both the strengths and the practical limitations of kNN.</p>
+<p>We begin by inspecting the structure of the dataset:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(liver)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(churn)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(churn)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>   <span class="st">'data.frame'</span><span class="sc">:</span>    <span class="dv">10127</span> obs. of  <span class="dv">21</span> variables<span class="sc">:</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="er">$</span> customer_ID          <span class="sc">:</span> int  <span class="dv">768805383</span> <span class="dv">818770008</span> <span class="dv">713982108</span> <span class="dv">769911858</span> <span class="dv">709106358</span> <span class="dv">713061558</span> <span class="dv">810347208</span> <span class="dv">818906208</span> <span class="dv">710930508</span> <span class="dv">719661558</span> ...</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> age                  <span class="sc">:</span> int  <span class="dv">45</span> <span class="dv">49</span> <span class="dv">51</span> <span class="dv">40</span> <span class="dv">40</span> <span class="dv">44</span> <span class="dv">51</span> <span class="dv">32</span> <span class="dv">37</span> <span class="dv">48</span> ...</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> gender               <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"female"</span>,<span class="st">"male"</span><span class="sc">:</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> ...</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> education            <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">7</span> levels <span class="st">"uneducated"</span>,<span class="st">"highschool"</span>,..<span class="sc">:</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">4</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">4</span> <span class="dv">7</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">4</span> ...</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> marital              <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">4</span> levels <span class="st">"married"</span>,<span class="st">"single"</span>,..<span class="sc">:</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">4</span> <span class="dv">2</span> <span class="dv">2</span> ...</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> income               <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">6</span> levels <span class="st">"&lt;40K"</span>,<span class="st">"40K-60K"</span>,..<span class="sc">:</span> <span class="dv">3</span> <span class="dv">1</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">5</span> <span class="dv">3</span> <span class="dv">3</span> <span class="dv">4</span> ...</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> card_category        <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">4</span> levels <span class="st">"blue"</span>,<span class="st">"silver"</span>,..<span class="sc">:</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">1</span> <span class="dv">1</span> ...</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> dependent_count      <span class="sc">:</span> int  <span class="dv">3</span> <span class="dv">5</span> <span class="dv">3</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">4</span> <span class="dv">0</span> <span class="dv">3</span> <span class="dv">2</span> ...</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> months_on_book       <span class="sc">:</span> int  <span class="dv">39</span> <span class="dv">44</span> <span class="dv">36</span> <span class="dv">34</span> <span class="dv">21</span> <span class="dv">36</span> <span class="dv">46</span> <span class="dv">27</span> <span class="dv">36</span> <span class="dv">36</span> ...</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> relationship_count   <span class="sc">:</span> int  <span class="dv">5</span> <span class="dv">6</span> <span class="dv">4</span> <span class="dv">3</span> <span class="dv">5</span> <span class="dv">3</span> <span class="dv">6</span> <span class="dv">2</span> <span class="dv">5</span> <span class="dv">6</span> ...</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> months_inactive      <span class="sc">:</span> int  <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">4</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">3</span> ...</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> contacts_count_12    <span class="sc">:</span> int  <span class="dv">3</span> <span class="dv">2</span> <span class="dv">0</span> <span class="dv">1</span> <span class="dv">0</span> <span class="dv">2</span> <span class="dv">3</span> <span class="dv">2</span> <span class="dv">0</span> <span class="dv">3</span> ...</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> credit_limit         <span class="sc">:</span> num  <span class="dv">12691</span> <span class="dv">8256</span> <span class="dv">3418</span> <span class="dv">3313</span> <span class="dv">4716</span> ...</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> revolving_balance    <span class="sc">:</span> int  <span class="dv">777</span> <span class="dv">864</span> <span class="dv">0</span> <span class="dv">2517</span> <span class="dv">0</span> <span class="dv">1247</span> <span class="dv">2264</span> <span class="dv">1396</span> <span class="dv">2517</span> <span class="dv">1677</span> ...</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> available_credit     <span class="sc">:</span> num  <span class="dv">11914</span> <span class="dv">7392</span> <span class="dv">3418</span> <span class="dv">796</span> <span class="dv">4716</span> ...</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> transaction_amount_12<span class="sc">:</span> int  <span class="dv">1144</span> <span class="dv">1291</span> <span class="dv">1887</span> <span class="dv">1171</span> <span class="dv">816</span> <span class="dv">1088</span> <span class="dv">1330</span> <span class="dv">1538</span> <span class="dv">1350</span> <span class="dv">1441</span> ...</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> transaction_count_12 <span class="sc">:</span> int  <span class="dv">42</span> <span class="dv">33</span> <span class="dv">20</span> <span class="dv">20</span> <span class="dv">28</span> <span class="dv">24</span> <span class="dv">31</span> <span class="dv">36</span> <span class="dv">24</span> <span class="dv">32</span> ...</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> ratio_amount_Q4_Q1   <span class="sc">:</span> num  <span class="fl">1.33</span> <span class="fl">1.54</span> <span class="fl">2.59</span> <span class="fl">1.41</span> <span class="fl">2.17</span> ...</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> ratio_count_Q4_Q1    <span class="sc">:</span> num  <span class="fl">1.62</span> <span class="fl">3.71</span> <span class="fl">2.33</span> <span class="fl">2.33</span> <span class="fl">2.5</span> ...</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> utilization_ratio    <span class="sc">:</span> num  <span class="fl">0.061</span> <span class="fl">0.105</span> <span class="dv">0</span> <span class="fl">0.76</span> <span class="dv">0</span> <span class="fl">0.311</span> <span class="fl">0.066</span> <span class="fl">0.048</span> <span class="fl">0.113</span> <span class="fl">0.144</span> ...</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="sc">$</span> churn                <span class="sc">:</span> Factor w<span class="sc">/</span> <span class="dv">2</span> levels <span class="st">"yes"</span>,<span class="st">"no"</span><span class="sc">:</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> <span class="dv">2</span> ...</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The dataset is a data frame containing 10127 observations, 20 predictor variables, and the binary outcome variable <code>churn</code>. For the kNN model developed in this chapter, we do not consider <code>customer_ID</code>, since it is only an identifier and does not provide meaningful information for measuring similarity between customers. We also exclude <code>available_credit</code> and <code>utilization_ratio</code>, as discussed in Section <a href="2-data-understanding-eda.html#sec-EDA-sec-multivariate" class="quarto-xref"><span>2.5.3</span></a>, where these variables were shown to be deterministic functions of other credit-related predictors already present in the dataset. Removing such variables reduces redundancy and helps prevent distance calculations from being influenced disproportionately by multiple representations of the same underlying information.</p>
+<p>Before proceeding to modeling, we prepare the dataset carefully. To avoid data leakage (see Section <a href="3-data-preperation.html#sec-data-prep-data-leakage" class="quarto-xref"><span>3.2</span></a>), preprocessing steps that depend on the data distribution, including imputation and scaling, are applied only after partitioning the data into training and test sets.</p>
+<p>In the remainder of this case study, we proceed step by step: partitioning the data, applying preprocessing after the split, selecting an appropriate value of <span class="math inline">\(k\)</span>, fitting the model, generating predictions, and evaluating performance. Because kNN is distance-based, each of these steps directly affects how similarity is measured and, therefore, how predictions are formed.</p>
+<section id="preparing-the-churn-data-for-knn" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="preparing-the-churn-data-for-knn">Preparing the Churn Data for kNN</h3>
+<p>We now apply the preparation principles developed in Chapter <a href="3-data-preperation.html" class="quarto-xref"><span>3</span></a> to the <code>churn</code> dataset. The first steps establish a common prepared dataset that could serve as the basis for different predictive models: we create the train–test split, apply predetermined recoding rules, handle missing values, remove redundant or non-informative representations, and ensure that categorical levels can be handled consistently across datasets. We then carry out the preparation required specifically for kNN by encoding categorical predictors numerically and scaling the numerical predictors used in the distance calculation.</p>
+<p>This distinction is important because not every preparation decision is specific to kNN. Decisions about missing values, redundant variables, and categorical levels are part of the broader Data Preparation for Modeling stage, whereas numerical encoding and scaling are especially consequential for kNN because they determine the geometry of the feature space.</p>
+<p>To evaluate how well the model generalizes, we begin by splitting the data into training and test sets. We use the <code><a href="https://rdrr.io/pkg/liver/man/partition.html">partition()</a></code> function from the <strong>liver</strong> package to create an 80% training set and a 20% test set:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span> <span class="co"># for reproducibility</span></span>
+<span></span>
+<span><span class="va">splits</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/liver/man/partition.html">partition</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">churn</span>, ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.8</span>, <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">train_set</span> <span class="op">=</span> <span class="va">splits</span><span class="op">$</span><span class="va">part1</span></span>
+<span><span class="va">test_set</span>  <span class="op">=</span> <span class="va">splits</span><span class="op">$</span><span class="va">part2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This split provides a training set for model development and a separate test set for final evaluation. The training set is used for all subsequent model development and data-dependent preparation, whereas the test set is kept separate for the final assessment of the selected model. Readers may verify that the churn rate remains similar across both sets (see Section <a href="3-data-preperation.html#sec-data-prep-cross-validation" class="quarto-xref"><span>3.1</span></a>).</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Create a 70% training set and a 30% test set for the same dataset. Verify that the proportion of churned customers remains similar across the two sets.</p>
+</blockquote>
+<section id="imputation-for-knn" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="imputation-for-knn">Imputation for kNN</h4>
+<p>The <code>churn</code> dataset is largely clean, but some entries in <code>education</code>, <code>income</code>, and <code>marital</code> are recorded as <code>"unknown"</code>. Based on the meaning assigned to this label during Data Understanding and Exploration, we treat <code>"unknown"</code> as a placeholder for unavailable information rather than as a substantive category. Because this interpretation is established before model fitting and does not depend on the observed distribution of the training or test data, the same recoding rule can be applied to both datasets.</p>
+<p>Here we use mode imputation for these categorical variables. Although simple, this approach is transparent and sufficient for illustrating the workflow. The following code first replaces <code>"unknown"</code> with missing values and then imputes those values using modes computed from the training set.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Treat "unknown" as missing</span></span>
+<span><span class="va">train_set</span><span class="op">[</span><span class="va">train_set</span> <span class="op">==</span> <span class="st">"unknown"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
+<span><span class="va">test_set</span><span class="op">[</span><span class="va">test_set</span> <span class="op">==</span> <span class="st">"unknown"</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
+<span></span>
+<span><span class="co"># Training-derived modes</span></span>
+<span><span class="va">mode_education</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">$</span><span class="va">education</span>, useNA <span class="op">=</span> <span class="st">"no"</span><span class="op">)</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">mode_income</span>    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">$</span><span class="va">income</span>,    useNA <span class="op">=</span> <span class="st">"no"</span><span class="op">)</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">mode_marital</span>   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">$</span><span class="va">marital</span>,   useNA <span class="op">=</span> <span class="st">"no"</span><span class="op">)</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
+<span></span>
+<span><span class="co"># Apply to the training set</span></span>
+<span><span class="va">train_set</span><span class="op">$</span><span class="va">education</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">$</span><span class="va">education</span><span class="op">)</span><span class="op">]</span> <span class="op">=</span> <span class="va">mode_education</span></span>
+<span><span class="va">train_set</span><span class="op">$</span><span class="va">income</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">$</span><span class="va">income</span><span class="op">)</span><span class="op">]</span>       <span class="op">=</span> <span class="va">mode_income</span></span>
+<span><span class="va">train_set</span><span class="op">$</span><span class="va">marital</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">$</span><span class="va">marital</span><span class="op">)</span><span class="op">]</span>     <span class="op">=</span> <span class="va">mode_marital</span></span>
+<span></span>
+<span><span class="co"># Apply to the test set using the same training-derived modes</span></span>
+<span><span class="va">test_set</span><span class="op">$</span><span class="va">education</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">test_set</span><span class="op">$</span><span class="va">education</span><span class="op">)</span><span class="op">]</span> <span class="op">=</span> <span class="va">mode_education</span></span>
+<span><span class="va">test_set</span><span class="op">$</span><span class="va">income</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">test_set</span><span class="op">$</span><span class="va">income</span><span class="op">)</span><span class="op">]</span>       <span class="op">=</span> <span class="va">mode_income</span></span>
+<span><span class="va">test_set</span><span class="op">$</span><span class="va">marital</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">test_set</span><span class="op">$</span><span class="va">marital</span><span class="op">)</span><span class="op">]</span>     <span class="op">=</span> <span class="va">mode_marital</span></span>
+<span></span>
+<span><span class="va">train_set</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/droplevels.html">droplevels</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">)</span></span>
+<span><span class="va">test_set</span>  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/droplevels.html">droplevels</a></span><span class="op">(</span><span class="va">test_set</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The same training-derived modes are applied to both datasets so that the imputation step does not use information from the test set. The call to <code><a href="https://rdrr.io/r/base/droplevels.html">droplevels()</a></code> removes unused factor levels after the missing values have been filled in, leaving both datasets in a cleaner form for the next preprocessing steps.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Repeat this imputation strategy after creating a 70%–30% split, and confirm that no missing values remain in <code>education</code>, <code>income</code>, and <code>marital</code>.</p>
+</blockquote>
+<p>Before moving to kNN-specific encoding, the categorical predictors must also be represented consistently across the training and test data. In particular, the encoding structure should be defined from the training data and then applied to new observations. This prevents differences in observed factor levels from producing different predictor columns and ensures a consistent treatment of levels that are rare or absent from one of the datasets. No additional collapsing of categorical levels is required for this dataset, but their representation must remain consistent across the training and test sets.</p>
+<p>At this point, the main preparation decisions that are not specific to a particular modeling algorithm have been completed. We can now adapt the data to kNN by constructing the numerical feature representation required for distance calculations.</p>
+</section><section id="encoding-categorical-features-for-knn" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="encoding-categorical-features-for-knn">Encoding Categorical Features for kNN</h4>
+<p>With the common preparation completed, we now construct the numerical feature representation required by kNN. Because Euclidean distance is calculated from numerical predictor values, the categorical predictors must be encoded in a way that preserves their relevant structure without imposing arbitrary relationships between categories. In the <code>churn</code> dataset, the variables <code>gender</code>, <code>education</code>, <code>marital</code>, <code>income</code>, and <code>card_category</code> are categorical and therefore require encoding.</p>
+<p>Because <code>income</code> is an ordinal variable, we follow the guidance in Section <a href="3-data-preperation.html#sec-data-prep-encoding" class="quarto-xref"><span>3.5</span></a> and replace its categories with representative numerical values that preserve their ordering. Specifically, we encode <code>"&lt;40K"</code> as 20, <code>"40K-60K"</code> as 50, <code>"60K-80K"</code> as 70, <code>"80K-120K"</code> as 100, and <code>"&gt;120K"</code> as 140. The resulting variable, <code>income_rank</code>, allows income to enter the distance calculations in numerical form while retaining its ordinal structure.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">income_levels</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"&lt;40K"</span>, <span class="st">"40K-60K"</span>, <span class="st">"60K-80K"</span>, <span class="st">"80K-120K"</span>, <span class="st">"&gt;120K"</span><span class="op">)</span></span>
+<span><span class="va">income_values</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">50</span>, <span class="fl">70</span>, <span class="fl">100</span>, <span class="fl">140</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">train_set</span><span class="op">$</span><span class="va">income_rank</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">$</span><span class="va">income</span>, levels <span class="op">=</span> <span class="va">income_levels</span>, labels <span class="op">=</span> <span class="va">income_values</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">test_set</span><span class="op">$</span><span class="va">income_rank</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">test_set</span><span class="op">$</span><span class="va">income</span>, levels <span class="op">=</span> <span class="va">income_levels</span>, labels <span class="op">=</span> <span class="va">income_values</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The remaining categorical variables are nominal, meaning that their categories have no natural order. For these variables, we apply one-hot encoding, which creates a separate 0/1 indicator for each category. The <code><a href="https://rdrr.io/pkg/liver/man/one.hot.html">one.hot()</a></code> function from the <strong>liver</strong> package automates this step:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">categorical_features</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"gender"</span>, <span class="st">"education"</span>, <span class="st">"marital"</span>, <span class="st">"card_category"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">train_onehot</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/liver/man/one.hot.html">one.hot</a></span><span class="op">(</span><span class="va">train_set</span>, cols <span class="op">=</span> <span class="va">categorical_features</span><span class="op">)</span></span>
+<span><span class="va">test_onehot</span>  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/liver/man/one.hot.html">one.hot</a></span><span class="op">(</span><span class="va">test_set</span>,  cols <span class="op">=</span> <span class="va">categorical_features</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>For a variable with <span class="math inline">\(m\)</span> categories, the <code><a href="https://rdrr.io/pkg/liver/man/one.hot.html">one.hot()</a></code> function creates <span class="math inline">\(m\)</span> binary columns. In kNN, this does not create estimation problems, but it does increase the dimensionality of the feature space. Because kNN is sensitive to the geometry of that space, one-hot encoding variables with many categories can make similarity relationships more diffuse and may affect predictive performance.</p>
+<p>For distance-based methods such as kNN, it is essential that the training and test sets ultimately contain the same encoded predictors in the same order. Otherwise, distances between observations cannot be computed meaningfully. At this stage, the one-hot encoded variables remain as 0/1 indicators, whereas the newly created variable <code>income_rank</code> will be treated as an ordinal numeric predictor in the scaling step that follows.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Using a 70%–30% train–test split, encode the categorical predictors as described above and verify that the training and test sets contain the same predictor columns in the same order. Why is this consistency important for kNN?</p>
+</blockquote>
+</section><section id="feature-scaling-for-knn" class="level4 unnumbered unlisted"><h4 class="unnumbered unlisted anchored" data-anchor-id="feature-scaling-for-knn">Feature Scaling for kNN</h4>
+<p>Once all predictors are represented numerically, the next step is to scale the continuous and ordinal numerical variables so that variables with larger ranges do not dominate the distance calculations. In this example, that includes the original continuous predictors as well as the newly created ordinal variable <code>income_rank</code>, which now enters the model as a numeric feature. By contrast, the binary 0/1 indicators created by one-hot encoding are already on a common scale and are therefore left unchanged.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">numeric_features</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"dependent_count"</span>, <span class="st">"months_on_book"</span>, <span class="st">"relationship_count"</span>, <span class="st">"months_inactive"</span>, <span class="st">"contacts_count_12"</span>, <span class="st">"credit_limit"</span>, <span class="st">"revolving_balance"</span>, <span class="st">"transaction_amount_12"</span>, <span class="st">"transaction_count_12"</span>, <span class="st">"ratio_amount_Q4_Q1"</span>, <span class="st">"ratio_count_Q4_Q1"</span>,<span class="st">"income_rank"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">min_train</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">sapply</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">[</span>, <span class="va">numeric_features</span><span class="op">]</span>, <span class="va">min</span><span class="op">)</span>  </span>
+<span><span class="va">max_train</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">sapply</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">[</span>, <span class="va">numeric_features</span><span class="op">]</span>, <span class="va">max</span><span class="op">)</span>   </span>
+<span></span>
+<span><span class="va">train_scaled</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/liver/man/minmax.html">minmax</a></span><span class="op">(</span><span class="va">train_onehot</span>, col <span class="op">=</span> <span class="va">numeric_features</span>, min <span class="op">=</span> <span class="va">min_train</span>, max <span class="op">=</span> <span class="va">max_train</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">test_scaled</span>  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/liver/man/minmax.html">minmax</a></span><span class="op">(</span><span class="va">test_onehot</span>,  col <span class="op">=</span> <span class="va">numeric_features</span>, min <span class="op">=</span> <span class="va">min_train</span>, max <span class="op">=</span> <span class="va">max_train</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Here, <code><a href="https://rdrr.io/r/base/lapply.html">sapply()</a></code> computes the column-wise minimum and maximum values for the selected numeric variables in the training data. These values define the scaling range. The <code><a href="https://rdrr.io/pkg/liver/man/minmax.html">minmax()</a></code> function from the <strong>liver</strong> package then applies min-max scaling to both the training and test sets, using the training-derived values as reference.</p>
+<p>This step places the continuous and ordinal predictors on a comparable scale, helping ensure that variables with larger numerical ranges do not dominate the distance calculations. For further discussion of scaling methods and their implications, see Section <a href="3-data-preperation.html#sec-data-prep-feature-scaling" class="quarto-xref"><span>3.6</span></a> and the preparation overview in Section <a href="#sec-knn-data-prepration" class="quarto-xref"><span>4.5</span></a>. With the predictors now encoded and scaled appropriately, we can proceed to select an appropriate value of <span class="math inline">\(k\)</span> for the kNN model.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Using a 70%–30% train–test split, verify that scaling parameters are computed only from the training data. Why should the test set not be scaled independently?</p>
+</blockquote>
+</section></section><section id="selecting-an-appropriate-value-of-k" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="selecting-an-appropriate-value-of-k">Selecting an Appropriate Value of <span class="math inline">\(k\)</span>
+</h3>
+<p>The number of neighbors <span class="math inline">\(k\)</span> is a key hyperparameter in the kNN algorithm. Choosing a small <span class="math inline">\(k\)</span> can make the model overly sensitive to noise, whereas a large <span class="math inline">\(k\)</span> can oversmooth decision boundaries and obscure meaningful local patterns.</p>
+<p>Several approaches can be used to select an appropriate value of <span class="math inline">\(k\)</span>. As discussed in Chapter <a href="3-data-preperation.html" class="quarto-xref"><span>3</span></a>, K-fold cross-validation within the training data generally provides a more stable basis for hyperparameter tuning because candidate models are evaluated across multiple training-validation splits. For this introductory kNN example, however, we use a simpler holdout-validation approach so that the tuning process can be seen directly.</p>
+<p>The <code><a href="https://rdrr.io/pkg/liver/man/kNN.plot.html">kNN.plot()</a></code> function from the <strong>liver</strong> package evaluates a range of candidate values of <span class="math inline">\(k\)</span> using an internal split of the training data. In this case, 70% of the available training observations are used for fitting candidate kNN models and the remaining 30% are used for validation. The external test set is not involved in selecting <span class="math inline">\(k\)</span> and remains untouched until the final assessment.</p>
+<p>In this chapter, we use the <code><a href="https://rdrr.io/pkg/liver/man/kNN.plot.html">kNN.plot()</a></code> function from the <strong>liver</strong> package, which computes classification accuracy across a specified range of <span class="math inline">\(k\)</span> values and visualizes the results. Before applying the function, we define a <code>formula_knn</code> object that specifies the relationship between the target variable (<code>churn</code>) and the predictors. These predictors include the scaled numerical variables together with the binary indicators created through one-hot encoding:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">formula_knn</span> <span class="op">=</span> <span class="va">churn</span> <span class="op">~</span> <span class="va">gender_female</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">income_rank</span> <span class="op">+</span> <span class="va">education_uneducated</span> <span class="op">+</span> <span class="va">education_highschool</span> <span class="op">+</span> <span class="va">education_college</span> <span class="op">+</span> <span class="va">education_graduate</span> <span class="op">+</span> <span class="va">`education_post-graduate`</span> <span class="op">+</span> <span class="va">marital_married</span> <span class="op">+</span> <span class="va">marital_single</span> <span class="op">+</span> <span class="va">card_category_blue</span> <span class="op">+</span> <span class="va">card_category_silver</span> <span class="op">+</span> <span class="va">card_category_gold</span> <span class="op">+</span> <span class="va">dependent_count</span> <span class="op">+</span> <span class="va">months_on_book</span> <span class="op">+</span> <span class="va">relationship_count</span> <span class="op">+</span> <span class="va">months_inactive</span> <span class="op">+</span> <span class="va">contacts_count_12</span> <span class="op">+</span> <span class="va">credit_limit</span> <span class="op">+</span> <span class="va">revolving_balance</span> <span class="op">+</span> <span class="va">transaction_amount_12</span> <span class="op">+</span> <span class="va">transaction_count_12</span> <span class="op">+</span> <span class="va">ratio_amount_Q4_Q1</span> <span class="op">+</span> <span class="va">ratio_count_Q4_Q1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We then apply <code><a href="https://rdrr.io/pkg/liver/man/kNN.plot.html">kNN.plot()</a></code>:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/liver/man/kNN.plot.html">kNN.plot</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">formula_knn</span>, train <span class="op">=</span> <span class="va">train_scaled</span>, ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.7</span>, <span class="fl">0.3</span><span class="op">)</span>, k.max <span class="op">=</span> <span class="fl">20</span>, reference <span class="op">=</span> <span class="st">"yes"</span>, set.seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="4-classification-knn_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" data-fig-pos="H"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Here, <code><a href="https://rdrr.io/pkg/liver/man/kNN.plot.html">kNN.plot()</a></code> uses only the training data and internally splits it into a temporary training subset and a validation subset according to <code>ratio = c(0.7, 0.3)</code>. This allows us to compare candidate values of <span class="math inline">\(k\)</span> without using the external test set. The argument <code>k.max = 20</code> specifies the largest value of <span class="math inline">\(k\)</span> to examine, and <code>set.seed = 42</code> ensures that the internal split is reproducible.</p>
+<p>Because tuning is carried out using only the training data, the test set remains untouched until the final evaluation stage. This helps avoid optimistic bias and preserves the integrity of the model assessment (see Section <a href="3-data-preperation.html#sec-data-prep-data-leakage" class="quarto-xref"><span>3.2</span></a>).</p>
+<p>In this example, we use accuracy to compare candidate values of <span class="math inline">\(k\)</span> because it provides a simple summary of predictive performance. However, the choice of tuning metric depends on the problem. In settings with class imbalance or unequal costs of misclassification, other measures such as precision, recall, or the F1-score may be more informative.</p>
+<p>The resulting plot shows how validation accuracy changes with <span class="math inline">\(k\)</span>. In this case, the highest accuracy is achieved at <span class="math inline">\(k = 7\)</span>. This does not mean that <span class="math inline">\(k = 7\)</span> is universally best; it simply indicates that, under this validation-based tuning strategy, <span class="math inline">\(k = 7\)</span> performs best for this dataset. With this value selected, we can now fit the final model on the full training set and evaluate it once on the separate test set.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Using a 70%–30% train–test split, use <code><a href="https://rdrr.io/pkg/liver/man/kNN.plot.html">kNN.plot()</a></code> to select a value of <span class="math inline">\(k\)</span> without using the test set. Compare the selected value with that from the 80%–20% split. What does this suggest about the stability of tuning?</p>
+</blockquote>
+</section><section id="applying-the-knn-classifier" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="applying-the-knn-classifier">Applying the kNN Classifier</h3>
+<p>With <span class="math inline">\(k = 7\)</span> giving the highest validation accuracy among the candidate values, we now apply the kNN algorithm to classify customer churn in the test set. This step brings together the work from the previous sections: data preparation, feature encoding, scaling, and hyperparameter tuning. Unlike many machine learning algorithms, kNN does not estimate coefficients or fit an explicit decision rule during training. Instead, it retains the training data and performs classification on demand by computing distances to identify the closest training observations.</p>
+<p>In R, we use the <code><a href="https://rdrr.io/pkg/liver/man/kNN.html">kNN()</a></code> function from the <strong>liver</strong> package to implement the k-Nearest Neighbors algorithm. This function provides a formula-based interface consistent with other modeling functions in R, making the syntax more readable and the workflow more transparent. An alternative is the <code>knn()</code> function from the <strong>class</strong> package, which requires the user to specify predictor matrices and class labels manually. While effective, that interface is less convenient for the presentation adopted in this book.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">kNN_predict</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/liver/man/kNN.html">kNN</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">formula_knn</span>, train <span class="op">=</span> <span class="va">train_scaled</span>, test <span class="op">=</span> <span class="va">test_scaled</span>, k <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In this command, <code>formula_knn</code> defines the relationship between the response variable (<code>churn</code>) and the predictors. The arguments <code>train</code> and <code>test</code> specify the processed datasets prepared in the earlier steps, and <code>k = 7</code> sets the number of neighbors used for classification. The <code><a href="https://rdrr.io/pkg/liver/man/kNN.html">kNN()</a></code> function predicts the class of each test observation by computing its distance to the training observations and assigning the majority class among the seven nearest neighbors.</p>
+<p>This is an important distinction between kNN and many other classifiers. Fitting kNN does not produce a coefficient table or a compact set of model parameters to interpret. Instead, prediction is determined by the local neighborhood structure of the training data. For this reason, interpretability in kNN is local rather than parametric: to understand a prediction, we look at which training observations were nearest to the new case and how their class labels were distributed.</p>
+</section><section id="initial-model-evaluation" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="initial-model-evaluation">Initial Model Evaluation</h3>
+<p>With predictions for the test set in hand, we can take a first look at the results using a confusion matrix. The confusion matrix compares the predicted and observed class labels and shows how many observations are classified correctly or incorrectly. We use the <code><a href="https://rdrr.io/pkg/liver/man/conf.mat.plot.html">conf.mat.plot()</a></code> function from the <strong>liver</strong> package to compute and visualize the matrix. The argument <code>reference = "yes"</code> specifies that customers who have churned are treated as the positive class.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">test_labels</span> <span class="op">=</span> <span class="va">test_set</span><span class="op">$</span><span class="va">churn</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/liver/man/conf.mat.plot.html">conf.mat.plot</a></span><span class="op">(</span><span class="va">kNN_predict</span>, <span class="va">test_labels</span>, reference <span class="op">=</span> <span class="st">"yes"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="4-classification-knn_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:30.0%" data-fig-pos="H"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The confusion matrix shows that the model correctly classified 1794 observations and misclassified 231. It also shows how these classifications are distributed across the two outcome classes, providing an initial view of the behavior of the selected kNN model on observations that were not used during model development.</p>
+<p>A confusion matrix alone, however, does not provide a complete assessment of predictive performance. In Chapter <a href="5-model-evaluation.html" class="quarto-xref"><span>5</span></a>, we move to the sixth stage of the Data Science Workflow, <em>Evaluation</em>, and examine classification performance systematically using measures such as accuracy, sensitivity, specificity, precision, recall, and the F1-score, together with the practical consequences of different types of classification error.</p>
+<blockquote class="blockquote">
+<p><em>Practice:</em> Using a 70%–30% train–test split, compute the confusion matrix and compare it with that from the 80%–20% split. What differences do you observe in the classifications?</p>
+</blockquote>
+<p>This case study has demonstrated the main steps involved in applying kNN: preparing the data for distance-based classification, selecting a value of <span class="math inline">\(k\)</span> using the training data, generating predictions for the test set, and obtaining an initial view of those predictions. The next chapter develops the principles and measures needed to evaluate predictive models more systematically.</p>
+</section></section><section id="chapter-summary-and-takeaways" class="level2" data-number="4.8"><h2 data-number="4.8" class="anchored" data-anchor-id="chapter-summary-and-takeaways">
+<span class="header-section-number">4.8</span> Chapter Summary and Takeaways</h2>
+<p>This chapter introduced kNN as an intuitive approach to classification based on local similarity. Rather than estimating coefficients or constructing an explicit prediction rule in advance, kNN classifies a new observation by comparing it with nearby observations in the training data.</p>
+<p>A central message of the chapter is that model-specific preparation is especially important for kNN. Because predictions depend directly on distances, categorical predictors must be represented appropriately and numerical predictors must be placed on suitable relative scales. We also saw that the choice of the number of neighbors, <span class="math inline">\(k\)</span>, determines how local or smooth the resulting classifications are.</p>
+<p>The chapter also demonstrated how kNN fits within a leakage-free modeling workflow. The value of <span class="math inline">\(k\)</span> was selected using only the training data, while the test set was kept separate from model development. Through the <code>churn</code> case study, we applied the preparation principles introduced in Chapter <a href="3-data-preperation.html" class="quarto-xref"><span>3</span></a>, constructed a feature representation suitable for kNN, selected a value of <span class="math inline">\(k\)</span>, generated predictions for the test set, and obtained an initial view of the resulting classifications. A systematic treatment of predictive performance is deferred to the next chapter.</p>
+<p>Although the focus of this chapter has been classification, the same neighborhood principle can also be used for regression. In kNN regression, the predicted value for a new observation is typically obtained from the numerical responses of its nearest neighbors rather than through majority voting. The underlying idea of prediction based on local similarity remains the same.</p>
+<p>The simplicity and transparency of kNN make it a useful baseline method and a natural starting point for classification. At the same time, its dependence on the representation of the feature space, sensitivity to irrelevant predictors, and computational cost for large training datasets can limit its usefulness in some applications. Having constructed and tuned our first classifier, we next turn to the question of how predictive models should be evaluated. Chapter <a href="5-model-evaluation.html" class="quarto-xref"><span>5</span></a> develops the sixth stage of the Data Science Workflow, <em>Model Evaluation</em>, and introduces the principles and measures needed to assess classification performance systematically. Chapter <a href="6-naive-bayes.html" class="quarto-xref"><span>6</span></a> then introduces Naive Bayes as a second classification method.</p>
+</section><section id="sec-knn-exercises" class="level2" data-number="4.9"><h2 data-number="4.9" class="anchored" data-anchor-id="sec-knn-exercises">
+<span class="header-section-number">4.9</span> Exercises</h2>
+<p>The following exercises reinforce the main ideas of this chapter through conceptual questions, hands-on practice with the <code>bank</code> dataset, extended practice with the <code>adult</code> dataset, and self-reflection. More detailed questions on model evaluation are developed in Chapter <a href="5-model-evaluation.html" class="quarto-xref"><span>5</span></a>.</p>
+<section id="conceptual-questions" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="conceptual-questions">Conceptual Questions</h3>
+<ol type="1">
+<li><p>Explain the difference between classification and regression. Give one example of each.</p></li>
+<li><p>What does kNN mean by “similarity,” and why is this idea central to prediction?</p></li>
+<li><p>Explain why kNN is described as both a non-parametric method and a lazy-learning method.</p></li>
+<li><p>Why does the choice of <span class="math inline">\(k\)</span> matter? Describe how the behavior of the classifier changes when <span class="math inline">\(k\)</span> is very small and when it becomes large.</p></li>
+<li><p>What role does Euclidean distance play in kNN, and under what conditions does it provide a meaningful measure of similarity?</p></li>
+<li><p>Why is model-specific preparation particularly important for kNN compared with many other classification methods?</p></li>
+<li><p>Why must missing values be handled before predictors can be used in distance calculations?</p></li>
+<li><p>In binary classification, why are odd values of <span class="math inline">\(k\)</span> often preferred?</p></li>
+<li><p>Why should the value of <span class="math inline">\(k\)</span> be selected using only the training data rather than the final test set?</p></li>
+</ol></section><section id="hands-on-practice" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="hands-on-practice">Hands-On Practice</h3>
+<ol start="10" type="1">
+<li><p>Load the <code>bank</code> dataset and inspect its structure. Identify the outcome variable and distinguish between categorical and numerical predictors.</p></li>
+<li><p>Partition the data into an 80% training set and a 20% test set using the <code><a href="https://rdrr.io/pkg/liver/man/partition.html">partition()</a></code> function from the <strong>liver</strong> package. Examine the number of observations and outcome proportions in each partition.</p></li>
+<li><p>Identify the categorical predictors that require numerical encoding before applying kNN. Which are nominal, and which, if any, are ordinal?</p></li>
+<li><p>Apply an appropriate numerical representation to the categorical predictors. Use one-hot encoding for nominal predictors and explain why assigning arbitrary integer codes to such categories would be inappropriate for a distance-based method.</p></li>
+<li><p>Scale the continuous numerical predictors using min-max scaling. Estimate the scaling parameters from the training data and apply the same parameters unchanged to the test data.</p></li>
+<li><p>Use <code><a href="https://rdrr.io/pkg/liver/man/kNN.plot.html">kNN.plot()</a></code> to examine candidate values of <span class="math inline">\(k\)</span> from 1 to 20 and select a value using the internal validation split. Explain why the external test set should not be involved in this choice.</p></li>
+<li><p>Fit a kNN classifier using the selected value of <span class="math inline">\(k\)</span> and generate predictions for the test set.</p></li>
+<li><p>Construct a confusion matrix for the test-set predictions. Report the numbers of correctly and incorrectly classified observations and describe how the predictions are distributed across the observed classes.</p></li>
+<li><p>Repeat the analysis without scaling the numerical predictors. Compare the resulting predictions with those from the properly scaled model. What does this illustrate about the role of feature scale in kNN?</p></li>
+<li><p>Intentionally apply an inappropriate encoding strategy to one nominal predictor, such as assigning arbitrary numerical codes to its categories. Compare the resulting kNN predictions with those obtained using appropriate one-hot encoding. Why can the encoding strategy change the nearest-neighbor relationships?</p></li>
+<li><p>Add one or more irrelevant predictors to the modeling dataset and repeat the kNN analysis. How do the selected value of <span class="math inline">\(k\)</span> and the resulting predictions change? What does this suggest about the sensitivity of kNN to irrelevant features?</p></li>
+<li><p>Examine several fixed values of <span class="math inline">\(k\)</span>, such as <span class="math inline">\(k = 1\)</span>, <span class="math inline">\(5\)</span>, <span class="math inline">\(15\)</span>, and <span class="math inline">\(25\)</span>. Compare how the predicted classifications change as <span class="math inline">\(k\)</span> increases. How does this illustrate the transition from highly local decisions to smoother classifications?</p></li>
+<li><p>Compare a kNN model using the full predictor set with one using a smaller subset of predictors, such as <code>age</code>, <code>balance</code>, <code>duration</code>, and <code>campaign</code>. How does changing the feature space affect the selected neighbors and resulting predictions?</p></li>
+<li><p>Repeat the preparation and tuning steps using z-score standardization instead of min-max scaling. Compare the selected value of <span class="math inline">\(k\)</span> and the resulting classifications. What does this suggest about the dependence of kNN on the representation of the feature space?</p></li>
+<li><p>Repeat the complete kNN workflow using a 70% training set and a 30% test set instead of the 80%–20% split. Compare the selected value of <span class="math inline">\(k\)</span> and the resulting test-set classifications with those from the original split. What aspects of the analysis remain similar, and what aspects change?</p></li>
+</ol></section><section id="extended-practice-revisiting-the-adult-dataset" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="extended-practice-revisiting-the-adult-dataset">Extended Practice: Revisiting the <code>adult</code> Dataset</h3>
+<p>In Chapter <a href="3-data-preperation.html" class="quarto-xref"><span>3</span></a>, the <code>adult</code> dataset was prepared for modeling. We now revisit it to apply kNN, focusing on model-specific preparation, selection of <span class="math inline">\(k\)</span>, and prediction. The dataset will be used again in Chapter <a href="10-tree-based-models.html" class="quarto-xref"><span>10</span></a> to illustrate tree-based classification.</p>
+<ol start="25" type="1">
+<li><p>Recreate or load the common prepared training and test datasets established for the <code>adult</code> case study in Chapter <a href="3-data-preperation.html" class="quarto-xref"><span>3</span></a>. Identify which preparation steps have already been completed and which additional steps are specifically required before applying kNN.</p></li>
+<li><p>Construct the numerical feature representation required for kNN. Apply the categorical encoding decisions established in Chapter <a href="3-data-preperation.html" class="quarto-xref"><span>3</span></a> and verify that the training and test sets contain the same predictor columns in the same order.</p></li>
+<li><p>Scale the numerical predictors using parameters estimated from the training data and apply the same parameters unchanged to the test data. Explain why scaling is particularly important for kNN.</p></li>
+<li><p>Use <code><a href="https://rdrr.io/pkg/liver/man/kNN.plot.html">kNN.plot()</a></code> to examine an appropriate range of candidate values of <span class="math inline">\(k\)</span> using only the training data for tuning. Select a candidate value of <span class="math inline">\(k\)</span> and explain your choice.</p></li>
+<li><p>Fit the kNN classifier using the selected value of <span class="math inline">\(k\)</span> and generate predictions for the test set.</p></li>
+<li><p>Construct a confusion matrix for the test-set predictions. Describe the numbers of correctly and incorrectly classified observations and how the predictions are distributed across the observed classes, without carrying out a full performance assessment.</p></li>
+<li><p>Fit kNN using several different values of <span class="math inline">\(k\)</span>. Compare the resulting predictions and describe how the classifications change as the neighborhood becomes more local or more broadly defined.</p></li>
+<li><p>Consider the structure of the <code>adult</code> dataset and identify characteristics that may make kNN more or less suitable for this prediction problem. Keep these observations in mind when the dataset is revisited with Decision Trees and Random Forests in Chapter <a href="10-tree-based-models.html" class="quarto-xref"><span>10</span></a>.</p></li>
+</ol></section><section id="self-reflection" class="level3 unnumbered unlisted"><h3 class="unnumbered unlisted anchored" data-anchor-id="self-reflection">Self-Reflection</h3>
+<ol start="33" type="1">
+<li><p>Suppose the training dataset becomes much larger or contains hundreds of predictors. What practical and statistical challenges would this create for kNN?</p></li>
+<li><p>Under what circumstances might kNN be a poor choice for deployment in a real-world application, even if its predictive results appear satisfactory during model development?</p></li>
+<li><p>Describe one situation in which the local interpretability of kNN would be an advantage over a parametric model such as logistic regression.</p></li>
+<li><p>Summarize the main lessons of this chapter in your own words. When is kNN a useful classification method, and when should it be used with caution?</p></li>
+</ol>
+
+
+</section></section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/book-data-science-r\.netlify\.app");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./3-data-preperation.html" class="pagination-link" aria-label="Data Preparation for Modeling">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data Preparation for Modeling</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./5-model-evaluation.html" class="pagination-link" aria-label="Model Evaluation and Performance Assessment">
+        <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Model Evaluation and Performance Assessment</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Data Science Foundations and Machine Learning with R was written by <a href="https://www.uva.nl/profile/a.mohammadi"><span style="color:#0056B3">Reza Mohammadi</span></a>.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/edit/main/4-classification-knn.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/RezaMoammadi/Book-Data-Science-R/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>This book was built with <a href="https://quarto.org/">Quarto</a>.</p>
+</div>
+  </div>
+</footer>
+
+
+</body></html>

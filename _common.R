@@ -3,6 +3,9 @@
 
 set.seed(42)
 
+# Limit excessive numerical precision in printed R output
+options(digits = 4)
+
 # R options set globally
 # options(width = 60)
 
@@ -222,19 +225,19 @@ ggplot2::theme_set(
       # axis.line = ggplot2::element_line(colour = "black", linewidth = 0.4, lineend = "square"),
       
       # Axis text and titles
-      axis.text  = ggplot2::element_text(size = 11, colour = "black"),
-      axis.title = ggplot2::element_text(size = 12, face = "bold", colour = "black"),
-      
+      axis.text  = ggplot2::element_text(size = 11, face = "plain", colour = "black"),
+      axis.title = ggplot2::element_text(size = 12, face = "plain", colour = "black"),
+
       # Plot titles and subtitles
       plot.title = ggplot2::element_text(
-        size = 14, face = "bold", hjust = 0.5, colour = "black"
+        size = 12, face = "plain", hjust = 0.5, colour = "black"
       ),
       plot.subtitle = ggplot2::element_text(
         size = 11, hjust = 0.5, colour = "gray20"
       ),
       
       # Legends — simple and light
-      legend.title = ggplot2::element_text(size = 11, face = "bold", colour = "black"),
+      legend.title = ggplot2::element_text(size = 11, face = "plain", colour = "black"),
       legend.text  = ggplot2::element_text(size = 10, colour = "black"),
       legend.background = ggplot2::element_rect(fill = "white", colour = "white"),
       
