@@ -400,10 +400,10 @@ data(creditcard_fraud)
 
 set.seed(42)
 
-fraud_splits <- partition(data = creditcard_fraud, ratio = c(0.7, 0.3))
+fraud_splits = partition(data = creditcard_fraud, ratio = c(0.7, 0.3))
 
-train_fraud <- fraud_splits$part1
-test_fraud  <- fraud_splits$part2
+train_fraud = fraud_splits$part1
+test_fraud  = fraud_splits$part2
 ```
 
 Because the minority class is uncommon, we examine its representation in both subsets after partitioning:
@@ -425,7 +425,7 @@ library(ROSE)
 
 set.seed(42)
 
-balanced_train_fraud <- ovun.sample(Class ~ ., data = train_fraud, method = "over", p = 0.15)$data
+balanced_train_fraud = ovun.sample(Class ~ ., data = train_fraud, method = "over", p = 0.15)$data
 
 table(balanced_train_fraud$Class)
 prop.table(table(balanced_train_fraud$Class))
@@ -498,10 +498,10 @@ We use the `partition()` function from the **liver** package to assign 80% of th
 ```{r}
 set.seed(42)
 
-splits <- partition(data = adult, ratio = c(0.8, 0.2))
+splits = partition(data = adult, ratio = c(0.8, 0.2))
 
-adult_train <- splits$part1
-adult_test  <- splits$part2
+adult_train = splits$part1
+adult_test  = splits$part2
 ```
 
 The `set.seed()` function makes the random partition reproducible. The two subsets now have distinct roles: `adult_train` is used for preparation and model development, whereas `adult_test` is reserved for final assessment and should not be used to choose preparation methods, features, models, or hyperparameters.
@@ -519,8 +519,8 @@ The training and test sets retain similar income proportions, with small differe
 To preserve the original partitioned data, we create working copies for the preparation steps that follow:
 
 ```{r}
-adult_train_prepared <- adult_train
-adult_test_prepared  <- adult_test
+adult_train_prepared = adult_train
+adult_test_prepared  = adult_test
 ```
 
 From this point onward, externally defined rules, such as interpreting `"?"` as a missing-value code, may be applied consistently to both subsets. Data-dependent preparation rules are learned from `adult_train_prepared` and then applied appropriately to `adult_test_prepared`, following the training-only principle developed earlier in this chapter. These steps will form the common prepared basis from which model-specific representations are created later in the case study.
@@ -532,7 +532,7 @@ The earlier Data Understanding stage identified `capital_gain` and `capital_loss
 We first review the relevant numerical features in the training data:
 
 ```{r}
-numerical_features <- c("age", "education_num", "capital_gain", "capital_loss", "hours_per_week")
+numerical_features = c("age", "education_num", "capital_gain", "capital_loss", "hours_per_week")
 
 summary(adult_train_prepared[numerical_features])
 ```
@@ -550,8 +550,8 @@ No changes to the numerical features are made at this point. We next turn to the
 The earlier data-understanding stage identified `"?"` as a nonstandard code for missing information in `workclass`, `occupation`, and `native_country`. Because this meaning is defined by the dataset documentation rather than inferred from the observed sample, we can recode `"?"` as `NA` consistently in both the training and test sets:
 
 ```{r}
-adult_train_prepared[adult_train_prepared == "?"] <- NA
-adult_test_prepared[adult_test_prepared == "?"] <- NA
+adult_train_prepared[adult_train_prepared == "?"] = NA
+adult_test_prepared[adult_test_prepared == "?"] = NA
 ```
 
 These missing values occur only in categorical features. Rather than removing incomplete observations, we retain them and use random sampling imputation. For each feature, a missing value is replaced by a category sampled from the observed training values of that feature. This simple approach preserves the marginal category distribution more closely than repeatedly inserting the mode, although it does not use relationships with other predictors.
@@ -559,13 +559,13 @@ These missing values occur only in categorical features. Rather than removing in
 We first store the observed training values that will serve as the sampling pools:
 
 ```{r}
-workclass_pool <- adult_train_prepared$workclass[
+workclass_pool = adult_train_prepared$workclass[
   !is.na(adult_train_prepared$workclass)]
 
-occupation_pool <- adult_train_prepared$occupation[
+occupation_pool = adult_train_prepared$occupation[
   !is.na(adult_train_prepared$occupation)]
 
-country_pool <- adult_train_prepared$native_country[
+country_pool = adult_train_prepared$native_country[
   !is.na(adult_train_prepared$native_country)]
 ```
 
@@ -576,28 +576,28 @@ library(Hmisc)
 
 set.seed(42)
 
-adult_train_prepared$workclass <- impute(adult_train_prepared$workclass, fun = "random")
+adult_train_prepared$workclass = impute(adult_train_prepared$workclass, fun = "random")
 
-adult_train_prepared$occupation <- impute(adult_train_prepared$occupation, fun = "random")
+adult_train_prepared$occupation = impute(adult_train_prepared$occupation, fun = "random")
 
-adult_train_prepared$native_country <- impute(adult_train_prepared$native_country, fun = "random")
+adult_train_prepared$native_country = impute(adult_train_prepared$native_country, fun = "random")
 ```
 
 The test data must not determine their own replacement distributions. Missing test values are therefore imputed using the sampling pools obtained from the training data:
 
 ```{r}
-adult_test_prepared$workclass <- impute(adult_test_prepared$workclass, fun = sample(workclass_pool, sum(is.na(adult_test_prepared$workclass)), replace = TRUE))
+adult_test_prepared$workclass = impute(adult_test_prepared$workclass, fun = sample(workclass_pool, sum(is.na(adult_test_prepared$workclass)), replace = TRUE))
 
-adult_test_prepared$occupation <- impute(adult_test_prepared$occupation, fun = sample(occupation_pool, sum(is.na(adult_test_prepared$occupation)), replace = TRUE))
+adult_test_prepared$occupation = impute(adult_test_prepared$occupation, fun = sample(occupation_pool, sum(is.na(adult_test_prepared$occupation)), replace = TRUE))
 
-adult_test_prepared$native_country <- impute(adult_test_prepared$native_country, fun = sample(country_pool, sum(is.na(adult_test_prepared$native_country)), replace = TRUE))
+adult_test_prepared$native_country = impute(adult_test_prepared$native_country, fun = sample(country_pool, sum(is.na(adult_test_prepared$native_country)), replace = TRUE))
 ```
 
 After imputation, we remove unused factor levels, including the former `"?"` level:
 
 ```{r}
-adult_train_prepared <- droplevels(adult_train_prepared)
-adult_test_prepared  <- droplevels(adult_test_prepared)
+adult_train_prepared = droplevels(adult_train_prepared)
+adult_test_prepared  = droplevels(adult_test_prepared)
 ```
 
 We then verify that the missing values have been addressed:
@@ -620,21 +620,21 @@ The `native_country` feature contains many individual country labels. To reduce 
 ```{r message = FALSE}
 library(forcats)
 
-Europe <- c("France", "Germany", "Greece", "Hungary", "Ireland", "Italy", "Netherlands", "Poland", "Portugal", "United-Kingdom", "Yugoslavia")
+Europe = c("France", "Germany", "Greece", "Hungary", "Ireland", "Italy", "Netherlands", "Poland", "Portugal", "United-Kingdom", "Yugoslavia")
 
-North_America <- c("United-States", "Canada", "Outlying-US(Guam-USVI-etc)")
+North_America = c("United-States", "Canada", "Outlying-US(Guam-USVI-etc)")
 
-Latin_America <- c("Mexico", "El-Salvador", "Guatemala", "Honduras", "Nicaragua", "Cuba", "Dominican-Republic", "Puerto-Rico", "Colombia", "Ecuador", "Peru")
+Latin_America = c("Mexico", "El-Salvador", "Guatemala", "Honduras", "Nicaragua", "Cuba", "Dominican-Republic", "Puerto-Rico", "Colombia", "Ecuador", "Peru")
 
-Caribbean <- c("Jamaica", "Haiti", "Trinidad&Tobago")
+Caribbean = c("Jamaica", "Haiti", "Trinidad&Tobago")
 
-Asia <- c("Cambodia", "China", "Hong-Kong", "India", "Iran", "Japan", "Laos", "Philippines", "South", "Taiwan", "Thailand", "Vietnam")
+Asia = c("Cambodia", "China", "Hong-Kong", "India", "Iran", "Japan", "Laos", "Philippines", "South", "Taiwan", "Thailand", "Vietnam")
 ```
 
 We apply this mapping to both subsets:
 
 ```{r}
-adult_train_prepared$native_country <- fct_collapse(
+adult_train_prepared$native_country = fct_collapse(
   adult_train_prepared$native_country,
   "Europe" = Europe,
   "North America" = North_America,
@@ -643,7 +643,7 @@ adult_train_prepared$native_country <- fct_collapse(
   "Asia" = Asia,
   other_level = "Other")
 
-adult_test_prepared$native_country <- fct_collapse(
+adult_test_prepared$native_country = fct_collapse(
   adult_test_prepared$native_country,
   "Europe" = Europe,
   "North America" = North_America,
@@ -658,10 +658,10 @@ The `"Other"` category provides a predefined destination for country labels that
 The `workclass` feature contains the categories `"Never-worked"` and `"Without-pay"`, whose meanings support combining them into a broader category representing individuals who are not in paid employment. Because this grouping is based on category meaning rather than a threshold estimated from the observed frequencies, the same rule is applied to both subsets:
 
 ```{r}
-adult_train_prepared$workclass <- fct_collapse(adult_train_prepared$workclass,
+adult_train_prepared$workclass = fct_collapse(adult_train_prepared$workclass,
   "Not in paid employment" = c("Never-worked", "Without-pay"))
 
-adult_test_prepared$workclass <- fct_collapse(adult_test_prepared$workclass,
+adult_test_prepared$workclass = fct_collapse(adult_test_prepared$workclass,
   "Not in paid employment" = c("Never-worked", "Without-pay"))
 ```
 

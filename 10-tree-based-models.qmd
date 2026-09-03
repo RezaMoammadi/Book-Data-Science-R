@@ -219,60 +219,60 @@ The predictors cover demographic, educational, employment, and financial charact
 ```{r echo=FALSE}
 set.seed(42)
 
-splits <- partition(data = adult, ratio = c(0.8, 0.2))
+splits = partition(data = adult, ratio = c(0.8, 0.2))
 
-adult_train <- splits$part1
-adult_test  <- splits$part2
+adult_train = splits$part1
+adult_test  = splits$part2
 
-adult_train_prepared <- adult_train
-adult_test_prepared  <- adult_test
+adult_train_prepared = adult_train
+adult_test_prepared  = adult_test
 
 ### Making Missingness Explicit and Handling Missing Values {.unnumbered .unlisted}
 
-adult_train_prepared[adult_train_prepared == "?"] <- NA
-adult_test_prepared[adult_test_prepared == "?"] <- NA
+adult_train_prepared[adult_train_prepared == "?"] = NA
+adult_test_prepared[adult_test_prepared == "?"] = NA
 
-workclass_pool <- adult_train_prepared$workclass[!is.na(adult_train_prepared$workclass)]
+workclass_pool = adult_train_prepared$workclass[!is.na(adult_train_prepared$workclass)]
 
-occupation_pool <- adult_train_prepared$occupation[!is.na(adult_train_prepared$occupation)]
+occupation_pool = adult_train_prepared$occupation[!is.na(adult_train_prepared$occupation)]
 
-country_pool <- adult_train_prepared$native_country[!is.na(adult_train_prepared$native_country)]
+country_pool = adult_train_prepared$native_country[!is.na(adult_train_prepared$native_country)]
 
 
 library(Hmisc)
 
 set.seed(42)
 
-adult_train_prepared$workclass <- impute(adult_train_prepared$workclass, fun = "random")
+adult_train_prepared$workclass = impute(adult_train_prepared$workclass, fun = "random")
 
-adult_train_prepared$occupation <- impute(adult_train_prepared$occupation, fun = "random")
+adult_train_prepared$occupation = impute(adult_train_prepared$occupation, fun = "random")
 
-adult_train_prepared$native_country <- impute(adult_train_prepared$native_country, fun = "random")
+adult_train_prepared$native_country = impute(adult_train_prepared$native_country, fun = "random")
 
-adult_test_prepared$workclass <- impute(adult_test_prepared$workclass, fun = sample(workclass_pool, sum(is.na(adult_test_prepared$workclass)), replace = TRUE))
+adult_test_prepared$workclass = impute(adult_test_prepared$workclass, fun = sample(workclass_pool, sum(is.na(adult_test_prepared$workclass)), replace = TRUE))
 
-adult_test_prepared$occupation <- impute(adult_test_prepared$occupation, fun = sample(occupation_pool, sum(is.na(adult_test_prepared$occupation)), replace = TRUE))
+adult_test_prepared$occupation = impute(adult_test_prepared$occupation, fun = sample(occupation_pool, sum(is.na(adult_test_prepared$occupation)), replace = TRUE))
 
-adult_test_prepared$native_country <- impute(adult_test_prepared$native_country, fun = sample(country_pool, sum(is.na(adult_test_prepared$native_country)), replace = TRUE))
+adult_test_prepared$native_country = impute(adult_test_prepared$native_country, fun = sample(country_pool, sum(is.na(adult_test_prepared$native_country)), replace = TRUE))
 
-adult_train_prepared <- droplevels(adult_train_prepared)
-adult_test_prepared  <- droplevels(adult_test_prepared)
+adult_train_prepared = droplevels(adult_train_prepared)
+adult_test_prepared  = droplevels(adult_test_prepared)
 
 ### Preparing Categorical Features {.unnumbered .unlisted}
 
 library(forcats)
 
-Europe <- c( "France", "Germany", "Greece", "Hungary", "Ireland", "Italy", "Netherlands", "Poland", "Portugal", "United-Kingdom", "Yugoslavia")
+Europe = c( "France", "Germany", "Greece", "Hungary", "Ireland", "Italy", "Netherlands", "Poland", "Portugal", "United-Kingdom", "Yugoslavia")
 
-North_America <- c("United-States", "Canada", "Outlying-US(Guam-USVI-etc)")
+North_America = c("United-States", "Canada", "Outlying-US(Guam-USVI-etc)")
 
-Latin_America <- c("Mexico", "El-Salvador", "Guatemala", "Honduras", "Nicaragua", "Cuba", "Dominican-Republic", "Puerto-Rico", "Colombia", "Ecuador", "Peru")
+Latin_America = c("Mexico", "El-Salvador", "Guatemala", "Honduras", "Nicaragua", "Cuba", "Dominican-Republic", "Puerto-Rico", "Colombia", "Ecuador", "Peru")
 
-Caribbean <- c("Jamaica", "Haiti", "Trinidad&Tobago")
+Caribbean = c("Jamaica", "Haiti", "Trinidad&Tobago")
 
-Asia <- c("Cambodia", "China", "Hong-Kong", "India", "Iran", "Japan", "Laos", "Philippines", "South", "Taiwan", "Thailand", "Vietnam")
+Asia = c("Cambodia", "China", "Hong-Kong", "India", "Iran", "Japan", "Laos", "Philippines", "South", "Taiwan", "Thailand", "Vietnam")
 
-adult_train_prepared$native_country <- fct_collapse(
+adult_train_prepared$native_country = fct_collapse(
   adult_train_prepared$native_country,
   "Europe" = Europe,
   "North America" = North_America,
@@ -281,7 +281,7 @@ adult_train_prepared$native_country <- fct_collapse(
   "Asia" = Asia,
   other_level = "Other")
 
-adult_test_prepared$native_country <- fct_collapse(
+adult_test_prepared$native_country = fct_collapse(
   adult_test_prepared$native_country,
   "Europe" = Europe,
   "North America" = North_America,
@@ -290,11 +290,11 @@ adult_test_prepared$native_country <- fct_collapse(
   "Asia" = Asia,
   other_level = "Other")
 
-adult_train_prepared$workclass <- fct_collapse(
+adult_train_prepared$workclass = fct_collapse(
   adult_train_prepared$workclass,
   "Not in paid employment" = c("Never-worked", "Without-pay"))
 
-adult_test_prepared$workclass <- fct_collapse(
+adult_test_prepared$workclass = fct_collapse(
   adult_test_prepared$workclass,
   "Not in paid employment" = c("Never-worked", "Without-pay"))
 ```
@@ -413,9 +413,9 @@ Following the evaluation framework introduced in Chapter [-@sec-chapter-evaluati
 We begin by generating predicted class probabilities for the test set using the `predict()` function. For all three models, we request probabilities rather than hard class labels by specifying `type = "prob"`:
 
 ```{r}
-cart_probs   = predict(cart_model,   adult_test_prepared, type = "prob")[, "<=50K"]
+cart_probs = predict(cart_model, adult_test_prepared, type = "prob")[, "<=50K"]
 
-C50_probs    = predict(C50_model,    adult_test_prepared, type = "prob")[, "<=50K"]
+C50_probs = predict(C50_model, adult_test_prepared, type = "prob")[, "<=50K"]
 
 forest_probs = predict(forest_model, adult_test_prepared, type = "prob")[, "<=50K"]
 ```

@@ -155,7 +155,7 @@ Before fitting the model, it is useful to inspect the levels of the response var
 ```{r}
 levels(loan$loan_status)
 
-loan$loan_status <- relevel(loan$loan_status, ref = "rejected")
+loan$loan_status = relevel(loan$loan_status, ref = "rejected")
 
 levels(loan$loan_status)
 ```
@@ -165,13 +165,13 @@ Because `"rejected"` is the reference level, the model estimates the probability
 To keep the example concise, we include all available predictors except `loan_id`, which serves only as an identifier and does not carry predictive meaning. This allows us to focus on model fitting and interpretation without listing each predictor individually. We first define the model formula:
 
 ```{r}
-formula_loan <- loan_status ~ . - loan_id
+formula_loan = loan_status ~ . - loan_id
 ```
 
 We then fit the logistic regression model using the `glm()` function. The argument `family = binomial` tells R to fit a generalized linear model for a binary response using the logit link:
 
 ```{r}
-glm_loan <- glm(formula = formula_loan, data = loan, family = binomial)
+glm_loan = glm(formula = formula_loan, data = loan, family = binomial)
 ```
 
 To inspect the fitted model, we use:
@@ -209,10 +209,10 @@ These values represent the model's estimated probabilities for the event corresp
 In some situations, predicted probabilities are the final quantity of interest. In others, however, we need a class prediction such as `approved` or `rejected`. To move from probabilities to class labels, we choose a decision threshold. The most common choice is 0.5: if the predicted probability of approval is at least 0.5, we classify the application as `approved`; otherwise, we classify it as `rejected`.
 
 ```{r}
-loan_probs <- predict(glm_loan, newdata = loan, type = "response")
+loan_probs = predict(glm_loan, newdata = loan, type = "response")
 
-loan_pred_05 <- ifelse(loan_probs >= 0.5, "approved", "rejected")
-loan_pred_05 <- factor(loan_pred_05, levels = levels(loan$loan_status))
+loan_pred_05 = ifelse(loan_probs >= 0.5, "approved", "rejected")
+loan_pred_05 = factor(loan_pred_05, levels = levels(loan$loan_status))
 
 table(loan_pred_05)
 ```
@@ -262,23 +262,23 @@ The model-development choices made in Chapter [-@sec-chapter-regression] were ba
 ```{r echo=FALSE}
 data(bike_demand)
 
-bike_data <- bike_demand
+bike_data = bike_demand
 
 # Fixed, response-independent preparation
-bike_data$date <- as.Date(bike_data$date, format = "%d/%m/%Y")
+bike_data$date = as.Date(bike_data$date, format = "%d/%m/%Y")
 
-bike_data <- dplyr::filter(
+bike_data = dplyr::filter(
   bike_data,
   functioning_day == "yes"
 )
 
-bike_data <- dplyr::arrange(
+bike_data = dplyr::arrange(
   bike_data,
   date,
   hour
 )
 
-bike_data$weekday <- factor(
+bike_data$weekday = factor(
   lubridate::wday(
     bike_data$date,
     label = TRUE,
@@ -289,21 +289,21 @@ bike_data$weekday <- factor(
 )
 
 # Chronological 80%--20% split
-n_total <- nrow(bike_data)
-n_train <- floor(0.8 * n_total)
+n_total = nrow(bike_data)
+n_train = floor(0.8 * n_total)
 
-train_bike <- bike_data[1:n_train, ]
-test_bike  <- bike_data[(n_train + 1):n_total, ]
+train_bike = bike_data[1:n_train, ]
+test_bike  = bike_data[(n_train + 1):n_total, ]
 
 # Reuse model-development decisions established from the
 # Chapter 8 training data
-train_bike$hour <- factor(train_bike$hour, levels = 0:23)
-test_bike$hour  <- factor(test_bike$hour, levels = 0:23)
+train_bike$hour = factor(train_bike$hour, levels = 0:23)
+test_bike$hour  = factor(test_bike$hour, levels = 0:23)
 
-train_bike$sqrt_bike_count <- sqrt(train_bike$bike_count)
+train_bike$sqrt_bike_count = sqrt(train_bike$bike_count)
 
 # Refit the Chapter 8 linear regression model using training data only
-full_reg <- lm(
+full_reg = lm(
   sqrt_bike_count ~ temperature + I(temperature^2) + humidity +
     wind_speed + visibility + dew_point_temperature +
     solar_radiation + rainfall + snowfall +
@@ -311,7 +311,7 @@ full_reg <- lm(
   data = train_bike
 )
 
-stepwise_reg <- step(
+stepwise_reg = step(
   full_reg,
   direction = "both",
   trace = FALSE
@@ -323,13 +323,13 @@ We now fit a Poisson regression model using the same candidate predictor specifi
 ```{r}
 formula_full_reg_glm = bike_count ~ temperature + I(temperature^2) + humidity + wind_speed + visibility + dew_point_temperature + solar_radiation + rainfall + snowfall + season + holiday + hour + weekday
 
-full_reg_glm <- glm(formula = formula_full_reg_glm, data = train_bike, family = poisson)
+full_reg_glm = glm(formula = formula_full_reg_glm, data = train_bike, family = poisson)
 ```
 
 The argument `family = poisson` tells R to use a Poisson response distribution together with the default log link. The expected number of bike rentals is therefore modeled directly as a positive quantity. As an exploratory model-simplification step, we also apply the stepwise procedure introduced in Chapter [-@sec-chapter-regression]. Importantly, this procedure uses only the training data:
 
 ```{r}
-stepwise_reg_glm <- step(full_reg_glm, direction = "both", trace = FALSE)
+stepwise_reg_glm = step(full_reg_glm, direction = "both", trace = FALSE)
 ```
 
 The fitted model can be examined using `summary(stepwise_reg_glm)`, which reports the estimated coefficients, their standard errors, the corresponding *z*-statistics, and *p*-values. Because the complete output is lengthy, we do not reproduce it here. Instead, we focus on the interpretation of the fitted coefficients.
@@ -343,7 +343,7 @@ More generally, each estimated coefficient can be interpreted on two related sca
 After the model-development steps have been completed, we use the reserved test set for final predictive evaluation. Predicted expected counts from the stepwise Poisson model are obtained using `predict()` with `type = "response"`:
 
 ```{r}
-pred_stepwise_glm <- predict(stepwise_reg_glm, newdata = test_bike, type = "response")
+pred_stepwise_glm = predict(stepwise_reg_glm, newdata = test_bike, type = "response")
 ```
 
 These values are the model's estimated expected numbers of bike rentals for the test observations. Because Poisson regression predicts expected counts, the predicted values do not need to be integers. They represent expected demand rather than the realized number of rentals in a particular hour.
@@ -351,14 +351,14 @@ These values are the model's estimated expected numbers of bike rentals for the 
 We can now compare the Poisson regression model with the linear regression model from Section [-@sec-reg-case-bike] on the original `bike_count` scale. For the linear model, predictions are first obtained on the square-root scale and then transformed back to the original count scale. We summarize predictive performance using RMSE and predictive $R^2$:
 
 ```{r echo=FALSE}
-pred_stepwise_sqrt <- predict(
+pred_stepwise_sqrt = predict(
   stepwise_reg,
   newdata = test_bike
 )
 
-pred_stepwise <- pmax(pred_stepwise_sqrt, 0)^2
+pred_stepwise = pmax(pred_stepwise_sqrt, 0)^2
 
-reg_metrics <- function(actual, predicted, model) {
+reg_metrics = function(actual, predicted, model) {
   data.frame(
     Model = model,
     RMSE = sqrt(mean((actual - predicted)^2)),
@@ -502,7 +502,7 @@ We begin with logistic regression, which serves as the main modeling approach in
 We fit a baseline logistic regression model using all available predictors in the training set. In `glm()`, the argument `family = binomial` specifies a logistic regression model for a binary response using the logit link:
 
 ```{r}
-baseline_logit <- glm(formula = revenue ~ ., data = train_set,family = binomial)
+baseline_logit = glm(formula = revenue ~ ., data = train_set,family = binomial)
 ```
 
 The baseline model provides a reference specification that includes all available predictors. At this stage, our focus is on model development using the training data. We therefore do not yet generate predictions for the test set. Those predictions will be obtained only after all models have been finalized and will be used for final out-of-sample comparison in the Model Evaluation and Comparison subsection.
@@ -516,7 +516,7 @@ The baseline logistic regression model includes all available predictors. While 
 To investigate this possibility, we apply stepwise selection to the baseline logistic regression model using the training data. Stepwise selection compares a sequence of candidate models by adding or removing predictors and evaluating them using the Akaike Information Criterion (AIC). As discussed in Section [-@sec-reg-stepwise], smaller AIC values indicate a better balance between model fit and model complexity. Here, we use bidirectional stepwise selection, which allows predictors to be both added and removed during the search.
 
 ```{r}
-stepwise_logit <- step(baseline_logit, direction = "both", trace = 0)
+stepwise_logit = step(baseline_logit, direction = "both", trace = 0)
 ```
 
 The resulting model is a reduced version of the baseline logistic regression model. Because stepwise selection is part of model development, it is performed entirely using the training data. We do not yet generate predictions for the test set. After all models have been finalized, the reserved test set will be used to compare their out-of-sample performance.
@@ -538,7 +538,7 @@ We fit the model using the `naive_bayes()` function from the **naivebayes** pack
 ```{r}
 library(naivebayes)
 
-bayes_model <- naive_bayes(formula = revenue ~ ., data = train_set, laplace = 1)
+bayes_fit = naive_bayes(formula = revenue ~ ., data = train_set, laplace = 1)
 ```
 
 The argument `laplace = 1` applies Laplace smoothing, which helps avoid zero estimated probabilities when some predictor values occur rarely within a class. At this stage, the Naive Bayes model is fitted using the training data only. We do not yet generate predictions for the test set. After all three models have been finalized, their probability-based predictions will be obtained on the reserved test set and compared using ROC curves and AUC in the Model Evaluation and Comparison subsection.
@@ -554,13 +554,13 @@ We now evaluate the three finalized models on the reserved test set. At this sta
 We first store the true test-set labels and generate predicted probabilities from each of the three models:
 
 ```{r}
-test_labels <- test_set$revenue
+test_labels = test_set$revenue
 
-baseline_probs <- predict(baseline_logit, newdata = test_set, type = "response")
+baseline_probs = predict(baseline_logit, newdata = test_set, type = "response")
 
-stepwise_probs <- predict(stepwise_logit, newdata = test_set, type = "response")
+stepwise_probs = predict(stepwise_logit, newdata = test_set, type = "response")
 
-bayes_probs <- predict(bayes_model, newdata = test_set, type = "prob")[, "yes"]
+bayes_probs = predict(bayes_fit, newdata = test_set, type = "prob")[, "yes"]
 ```
 
 For the two logistic regression models, `type = "response"` returns the estimated probability that `revenue = "yes"`. For the Naive Bayes model, `predict(..., type = "prob")` returns probabilities for both outcome classes, so we select the `"yes"` column. These probability-based predictions allow the three models to be compared using the same evaluation framework.
