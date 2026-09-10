@@ -68,7 +68,7 @@ This separation also determines how data preparation must be carried out. Data-d
 
 The simplest and most widely used way to create this separation is the *train-test split*, also known as the *holdout method*. The choice of split ratio depends on the size and structure of the dataset. Common choices include 70--30, 80--20, and 90--10. Allocating more observations to the training set provides more information for learning preparation rules and fitting models, whereas allocating more observations to the test set can provide a more stable estimate of final predictive performance. There is no universally optimal ratio; the choice should balance these competing needs while leaving enough observations in both subsets for their intended roles.
 
-For classification problems, random partitioning is often combined with *stratification*. A stratified split aims to preserve approximately the same outcome proportions in the training and test sets. This is especially useful when one class is uncommon, since an unstratified random split may leave too few minority-class observations in one of the subsets.
+For classification problems, random partitioning is often combined with *stratification*. A stratified split aims to preserve approximately the same outcome proportions in the training and test sets. This is especially useful when one class is uncommon, since an unstratified random split may leave too few minority-class observations in one of the subsets. More generally, stratification can also be based on another categorical or numerical variable whose distribution should be approximately preserved across the resulting subsets. Stratified partitioning is illustrated later in the `adult` case study.
 
 A standard random split is appropriate when observations can reasonably be treated as independent and there is no ordering or grouping structure that must be preserved. When such structure is present, however, the partition should reflect how future predictions will actually be made.
 
@@ -390,9 +390,11 @@ Several strategies can be considered when class imbalance interferes with model 
 
 Each strategy involves trade-offs. Simple oversampling may provide the model with greater exposure to minority-class observations, but repeatedly duplicating the same cases can increase the risk of overfitting. Undersampling may reduce computational demands but discards information from the majority class. Synthetic sampling introduces assumptions about which combinations of predictor values represent plausible observations. Class weighting avoids modifying the dataset, but its usefulness depends on whether the modeling method supports weights and how it responds to them.
 
+
+
 To illustrate these ideas, consider the `creditcard_fraud` dataset from the **liver** package. The original source data are extremely imbalanced, with fraudulent transactions representing less than 0.2% of all observations. For teaching purposes, the package provides a smaller dataset that retains the fraud cases together with a sample of legitimate transactions. The minority class remains uncommon, but the reduced dataset is more manageable for illustrating class-imbalance strategies.
 
-We first partition the data into training and test sets using the `partition()` function from the **liver** package:
+Because the fraud class is uncommon, we use stratified partitioning to help preserve its proportion in the training and test sets. The `strata` argument of the `partition()` function specifies `Class` as the variable used for stratification:
 
 ```{r}
 library(liver)
@@ -400,13 +402,13 @@ data(creditcard_fraud)
 
 set.seed(42)
 
-fraud_splits = partition(data = creditcard_fraud, ratio = c(0.7, 0.3))
+fraud_splits = partition(data = creditcard_fraud, ratio = c(0.7, 0.3), strata = Class)
 
 train_fraud = fraud_splits$part1
 test_fraud  = fraud_splits$part2
 ```
 
-Because the minority class is uncommon, we examine its representation in both subsets after partitioning:
+We then examine the class proportions in the full dataset and in the two resulting subsets:
 
 ```{r}
 prop.table(table(creditcard_fraud$Class))
@@ -414,7 +416,7 @@ prop.table(table(train_fraud$Class))
 prop.table(table(test_fraud$Class))
 ```
 
-The fraud class (`Class = 1`) remains uncommon in both the training and test sets. With an imbalanced outcome, it is important to verify that a random split has not left too few minority-class observations in either subset. When preserving class proportions is particularly important, stratified partitioning may be preferable, as discussed earlier in this chapter.
+The fraud class (`Class = 1`) remains uncommon in both the training and test sets, while stratification helps preserve approximately the same class proportions across the subsets. It is still useful to verify the resulting distributions after partitioning to confirm that both classes are adequately represented for their intended roles.
 
 The observed class proportion does not by itself establish that rebalancing is necessary. Rather, it indicates that the minority class may require particular attention during model development and evaluation. Whether a balancing strategy is useful should ultimately be considered together with the intended model and appropriate performance measures.
 
@@ -493,28 +495,28 @@ The earlier Data Understanding stage identifies several issues that now require 
 
 Before carrying out any data-dependent preparation, we partition the `adult` dataset into training and test sets. The training set will be used to learn preparation rules and support model development, while the test set will remain outside these decisions until final evaluation.
 
-We use the `partition()` function from the **liver** package to assign 80% of the observations to the training set and the remaining 20% to the test set:
+We use the `partition()` function from the **liver** package to assign 80% of the observations to the training set and the remaining 20% to the test set. Because `income` is the target feature and its two classes are not equally represented, we use stratified partitioning to help preserve the income proportions across the two subsets:
 
 ```{r}
 set.seed(42)
 
-splits = partition(data = adult, ratio = c(0.8, 0.2))
+splits = partition(data = adult, ratio = c(0.8, 0.2), strata = income)
 
 adult_train = splits$part1
 adult_test  = splits$part2
 ```
 
-The `set.seed()` function makes the random partition reproducible. The two subsets now have distinct roles: `adult_train` is used for preparation and model development, whereas `adult_test` is reserved for final assessment and should not be used to choose preparation methods, features, models, or hyperparameters.
+The `set.seed()` function makes the stratified random partition reproducible. The two subsets now have distinct roles: `adult_train` is used for preparation and model development, whereas `adult_test` is reserved for final assessment and should not be used to choose preparation methods, features, models, or hyperparameters.
 
-Because `income` is the target feature, we verify that both outcome classes remain adequately represented in the training and test sets:
+We verify that the income proportions have been approximately preserved in the training and test sets:
 
 ```{r}
+prop.table(table(adult$income))
 prop.table(table(adult_train$income))
-
 prop.table(table(adult_test$income))
 ```
 
-The training and test sets retain similar income proportions, with small differences expected from a random partition. The purpose of this check is not to make the subsets identical, but to confirm that both outcome classes remain adequately represented for their intended roles.
+The training and test sets retain approximately the same income proportions as the full dataset. Small differences may still occur because the required subset sizes correspond to integer numbers of observations. The purpose of this check is to confirm that the stratified partition was implemented as intended and that both outcome classes remain adequately represented for their intended roles.
 
 To preserve the original partitioned data, we create working copies for the preparation steps that follow:
 
@@ -783,7 +785,7 @@ data(diamonds)
 
 ### Hands-On Practice: Class Imbalance {.unnumbered .unlisted}
 
-30. Use `partition()` to divide the `creditcard_fraud` dataset into training and test sets. Report the fraud counts and proportions in the full dataset and in each subset. Explain why class representation should be checked after a random split and when stratified partitioning would be preferable.
+30. Use `partition()` to create a stratified train-test split of `creditcard_fraud` using `Class`. Report and compare the class proportions in the full, training, and test data.
 
 31. Consider a classifier that predicts every transaction as nonfraudulent. Explain why such a classifier may appear successful when judged by overall accuracy even though it fails to identify the minority class.
 
