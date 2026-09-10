@@ -22,41 +22,133 @@ You see, but you do not observe. The distinction is clear.
 ::::
 :::::
 
-Having data does not mean that we understand it. Before drawing conclusions or building predictive models, we need to know what the observations represent, how the features are defined, whether the recorded values are plausible, and what patterns or relationships are present. A dataset may also contain missing information, unusual observations, or redundant measurements that are not immediately apparent from the raw values. Examining these characteristics is the focus of the *Data Understanding and Exploration* stage of the Data Science Workflow.
+A dataset does not explain itself. Values that appear ordinary may encode missing information, unusual observations may reflect errors or meaningful rare cases, and seemingly different features may contain overlapping information. Before drawing conclusions or building predictive models, we therefore need to understand what the observations represent, how the features are defined and measured, whether the recorded values are plausible, and what patterns and relationships are present. Developing this understanding is the purpose of the *Data Understanding and Exploration* stage of the Data Science Workflow.
 
-This stage follows Data Acquisition in the workflow introduced in Figure [-@fig-ds_DSW] and provides the empirical foundation for Data Preparation for Modeling (Chapter [-@sec-chapter-data-preparation]). It combines knowledge of how the data were defined and collected with numerical summaries and visualizations to examine data quality, distributions, relationships, and potential limitations.
+This stage follows Data Acquisition in the workflow introduced in Figure [-@fig-ds_DSW] and provides the empirical foundation for Data Preparation for Modeling (Chapter [-@sec-chapter-data-preparation]). Its purpose is not simply to produce summaries and plots, but to develop a reliable understanding of the data before analytical decisions are made. This requires combining knowledge of how the data were defined and collected with numerical summaries, visualizations, and contextual reasoning to examine data quality, distributions, relationships, and potential limitations.
 
-Exploratory data analysis (EDA) is a central component of this stage. It is primarily investigative rather than confirmatory: we use it to formulate questions, recognize patterns, evaluate whether initial assumptions are reasonable, and identify issues that may affect later analysis. Exploratory findings may suggest useful directions for data preparation, statistical inference, or predictive modeling, but they should be interpreted cautiously. They do not by themselves establish causal relationships or support conclusions about a broader population. Later, Chapter [-@sec-chapter-statistics] introduces formal tools for quantifying uncertainty and drawing conclusions beyond the observed data.
+Exploratory data analysis (EDA) is a central component of this stage. It is primarily investigative rather than confirmatory: it helps us discover patterns, identify potential problems, compare groups, examine relationships, and formulate questions for further analysis. These findings may motivate later data preparation, statistical inference, or predictive modeling, but they should not be treated as final statistical or causal conclusions. Formal tools for quantifying uncertainty and drawing conclusions beyond the observed data are introduced later in Chapter [-@sec-chapter-statistics].
 
-Data understanding and exploration are iterative rather than strictly linear. Unexpected values or patterns may require us to revisit the data source, clarify a feature definition, reconsider the problem of interest, or examine particular observations or subgroups more closely. An important distinction must therefore be maintained between identifying a data issue and deciding how to address it. In this chapter, we focus on understanding feature types and roles, investigating missing or unspecified information, identifying unusual or implausible observations, and examining relationships among features. The issues and patterns identified during exploration often motivate decisions about imputation, transformation, encoding, feature selection, and other procedures used to create a model-ready dataset. These decisions are addressed in the next stage of the workflow, Data Preparation for Modeling, in Chapter [-@sec-chapter-data-preparation].
+Data understanding and exploration are iterative rather than strictly linear. An unexpected value may require us to revisit the data source, an apparent pattern may prompt closer examination of particular observations or subgroups, and a feature whose meaning is unclear may require further documentation. An important distinction must therefore be maintained between identifying and understanding a data issue and deciding how to address it. This chapter focuses on the former; decisions about imputation, transformation, encoding, feature representation, and other procedures used to create a model-ready dataset belong to the next stage of the workflow, Data Preparation for Modeling, addressed in Chapter [-@sec-chapter-data-preparation].
 
 ### What This Chapter Covers {.unnumbered .unlisted}
 
-This chapter introduces the main principles of data understanding and exploratory data analysis. We begin by considering the objectives and guiding questions that direct a systematic examination of an unfamiliar dataset. We then discuss feature types and their representation in R, emphasizing that a feature’s conceptual meaning, analytical role, and technical representation may differ. We also examine how unusual observations and implausible values can be identified and investigated, and how exploratory findings can be communicated clearly through data storytelling without overstating their implications. Readers who need a review of R fundamentals, including data frames, indexing, data manipulation, and basic visualization, can consult Appendix [-@sec-chapter-r-foundations].
+This chapter develops a systematic approach to data understanding and exploration. We begin by examining how visualizations can reveal patterns, support clear data storytelling, and generate questions for further investigation. We then consider the types and analytical roles of features, the relationship between their conceptual meaning and technical representation in R, and the interpretation of numerical distributions. We also examine how unusual observations and implausible values can be identified and investigated using graphical, numerical, and contextual information. Readers who need a review of R fundamentals, including data frames, indexing, data manipulation, and basic visualization, can consult Appendix [-@sec-chapter-r-foundations].
 
-These principles are applied in a guided case study using the `churn` dataset from the **liver** package. The case study begins with problem definition, data acquisition, and initial inspection. We then identify the types and analytical roles of the features, assess data quality, and explore categorical, numerical, and multivariate patterns related to customer attrition. Throughout the analysis, numerical summaries, visualizations, and contextual reasoning are used together to identify meaningful patterns, data limitations, and potential redundancy among features before statistical inference or predictive modeling begins.
+These principles are applied in a guided case study using the `churn` dataset from the **liver** package. The case study begins with problem definition, data acquisition, initial inspection, and assessment of data quality. We then explore categorical and numerical features and investigate relationships and potential redundancy among features. Throughout the analysis, numerical summaries, visualizations, and contextual reasoning are used together to identify meaningful patterns and limitations while distinguishing exploratory associations from conclusions that would require formal statistical or causal evidence.
 
-By the end of the chapter, readers should be able to formulate appropriate questions for data understanding and exploration, identify feature types and analytical roles, and distinguish a feature’s conceptual meaning from its representation in R. They should also be able to assess data quality, investigate unusual or implausible observations, select suitable numerical and graphical summaries, compare feature behavior across groups, examine relationships and potential redundancy among features, and communicate exploratory findings without presenting descriptive associations as inferential or causal conclusions. Finally, readers should be able to use insights obtained during exploration to motivate later decisions during Data Preparation for Modeling.
+By the end of the chapter, readers should be able to formulate appropriate questions for data understanding and exploration, identify feature types and analytical roles, assess data quality, and investigate unusual or implausible observations. They should also be able to select suitable numerical and graphical summaries, compare patterns across groups, examine relationships and potential redundancy among features, and communicate exploratory findings clearly without overstating their implications. Finally, readers should be able to use insights obtained during exploration to motivate later decisions during Data Preparation for Modeling.
 
-## Guiding Questions for Data Understanding and Exploration {#sec-eda-EDA-objectives}
+## Seeing Patterns and Data Storytelling {#sec-eda-seeing-patterns}
 
-A useful starting point in the *Data Understanding and Exploration* stage is to clarify what we want to learn from the data. Exploratory data analysis (EDA) is a central component of this process, which usually moves through three levels: understanding the dataset as a whole, examining individual features, and investigating relationships among features.
+Data exploration helps reveal patterns, differences, and potential limitations that are difficult to recognize from raw observations alone. Visualizations are particularly valuable because they can make relationships, unusual observations, group differences, and changes over time visible, while also drawing attention to questions that deserve closer investigation.
 
-At the dataset level, we ask what each observation represents, how and when the data were collected, and which population or process they describe. We also identify the unit of analysis and determine whether the dataset contains a target feature, predictors, identifiers, derived measurements, or other variables with special analytical roles. These questions help us assess whether the available data are suitable for addressing the problem of interest.
+A well-known example is Hans Rosling’s TED Talk *New insights on poverty* [@rosling2007poverty], in which demographic and economic data are used to reveal and communicate patterns of global development over time. Figure [-@fig-EDA-fig-1] presents a related visualization based on the `gapminder` dataset from the **liver** package. It compares GDP per capita and life expectancy across countries in 1950 and 2019. Countries are distinguished by world region, and point size is proportional to population.
 
-At the feature level, we examine what each feature means, how it is represented in R, and which values it can reasonably take. We investigate its range and distribution, identify missing or unspecified information, and look for unusual observations. Relevant questions include whether a numerical feature is symmetric or skewed, whether a categorical feature contains rare or placeholder levels, and whether extreme values represent errors, valid rare cases, or meaningful subgroups.
+```{r}
+#| label: fig-EDA-fig-1
+#| echo: false
+#| out-width: 100%
+#| fig-cap: "GDP per capita and life expectancy across countries in 1950 (left) and 2019 (right). Countries are grouped by world region, and point size is proportional to population."
 
-We then examine relationships among features. We may ask whether a numerical feature differs across groups, whether two numerical features are associated, or whether two categorical features occur together systematically. We also investigate whether some features contain overlapping information, are mathematically derived from one another, or reveal patterns only when considered jointly. When a target feature is available, these questions may include how other features vary across target groups.
+data(gapminder, package = "liver")
 
-The interpretation of exploratory findings should be informed by the context in which the data were collected. A large numerical value may be unusual but valid in one application and implausible in another. Similarly, a value such as `"unknown"` may be stored as an ordinary categorical level in R while actually representing missing or unspecified information. The exploratory tools we select should therefore follow from both the question and the feature types involved. Numerical features may be examined using summary statistics and distributional plots, categorical features using frequencies and bar plots, and relationships among features using grouped summaries, scatter plots, contingency tables, or measures of association. These tools must be interpreted together with feature definitions, measurement units, the data-collection process, and relevant domain knowledge. Selecting suitable exploratory methods therefore begins with understanding the types, meanings, and analytical roles of the features in the dataset.
+ggplot_1 = gapminder |>
+  dplyr::filter(
+    year %in% c(1950, 2019),
+    !is.na(world_group),
+    world_group != "Others",
+    !is.na(gdp),
+    !is.na(life_expectancy),
+    !is.na(population)
+  ) |>
+  ggplot(
+    aes(
+      x = gdp,
+      y = life_expectancy,
+      col = world_group,
+      size = population / 10^6
+    )
+  ) +
+  geom_point(alpha = 0.5) +
+  guides(size = "none") +
+  coord_cartesian(ylim = c(20, 90)) +
+  labs(
+    x = "GDP per Capita (USD)",
+    y = "Life Expectancy"
+  )
+
+if (knitr::is_latex_output()) {
+  ggplot_1 +
+    facet_grid(. ~ year) +
+    theme(
+      legend.position = "top",
+      legend.title = element_text(size = 9),
+      legend.text = element_text(size = 8),
+      legend.key.size = grid::unit(0.4, "cm"),
+      legend.spacing.x = grid::unit(0.2, "cm"),
+      axis.text.x = element_text(size = 8, angle = 45),
+      axis.text.y = element_text(size = 10),
+      axis.title = element_text(size = 10, face = "plain"),
+      title = element_text(size = 10, face = "plain")
+    ) +
+    scale_color_brewer(
+      palette = "Set2",
+      name = "World Region: "
+    )
+} else {
+  ggplot_html = ggplot_1 +
+    ggtitle("{frame_time}") +
+    gganimate::transition_time(year) +
+    gganimate::ease_aes("linear") +
+    theme(
+      title = element_text(size = 14, face = "bold"),
+      legend.title = element_blank(),
+      plot.margin = grid::unit(c(-0.19, 0, 0.03, 0.1), "null"),
+      plot.title = element_text(
+        hjust = 0.86,
+        vjust = -23.5,
+        color = "#7286c3",
+        size = 48,
+        face = "bold.italic"
+      )
+    ) +
+    scale_color_brewer(palette = "Set2")
+
+  gganimate::animate(
+    ggplot_html,
+    fps = 7,
+    end_pause = 25
+  )
+}
+```
+
+Several patterns are immediately visible. Between 1950 and 2019, both GDP per capita and life expectancy generally increased, although substantial differences remained across countries and world regions. The figure also suggests that countries with higher GDP per capita tend to have higher life expectancy. At the same time, countries with similar levels of GDP may differ considerably in life expectancy, indicating that the relationship is not uniform.
+
+The visualization therefore provides both information and questions. How strong is the relationship between GDP per capita and life expectancy? Which countries depart from the overall pattern, and do regional differences help explain some of this variation? Such questions can guide further exploration. The observed association is descriptive, however, and should not be interpreted as evidence that changes in GDP per capita directly cause changes in life expectancy.
+
+Visual exploration also plays an important role in communicating what we learn from data. In this context, *data storytelling* means selecting and organizing relevant graphical and numerical evidence around a clear question so that the main patterns, their context, and their limitations can be understood. It does not mean imposing a predetermined narrative on the data or presenting only the evidence that supports a preferred conclusion. Effective data storytelling distinguishes between what is directly observed, how the observed patterns may be interpreted, and which questions remain unresolved.
+
+Seeing and communicating a pattern is only the beginning. Data understanding and exploration also require us to investigate what the pattern represents, whether it is consistent across the dataset, which observations depart from it, and what additional information may be needed to interpret it. The next step is therefore to translate visible patterns into systematic exploratory questions.
+
+### From Patterns to Questions {.unnumbered .unlisted}
+
+To move from observation to systematic exploration, we need to translate visible patterns into questions that can be investigated using the data. These questions can be organized around three complementary levels: understanding the dataset as a whole, examining individual features, and investigating relationships among features. Exploratory data analysis (EDA) provides numerical and graphical tools for addressing many of these questions, while contextual information helps determine how the resulting patterns should be interpreted.
+
+At the dataset level, we ask what each observation represents, how and when the data were collected, and which population or process the data describe. We identify the unit of analysis and determine whether the dataset contains a target feature, predictors, identifiers, derived measurements, or other features with special analytical roles. These questions help establish whether the available data are appropriate for addressing the problem of interest and which limitations should be considered during exploration.
+
+At the feature level, we examine what each feature means, how it is represented in R, and which values it can reasonably take. We investigate its distribution and range, assess the presence of missing or unspecified information, and look for unusual observations. Relevant questions include whether a numerical feature is symmetric or skewed, whether a categorical feature contains rare or placeholder levels, and whether extreme values represent errors, valid rare cases, or meaningful subgroups.
+
+At the relationship level, we examine how features vary together. We may ask whether a numerical feature differs across groups, whether two numerical features are associated, or whether two categorical features occur together systematically. We also investigate whether features contain overlapping information, are mathematically derived from one another, or reveal patterns only when considered jointly. When a target feature is available, we may also examine how other features vary across target groups.
+
+The interpretation of exploratory findings depends on the context in which the data were defined and collected. A large numerical value may be unusual but valid in one application and implausible in another. Similarly, a value such as `"unknown"` may be stored as an ordinary categorical level in R while representing missing or unspecified information. The choice of exploratory tools should therefore follow from both the question and the feature types involved. Numerical features may be examined using summary statistics and distributional plots, categorical features using frequencies and bar plots, and relationships among features using grouped summaries, scatter plots, contingency tables, or measures of association. These tools should be interpreted together with feature definitions, measurement units, the data-collection process, and relevant domain knowledge. Systematic exploration therefore depends not only on selecting appropriate tools, but also on understanding what the data represent and what questions they can reasonably address.
 
 ## Feature Types and Data Representation {#sec-eda-feature-types}
 
 Before summarizing, visualizing, or interpreting a dataset, we need to understand what each feature represents. Feature type determines which numerical summaries are meaningful, which graphical tools are appropriate, and how observed patterns should be interpreted. For example, a numerical feature may be summarized using measures such as the mean, median, or standard deviation, whereas a categorical feature is usually described using frequencies or proportions. Treating these feature types interchangeably can lead to misleading summaries, inappropriate visualizations, and poor analytical decisions.
 
-Feature type also informs later decisions during Data Preparation for Modeling. Numerical features may require transformations or scaling, while categorical features may need to be encoded or have sparse levels combined. However, such decisions should be made only after the meaning, representation, and observed behavior of each feature have been examined carefully.
+It is equally important to consider a feature’s analytical role. A feature may serve as a predictor, a target, an identifier, or a quantity derived from other features. These roles affect how the feature should be explored and interpreted. For example, a customer identifier may be stored as a number, but it represents a label rather than a measurable quantity and should not be treated as an ordinary numerical feature.
 
-It is also important to consider a feature’s analytical role. A feature may serve as a predictor, a target, an identifier, or a quantity derived from other features. These roles affect how the feature should be explored and whether it should be included in later analyses. For example, a customer identifier may be stored as a number, but it represents a label rather than a measurable quantity and should not be treated as an ordinary numerical predictor.
+Understanding both feature type and analytical role also provides a foundation for later Data Preparation for Modeling. Numerical features may eventually require transformation or scaling, while categorical features may need encoding or other forms of preparation. Such decisions should be made only after the meaning, representation, and observed behavior of the relevant features have been examined carefully.
 
 ### Numerical and Categorical Features {.unnumbered .unlisted}
 
@@ -194,99 +286,9 @@ No observation should be removed or changed solely because it lies beyond a boxp
 
 > *Practice:* Apply the same checks to `x` and `z`. Use boxplots and histograms to identify unusual values, then compare all three diamond dimensions. Which observations seem unusual but plausible, and which appear physically implausible?
 
-## Communicating Exploratory Findings with Data Storytelling {#sec-eda-storytelling}
-
-Exploratory findings become useful when they are communicated in relation to a clear question rather than presented as an isolated collection of outputs. A histogram, scatter plot, boxplot, or correlation matrix should help the reader recognize something that is difficult to see from raw data alone, such as variation, overlap, unusual observations, group differences, relationships among features, or change over time.
-
-In this context, data storytelling does not mean imposing a predetermined narrative on the data or selecting only the patterns that support a preferred conclusion. Instead, it means organizing graphical and numerical evidence so that the main findings, their context, and their limitations can be understood clearly. Effective exploratory communication distinguishes among what is directly visible in the data, how the observed pattern may be interpreted, and which questions remain unresolved.
-
-A well-known example of effective exploratory communication is Hans Rosling’s TED Talk *New insights on poverty* [@rosling2007poverty], in which demographic and economic data are used to communicate patterns of global development over time. Figure [-@fig-EDA-fig-1] presents a related exploratory visualization based on the `gapminder` dataset from the **liver** package. It compares GDP per capita and life expectancy across countries in 1950 and 2019. Countries are grouped by world region, and point size is proportional to population.
-
-```{r}
-#| label: fig-EDA-fig-1
-#| echo: false
-#| out-width: 100%
-#| fig-cap: "GDP per capita and life expectancy across countries in 1950 (left) and 2019 (right). Countries are grouped by world region, and point size is proportional to population."
-
-data(gapminder, package = "liver")
-
-ggplot_1 = gapminder |>
-  dplyr::filter(
-    year %in% c(1950, 2019),
-    !is.na(world_group),
-    world_group != "Others",
-    !is.na(gdp),
-    !is.na(life_expectancy),
-    !is.na(population)
-  ) |>
-  ggplot(
-    aes(
-      x = gdp,
-      y = life_expectancy,
-      col = world_group,
-      size = population / 10^6
-    )
-  ) +
-  geom_point(alpha = 0.5) +
-  guides(size = "none") +
-  coord_cartesian(ylim = c(20, 90)) +
-  labs(
-    x = "GDP per Capita (USD)",
-    y = "Life Expectancy"
-  )
-
-if (knitr::is_latex_output()) {
-  ggplot_1 +
-    facet_grid(. ~ year) +
-    theme(
-      legend.position = "top",
-      legend.title = element_text(size = 9),
-      legend.text = element_text(size = 8),
-      legend.key.size = grid::unit(0.4, "cm"),
-      legend.spacing.x = grid::unit(0.2, "cm"),
-      axis.text.x = element_text(size = 8, angle = 45),
-      axis.text.y = element_text(size = 10),
-      axis.title = element_text(size = 10, face = "bold"),
-      title = element_text(size = 10, face = "bold")
-    ) +
-    scale_color_brewer(
-      palette = "Set2",
-      name = "World Region: "
-    )
-} else {
-  ggplot_html = ggplot_1 +
-    ggtitle("{frame_time}") +
-    gganimate::transition_time(year) +
-    gganimate::ease_aes("linear") +
-    theme(
-      title = element_text(size = 14, face = "bold"),
-      legend.title = element_blank(),
-      plot.margin = grid::unit(c(-0.19, 0, 0.03, 0.1), "null"),
-      plot.title = element_text(
-        hjust = 0.86,
-        vjust = -23.5,
-        color = "#7286c3",
-        size = 48,
-        face = "bold.italic"
-      )
-    ) +
-    scale_color_brewer(palette = "Set2")
-
-  gganimate::animate(
-    ggplot_html,
-    fps = 7,
-    end_pause = 25
-  )
-}
-```
-
-Figure [-@fig-EDA-fig-1] illustrates how a visualization can communicate several dimensions of a dataset without requiring a complex statistical model. Between 1950 and 2019, both GDP per capita and life expectancy generally increased, although their levels and rates of change differed substantially across countries and regions. The figure also shows that countries with higher GDP per capita tend to have higher life expectancy. This association is descriptive and should not be interpreted as evidence that changes in one variable directly cause changes in the other.
-
-The figure also demonstrates several principles of exploratory communication. Position is used to show the relationship between two numerical features, color distinguishes world regions, point size represents population, and separate panels make change over time visible. At the same time, the visualization does not explain the mechanisms underlying the observed differences, quantify uncertainty, or account for other social, economic, and health-related factors. These limitations should be acknowledged alongside the visible patterns.
-
 In the following `churn` case study, we apply the same principles to a practical data science problem. Numerical summaries and exploratory graphics are used not merely to display the data, but to make customer patterns visible, communicate relevant limitations, and identify questions that may guide later statistical inference and predictive modeling.
 
-## Data Understanding and Exploration with the `churn` Dataset {#sec-eda-EDA-churn}
+## Case Study: Exploring the `churn` Dataset {#sec-eda-EDA-churn}
 
 Data understanding and exploratory data analysis are most useful when they are grounded in a real dataset and guided by a practical problem. In this section, we use the `churn` dataset from the **liver** package to examine customer attrition in a credit card portfolio. The dataset contains demographic, account-related, behavioral, and financial information about customers, together with a binary target indicating whether a customer closed their account.
 
@@ -306,7 +308,7 @@ At this stage, the goal is to develop a structured understanding of the dataset,
 
 ### Data Acquisition and Initial Inspection {.unnumbered .unlisted}
 
-Although the focus of this case study is the *Data Understanding and Exploration* stage, we briefly revisit Data Acquisition to establish the source and context of the data before beginning detailed exploration. The `churn` dataset, available in the **liver** package, contains demographic, account-related, behavioral, and financial information about credit card customers. The target feature is `churn`, which indicates whether a customer closed their credit card account (`"yes"`) or remained active (`"no"`). At this stage, we use the target to guide exploration rather than to build a predictive model.
+Although the focus of this case study is the *Data Understanding and Exploration* stage, we briefly revisit Data Acquisition to establish the source, structure, and context of the data before beginning detailed exploration. The `churn` dataset, available in the **liver** package, contains demographic, account-related, behavioral, and financial information about credit card customers. The target feature is `churn`, which indicates whether a customer closed their credit card account (`"yes"`) or remained active (`"no"`). At this stage, the target is used to guide exploration rather than to build a predictive model.
 
 We begin by loading the package and dataset and inspecting its structure:
 
@@ -317,25 +319,31 @@ data(churn)
 str(churn)
 ```
 
-The dataset is stored as a `data.frame` with `r nrow(churn)` observations and `r ncol(churn)` features. Each row represents one credit card customer, while each column records a customer characteristic, account attribute, or measure of customer activity.
+The dataset is stored as a `data.frame` with `r nrow(churn)` observations and `r ncol(churn)` features. Each row represents one credit card customer, establishing the customer as the unit of analysis. Each column records a demographic characteristic, account attribute, or measure of customer behavior or activity.
 
 The features describe several aspects of the customer relationship. Demographic features include `age`, `gender`, `education`, `marital`, `income`, and `dependent_count`. Account and relationship features include `months_on_book`, `relationship_count`, and `card_category`, while service-related behavior is represented by `months_inactive` and `contacts_count_12`. Credit behavior is described by `credit_limit`, `revolving_balance`, `available_credit`, and `utilization_ratio`. Transaction activity is summarized by `transaction_amount_12`, `transaction_count_12`, `ratio_amount_Q4_Q1`, and `ratio_count_Q4_Q1`.
 
 The dataset contains both categorical and numerical features. Categorical features include `gender`, `education`, `marital`, `income`, `card_category`, and the binary target `churn`. Numerical features include measurements such as `credit_limit` and `transaction_amount_12`, as well as discrete counts such as `dependent_count`, `contacts_count_12`, and `transaction_count_12`.
 
-The feature `customer_ID` is represented using numbers in R but serves as an account identifier rather than as a quantitative measurement. Numerical summaries such as its mean or standard deviation would therefore have no substantive interpretation, and it should not be included automatically as a predictor in later models.
+The feature `customer_ID` illustrates why technical representation should not be confused with analytical meaning. Although it is stored numerically in R, it serves as an account identifier rather than as a quantitative measurement. Numerical summaries such as its mean or standard deviation therefore have no substantive interpretation. Its role is determined by what the feature represents, not by the fact that R stores it as a number.
 
-Some numerical features are derived from others. For example, `available_credit` is calculated from `credit_limit` and `revolving_balance`, while `utilization_ratio` expresses revolving balance relative to credit limit. These derived features may provide useful summaries of credit behavior, but their mathematical relationships with their component features may introduce redundancy. We examine these relationships later when exploring relationships among features.
+Some numerical features are derived from others. For example, `available_credit` is calculated from `credit_limit` and `revolving_balance`, while `utilization_ratio` expresses revolving balance relative to credit limit. These derived features summarize aspects of credit behavior, but their mathematical relationships with their component features mean that they contain overlapping information. We return to these relationships later when examining associations and potential redundancy among features.
 
-The technical representation of a feature in R should always be interpreted together with its substantive meaning and analytical role. A feature can be represented numerically without measuring a quantity, as illustrated by `customer_ID`. Similarly, a categorical level may carry a special meaning that is not apparent from its R class.
+Initial inspection therefore involves more than identifying feature names and R classes. It establishes the unit of analysis, clarifies the target and other analytical roles, distinguishes conceptual feature types from technical representations, and identifies features whose meanings are linked by construction. With the basic structure and interpretation of the dataset established, the next step is to assess whether the recorded values raise any data-quality concerns.
 
-As part of the initial data-quality assessment, we first use the `find.na()` function from the **liver** package to check for values represented as `NA` in R:
+> *Practice:* Run `dim(churn)`, `names(churn)`, and `head(churn)`. How does each function complement the information provided by `str(churn)`? Identify the unit of analysis, the target feature, the customer identifier, and at least one feature derived from other measurements.
+
+### Assessing Data Quality {.unnumbered .unlisted}
+
+Once the structure and analytical roles of the features are understood, the next step is to assess the quality of the recorded data. At this stage, we look for missing or unspecified information, implausible values, and other indications that the data may not fully represent the quantities or categories they are intended to measure. The objective is to identify, investigate, and document such issues rather than decide immediately how they should be handled.
+
+We first use the `find.na()` function from the **liver** package to check for values represented explicitly as `NA` in R:
 
 ```{r}
 find.na(churn)
 ```
 
-The output indicates that the dataset contains no values coded as `NA`. However, missing or unspecified information may also be represented by placeholder values that R does not automatically recognize as missing. We therefore inspect selected categorical features more closely:
+The output indicates that the dataset contains no values coded as `NA`. This does not necessarily mean, however, that all information is complete. Missing or unspecified values may be encoded using placeholder categories or special numerical values that R treats as ordinary observations. We therefore inspect selected categorical features more closely:
 
 ```{r}
 summary(churn[, c("education", "income", "marital")])
@@ -343,15 +351,21 @@ summary(churn[, c("education", "income", "marital")])
 
 The output shows that `education`, `income`, and `marital` contain the level `"unknown"`. In this dataset, `"unknown"` represents missing or unspecified information rather than an ordinary substantive category. Because it is stored as a categorical level rather than as `NA`, it is not detected by `find.na()`.
 
-During EDA, we retain `"unknown"` as an explicit level so that these observations remain visible in frequency tables and plots. This allows us to examine how frequently information is unspecified and whether customers in the `"unknown"` groups differ from other groups.
+During exploration, we retain `"unknown"` as an explicit level so that these observations remain visible in summaries and visualizations. This allows us to determine how frequently information is unspecified and to examine whether the corresponding observations show patterns that differ from those in the substantive categories. At this stage, retaining `"unknown"` is an exploratory choice rather than a final decision about how these values should be represented in later analyses.
 
-Keeping `"unknown"` visible during exploration should not be interpreted as a final modeling decision. During Data Preparation for Modeling, these values may instead be handled using imputation, missingness indicators, category combination, or model-specific preprocessing procedures. The appropriate choice depends on their meaning, frequency, and relationships with the target and other features.
+We also inspect the numerical features for unusual ranges and potentially implausible values. The `summary()` function provides a useful initial overview:
 
-Initial numerical summaries and the visualizations presented later in the chapter do not reveal clearly implausible numerical values in the `churn` dataset. Some features are skewed or contain relatively extreme observations, but these values appear plausible in the context of customer credit and transaction behavior. They should therefore not be classified as errors merely because they occur in the tails of their distributions.
+```{r}
+summary(churn)
+```
 
-With the unit of analysis, feature types, analytical roles, and initial data-quality issues clarified, the dataset is ready for categorical, numerical, and multivariate exploration.
+The numerical summaries, together with the visualizations presented later in the case study, do not reveal clearly implausible numerical values in the `churn` dataset. Some features are skewed or contain relatively extreme observations, but these values appear plausible in the context of customer credit and transaction behavior. An observation should therefore not be classified as erroneous simply because it lies far from the center of a distribution.
 
-> *Practice:* Run `dim(churn)`, `names(churn)`, `head(churn)`, and `summary(churn)`. Which numerical features have the largest ranges? Which categorical features contain the level `"unknown"`? How do these functions complement the information provided by `str(churn)`?
+This assessment highlights an important distinction between technical completeness and substantive data quality. A dataset may contain no values coded as `NA` while still containing missing or unspecified information, and an extreme numerical value may be unusual without being implausible. Data quality must therefore be assessed using the technical representation of the data together with feature definitions, plausible ranges, relationships among features, and contextual knowledge.
+
+The issues identified during this stage are documented for later consideration. Decisions about recoding placeholder values, imputing missing information, transforming features, or applying other preparation procedures belong to Data Preparation for Modeling in Chapter [-@sec-chapter-data-preparation]. With the main data-quality issues identified, we can now proceed to a more detailed exploration of categorical and numerical features and the relationships among them.
+
+> *Practice:* Examine the output of `summary(churn)`. Which categorical features contain the level `"unknown"`? Which numerical features have large ranges or skewed distributions? Do any values appear clearly implausible based on the available information, and what additional evidence would be needed before classifying them as errors?
 
 ### Exploring Categorical Features {#sec-EDA-categorical}
 
@@ -707,13 +721,13 @@ This subsection illustrates how bivariate EDA can connect product information wi
 
 ## Chapter Summary and Takeaways {#sec-eda-summary}
 
-This chapter introduced the *Data Understanding and Exploration* stage of the Data Science Workflow and presented exploratory data analysis (EDA) as a central component of that stage. We used numerical summaries, visualizations, and contextual reasoning to examine dataset structure, feature types and representations, placeholder levels such as `"unknown"`, unusual observations, group differences, and relationships among features. We also emphasized that exploratory analysis is descriptive rather than confirmatory: it helps identify patterns, limitations, and questions, but does not by itself establish causal relationships or provide final statistical evidence.
+This chapter introduced the *Data Understanding and Exploration* stage of the Data Science Workflow and presented exploratory data analysis (EDA) as a central component of that stage. Beginning with the `gapminder` example, we saw how visualizations can reveal patterns, differences, and relationships that are difficult to recognize from raw observations alone. We also considered the role of data storytelling in communicating these patterns clearly while distinguishing what is directly visible in the data from interpretations that require further evidence. Exploratory patterns therefore serve not only as findings to communicate, but also as starting points for questions that guide deeper investigation.
 
-Using the `diamonds` dataset, we distinguished statistically unusual observations from implausible values. Boxplots and histograms can identify values that deserve closer inspection, but contextual information and relationships with other features are needed to determine whether an observation is erroneous, rare, or informative. During Data Understanding and Exploration, the objective is to identify and investigate such observations rather than automatically change or remove them.
+A systematic exploration begins by understanding the dataset as a whole, examining individual features, and investigating relationships among features. We distinguished numerical and categorical features, considered their analytical roles and technical representations in R, and examined how distribution shape affects the interpretation of numerical summaries. Using the `diamonds` dataset, we also distinguished statistically unusual observations from implausible values and showed why unusual observations should be investigated using contextual information, related features, and domain knowledge rather than removed automatically.
 
-The `churn` case study showed how exploratory analysis can connect data summaries to a practical problem. The categorical analyses suggested that `gender` and `marital` provide limited separation between churners and non-churners, while `card_category` requires cautious interpretation because the product tiers differ substantially in size. The numerical analyses revealed clearer behavioral patterns: customers with more frequent service contacts, lower annual transaction amounts, and declining transaction activity appeared more likely to churn. These findings should be interpreted as exploratory associations rather than definitive explanations of customer attrition.
+The `churn` case study demonstrated how these principles can be applied to a practical problem. Some demographic and product-related features showed limited differences across churn groups, whereas behavioral features such as customer-service contacts, transaction activity, and changes in spending revealed clearer exploratory patterns. The analysis also illustrated the importance of considering group sizes, placeholder categories such as `"unknown"`, class imbalance, distributional overlap, and relationships among features when interpreting exploratory results.
 
-The chapter also highlighted the importance of examining features jointly. Correlation analysis identified potential redundancy among related credit features, including `available_credit`, `credit_limit`, `revolving_balance`, and `utilization_ratio`. Multivariate exploration further showed that transaction amount and transaction count jointly describe customer activity, and that product tier is related to spending behavior. These insights inform decisions in the next stage of the workflow, Data Preparation for Modeling, introduced in Chapter [-@sec-chapter-data-preparation]. They also provide an exploratory foundation for the statistical inference methods introduced later in Chapter [-@sec-chapter-statistics].
+Finally, examining features jointly revealed associations and potential redundancy that were not apparent from isolated summaries. These findings provide the basis for decisions in the next stage of the workflow, Data Preparation for Modeling, introduced in Chapter [-@sec-chapter-data-preparation], where issues identified during exploration are translated into appropriate preparation decisions. They also provide an exploratory foundation for the formal statistical inference methods introduced later in Chapter [-@sec-chapter-statistics].
 
 ## Exercises {#sec-eda-exercises}
 
@@ -749,7 +763,7 @@ These exercises reinforce the main ideas of the chapter, progressing from concep
 
 14. If a feature shows only a weak relationship with the target during EDA, should it automatically be excluded from later modeling? Explain why or why not.
 
-15. What is the role of data storytelling in exploratory analysis? How can an analyst communicate an observed pattern without overstating its meaning or implying causation?
+15. Why is it important to distinguish between what is directly visible in an exploratory visualization and conclusions that would require statistical or causal evidence?
 
 #### Hands-On Practice: Exploring the `churn` Dataset {.unnumbered .unlisted}
 
