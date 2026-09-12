@@ -40,16 +40,17 @@ Next, we consider how to prepare implausible and extreme values, handle missing 
 
 The chapter concludes with a case study using the `adult` dataset. The case study brings together the main preparation principles in a workflow for predicting whether an individual earns more than \$50,000 per year. It illustrates how preparation decisions are learned from the training data and how the final representation may depend on the modeling method. These ideas provide the foundation for the *k*-Nearest Neighbors classifier introduced in Chapter [-@sec-chapter-knn] and for later supervised-learning methods throughout the book.
 
-## Data Partitioning and Resampling {#sec-data-prep-cross-validation}
 
-Reliable predictive modeling requires a clear separation between model development and final evaluation. If the same observations influence both model development and performance assessment, the resulting estimate may be overly optimistic because the model has already adapted to information from those observations.
+## Data Partitioning and Cross-Validation {#sec-data-prep-cross-validation}
 
-Supervised learning therefore assigns different roles to different subsets of the data. The *training set* is used to learn data-preparation rules, fit candidate models, compare alternatives, select features, and tune hyperparameters. The *test set* is reserved for final assessment and should remain outside these decisions until the preparation workflow and model have been finalized.
+Reliable predictive modeling requires a clear separation between model development and final evaluation. If the same observations influence both processes, the resulting estimate of predictive performance may be overly optimistic because the model has already adapted to information from those observations.
+
+Supervised learning therefore assigns different roles to different subsets of the data. The *training set* is used for data preparation, model fitting, model comparison, feature selection, and hyperparameter tuning. The *test set* is reserved for final assessment and should remain outside these decisions until the preparation workflow and model have been finalized.
 
 Throughout the supervised modeling chapters of this book, we follow a general three-step workflow:
 
 1. *Partition* the available data into training and test sets.
-2. *Use the training data* to learn data-preparation rules, compare and tune candidate models, and fit the selected model.
+2. *Use the training data* to develop the preparation workflow, compare and tune candidate models, and fit the selected model.
 3. *Assess* final predictive performance once on the untouched test set.
 
 Figure [-@fig-data-prep-modeling] illustrates this workflow.
@@ -58,45 +59,41 @@ Figure [-@fig-data-prep-modeling] illustrates this workflow.
 knitr::include_graphics("images/ch_data-prep_partitioning.png")
 ```
 
-This separation also governs data preparation: rules estimated from the observed data must be learned within the training process rather than from the full dataset. Otherwise, information from the test set may influence model development and compromise the independence of the final assessment. These principles are developed further in Section [-@sec-data-prep-data-leakage].
+Data partitioning establishes the outer separation between model development and final evaluation. Within the training set, cross-validation provides a structured way to compare models and tune hyperparameters without using the test data. Data-dependent preparation must follow the same separation so that information from validation or test observations does not influence model development; this principle is developed in Section [-@sec-data-prep-data-leakage].
 
-Data partitioning establishes the outer separation between model development and final evaluation, while resampling methods such as cross-validation support model comparison and tuning within the training data. The following subsections explain how to choose and check an appropriate train-test split and how cross-validation is used within the training set. The broader concept of *generalization*, together with underfitting, overfitting, and the relationship between model complexity and predictive performance, is developed in Section [-@sec-evaluation-generalization].
+The following subsections explain how to choose an appropriate train-test split and how cross-validation is carried out within the training set. The broader concept of *generalization*, together with underfitting, overfitting, and the relationship between model complexity and predictive performance, is developed in Section [-@sec-evaluation-generalization].
 
-### Choosing and Checking the Train-Test Split {.unnumbered .unlisted}
+### Choosing the Train-Test Split {.unnumbered .unlisted}
 
-The simplest way to separate model development from final evaluation is the *train-test split*, also known as the *holdout method*. The choice of split ratio depends on the size and structure of the dataset. Common choices include 70--30, 80--20, and 90--10. A larger training set provides more information for learning preparation rules and fitting models, whereas a larger test set can provide a more stable estimate of final predictive performance. There is no universally optimal ratio; both subsets should be large enough for their intended roles.
+The simplest way to separate model development from final evaluation is the *train-test split*, also known as the *holdout method*. Common choices include 70--30, 80--20, and 90--10. A larger training set provides more information for learning preparation rules and fitting models, whereas a larger test set can provide a more stable estimate of final predictive performance. There is no universally optimal ratio; both subsets should be large enough for their intended roles.
 
-For classification problems, random partitioning is often combined with *stratification*. A stratified split aims to preserve approximately the same outcome proportions in the training and test sets. This is especially useful when one class is uncommon, since an unstratified split may leave too few minority-class observations in one of the subsets. More generally, stratification may also be based on another categorical or numerical variable whose distribution should be reasonably preserved across the resulting subsets. Stratified partitioning is illustrated later in the `adult` case study.
+For classification problems, random partitioning is often combined with *stratification* so that the outcome proportions are approximately preserved across the training and test sets. This is especially useful when one class is uncommon. More generally, stratification may be based on another variable whose distribution should be reasonably preserved. Stratified partitioning is illustrated later in the `adult` case study.
 
-A standard random split is appropriate when observations can reasonably be treated as independent and there is no ordering or grouping structure that must be preserved. When such structure is present, the partitioning strategy should reflect how future predictions will actually be made.
+A standard random split is appropriate when observations can reasonably be treated as independent and there is no ordering or grouping structure that must be preserved. When observations are not independent, the partitioning strategy should preserve the structure relevant to the prediction problem.
 
 For time-ordered data, the training set should usually contain earlier observations and the test set later observations. This preserves the temporal direction of the prediction problem and avoids using future information when evaluating a model intended to predict future outcomes. For example, in the `bike_demand` case study in Chapter [-@sec-chapter-regression], earlier time points are assigned to the training set and later time points to the test set.
 
-Grouped or repeated-measurement data require similar care. Observations from the same individual or group should generally remain in the same subset so that closely related information does not appear in both the training and test data. The same principle applies to clustered data, such as patients within hospitals or customers within companies. Spatial data may likewise require partitions that account for geographical dependence and reflect the locations or regions for which future predictions are intended.
+For grouped or repeated-measurement data, observations from the same individual or group should generally remain in the same subset so that closely related information does not appear in both the training and test data. The same principle applies to clustered data, such as patients within hospitals or customers within companies. Spatial data may likewise require partitions that reflect geographical dependence and the locations or regions for which future predictions are intended.
 
-The train-test split should be created before any data-dependent preparation rule is estimated. Computing imputation values, determining rare-category thresholds, estimating scaling parameters, selecting features, or balancing classes before partitioning would allow information from the test set to influence model development.
+The train-test split should be created before any data-dependent preparation rule is estimated. Otherwise, information from the test set may influence model development. The distinction between data-dependent rules and rules defined independently of the observed sample is developed in Section [-@sec-data-prep-data-leakage].
 
-Rules defined independently of the observed sample are different. For example, if dataset documentation specifies that `"?"` represents a missing value, it can be recoded consistently in both the training and test sets. The rule follows from the meaning of the data rather than from information estimated from the observed sample. More generally, externally defined coding rules, valid-value ranges, or category orderings may be applied consistently across subsets.
-
-After partitioning, the split should be checked to confirm that the intended design has been implemented correctly. Basic checks include verifying the number and proportion of observations assigned to each subset and, when stratification is used, confirming that the intended proportions have been reasonably preserved. For grouped or repeated-measurement data, the same individual or group should not appear in both subsets, while time-based splits should preserve the required chronological separation.
-
-These checks concern the *design* of the split rather than the detailed characteristics of the test observations. The purpose is not to make the training and test sets as similar as possible, since some differences are expected. Nor should a random split be regenerated repeatedly simply because another seed produces more similar subsets. If particular characteristics must be preserved, they should be incorporated directly into the partitioning strategy through stratification, grouping, temporal ordering, or another appropriate structure-aware approach.
+After partitioning, the split should be checked to confirm that the intended design has been implemented correctly. This includes verifying subset sizes and, when relevant, checking that stratification, grouping, or temporal ordering has been preserved. These checks concern the *design* of the split rather than making the training and test sets as similar as possible. A random split should therefore not be regenerated simply because another seed produces more similar subsets; required characteristics should instead be built into the partitioning strategy.
 
 ### Cross-Validation Within the Training Set {.unnumbered .unlisted}
 
-After reserving a test set, model development could rely on a single portion of the training data for validation. However, the resulting model comparisons, hyperparameter choices, and estimates of validation performance may depend strongly on which observations happen to be assigned to that validation subset. This can be particularly problematic when the training set is small, the outcome is imbalanced, or important patterns are represented by relatively few observations.
+After reserving a test set, model development could rely on a single portion of the training data for validation. However, the resulting model comparisons and hyperparameter choices may depend strongly on which observations happen to be assigned to that validation subset. This can be particularly problematic when the training set is small, the outcome is imbalanced, or important patterns are represented by relatively few observations.
 
 *k*-fold cross-validation reduces this dependence on a single validation split by evaluating models across several divisions of the training data. The training set is divided into $k$ non-overlapping subsets of approximately equal size, called *folds*. In each iteration, the model is fitted using $k-1$ folds and evaluated on the remaining fold, which serves as validation data. The process is repeated $k$ times so that each fold is used once for validation.
 
-The performance values obtained from the individual folds are then averaged to provide a cross-validated basis for comparing models or tuning hyperparameters. Common choices are $k=5$ and $k=10$. Figure [-@fig-data-prep-cross-validation] illustrates the procedure for $k=5$.
+The resulting performance values are averaged to provide a cross-validated basis for comparing models or tuning hyperparameters. Common choices are $k=5$ and $k=10$. Figure [-@fig-data-prep-cross-validation] illustrates the procedure for $k=5$.
 
-```{r fig-data-prep-cross-validation, echo = FALSE, out.width = "70%", fig.cap = "Illustration of five-fold cross-validation within the training set. In each iteration, the model is fitted using four folds and evaluated on the remaining validation fold."} 
+```{r fig-data-prep-cross-validation, echo = FALSE, out.width = "70%", fig.cap = "Illustration of five-fold cross-validation within the training set. In each iteration, the model is fitted using four folds and evaluated on the remaining validation fold."}
 knitr::include_graphics("images/ch_data-prep_cross_validation.png")
 ```
 
-In classification problems, the folds are often stratified so that each contains approximately the same outcome proportions. Other data structures may require different resampling strategies. Grouped cross-validation keeps related observations in the same fold, while time-series resampling preserves temporal order.
+As with the initial train-test split, the resampling strategy should respect the structure of the prediction problem. In classification, the folds are often stratified to preserve approximately the same outcome proportions. Grouped cross-validation keeps related observations in the same fold, while resampling for time-ordered data preserves temporal order.
 
-Cross-validation is part of model development and should therefore be applied within the training set rather than to the full dataset. If the test set influences model comparison, hyperparameter tuning, feature selection, or data-preparation decisions, it no longer provides an independent basis for final assessment.
+Cross-validation is part of model development and should therefore be carried out entirely within the training set. The test set remains outside model comparison, hyperparameter tuning, feature selection, and other development decisions until final assessment.
 
 A typical workflow proceeds as follows:
 
@@ -106,17 +103,17 @@ A typical workflow proceeds as follows:
 4. Use the cross-validation results to select the preparation workflow, model, and hyperparameters.
 5. Refit the selected workflow and model using the full training set, then assess final predictive performance once on the untouched test set.
 
-Figure [-@fig-data-prep-cross-validation-2] shows how cross-validation is nested within the training set while the test set remains separate from model development.
+Figure [-@fig-data-prep-cross-validation-2] shows how cross-validation is carried out within the training set while the test set remains separate from model development.
 
 ```{r fig-data-prep-cross-validation-2, echo = FALSE, out.width = "85%", fig.cap = "Cross-validation applied within the training set while the test set remains untouched for final assessment."}
 knitr::include_graphics("images/ch_data-prep_cross_validation_2.png")
 ```
 
-Data-dependent preparation is part of this cross-validation process. In each iteration, imputation values, category groupings, encoding structures, scaling parameters, feature transformations, feature-selection decisions, and similar rules must be learned using only the training folds and then applied to the corresponding validation fold. Estimating these rules once from the complete training set before cross-validation would allow validation observations to influence model development indirectly. The resulting risk of data leakage is discussed in Section [-@sec-data-prep-data-leakage].
+Data-dependent preparation must also be incorporated within cross-validation: in each iteration, preparation rules are learned from the training folds and then applied to the corresponding validation fold. Otherwise, validation observations may influence model development indirectly. This issue is developed further in Section [-@sec-data-prep-data-leakage].
 
-After the preferred preparation workflow, model, and hyperparameters have been selected, the preparation rules are estimated again using the full training set and the final model is fitted. The fitted preparation rules are then applied to the test data before final assessment.
+After the preparation workflow, model, and hyperparameters have been selected, the chosen preparation rules and final model are fitted using the full training set. The fitted preparation rules are then applied to the test data before final assessment.
 
-This workflow is used in Chapter [-@sec-knn-choose-k], where cross-validation is applied to select the number of neighbors in a *k*-Nearest Neighbors model. It is also used in the `adult` case study at the end of this chapter, where the test set remains outside data-dependent preparation and model-development decisions.
+This workflow is used in Chapter [-@sec-knn-choose-k], where cross-validation is applied to select the number of neighbors in a *k*-Nearest Neighbors model. It is also used in the `adult` case study at the end of this chapter.
 
 ## Data Leakage and the Training-Only Principle {#sec-data-prep-data-leakage}
 
@@ -140,7 +137,7 @@ The case study at the end of this chapter applies the training-only principle ac
 
 > *Practice:* Identify two data-preparation steps that could introduce leakage if handled incorrectly. For each, explain how the training, validation, and test data should be treated.
 
-## Preparing Implausible and Extreme Values for Modeling {#sec-data-prep-outliers}
+## Preparing Implausible and Extreme Values {#sec-data-prep-outliers}
 
 During *Data Understanding and Exploration*, unusual observations are identified and investigated using summaries, visualizations, documentation, related features, and domain knowledge. As discussed in Section [-@sec-eda-outliers], this investigation helps determine whether an unusual value is implausible, valid but extreme, or uncertain. The task in *Data Preparation for Modeling* is different: given what has already been learned, we must decide how the observation should be represented before modeling.
 
