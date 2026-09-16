@@ -116,27 +116,25 @@ test_set  = splits$part2
 test_labels = test_set$churn
 
 # Imputation for NA values
+library(recipes)
+
 # Treat "unknown" as missing
 train_set[train_set == "unknown"] = NA
 test_set[test_set == "unknown"] = NA
 
-# Training-derived modes
-mode_education = names(sort(table(train_set$education, useNA = "no"), decreasing = TRUE))[1]
-mode_income    = names(sort(table(train_set$income,    useNA = "no"), decreasing = TRUE))[1]
-mode_marital   = names(sort(table(train_set$marital,   useNA = "no"), decreasing = TRUE))[1]
+# Define the imputation procedure
+imputation_recipe = recipe(churn ~ ., data = train_set) |>
+  step_impute_mode(education, income, marital)
 
-# Apply to the training set
-train_set$education[is.na(train_set$education)] = mode_education
-train_set$income[is.na(train_set$income)]       = mode_income
-train_set$marital[is.na(train_set$marital)]     = mode_marital
+# Learn the imputation values from the training data
+imputation_prep = prep(imputation_recipe, training = train_set)
 
-# Apply to the test set using the same training-derived modes
-test_set$education[is.na(test_set$education)] = mode_education
-test_set$income[is.na(test_set$income)]       = mode_income
-test_set$marital[is.na(test_set$marital)]     = mode_marital
+# Apply the learned procedure
+train_set = bake(imputation_prep, new_data = NULL, composition = "data.frame")
+test_set = bake(imputation_prep, new_data = test_set, composition = "data.frame")
 
 train_set = droplevels(train_set)
-test_set  = droplevels(test_set)
+test_set = droplevels(test_set)
 
 # Encoding categorical features
 income_levels = c("<40K", "40K-60K", "60K-80K", "80K-120K", ">120K")
@@ -173,7 +171,7 @@ kNN_predict = kNN(
   formula = formula_knn,
   train = train_scaled,
   test = test_scaled,
-  k = 7
+  k = 9
 )
 ```
 

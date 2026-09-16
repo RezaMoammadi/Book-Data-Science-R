@@ -360,39 +360,37 @@ This split provides a training set for model development and a separate test set
 
 The `churn` dataset is largely clean, but some entries in `education`, `income`, and `marital` are recorded as `"unknown"`. Based on the meaning assigned to this label during Data Understanding and Exploration, we treat `"unknown"` as a placeholder for unavailable information rather than as a substantive category. Because this interpretation is established before model fitting and does not depend on the observed distribution of the training or test data, the same recoding rule can be applied to both datasets.
 
-Here we use mode imputation for these categorical variables. Although simple, this approach is transparent and sufficient for illustrating the workflow. The following code first replaces `"unknown"` with missing values and then imputes those values using modes computed from the training set.
+Here we use mode imputation for these categorical variables. Although simple, this approach is transparent and sufficient for illustrating the preprocessing workflow. Rather than calculating and applying the modes manually, we use the **recipes** package to define the imputation procedure. This makes it easier to ensure that the imputation values are learned only from the training data and then applied unchanged to the test data.
 
 ```{r}
+library(recipes)
+
 # Treat "unknown" as missing
 train_set[train_set == "unknown"] = NA
 test_set[test_set == "unknown"] = NA
 
-# Training-derived modes
-mode_education = names(sort(table(train_set$education, useNA = "no"), decreasing = TRUE))[1]
-mode_income    = names(sort(table(train_set$income,    useNA = "no"), decreasing = TRUE))[1]
-mode_marital   = names(sort(table(train_set$marital,   useNA = "no"), decreasing = TRUE))[1]
+# Define the imputation procedure
+imputation_recipe = recipe(churn ~ ., data = train_set) |>
+  step_impute_mode(education, income, marital)
 
-# Apply to the training set
-train_set$education[is.na(train_set$education)] = mode_education
-train_set$income[is.na(train_set$income)]       = mode_income
-train_set$marital[is.na(train_set$marital)]     = mode_marital
+# Learn the imputation values from the training data
+imputation_prep = prep(imputation_recipe, training = train_set)
 
-# Apply to the test set using the same training-derived modes
-test_set$education[is.na(test_set$education)] = mode_education
-test_set$income[is.na(test_set$income)]       = mode_income
-test_set$marital[is.na(test_set$marital)]     = mode_marital
+# Apply the learned procedure
+train_set = bake(imputation_prep, new_data = NULL, composition = "data.frame")
+test_set = bake(imputation_prep, new_data = test_set, composition = "data.frame")
 
 train_set = droplevels(train_set)
-test_set  = droplevels(test_set)
+test_set = droplevels(test_set)
 ```
 
-The same training-derived modes are applied to both datasets so that the imputation step does not use information from the test set. The call to `droplevels()` removes unused factor levels after the missing values have been filled in, leaving both datasets in a cleaner form for the next preprocessing steps.
+The `recipe()` function defines the preprocessing procedure, while `step_impute_mode()` specifies that missing values in `education`, `income`, and `marital` should be replaced by the most frequent observed category. The call to `prep()` estimates these modes using only the training data. The prepared recipe is then applied to the training data and, without re-estimating the imputation values, to the test data using `bake()`.
 
-> *Practice:* Repeat this imputation strategy after creating a 70%–30% split, and confirm that no missing values remain in `education`, `income`, and `marital`.
+This distinction is important for avoiding data leakage. Information from the test set should not influence preprocessing decisions made during model development. The final calls to `droplevels()` remove factor levels that are no longer observed after replacing `"unknown"` and completing the imputation.
 
-Before moving to kNN-specific encoding, the categorical predictors must also be represented consistently across the training and test data. In particular, the encoding structure should be defined from the training data and then applied to new observations. This prevents differences in observed factor levels from producing different predictor columns and ensures a consistent treatment of levels that are rare or absent from one of the datasets. No additional collapsing of categorical levels is required for this dataset, but their representation must remain consistent across the training and test sets.
+Mode imputation is only one possible approach. More flexible methods can use information from other predictors when estimating missing values. For example, the **recipes** package also provides k-nearest-neighbor imputation through `step_impute_knn()` and bagged-tree imputation through `step_impute_bag()`. Such methods can better reflect relationships among variables, but they also introduce additional modeling choices. For this introductory example, we retain mode imputation because it is simple, transparent, and sufficient for illustrating leakage-free preprocessing.
 
-At this point, the main preparation decisions that are not specific to a particular modeling algorithm have been completed. We can now adapt the data to kNN by constructing the numerical feature representation required for distance calculations.
+> *Practice:* Repeat this imputation procedure after creating a 70%–30% train–test split. Confirm that no missing values remain in `education`, `income`, and `marital`, and identify the mode learned from the training data for each variable.
 
 #### Encoding Categorical Features for kNN {.unnumbered .unlisted}
 
@@ -471,21 +469,21 @@ Because tuning is carried out using only the training data, the test set remains
 
 In this example, we use accuracy to compare candidate values of $k$ because it provides a simple summary of predictive performance. However, the choice of tuning metric depends on the problem. In settings with class imbalance or unequal costs of misclassification, other measures such as precision, recall, or the F1-score may be more informative.
 
-The resulting plot shows how validation accuracy changes with $k$. In this case, the highest accuracy is achieved at $k = 7$. This does not mean that $k = 7$ is universally best; it simply indicates that, under this validation-based tuning strategy, $k = 7$ performs best for this dataset. With this value selected, we can now fit the final model on the full training set and evaluate it once on the separate test set.
+The resulting plot shows how validation accuracy changes with $k$. In this case, the highest accuracy is achieved at $k = 9$. This does not mean that $k = 9$ is universally best; it simply indicates that, under this validation-based tuning strategy, $k = 9$ performs best for this dataset. With this value selected, we can now fit the final model on the full training set and evaluate it once on the separate test set.
 
 > *Practice:* Using a 70%–30% train–test split, use `kNN.plot()` to select a value of $k$ without using the test set. Compare the selected value with that from the 80%–20% split. What does this suggest about the stability of tuning?
 
 ### Applying the kNN Classifier {.unnumbered .unlisted}
 
-With $k = 7$ giving the highest validation accuracy among the candidate values, we now apply the kNN algorithm to classify customer churn in the test set. This step brings together the work from the previous sections: data preparation, feature encoding, scaling, and hyperparameter tuning. Unlike many machine learning algorithms, kNN does not estimate coefficients or fit an explicit decision rule during training. Instead, it retains the training data and performs classification on demand by computing distances to identify the closest training observations.
+With $k = 9$ giving the highest validation accuracy among the candidate values, we now apply the kNN algorithm to classify customer churn in the test set. This step brings together the work from the previous sections: data preparation, feature encoding, scaling, and hyperparameter tuning. Unlike many machine learning algorithms, kNN does not estimate coefficients or fit an explicit decision rule during training. Instead, it retains the training data and performs classification on demand by computing distances to identify the closest training observations.
 
 In R, we use the `kNN()` function from the **liver** package to implement the k-Nearest Neighbors algorithm. This function provides a formula-based interface consistent with other modeling functions in R, making the syntax more readable and the workflow more transparent. An alternative is the `knn()` function from the **class** package, which requires the user to specify predictor matrices and class labels manually. While effective, that interface is less convenient for the presentation adopted in this book.
 
 ```{r}
-kNN_predict = kNN(formula = formula_knn, train = train_scaled, test = test_scaled, k = 7)
+kNN_predict = kNN(formula = formula_knn, train = train_scaled, test = test_scaled, k = 9)
 ```
 
-In this command, `formula_knn` defines the relationship between the response variable (`churn`) and the predictors. The arguments `train` and `test` specify the processed datasets prepared in the earlier steps, and `k = 7` sets the number of neighbors used for classification. The `kNN()` function predicts the class of each test observation by computing its distance to the training observations and assigning the majority class among the seven nearest neighbors.
+In this command, `formula_knn` defines the relationship between the response variable (`churn`) and the predictors. The arguments `train` and `test` specify the processed datasets prepared in the earlier steps, and `k = 9` sets the number of neighbors used for classification. The `kNN()` function predicts the class of each test observation by computing its distance to the training observations and assigning the majority class among the seven nearest neighbors.
 
 This is an important distinction between kNN and many other classifiers. Fitting kNN does not produce a coefficient table or a compact set of model parameters to interpret. Instead, prediction is determined by the local neighborhood structure of the training data. For this reason, interpretability in kNN is local rather than parametric: to understand a prediction, we look at which training observations were nearest to the new case and how their class labels were distributed.
 
